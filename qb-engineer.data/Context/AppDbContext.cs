@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using QbEngineer.Core.Entities;
+using QBEngineer.Core.Entities;
 
-namespace QbEngineer.Data.Context;
+namespace QBEngineer.Data.Context;
 
 public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
 {
@@ -11,9 +11,25 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     {
     }
 
+    public DbSet<TrackType> TrackTypes => Set<TrackType>();
+    public DbSet<JobStage> JobStages => Set<JobStage>();
+    public DbSet<Job> Jobs => Set<Job>();
+    public DbSet<JobSubtask> JobSubtasks => Set<JobSubtask>();
+    public DbSet<JobLink> JobLinks => Set<JobLink>();
+    public DbSet<JobActivityLog> JobActivityLogs => Set<JobActivityLog>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<Part> Parts => Set<Part>();
+    public DbSet<BOMEntry> BOMEntries => Set<BOMEntry>();
+    public DbSet<ReferenceData> ReferenceData => Set<ReferenceData>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+    public DbSet<SyncQueueEntry> SyncQueueEntries => Set<SyncQueueEntry>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         // Apply snake_case naming convention for all tables and columns
         foreach (var entity in builder.Model.GetEntityTypes())

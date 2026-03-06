@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>QbEngineer.Integrations</RootNamespace>
+    <RootNamespace>QBEngineer.Integrations</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

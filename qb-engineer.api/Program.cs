@@ -1,9 +1,15 @@
 using System.Text;
+using System.Text.Json.Serialization;
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using QbEngineer.Data.Context;
+using QBEngineer.Api.Behaviors;
+using QBEngineer.Api.Data;
+using QBEngineer.Api.Middleware;
+using QBEngineer.Data.Context;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -64,9 +70,15 @@ try
 
     // MediatR
     builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
+    builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+    builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
     // Controllers + OpenAPI
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
     builder.Services.AddOpenApi();
 
     // CORS
@@ -103,8 +115,8 @@ try
             await db.Database.EnsureCreatedAsync();
             Log.Information("Database recreated successfully");
 
-            // Seed default roles and admin user
-            await SeedDataAsync(scope.ServiceProvider);
+            // Seed default data
+            await SeedData.SeedAsync(scope.ServiceProvider);
         }
         else
         {
@@ -114,6 +126,7 @@ try
 
     // Middleware pipeline
     app.UseSerilogRequestLogging();
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
     app.UseCors();
 
     if (app.Environment.IsDevelopment())
@@ -142,41 +155,4 @@ catch (Exception ex)
 finally
 {
     await Log.CloseAndFlushAsync();
-}
-
-static async Task SeedDataAsync(IServiceProvider services)
-{
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-
-    // Default roles
-    string[] roles = ["Admin", "Manager", "Engineer", "PM", "ProductionWorker", "OfficeManager"];
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole<int>(role));
-    }
-
-    // Default admin user
-    const string adminEmail = "admin@qbengineer.local";
-    if (await userManager.FindByEmailAsync(adminEmail) is null)
-    {
-        var admin = new ApplicationUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            FirstName = "Admin",
-            LastName = "User",
-            Initials = "AU",
-            AvatarColor = "#0d9488",
-            EmailConfirmed = true,
-        };
-
-        var result = await userManager.CreateAsync(admin, "Admin123!");
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(admin, "Admin");
-            Log.Information("Default admin user created: {Email}", adminEmail);
-        }
-    }
 }

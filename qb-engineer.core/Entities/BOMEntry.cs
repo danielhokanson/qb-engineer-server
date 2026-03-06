@@ -1,0 +1,17 @@
+using QBEngineer.Core.Enums;
+
+namespace QBEngineer.Core.Entities;
+
+public class BOMEntry : BaseAuditableEntity
+{
+    public int ParentPartId { get; set; }
+    public int ChildPartId { get; set; }
+    public decimal Quantity { get; set; } = 1;
+    public string? ReferenceDesignator { get; set; }
+    public int SortOrder { get; set; }
+    public BOMSourceType SourceType { get; set; } = BOMSourceType.Buy;
+    public string? Notes { get; set; }
+
+    public Part ParentPart { get; set; } = null!;
+    public Part ChildPart { get; set; } = null!;
+}

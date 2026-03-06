@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace QbEngineer.Data.Context;
+namespace QBEngineer.Data.Context;
 
 public class ApplicationUser : IdentityUser<int>
 {

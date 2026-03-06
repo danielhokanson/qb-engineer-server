@@ -1,4 +1,4 @@
-namespace QbEngineer.Core.Entities;
+namespace QBEngineer.Core.Entities;
 
 public abstract class BaseEntity
 {
