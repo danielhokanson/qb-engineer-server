@@ -46,6 +46,28 @@ public class AdminController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("track-types")]
+    public async Task<ActionResult<TrackTypeResponseModel>> CreateTrackType(CreateTrackTypeCommand command)
+    {
+        var result = await mediator.Send(command);
+        return CreatedAtAction(nameof(GetTrackTypes), result);
+    }
+
+    [HttpPut("track-types/{id:int}")]
+    public async Task<ActionResult<TrackTypeResponseModel>> UpdateTrackType(int id, UpdateTrackTypeCommand command)
+    {
+        var cmd = command with { Id = id };
+        var result = await mediator.Send(cmd);
+        return Ok(result);
+    }
+
+    [HttpDelete("track-types/{id:int}")]
+    public async Task<ActionResult> DeleteTrackType(int id)
+    {
+        await mediator.Send(new DeleteTrackTypeCommand(id));
+        return NoContent();
+    }
+
     // ── Reference Data ──
 
     [HttpGet("reference-data")]

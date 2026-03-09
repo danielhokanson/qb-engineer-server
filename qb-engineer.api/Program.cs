@@ -16,6 +16,7 @@ using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 using QBEngineer.Data.Repositories;
 using QBEngineer.Integrations;
+using System.Threading.RateLimiting;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -109,11 +110,31 @@ try
     builder.Services.AddScoped<ITimeTrackingRepository, TimeTrackingRepository>();
     builder.Services.AddScoped<IUserPreferenceRepository, UserPreferenceRepository>();
     builder.Services.AddScoped<IFileRepository, FileRepository>();
+    builder.Services.AddScoped<IJobLinkRepository, JobLinkRepository>();
+    builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+    builder.Services.AddScoped<ITerminologyRepository, TerminologyRepository>();
     builder.Services.AddHttpContextAccessor();
 
-    // MinIO file storage
+    // Integration services (mock or real based on config)
+    var useMocks = builder.Configuration.GetValue<bool>("MockIntegrations");
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection(MinioOptions.SectionName));
-    builder.Services.AddSingleton<IStorageService, MinioStorageService>();
+
+    if (useMocks)
+    {
+        builder.Services.AddSingleton<IStorageService, MockStorageService>();
+        builder.Services.AddSingleton<IAccountingService, MockAccountingService>();
+        builder.Services.AddSingleton<IShippingService, MockShippingService>();
+        builder.Services.AddSingleton<IAiService, MockAiService>();
+        Log.Information("MockIntegrations=true — using in-memory storage and mock services");
+    }
+    else
+    {
+        builder.Services.AddSingleton<IStorageService, MinioStorageService>();
+        // Real accounting/shipping/AI services registered here when implemented
+        builder.Services.AddSingleton<IAccountingService, MockAccountingService>();
+        builder.Services.AddSingleton<IShippingService, MockShippingService>();
+        builder.Services.AddSingleton<IAiService, MockAiService>();
+    }
 
     // MediatR
     builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
@@ -147,6 +168,21 @@ try
         .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
             name: "postgresql");
 
+    // Rate limiting
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                ctx.User?.Identity?.Name ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    });
+
     var app = builder.Build();
 
     // Database initialization
@@ -159,7 +195,7 @@ try
         {
             Log.Information("RECREATE_DB=true — dropping and recreating database...");
             await db.Database.EnsureDeletedAsync();
-            await db.Database.EnsureCreatedAsync();
+            await db.Database.MigrateAsync();
             Log.Information("Database recreated successfully");
 
             // Seed default data
@@ -167,13 +203,14 @@ try
         }
         else
         {
-            await db.Database.EnsureCreatedAsync();
+            await db.Database.MigrateAsync();
         }
     }
 
-    // MinIO bucket initialization
-    using (var scope = app.Services.CreateScope())
+    // MinIO bucket initialization (skip when using mock storage)
+    if (!useMocks)
     {
+        using var scope = app.Services.CreateScope();
         var storageService = scope.ServiceProvider.GetRequiredService<IStorageService>();
         var minioOpts = scope.ServiceProvider.GetRequiredService<IOptions<MinioOptions>>().Value;
 
@@ -191,9 +228,11 @@ try
     }
 
     // Middleware pipeline
+    app.UseMiddleware<SecurityHeadersMiddleware>();
     app.UseSerilogRequestLogging();
     app.UseMiddleware<ExceptionHandlingMiddleware>();
     app.UseCors();
+    app.UseRateLimiter();
 
     if (app.Environment.IsDevelopment())
     {

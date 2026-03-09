@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Features.Jobs;
+using QBEngineer.Api.Features.Jobs.Bulk;
+using QBEngineer.Api.Features.Jobs.Links;
 using QBEngineer.Api.Features.Jobs.Subtasks;
 using QBEngineer.Core.Models;
 
@@ -69,6 +71,14 @@ public class JobsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{id:int}/comments")]
+    public async Task<ActionResult<ActivityResponseModel>> CreateJobComment(int id, CreateJobCommentCommand command)
+    {
+        var cmd = command with { JobId = id };
+        var result = await mediator.Send(cmd);
+        return Created($"/api/v1/jobs/{id}/activity", result);
+    }
+
     [HttpGet("{id:int}/subtasks")]
     public async Task<ActionResult<List<SubtaskResponseModel>>> GetSubtasks(int id)
     {
@@ -89,6 +99,57 @@ public class JobsController(IMediator mediator) : ControllerBase
     {
         var cmd = command with { JobId = id, SubtaskId = subtaskId };
         var result = await mediator.Send(cmd);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:int}/links")]
+    public async Task<ActionResult<List<JobLinkResponseModel>>> GetJobLinks(int id)
+    {
+        var result = await mediator.Send(new GetJobLinksQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/links")]
+    public async Task<ActionResult<JobLinkResponseModel>> CreateJobLink(int id, CreateJobLinkCommand command)
+    {
+        var cmd = command with { JobId = id };
+        var result = await mediator.Send(cmd);
+        return CreatedAtAction(nameof(GetJobLinks), new { id }, result);
+    }
+
+    [HttpDelete("{id:int}/links/{linkId:int}")]
+    public async Task<ActionResult> DeleteJobLink(int id, int linkId)
+    {
+        await mediator.Send(new DeleteJobLinkCommand(id, linkId));
+        return NoContent();
+    }
+
+    // Bulk operations
+    [HttpPatch("bulk/stage")]
+    public async Task<ActionResult<BulkOperationResponseModel>> BulkMoveStage(BulkMoveJobStageCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPatch("bulk/assign")]
+    public async Task<ActionResult<BulkOperationResponseModel>> BulkAssign(BulkAssignJobCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPatch("bulk/priority")]
+    public async Task<ActionResult<BulkOperationResponseModel>> BulkSetPriority(BulkSetPriorityCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPatch("bulk/archive")]
+    public async Task<ActionResult<BulkOperationResponseModel>> BulkArchive(BulkArchiveJobsCommand command)
+    {
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 }

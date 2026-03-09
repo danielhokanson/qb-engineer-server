@@ -10,6 +10,7 @@ public interface IJobRepository
     Task<Job?> FindAsync(int id, CancellationToken ct);
     Task<string> GenerateNextJobNumberAsync(CancellationToken ct);
     Task<int> GetMaxBoardPositionAsync(int stageId, CancellationToken ct);
+    Task<List<Job>> FindMultipleAsync(List<int> ids, CancellationToken ct);
     Task AddAsync(Job job, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }

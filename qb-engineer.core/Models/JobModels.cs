@@ -57,3 +57,22 @@ public record SubtaskResponseModel(
     int? AssigneeId,
     int SortOrder,
     DateTime? CompletedAt);
+
+public record BulkOperationResponseModel(
+    int SuccessCount,
+    int FailureCount,
+    List<BulkOperationError> Errors);
+
+public record BulkOperationError(int JobId, string Message);
+
+public record JobLinkResponseModel(
+    int Id,
+    int SourceJobId,
+    int TargetJobId,
+    string LinkType,
+    int LinkedJobId,
+    string LinkedJobNumber,
+    string LinkedJobTitle,
+    string LinkedJobStageName,
+    string LinkedJobStageColor,
+    DateTime CreatedAt);

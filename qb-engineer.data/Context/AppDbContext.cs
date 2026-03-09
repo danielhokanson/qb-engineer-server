@@ -34,6 +34,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<ClockEvent> ClockEvents => Set<ClockEvent>();
     public DbSet<UserPreference> UserPreferences => Set<UserPreference>();
     public DbSet<FileAttachment> FileAttachments => Set<FileAttachment>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<TerminologyEntry> TerminologyEntries => Set<TerminologyEntry>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

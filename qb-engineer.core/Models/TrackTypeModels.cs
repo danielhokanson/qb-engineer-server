@@ -18,3 +18,11 @@ public record StageResponseModel(
     int? WIPLimit,
     string? AccountingDocumentType,
     bool IsIrreversible);
+
+public record StageRequestModel(
+    string Name,
+    string Code,
+    int SortOrder,
+    string Color,
+    int? WIPLimit,
+    bool IsIrreversible);

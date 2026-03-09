@@ -75,4 +75,35 @@ public class TrackTypeRepository(AppDbContext db) : ITrackTypeRepository
     {
         return await db.JobStages.FirstOrDefaultAsync(s => s.Id == stageId, ct);
     }
+
+    public async Task<TrackType?> FindAsync(int id, CancellationToken ct)
+    {
+        return await db.TrackTypes
+            .Include(t => t.Stages)
+            .FirstOrDefaultAsync(t => t.Id == id, ct);
+    }
+
+    public async Task<bool> CodeExistsAsync(string code, int? excludeId, CancellationToken ct)
+    {
+        return await db.TrackTypes
+            .AnyAsync(t => t.Code == code && t.IsActive && (!excludeId.HasValue || t.Id != excludeId.Value), ct);
+    }
+
+    public async Task<int> GetMaxSortOrderAsync(CancellationToken ct)
+    {
+        return await db.TrackTypes
+            .Where(t => t.IsActive)
+            .MaxAsync(t => (int?)t.SortOrder, ct) ?? 0;
+    }
+
+    public async Task AddAsync(TrackType trackType, CancellationToken ct)
+    {
+        db.TrackTypes.Add(trackType);
+        await Task.CompletedTask;
+    }
+
+    public async Task SaveChangesAsync(CancellationToken ct)
+    {
+        await db.SaveChangesAsync(ct);
+    }
 }

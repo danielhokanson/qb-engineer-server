@@ -138,6 +138,14 @@ public class JobRepository(AppDbContext db) : IJobRepository
             .MaxAsync(j => (int?)j.BoardPosition, ct) ?? 0;
     }
 
+    public async Task<List<Job>> FindMultipleAsync(List<int> ids, CancellationToken ct)
+    {
+        return await db.Jobs
+            .Include(j => j.CurrentStage)
+            .Where(j => ids.Contains(j.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Job job, CancellationToken ct)
     {
         db.Jobs.Add(job);

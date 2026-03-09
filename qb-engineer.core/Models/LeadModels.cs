@@ -36,3 +36,7 @@ public record UpdateLeadRequestModel(
     string? Notes,
     DateTime? FollowUpDate,
     string? LostReason);
+
+public record ConvertLeadResponseModel(
+    int CustomerId,
+    int? JobId);
