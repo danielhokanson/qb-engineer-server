@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Features.Dashboard;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
 
@@ -11,7 +12,7 @@ namespace QBEngineer.Api.Controllers;
 public class DashboardController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<DashboardDto>> GetDashboard()
+    public async Task<ActionResult<DashboardResponseModel>> GetDashboard()
     {
         var result = await mediator.Send(new GetDashboardQuery());
         return Ok(result);

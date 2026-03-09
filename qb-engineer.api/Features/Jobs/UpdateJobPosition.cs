@@ -1,22 +1,30 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using QBEngineer.Data.Context;
+using Microsoft.AspNetCore.SignalR;
+using QBEngineer.Api.Hubs;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Jobs;
 
 public record UpdateJobPositionCommand(int JobId, int Position) : IRequest<Unit>;
 
-public class UpdateJobPositionHandler(AppDbContext db) : IRequestHandler<UpdateJobPositionCommand, Unit>
+public class UpdateJobPositionHandler(
+    IJobRepository repo,
+    IHubContext<BoardHub> boardHub) : IRequestHandler<UpdateJobPositionCommand, Unit>
 {
     public async Task<Unit> Handle(UpdateJobPositionCommand request, CancellationToken cancellationToken)
     {
-        var job = await db.Jobs
-            .FirstOrDefaultAsync(j => j.Id == request.JobId, cancellationToken)
+        var job = await repo.FindAsync(request.JobId, cancellationToken)
             ?? throw new KeyNotFoundException($"Job with ID {request.JobId} not found.");
 
         job.BoardPosition = request.Position;
 
-        await db.SaveChangesAsync(cancellationToken);
+        await repo.SaveChangesAsync(cancellationToken);
+
+        // Broadcast position change
+        await boardHub.Clients.Group($"board:{job.TrackTypeId}")
+            .SendAsync("jobPositionChanged", new BoardJobPositionChangedEvent(
+                job.Id, job.CurrentStageId, request.Position), cancellationToken);
 
         return Unit.Value;
     }

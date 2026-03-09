@@ -1,65 +1,41 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Enums;
-using QBEngineer.Data.Context;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Dashboard;
 
-public record GetDashboardQuery : IRequest<DashboardDto>;
+public record GetDashboardQuery : IRequest<DashboardResponseModel>;
 
-public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboardQuery, DashboardDto>
+public class GetDashboardHandler(IDashboardRepository repo) : IRequestHandler<GetDashboardQuery, DashboardResponseModel>
 {
-    public async Task<DashboardDto> Handle(GetDashboardQuery request, CancellationToken cancellationToken)
+    public async Task<DashboardResponseModel> Handle(GetDashboardQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var today = now.Date;
 
-        // Load the production track type (default) with stages
-        var productionTrack = await db.TrackTypes
-            .Include(t => t.Stages.Where(s => s.IsActive))
-            .Where(t => t.IsDefault && t.IsActive)
-            .FirstOrDefaultAsync(cancellationToken);
+        var data = await repo.GetDashboardDataAsync(cancellationToken);
 
-        if (productionTrack is null)
-        {
+        if (data.ProductionTrack is null)
             return EmptyDashboard();
-        }
 
-        var stages = productionTrack.Stages
+        var stages = data.ProductionTrack.Stages
+            .Where(s => s.IsActive)
             .OrderBy(s => s.SortOrder)
             .ToList();
 
         var totalStages = stages.Count;
 
-        // Load active (non-archived) jobs for this track type
-        var jobs = await db.Jobs
-            .Include(j => j.CurrentStage)
-            .Include(j => j.Customer)
-            .Where(j => j.TrackTypeId == productionTrack.Id && !j.IsArchived)
-            .OrderBy(j => j.CurrentStage.SortOrder)
-            .ThenBy(j => j.BoardPosition)
-            .ToListAsync(cancellationToken);
-
-        // Load assignee info for jobs that have one
-        var assigneeIds = jobs
-            .Where(j => j.AssigneeId.HasValue)
-            .Select(j => j.AssigneeId!.Value)
-            .Distinct()
-            .ToList();
-
-        var users = await db.Users
-            .Where(u => assigneeIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, cancellationToken);
-
         // Build task list
-        var tasks = jobs.Select((job, index) => {
+        var tasks = data.Jobs.Select((job, index) =>
+        {
             var stage = job.CurrentStage;
             var stageIndex = stages.FindIndex(s => s.Id == stage.Id);
             var (status, statusColor) = DeriveStatus(stageIndex, totalStages, job.DueDate, today);
-            var assignee = GetAssigneeInfo(job.AssigneeId, users);
+            var assignee = GetAssigneeInfo(job.AssigneeId, data.Users);
             var time = GenerateDisplayTime(index);
 
-            return new DashboardTaskDto(
+            return new DashboardTaskResponseModel(
                 time,
                 job.Title,
                 job.JobNumber,
@@ -70,9 +46,9 @@ public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboard
         }).ToList();
 
         // Stage counts
-        var jobsByStage = jobs.GroupBy(j => j.CurrentStageId).ToDictionary(g => g.Key, g => g.Count());
+        var jobsByStage = data.Jobs.GroupBy(j => j.CurrentStageId).ToDictionary(g => g.Key, g => g.Count());
         var maxJobsPerStage = jobsByStage.Values.DefaultIfEmpty(0).Max();
-        var stageCounts = stages.Select(s => new StageCountDto(
+        var stageCounts = stages.Select(s => new StageCountResponseModel(
             s.Name,
             jobsByStage.GetValueOrDefault(s.Id, 0),
             s.Color,
@@ -80,13 +56,13 @@ public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboard
         )).ToList();
 
         // Team members
-        var teamMembers = jobs
+        var teamMembers = data.Jobs
             .Where(j => j.AssigneeId.HasValue)
             .GroupBy(j => j.AssigneeId!.Value)
             .Select(g =>
             {
-                var user = users.GetValueOrDefault(g.Key);
-                return new TeamMemberDto(
+                var user = data.Users.GetValueOrDefault(g.Key);
+                return new TeamMemberResponseModel(
                     user?.Initials ?? "??",
                     user is not null ? $"{user.FirstName} {user.LastName}".Trim() : "Unknown",
                     user?.AvatarColor ?? "#94a3b8",
@@ -97,40 +73,24 @@ public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboard
             .ToList();
 
         // Activity log - last 5 entries
-        var activityLogs = await db.JobActivityLogs
-            .Include(a => a.Job)
-            .OrderByDescending(a => a.CreatedAt)
-            .Take(5)
-            .ToListAsync(cancellationToken);
-
-        var activityUserIds = activityLogs
-            .Where(a => a.UserId.HasValue)
-            .Select(a => a.UserId!.Value)
-            .Distinct()
-            .ToList();
-
-        var activityUsers = await db.Users
-            .Where(u => activityUserIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, cancellationToken);
-
-        var activity = activityLogs.Select(a =>
+        var activity = data.RecentActivity.Select(a =>
         {
             var (icon, iconColor) = GetActivityIcon(a.Action);
-            var userName = a.UserId.HasValue && activityUsers.TryGetValue(a.UserId.Value, out var user)
+            var userName = a.UserId.HasValue && data.Users.TryGetValue(a.UserId.Value, out var user)
                 ? user.FirstName
                 : "System";
             var text = $"{userName} {a.Description}";
             var time = FormatRelativeTime(a.CreatedAt, now);
 
-            return new ActivityEntryDto(icon, iconColor, text, time);
+            return new ActivityEntryResponseModel(icon, iconColor, text, time);
         }).ToList();
 
         // Deadlines - jobs due in next 14 days
         var deadlineCutoff = today.AddDays(14);
-        var deadlines = jobs
+        var deadlines = data.Jobs
             .Where(j => j.DueDate.HasValue && j.DueDate.Value.Date <= deadlineCutoff)
             .OrderBy(j => j.DueDate)
-            .Select(j => new DeadlineEntryDto(
+            .Select(j => new DeadlineEntryResponseModel(
                 j.DueDate!.Value.ToString("MMM d"),
                 j.JobNumber,
                 j.Title,
@@ -138,26 +98,25 @@ public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboard
             .ToList();
 
         // KPIs
-        var activeCount = jobs.Count;
-        var overdueCount = jobs.Count(j => j.DueDate.HasValue && j.DueDate.Value.Date < today);
+        var activeCount = data.Jobs.Count;
+        var overdueCount = data.Jobs.Count(j => j.DueDate.HasValue && j.DueDate.Value.Date < today);
 
-        var kpis = new DashboardKPIsDto(
+        var kpis = new DashboardKPIsResponseModel(
             activeCount,
-            0, // Change tracking requires historical comparison; hardcoded for now
+            0,
             overdueCount,
             0,
             "0h",
             "neutral");
 
-        return new DashboardDto(tasks, stageCounts, teamMembers, activity, deadlines, kpis);
+        return new DashboardResponseModel(tasks, stageCounts, teamMembers, activity, deadlines, kpis);
     }
 
-    private static DashboardDto EmptyDashboard() => new([], [], [], [], [],
-        new DashboardKPIsDto(0, 0, 0, 0, "0h", "neutral"));
+    private static DashboardResponseModel EmptyDashboard() => new([], [], [], [], [],
+        new DashboardKPIsResponseModel(0, 0, 0, 0, "0h", "neutral"));
 
     private static string GenerateDisplayTime(int index)
     {
-        // Generate times starting at 8:00a in 30-minute increments
         var totalMinutes = 8 * 60 + index * 30;
         var hours = totalMinutes / 60;
         var minutes = totalMinutes % 60;
@@ -165,9 +124,7 @@ public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboard
         var displayHour = hours > 12 ? hours - 12 : hours;
         if (displayHour == 0) displayHour = 12;
 
-        return minutes == 0
-            ? $"{displayHour}:{minutes:D2}{period}"
-            : $"{displayHour}:{minutes:D2}{period}";
+        return $"{displayHour}:{minutes:D2}{period}";
     }
 
     private static (string Status, string StatusColor) DeriveStatus(int stageIndex, int totalStages, DateTime? dueDate, DateTime today)
@@ -178,7 +135,6 @@ public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboard
         if (totalStages <= 1)
             return ("ACTIVE", "#3b82f6");
 
-        // First third of stages = NEXT, middle = ACTIVE, last third = FINISHING
         var position = (double)stageIndex / (totalStages - 1);
 
         return position switch
@@ -189,7 +145,7 @@ public class GetDashboardHandler(AppDbContext db) : IRequestHandler<GetDashboard
         };
     }
 
-    private static AssigneeInfo GetAssigneeInfo(int? assigneeId, Dictionary<int, ApplicationUser> users)
+    private static AssigneeInfo GetAssigneeInfo(int? assigneeId, Dictionary<int, ApplicationUserInfo> users)
     {
         if (assigneeId.HasValue && users.TryGetValue(assigneeId.Value, out var user))
             return new AssigneeInfo(user.Initials ?? "??", user.AvatarColor ?? "#94a3b8");

@@ -1,15 +1,15 @@
-namespace QBEngineer.Api.Features.TrackTypes;
+namespace QBEngineer.Core.Models;
 
-public record TrackTypeDto(
+public record TrackTypeResponseModel(
     int Id,
     string Name,
     string Code,
     string? Description,
     bool IsDefault,
     int SortOrder,
-    List<StageDto> Stages);
+    List<StageResponseModel> Stages);
 
-public record StageDto(
+public record StageResponseModel(
     int Id,
     string Name,
     string Code,

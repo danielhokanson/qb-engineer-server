@@ -10,7 +10,7 @@ RUN dotnet restore qb-engineer.api/qb-engineer.api.csproj
 
 # Copy everything and build
 COPY . .
-RUN dotnet publish qb-engineer.api/qb-engineer.api.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish qb-engineer.api/qb-engineer.api.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app

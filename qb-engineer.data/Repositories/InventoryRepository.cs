@@ -1,0 +1,227 @@
+using Microsoft.EntityFrameworkCore;
+using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+
+namespace QBEngineer.Data.Repositories;
+
+public class InventoryRepository(AppDbContext db) : IInventoryRepository
+{
+    public async Task<List<StorageLocationResponseModel>> GetLocationTreeAsync(CancellationToken ct)
+    {
+        var locations = await db.StorageLocations
+            .Include(l => l.Contents.Where(c => c.RemovedAt == null))
+            .Where(l => l.DeletedAt == null)
+            .OrderBy(l => l.SortOrder).ThenBy(l => l.Name)
+            .ToListAsync(ct);
+
+        var lookup = locations.ToLookup(l => l.ParentId);
+        return BuildTree(null, lookup, "");
+    }
+
+    private static List<StorageLocationResponseModel> BuildTree(
+        int? parentId,
+        ILookup<int?, StorageLocation> lookup,
+        string parentPath)
+    {
+        return lookup[parentId].Select(loc =>
+        {
+            var path = string.IsNullOrEmpty(parentPath) ? loc.Name : $"{parentPath} / {loc.Name}";
+            var children = BuildTree(loc.Id, lookup, path);
+            var contentCount = loc.Contents.Count + children.Sum(c => c.ContentCount);
+
+            return new StorageLocationResponseModel(
+                loc.Id, loc.Name, loc.LocationType, loc.ParentId,
+                loc.Barcode, loc.Description, loc.SortOrder, loc.IsActive,
+                path, contentCount, children);
+        }).ToList();
+    }
+
+    public async Task<List<StorageLocationFlatResponseModel>> GetBinLocationsAsync(CancellationToken ct)
+    {
+        var locations = await db.StorageLocations
+            .Where(l => l.DeletedAt == null)
+            .OrderBy(l => l.SortOrder).ThenBy(l => l.Name)
+            .ToListAsync(ct);
+
+        var byId = locations.ToDictionary(l => l.Id);
+        return locations
+            .Where(l => l.LocationType == LocationType.Bin)
+            .Select(l => new StorageLocationFlatResponseModel(
+                l.Id, l.Name, l.LocationType, l.Barcode, BuildPath(l, byId)))
+            .ToList();
+    }
+
+    private static string BuildPath(StorageLocation loc, Dictionary<int, StorageLocation> byId)
+    {
+        var parts = new List<string> { loc.Name };
+        var current = loc;
+        while (current.ParentId.HasValue && byId.TryGetValue(current.ParentId.Value, out var parent))
+        {
+            parts.Insert(0, parent.Name);
+            current = parent;
+        }
+        return string.Join(" / ", parts);
+    }
+
+    public Task<StorageLocation?> FindLocationAsync(int id, CancellationToken ct)
+        => db.StorageLocations.FirstOrDefaultAsync(l => l.Id == id && l.DeletedAt == null, ct);
+
+    public Task<bool> BarcodeExistsAsync(string barcode, int? excludeId, CancellationToken ct)
+    {
+        var query = db.StorageLocations.Where(l => l.Barcode == barcode && l.DeletedAt == null);
+        if (excludeId.HasValue)
+            query = query.Where(l => l.Id != excludeId.Value);
+        return query.AnyAsync(ct);
+    }
+
+    public async Task AddLocationAsync(StorageLocation location, CancellationToken ct)
+    {
+        await db.StorageLocations.AddAsync(location, ct);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<BinContentResponseModel>> GetBinContentsAsync(int locationId, CancellationToken ct)
+    {
+        var contents = await db.BinContents
+            .Include(c => c.Location)
+            .Include(c => c.Job)
+            .Where(c => c.LocationId == locationId && c.RemovedAt == null)
+            .OrderBy(c => c.EntityType).ThenBy(c => c.PlacedAt)
+            .ToListAsync(ct);
+
+        var allLocations = await db.StorageLocations
+            .Where(l => l.DeletedAt == null)
+            .ToListAsync(ct);
+        var byId = allLocations.ToDictionary(l => l.Id);
+
+        var partIds = contents.Where(c => c.EntityType == "part").Select(c => c.EntityId).Distinct().ToList();
+        var parts = await db.Parts.Where(p => partIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
+
+        return contents.Select(c => new BinContentResponseModel(
+            c.Id, c.LocationId, c.Location.Name,
+            BuildPath(c.Location, byId),
+            c.EntityType, c.EntityId,
+            c.EntityType == "part" && parts.TryGetValue(c.EntityId, out var part) ? $"{part.PartNumber} — {part.Description}" : $"{c.EntityType}:{c.EntityId}",
+            c.Quantity, c.LotNumber, c.JobId,
+            c.Job?.JobNumber, c.Status, c.PlacedAt
+        )).ToList();
+    }
+
+    public Task<BinContent?> FindBinContentAsync(int id, CancellationToken ct)
+        => db.BinContents.Include(c => c.Location).FirstOrDefaultAsync(c => c.Id == id, ct);
+
+    public async Task AddBinContentAsync(BinContent content, CancellationToken ct)
+    {
+        await db.BinContents.AddAsync(content, ct);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task AddMovementAsync(BinMovement movement, CancellationToken ct)
+    {
+        await db.BinMovements.AddAsync(movement, ct);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<InventoryPartSummaryResponseModel>> GetPartInventorySummaryAsync(string? search, CancellationToken ct)
+    {
+        var query = db.Parts.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(p =>
+                p.PartNumber.ToLower().Contains(term) ||
+                p.Description.ToLower().Contains(term));
+        }
+
+        var partsWithStock = await query
+            .OrderBy(p => p.PartNumber)
+            .ToListAsync(ct);
+
+        var partIds = partsWithStock.Select(p => p.Id).ToList();
+
+        var contents = await db.BinContents
+            .Include(c => c.Location)
+            .Where(c => c.EntityType == "part" && partIds.Contains(c.EntityId) && c.RemovedAt == null)
+            .ToListAsync(ct);
+
+        var allLocations = await db.StorageLocations
+            .Where(l => l.DeletedAt == null)
+            .ToListAsync(ct);
+        var locById = allLocations.ToDictionary(l => l.Id);
+
+        var contentsByPart = contents.ToLookup(c => c.EntityId);
+
+        return partsWithStock
+            .Where(p => contentsByPart[p.Id].Any())
+            .Select(p =>
+            {
+                var bins = contentsByPart[p.Id].ToList();
+                var onHand = bins.Sum(b => b.Quantity);
+                var reserved = bins.Where(b => b.Status == BinContentStatus.Reserved).Sum(b => b.Quantity);
+
+                return new InventoryPartSummaryResponseModel(
+                    p.Id, p.PartNumber, p.Description, p.Material,
+                    onHand, reserved, onHand - reserved,
+                    bins.Select(b => new BinStockResponseModel(
+                        b.LocationId, b.Location.Name,
+                        BuildPath(b.Location, locById),
+                        b.Quantity, b.Status, b.LotNumber
+                    )).ToList());
+            }).ToList();
+    }
+
+    public async Task<List<BinMovementResponseModel>> GetMovementsAsync(int? locationId, string? entityType, int? entityId, int take, CancellationToken ct)
+    {
+        var query = db.BinMovements
+            .Include(m => m.FromLocation)
+            .Include(m => m.ToLocation)
+            .AsQueryable();
+
+        if (locationId.HasValue)
+            query = query.Where(m => m.FromLocationId == locationId || m.ToLocationId == locationId);
+
+        if (!string.IsNullOrWhiteSpace(entityType))
+            query = query.Where(m => m.EntityType == entityType);
+
+        if (entityId.HasValue)
+            query = query.Where(m => m.EntityId == entityId.Value);
+
+        var movements = await query
+            .OrderByDescending(m => m.MovedAt)
+            .Take(take)
+            .ToListAsync(ct);
+
+        var userIds = movements.Select(m => m.MovedBy).Distinct().ToList();
+        var users = await db.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, ct);
+
+        var partIds = movements.Where(m => m.EntityType == "part").Select(m => m.EntityId).Distinct().ToList();
+        var parts = await db.Parts.Where(p => partIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
+
+        return movements.Select(m =>
+        {
+            var entityName = m.EntityType == "part" && parts.TryGetValue(m.EntityId, out var part)
+                ? $"{part.PartNumber} — {part.Description}"
+                : $"{m.EntityType}:{m.EntityId}";
+
+            var userName = users.TryGetValue(m.MovedBy, out var user)
+                ? $"{user.FirstName} {user.LastName}"
+                : "Unknown";
+
+            return new BinMovementResponseModel(
+                m.Id, m.EntityType, m.EntityId, entityName,
+                m.Quantity, m.LotNumber,
+                m.FromLocationId, m.FromLocation?.Name,
+                m.ToLocationId, m.ToLocation?.Name,
+                userName, m.MovedAt, m.Reason);
+        }).ToList();
+    }
+
+    public Task SaveChangesAsync(CancellationToken ct)
+        => db.SaveChangesAsync(ct);
+}

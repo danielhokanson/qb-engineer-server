@@ -1,7 +1,9 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Enums;
-using QBEngineer.Data.Context;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Jobs;
 
@@ -12,14 +14,16 @@ public record UpdateJobCommand(
     int? AssigneeId,
     int? CustomerId,
     JobPriority? Priority,
-    DateTime? DueDate) : IRequest<JobDetailDto>;
+    DateTime? DueDate) : IRequest<JobDetailResponseModel>;
 
-public class UpdateJobHandler(AppDbContext db, IMediator mediator) : IRequestHandler<UpdateJobCommand, JobDetailDto>
+public class UpdateJobHandler(
+    IJobRepository repo,
+    IMediator mediator,
+    IHubContext<BoardHub> boardHub) : IRequestHandler<UpdateJobCommand, JobDetailResponseModel>
 {
-    public async Task<JobDetailDto> Handle(UpdateJobCommand request, CancellationToken cancellationToken)
+    public async Task<JobDetailResponseModel> Handle(UpdateJobCommand request, CancellationToken cancellationToken)
     {
-        var job = await db.Jobs
-            .FirstOrDefaultAsync(j => j.Id == request.Id, cancellationToken)
+        var job = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Job with ID {request.Id} not found.");
 
         if (request.Title is not null)
@@ -40,8 +44,17 @@ public class UpdateJobHandler(AppDbContext db, IMediator mediator) : IRequestHan
         if (request.DueDate.HasValue)
             job.DueDate = request.DueDate.Value;
 
-        await db.SaveChangesAsync(cancellationToken);
+        await repo.SaveChangesAsync(cancellationToken);
 
-        return await mediator.Send(new GetJobByIdQuery(job.Id), cancellationToken);
+        var result = await mediator.Send(new GetJobByIdQuery(job.Id), cancellationToken);
+
+        // Broadcast to board + job detail subscribers
+        var evt = new BoardJobUpdatedEvent(job.Id, result);
+        await boardHub.Clients.Group($"board:{job.TrackTypeId}")
+            .SendAsync("jobUpdated", evt, cancellationToken);
+        await boardHub.Clients.Group($"job:{job.Id}")
+            .SendAsync("jobUpdated", evt, cancellationToken);
+
+        return result;
     }
 }

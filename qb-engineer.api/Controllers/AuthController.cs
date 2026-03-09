@@ -19,9 +19,25 @@ public class AuthController(IMediator mediator) : ControllerBase
 
     [HttpGet("me")]
     [Authorize]
-    public async Task<ActionResult<AuthUserDto>> Me()
+    public async Task<ActionResult<AuthUserResponseModel>> Me()
     {
         var result = await mediator.Send(new GetCurrentUserQuery(User));
+        return Ok(result);
+    }
+
+    [HttpGet("status")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SetupStatusResponseModel>> Status()
+    {
+        var result = await mediator.Send(new CheckSetupStatusQuery());
+        return Ok(result);
+    }
+
+    [HttpPost("setup")]
+    [AllowAnonymous]
+    public async Task<ActionResult<LoginResponse>> Setup(InitialSetupCommand command)
+    {
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 }

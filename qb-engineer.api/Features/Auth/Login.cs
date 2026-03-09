@@ -9,9 +9,7 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Auth;
 
-// --- DTOs ---
-
-public record AuthUserDto(
+public record AuthUserResponseModel(
     int Id,
     string Email,
     string FirstName,
@@ -24,7 +22,7 @@ public record AuthUserDto(
 
 public record LoginCommand(string Email, string Password) : IRequest<LoginResponse>;
 
-public record LoginResponse(string Token, DateTime ExpiresAt, AuthUserDto User);
+public record LoginResponse(string Token, DateTime ExpiresAt, AuthUserResponseModel User);
 
 public class LoginValidator : AbstractValidator<LoginCommand>
 {
@@ -60,7 +58,7 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
 
         var expiresAt = DateTime.UtcNow.AddHours(24);
 
-        var userDto = new AuthUserDto(
+        var userResponse = new AuthUserResponseModel(
             user.Id,
             user.Email!,
             user.FirstName,
@@ -69,7 +67,7 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
             user.AvatarColor,
             roles.ToArray());
 
-        return new LoginResponse(token, expiresAt, userDto);
+        return new LoginResponse(token, expiresAt, userResponse);
     }
 
     private string GenerateJwtToken(ApplicationUser user, IList<string> roles)
@@ -109,12 +107,12 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
 
 // --- Get Current User ---
 
-public record GetCurrentUserQuery(ClaimsPrincipal User) : IRequest<AuthUserDto>;
+public record GetCurrentUserQuery(ClaimsPrincipal User) : IRequest<AuthUserResponseModel>;
 
 public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager)
-    : IRequestHandler<GetCurrentUserQuery, AuthUserDto>
+    : IRequestHandler<GetCurrentUserQuery, AuthUserResponseModel>
 {
-    public async Task<AuthUserDto> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    public async Task<AuthUserResponseModel> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
     {
         var userId = request.User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? throw new UnauthorizedAccessException("Invalid credentials");
@@ -127,7 +125,7 @@ public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager)
 
         var roles = await userManager.GetRolesAsync(user);
 
-        return new AuthUserDto(
+        return new AuthUserResponseModel(
             user.Id,
             user.Email!,
             user.FirstName,

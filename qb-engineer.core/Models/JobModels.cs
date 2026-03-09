@@ -1,6 +1,6 @@
-namespace QBEngineer.Api.Features.Jobs;
+namespace QBEngineer.Core.Models;
 
-public record JobListDto(
+public record JobListResponseModel(
     int Id,
     string JobNumber,
     string Title,
@@ -13,7 +13,7 @@ public record JobListDto(
     bool IsOverdue,
     string? CustomerName);
 
-public record JobDetailDto(
+public record JobDetailResponseModel(
     int Id,
     string JobNumber,
     string Title,
@@ -38,7 +38,7 @@ public record JobDetailDto(
     DateTime CreatedAt,
     DateTime UpdatedAt);
 
-public record ActivityDto(
+public record ActivityResponseModel(
     int Id,
     string Action,
     string? FieldName,
@@ -48,3 +48,12 @@ public record ActivityDto(
     string? UserInitials,
     string? UserName,
     DateTime CreatedAt);
+
+public record SubtaskResponseModel(
+    int Id,
+    int JobId,
+    string Text,
+    bool IsCompleted,
+    int? AssigneeId,
+    int SortOrder,
+    DateTime? CompletedAt);

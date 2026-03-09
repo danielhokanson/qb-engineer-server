@@ -8,8 +8,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QBEngineer.Api.Behaviors;
 using QBEngineer.Api.Data;
+using QBEngineer.Api.Hubs;
 using QBEngineer.Api.Middleware;
+using Microsoft.Extensions.Options;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
+using QBEngineer.Data.Repositories;
+using QBEngineer.Integrations;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -64,9 +70,50 @@ try
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "qb-engineer-ui",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         };
+
+        // SignalR sends JWT via query string (WebSocket can't use headers)
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
     builder.Services.AddAuthorization();
+
+    // SignalR
+    builder.Services.AddSignalR();
+
+    // Repositories
+    builder.Services.AddScoped<IJobRepository, JobRepository>();
+    builder.Services.AddScoped<ISubtaskRepository, SubtaskRepository>();
+    builder.Services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
+    builder.Services.AddScoped<ITrackTypeRepository, TrackTypeRepository>();
+    builder.Services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
+    builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+    builder.Services.AddScoped<IUserRepository, UserRepository>();
+    builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+    builder.Services.AddScoped<IPartRepository, PartRepository>();
+    builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+    builder.Services.AddScoped<ILeadRepository, LeadRepository>();
+    builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+    builder.Services.AddScoped<IAssetRepository, AssetRepository>();
+    builder.Services.AddScoped<ITimeTrackingRepository, TimeTrackingRepository>();
+    builder.Services.AddScoped<IUserPreferenceRepository, UserPreferenceRepository>();
+    builder.Services.AddScoped<IFileRepository, FileRepository>();
+    builder.Services.AddHttpContextAccessor();
+
+    // MinIO file storage
+    builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection(MinioOptions.SectionName));
+    builder.Services.AddSingleton<IStorageService, MinioStorageService>();
 
     // MediatR
     builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
@@ -124,6 +171,25 @@ try
         }
     }
 
+    // MinIO bucket initialization
+    using (var scope = app.Services.CreateScope())
+    {
+        var storageService = scope.ServiceProvider.GetRequiredService<IStorageService>();
+        var minioOpts = scope.ServiceProvider.GetRequiredService<IOptions<MinioOptions>>().Value;
+
+        try
+        {
+            await storageService.EnsureBucketExistsAsync(minioOpts.JobFilesBucket, CancellationToken.None);
+            await storageService.EnsureBucketExistsAsync(minioOpts.ReceiptsBucket, CancellationToken.None);
+            await storageService.EnsureBucketExistsAsync(minioOpts.EmployeeDocsBucket, CancellationToken.None);
+            Log.Information("MinIO buckets verified");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "MinIO bucket initialization failed — file storage unavailable until MinIO is reachable");
+        }
+    }
+
     // Middleware pipeline
     app.UseSerilogRequestLogging();
     app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -144,6 +210,11 @@ try
 
     app.MapControllers();
     app.MapHealthChecks("/api/v1/health");
+
+    // SignalR Hubs
+    app.MapHub<BoardHub>("/hubs/board");
+    app.MapHub<NotificationHub>("/hubs/notifications");
+    app.MapHub<TimerHub>("/hubs/timer");
 
     Log.Information("QB Engineer API starting on {Urls}", string.Join(", ", app.Urls));
     await app.RunAsync();

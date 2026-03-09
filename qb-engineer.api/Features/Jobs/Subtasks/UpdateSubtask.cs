@@ -1,6 +1,8 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using QBEngineer.Data.Context;
+using Microsoft.AspNetCore.SignalR;
+using QBEngineer.Api.Hubs;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Jobs.Subtasks;
 
@@ -9,14 +11,15 @@ public record UpdateSubtaskCommand(
     int SubtaskId,
     string? Text,
     bool? IsCompleted,
-    int? AssigneeId) : IRequest<SubtaskDto>;
+    int? AssigneeId) : IRequest<SubtaskResponseModel>;
 
-public class UpdateSubtaskHandler(AppDbContext db) : IRequestHandler<UpdateSubtaskCommand, SubtaskDto>
+public class UpdateSubtaskHandler(
+    ISubtaskRepository repo,
+    IHubContext<BoardHub> boardHub) : IRequestHandler<UpdateSubtaskCommand, SubtaskResponseModel>
 {
-    public async Task<SubtaskDto> Handle(UpdateSubtaskCommand request, CancellationToken cancellationToken)
+    public async Task<SubtaskResponseModel> Handle(UpdateSubtaskCommand request, CancellationToken cancellationToken)
     {
-        var subtask = await db.JobSubtasks
-            .FirstOrDefaultAsync(s => s.Id == request.SubtaskId && s.JobId == request.JobId, cancellationToken)
+        var subtask = await repo.FindAsync(request.SubtaskId, request.JobId, cancellationToken)
             ?? throw new KeyNotFoundException(
                 $"Subtask {request.SubtaskId} not found for Job {request.JobId}.");
 
@@ -33,8 +36,6 @@ public class UpdateSubtaskHandler(AppDbContext db) : IRequestHandler<UpdateSubta
             if (request.IsCompleted.Value)
             {
                 subtask.CompletedAt = DateTime.UtcNow;
-                // CompletedById would typically come from the current user context;
-                // left unset here since there's no ICurrentUser service wired yet.
             }
             else
             {
@@ -43,9 +44,9 @@ public class UpdateSubtaskHandler(AppDbContext db) : IRequestHandler<UpdateSubta
             }
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        await repo.SaveChangesAsync(cancellationToken);
 
-        return new SubtaskDto(
+        var result = new SubtaskResponseModel(
             subtask.Id,
             subtask.JobId,
             subtask.Text,
@@ -53,5 +54,11 @@ public class UpdateSubtaskHandler(AppDbContext db) : IRequestHandler<UpdateSubta
             subtask.AssigneeId,
             subtask.SortOrder,
             subtask.CompletedAt);
+
+        // Broadcast to job detail subscribers
+        await boardHub.Clients.Group($"job:{request.JobId}")
+            .SendAsync("subtaskChanged", new { jobId = request.JobId, subtask = result, changeType = "updated" }, cancellationToken);
+
+        return result;
     }
 }

@@ -1,25 +1,13 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using QBEngineer.Data.Context;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.ReferenceData;
 
-public record GetReferenceDataByGroupQuery(string GroupCode) : IRequest<List<ReferenceDataDto>>;
+public record GetReferenceDataByGroupQuery(string GroupCode) : IRequest<List<ReferenceDataResponseModel>>;
 
-public class GetReferenceDataByGroupHandler(AppDbContext db) : IRequestHandler<GetReferenceDataByGroupQuery, List<ReferenceDataDto>>
+public class GetReferenceDataByGroupHandler(IReferenceDataRepository repo) : IRequestHandler<GetReferenceDataByGroupQuery, List<ReferenceDataResponseModel>>
 {
-    public async Task<List<ReferenceDataDto>> Handle(GetReferenceDataByGroupQuery request, CancellationToken cancellationToken)
-    {
-        return await db.ReferenceData
-            .Where(r => r.GroupCode == request.GroupCode)
-            .OrderBy(r => r.SortOrder)
-            .Select(r => new ReferenceDataDto(
-                r.Id,
-                r.Code,
-                r.Label,
-                r.SortOrder,
-                r.IsActive,
-                r.Metadata))
-            .ToListAsync(cancellationToken);
-    }
+    public Task<List<ReferenceDataResponseModel>> Handle(GetReferenceDataByGroupQuery request, CancellationToken cancellationToken)
+        => repo.GetByGroupAsync(request.GroupCode, cancellationToken);
 }

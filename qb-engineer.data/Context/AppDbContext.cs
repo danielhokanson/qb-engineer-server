@@ -24,6 +24,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<ReferenceData> ReferenceData => Set<ReferenceData>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<SyncQueueEntry> SyncQueueEntries => Set<SyncQueueEntry>();
+    public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();
+    public DbSet<BinContent> BinContents => Set<BinContent>();
+    public DbSet<BinMovement> BinMovements => Set<BinMovement>();
+    public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<Asset> Assets => Set<Asset>();
+    public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
+    public DbSet<ClockEvent> ClockEvents => Set<ClockEvent>();
+    public DbSet<UserPreference> UserPreferences => Set<UserPreference>();
+    public DbSet<FileAttachment> FileAttachments => Set<FileAttachment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -68,12 +78,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public override int SaveChanges()
     {
         SetTimestamps();
+        NormalizeDateTimes();
         return base.SaveChanges();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         SetTimestamps();
+        NormalizeDateTimes();
         return base.SaveChangesAsync(cancellationToken);
     }
 
@@ -93,6 +105,23 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
                     break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Npgsql requires DateTime values to have Kind=Utc for timestamptz columns.
+    /// Normalize any Unspecified-kind DateTimes to UTC before saving.
+    /// </summary>
+    private void NormalizeDateTimes()
+    {
+        foreach (var entry in ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified))
+        {
+            foreach (var prop in entry.Properties)
+            {
+                if (prop.CurrentValue is DateTime dt && dt.Kind == DateTimeKind.Unspecified)
+                    prop.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
             }
         }
     }

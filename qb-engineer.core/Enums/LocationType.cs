@@ -1,0 +1,9 @@
+namespace QBEngineer.Core.Enums;
+
+public enum LocationType
+{
+    Area,
+    Rack,
+    Shelf,
+    Bin
+}

@@ -1,46 +1,43 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
-using QBEngineer.Data.Context;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Jobs;
 
-public record MoveJobStageCommand(int JobId, int StageId) : IRequest<JobDetailDto>;
+public record MoveJobStageCommand(int JobId, int StageId) : IRequest<JobDetailResponseModel>;
 
-public class MoveJobStageHandler(AppDbContext db, IMediator mediator) : IRequestHandler<MoveJobStageCommand, JobDetailDto>
+public class MoveJobStageHandler(
+    IJobRepository jobRepo,
+    ITrackTypeRepository trackRepo,
+    IActivityLogRepository actRepo,
+    IMediator mediator,
+    IHubContext<BoardHub> boardHub) : IRequestHandler<MoveJobStageCommand, JobDetailResponseModel>
 {
-    public async Task<JobDetailDto> Handle(MoveJobStageCommand request, CancellationToken cancellationToken)
+    public async Task<JobDetailResponseModel> Handle(MoveJobStageCommand request, CancellationToken cancellationToken)
     {
-        var job = await db.Jobs
-            .FirstOrDefaultAsync(j => j.Id == request.JobId, cancellationToken)
+        var job = await jobRepo.FindAsync(request.JobId, cancellationToken)
             ?? throw new KeyNotFoundException($"Job with ID {request.JobId} not found.");
 
-        // Validate the target stage belongs to the same track type
-        var targetStage = await db.JobStages
-            .FirstOrDefaultAsync(s => s.Id == request.StageId, cancellationToken)
+        var targetStage = await trackRepo.FindStageAsync(request.StageId, cancellationToken)
             ?? throw new KeyNotFoundException($"Stage with ID {request.StageId} not found.");
 
         if (targetStage.TrackTypeId != job.TrackTypeId)
             throw new InvalidOperationException(
                 $"Stage {request.StageId} does not belong to track type {job.TrackTypeId}.");
 
+        var previousStage = await trackRepo.FindStageAsync(job.CurrentStageId, cancellationToken);
+        var previousStageName = previousStage?.Name;
         var previousStageId = job.CurrentStageId;
-        var previousStageName = await db.JobStages
-            .Where(s => s.Id == previousStageId)
-            .Select(s => s.Name)
-            .FirstOrDefaultAsync(cancellationToken);
 
-        // Update stage and board position
         job.CurrentStageId = request.StageId;
 
-        var maxPosition = await db.Jobs
-            .Where(j => j.CurrentStageId == request.StageId && j.Id != job.Id)
-            .MaxAsync(j => (int?)j.BoardPosition, cancellationToken) ?? 0;
-
+        var maxPosition = await jobRepo.GetMaxBoardPositionAsync(request.StageId, cancellationToken);
         job.BoardPosition = maxPosition + 1;
 
-        // Create activity log
         var log = new JobActivityLog
         {
             JobId = job.Id,
@@ -50,10 +47,18 @@ public class MoveJobStageHandler(AppDbContext db, IMediator mediator) : IRequest
             NewValue = targetStage.Name,
             Description = $"Moved from {previousStageName} to {targetStage.Name}.",
         };
-        db.JobActivityLogs.Add(log);
+        await actRepo.AddAsync(log, cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        await jobRepo.SaveChangesAsync(cancellationToken);
 
-        return await mediator.Send(new GetJobByIdQuery(job.Id), cancellationToken);
+        var result = await mediator.Send(new GetJobByIdQuery(job.Id), cancellationToken);
+
+        // Broadcast to board group
+        await boardHub.Clients.Group($"board:{job.TrackTypeId}")
+            .SendAsync("jobMoved", new BoardJobMovedEvent(
+                job.Id, previousStageId, request.StageId,
+                targetStage.Name, job.BoardPosition), cancellationToken);
+
+        return result;
     }
 }

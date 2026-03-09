@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0
+WORKDIR /app
+
+# Pre-restore packages for layer caching (source is volume-mounted at runtime)
+COPY qb-engineer.api/qb-engineer.api.csproj qb-engineer.api/
+COPY qb-engineer.core/qb-engineer.core.csproj qb-engineer.core/
+COPY qb-engineer.data/qb-engineer.data.csproj qb-engineer.data/
+COPY qb-engineer.integrations/qb-engineer.integrations.csproj qb-engineer.integrations/
+RUN dotnet restore qb-engineer.api/qb-engineer.api.csproj
+
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+ENV DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "qb-engineer.api", "--no-launch-profile"]
