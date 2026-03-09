@@ -1,0 +1,3 @@
+namespace QBEngineer.Core.Models;
+
+public record ActivityEntryResponseModel(string Icon, string IconColor, string Text, string Time);

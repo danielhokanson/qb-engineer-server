@@ -1,13 +1,15 @@
+using Microsoft.EntityFrameworkCore;
 using MediatR;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Dashboard;
 
 public record GetDashboardQuery : IRequest<DashboardResponseModel>;
 
-public class GetDashboardHandler(IDashboardRepository repo) : IRequestHandler<GetDashboardQuery, DashboardResponseModel>
+public class GetDashboardHandler(IDashboardRepository repo, AppDbContext db) : IRequestHandler<GetDashboardQuery, DashboardResponseModel>
 {
     public async Task<DashboardResponseModel> Handle(GetDashboardQuery request, CancellationToken cancellationToken)
     {
@@ -101,13 +103,27 @@ public class GetDashboardHandler(IDashboardRepository repo) : IRequestHandler<Ge
         var activeCount = data.Jobs.Count;
         var overdueCount = data.Jobs.Count(j => j.DueDate.HasValue && j.DueDate.Value.Date < today);
 
+        // Completed this week (ISO week: Monday to Sunday)
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+        if (today.DayOfWeek == DayOfWeek.Sunday) startOfWeek = startOfWeek.AddDays(-7);
+        var completedThisWeek = data.Jobs.Count(j => j.CompletedDate.HasValue && j.CompletedDate.Value.Date >= startOfWeek);
+
+        // Total hours this week from time entries
+        var weekStart = DateOnly.FromDateTime(startOfWeek);
+        var weekEnd = DateOnly.FromDateTime(today);
+        var totalMinutes = await db.TimeEntries
+            .Where(t => t.Date >= weekStart && t.Date <= weekEnd)
+            .SumAsync(t => t.DurationMinutes, cancellationToken);
+        var totalHoursValue = Math.Round((decimal)totalMinutes / 60, 1);
+        var hoursLabel = totalHoursValue >= 1 ? $"{totalHoursValue}h" : $"{totalMinutes}m";
+
         var kpis = new DashboardKPIsResponseModel(
             activeCount,
-            0,
+            completedThisWeek,
             overdueCount,
             0,
-            "0h",
-            "neutral");
+            hoursLabel,
+            totalHoursValue > 0 ? "up" : "neutral");
 
         return new DashboardResponseModel(tasks, stageCounts, teamMembers, activity, deadlines, kpis);
     }

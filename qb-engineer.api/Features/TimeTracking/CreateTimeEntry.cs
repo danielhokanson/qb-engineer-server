@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using QBEngineer.Core.Entities;
@@ -8,6 +9,16 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.TimeTracking;
 
 public record CreateTimeEntryCommand(CreateTimeEntryRequestModel Data) : IRequest<TimeEntryResponseModel>;
+
+public class CreateTimeEntryCommandValidator : AbstractValidator<CreateTimeEntryCommand>
+{
+    public CreateTimeEntryCommandValidator()
+    {
+        RuleFor(x => x.Data.DurationMinutes).InclusiveBetween(1, 1440).WithMessage("Duration must be between 1 and 1440 minutes.");
+        RuleFor(x => x.Data.Category).MaximumLength(100).When(x => x.Data.Category is not null);
+        RuleFor(x => x.Data.Notes).MaximumLength(1000).When(x => x.Data.Notes is not null);
+    }
+}
 
 public class CreateTimeEntryHandler(ITimeTrackingRepository repo, IHttpContextAccessor httpContext) : IRequestHandler<CreateTimeEntryCommand, TimeEntryResponseModel>
 {

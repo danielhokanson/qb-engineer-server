@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -6,12 +7,23 @@ namespace QBEngineer.Api.Features.Assets;
 
 public record UpdateAssetCommand(int Id, UpdateAssetRequestModel Data) : IRequest<AssetResponseModel>;
 
+public class UpdateAssetCommandValidator : AbstractValidator<UpdateAssetCommand>
+{
+    public UpdateAssetCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Data.Name).MaximumLength(200).When(x => x.Data.Name is not null);
+        RuleFor(x => x.Data.SerialNumber).MaximumLength(100).When(x => x.Data.SerialNumber is not null);
+        RuleFor(x => x.Data.Location).MaximumLength(200).When(x => x.Data.Location is not null);
+    }
+}
+
 public class UpdateAssetHandler(IAssetRepository repo) : IRequestHandler<UpdateAssetCommand, AssetResponseModel>
 {
     public async Task<AssetResponseModel> Handle(UpdateAssetCommand request, CancellationToken cancellationToken)
     {
         var asset = await repo.FindAsync(request.Id, cancellationToken)
-            ?? throw new InvalidOperationException("Asset not found.");
+            ?? throw new KeyNotFoundException("Asset not found.");
 
         var data = request.Data;
 

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Parts;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -63,6 +64,20 @@ public class PartsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<PartDetailResponseModel>> DeleteBOMEntry(int id, int bomEntryId)
     {
         var result = await mediator.Send(new DeleteBOMEntryCommand(id, bomEntryId));
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeletePart(int id)
+    {
+        await mediator.Send(new DeletePartCommand(id));
+        return NoContent();
+    }
+
+    [HttpGet("{id:int}/activity")]
+    public async Task<ActionResult<List<ActivityResponseModel>>> GetPartActivity(int id)
+    {
+        var result = await mediator.Send(new GetEntityActivityQuery("Part", id));
         return Ok(result);
     }
 }

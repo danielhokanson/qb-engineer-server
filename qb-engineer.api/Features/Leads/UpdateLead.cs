@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -6,12 +7,23 @@ namespace QBEngineer.Api.Features.Leads;
 
 public record UpdateLeadCommand(int Id, UpdateLeadRequestModel Data) : IRequest<LeadResponseModel>;
 
+public class UpdateLeadCommandValidator : AbstractValidator<UpdateLeadCommand>
+{
+    public UpdateLeadCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Data.CompanyName).MaximumLength(200).When(x => x.Data.CompanyName is not null);
+        RuleFor(x => x.Data.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Data.Email));
+        RuleFor(x => x.Data.Phone).MaximumLength(50).When(x => x.Data.Phone is not null);
+    }
+}
+
 public class UpdateLeadHandler(ILeadRepository repo) : IRequestHandler<UpdateLeadCommand, LeadResponseModel>
 {
     public async Task<LeadResponseModel> Handle(UpdateLeadCommand request, CancellationToken cancellationToken)
     {
         var lead = await repo.FindAsync(request.Id, cancellationToken)
-            ?? throw new InvalidOperationException("Lead not found.");
+            ?? throw new KeyNotFoundException("Lead not found.");
 
         var data = request.Data;
 

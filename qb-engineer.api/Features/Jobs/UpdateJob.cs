@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using QBEngineer.Api.Hubs;
@@ -15,6 +16,16 @@ public record UpdateJobCommand(
     int? CustomerId,
     JobPriority? Priority,
     DateTime? DueDate) : IRequest<JobDetailResponseModel>;
+
+public class UpdateJobCommandValidator : AbstractValidator<UpdateJobCommand>
+{
+    public UpdateJobCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Title).MaximumLength(200).When(x => x.Title is not null);
+        RuleFor(x => x.Description).MaximumLength(5000).When(x => x.Description is not null);
+    }
+}
 
 public class UpdateJobHandler(
     IJobRepository repo,

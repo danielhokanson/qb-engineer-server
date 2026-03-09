@@ -63,4 +63,18 @@ public class InventoryController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetMovementsQuery(locationId, entityType, entityId, take));
         return Ok(result);
     }
+
+    [HttpDelete("locations/{id:int}")]
+    public async Task<IActionResult> DeleteLocation(int id)
+    {
+        await mediator.Send(new DeleteStorageLocationCommand(id));
+        return NoContent();
+    }
+
+    [HttpDelete("bin-contents/{id:int}")]
+    public async Task<IActionResult> RemoveBinContent(int id)
+    {
+        await mediator.Send(new RemoveBinContentCommand(id));
+        return NoContent();
+    }
 }

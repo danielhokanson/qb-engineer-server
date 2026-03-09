@@ -66,4 +66,11 @@ public class TimeTrackingController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new CreateClockEventCommand(request));
         return Created($"/api/v1/time-tracking/clock-events/{result.Id}", result);
     }
+
+    [HttpDelete("entries/{id:int}")]
+    public async Task<IActionResult> DeleteTimeEntry(int id)
+    {
+        await mediator.Send(new DeleteTimeEntryCommand(id));
+        return NoContent();
+    }
 }

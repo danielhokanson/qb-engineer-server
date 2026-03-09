@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
@@ -6,6 +7,16 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Parts;
 
 public record CreateBOMEntryCommand(int ParentPartId, CreateBOMEntryRequestModel Data) : IRequest<PartDetailResponseModel>;
+
+public class CreateBOMEntryCommandValidator : AbstractValidator<CreateBOMEntryCommand>
+{
+    public CreateBOMEntryCommandValidator()
+    {
+        RuleFor(x => x.ParentPartId).GreaterThan(0);
+        RuleFor(x => x.Data.ChildPartId).GreaterThan(0);
+        RuleFor(x => x.Data.Quantity).GreaterThan(0);
+    }
+}
 
 public class CreateBOMEntryHandler(IPartRepository repo) : IRequestHandler<CreateBOMEntryCommand, PartDetailResponseModel>
 {

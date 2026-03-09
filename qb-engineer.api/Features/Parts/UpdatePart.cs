@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -5,6 +6,17 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Parts;
 
 public record UpdatePartCommand(int Id, UpdatePartRequestModel Data) : IRequest<PartDetailResponseModel>;
+
+public class UpdatePartCommandValidator : AbstractValidator<UpdatePartCommand>
+{
+    public UpdatePartCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Data.Description).MaximumLength(500).When(x => x.Data.Description is not null);
+        RuleFor(x => x.Data.Revision).MaximumLength(10).When(x => x.Data.Revision is not null);
+        RuleFor(x => x.Data.Material).MaximumLength(200).When(x => x.Data.Material is not null);
+    }
+}
 
 public class UpdatePartHandler(IPartRepository repo) : IRequestHandler<UpdatePartCommand, PartDetailResponseModel>
 {

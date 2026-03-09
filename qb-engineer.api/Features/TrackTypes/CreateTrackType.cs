@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
@@ -10,6 +11,16 @@ public record CreateTrackTypeCommand(
     string Code,
     string? Description,
     List<StageRequestModel> Stages) : IRequest<TrackTypeResponseModel>;
+
+public class CreateTrackTypeCommandValidator : AbstractValidator<CreateTrackTypeCommand>
+{
+    public CreateTrackTypeCommandValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Code).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Stages).NotEmpty().WithMessage("At least one stage is required.");
+    }
+}
 
 public class CreateTrackTypeHandler(
     ITrackTypeRepository repo) : IRequestHandler<CreateTrackTypeCommand, TrackTypeResponseModel>

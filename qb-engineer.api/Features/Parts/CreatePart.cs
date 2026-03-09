@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
@@ -13,6 +14,17 @@ public record CreatePartCommand(
     PartType PartType,
     string? Material,
     string? MoldToolRef) : IRequest<PartDetailResponseModel>;
+
+public class CreatePartCommandValidator : AbstractValidator<CreatePartCommand>
+{
+    public CreatePartCommandValidator()
+    {
+        RuleFor(x => x.PartNumber).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Description).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.Revision).MaximumLength(10).When(x => x.Revision is not null);
+        RuleFor(x => x.Material).MaximumLength(200).When(x => x.Material is not null);
+    }
+}
 
 public class CreatePartHandler(IPartRepository repo) : IRequestHandler<CreatePartCommand, PartDetailResponseModel>
 {

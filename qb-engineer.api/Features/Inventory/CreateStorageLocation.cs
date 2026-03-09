@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
@@ -6,6 +7,16 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Inventory;
 
 public record CreateStorageLocationCommand(CreateStorageLocationRequestModel Data) : IRequest<StorageLocationResponseModel>;
+
+public class CreateStorageLocationCommandValidator : AbstractValidator<CreateStorageLocationCommand>
+{
+    public CreateStorageLocationCommandValidator()
+    {
+        RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Data.Barcode).MaximumLength(100).When(x => x.Data.Barcode is not null);
+        RuleFor(x => x.Data.Description).MaximumLength(500).When(x => x.Data.Description is not null);
+    }
+}
 
 public class CreateStorageLocationHandler(IInventoryRepository repo) : IRequestHandler<CreateStorageLocationCommand, StorageLocationResponseModel>
 {
@@ -19,7 +30,7 @@ public class CreateStorageLocationHandler(IInventoryRepository repo) : IRequestH
         if (data.ParentId.HasValue)
         {
             var parent = await repo.FindLocationAsync(data.ParentId.Value, cancellationToken)
-                ?? throw new InvalidOperationException("Parent location not found.");
+                ?? throw new KeyNotFoundException("Parent location not found.");
         }
 
         var location = new StorageLocation

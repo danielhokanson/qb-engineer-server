@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Leads;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -46,6 +47,20 @@ public class LeadsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ConvertLeadResponseModel>> ConvertLead(int id, [FromQuery] bool createJob = false)
     {
         var result = await mediator.Send(new ConvertLeadCommand(id, createJob));
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteLead(int id)
+    {
+        await mediator.Send(new DeleteLeadCommand(id));
+        return NoContent();
+    }
+
+    [HttpGet("{id:int}/activity")]
+    public async Task<ActionResult<List<ActivityResponseModel>>> GetLeadActivity(int id)
+    {
+        var result = await mediator.Send(new GetEntityActivityQuery("Lead", id));
         return Ok(result);
     }
 }

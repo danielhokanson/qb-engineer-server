@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using QBEngineer.Api.Hubs;
@@ -11,6 +12,15 @@ public record CreateSubtaskCommand(
     int JobId,
     string Text,
     int? AssigneeId) : IRequest<SubtaskResponseModel>;
+
+public class CreateSubtaskCommandValidator : AbstractValidator<CreateSubtaskCommand>
+{
+    public CreateSubtaskCommandValidator()
+    {
+        RuleFor(x => x.JobId).GreaterThan(0);
+        RuleFor(x => x.Text).NotEmpty().MaximumLength(500);
+    }
+}
 
 public class CreateSubtaskHandler(
     ISubtaskRepository repo,

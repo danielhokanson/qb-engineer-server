@@ -1,0 +1,9 @@
+namespace QBEngineer.Core.Models;
+
+public record ReferenceDataResponseModel(
+    int Id,
+    string Code,
+    string Label,
+    int SortOrder,
+    bool IsActive,
+    string? Metadata);

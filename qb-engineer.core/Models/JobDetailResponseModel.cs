@@ -1,0 +1,26 @@
+namespace QBEngineer.Core.Models;
+
+public record JobDetailResponseModel(
+    int Id,
+    string JobNumber,
+    string Title,
+    string? Description,
+    int TrackTypeId,
+    string TrackTypeName,
+    int CurrentStageId,
+    string StageName,
+    string StageColor,
+    int? AssigneeId,
+    string? AssigneeInitials,
+    string? AssigneeName,
+    string? AssigneeColor,
+    string Priority,
+    int? CustomerId,
+    string? CustomerName,
+    DateTime? DueDate,
+    DateTime? StartDate,
+    DateTime? CompletedDate,
+    bool IsArchived,
+    int BoardPosition,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);

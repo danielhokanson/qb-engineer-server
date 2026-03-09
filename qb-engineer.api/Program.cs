@@ -113,6 +113,8 @@ try
     builder.Services.AddScoped<IJobLinkRepository, JobLinkRepository>();
     builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
     builder.Services.AddScoped<ITerminologyRepository, TerminologyRepository>();
+    builder.Services.AddScoped<IReportRepository, ReportRepository>();
+    builder.Services.AddScoped<ISearchRepository, SearchRepository>();
     builder.Services.AddHttpContextAccessor();
 
     // Integration services (mock or real based on config)

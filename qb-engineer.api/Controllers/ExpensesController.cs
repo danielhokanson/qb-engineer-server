@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Expenses;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -33,6 +34,20 @@ public class ExpensesController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ExpenseResponseModel>> UpdateExpenseStatus(int id, [FromBody] UpdateExpenseStatusRequestModel request)
     {
         var result = await mediator.Send(new UpdateExpenseStatusCommand(id, request));
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteExpense(int id)
+    {
+        await mediator.Send(new DeleteExpenseCommand(id));
+        return NoContent();
+    }
+
+    [HttpGet("{id:int}/activity")]
+    public async Task<ActionResult<List<ActivityResponseModel>>> GetExpenseActivity(int id)
+    {
+        var result = await mediator.Send(new GetEntityActivityQuery("Expense", id));
         return Ok(result);
     }
 }

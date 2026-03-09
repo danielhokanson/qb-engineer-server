@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -5,6 +6,17 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.TimeTracking;
 
 public record UpdateTimeEntryCommand(int Id, UpdateTimeEntryRequestModel Data) : IRequest<TimeEntryResponseModel>;
+
+public class UpdateTimeEntryCommandValidator : AbstractValidator<UpdateTimeEntryCommand>
+{
+    public UpdateTimeEntryCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Data.DurationMinutes).InclusiveBetween(1, 1440).When(x => x.Data.DurationMinutes.HasValue);
+        RuleFor(x => x.Data.Category).MaximumLength(100).When(x => x.Data.Category is not null);
+        RuleFor(x => x.Data.Notes).MaximumLength(1000).When(x => x.Data.Notes is not null);
+    }
+}
 
 public class UpdateTimeEntryHandler(ITimeTrackingRepository repo) : IRequestHandler<UpdateTimeEntryCommand, TimeEntryResponseModel>
 {

@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
@@ -6,6 +7,16 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Assets;
 
 public record CreateAssetCommand(CreateAssetRequestModel Data) : IRequest<AssetResponseModel>;
+
+public class CreateAssetCommandValidator : AbstractValidator<CreateAssetCommand>
+{
+    public CreateAssetCommandValidator()
+    {
+        RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Data.SerialNumber).MaximumLength(100).When(x => x.Data.SerialNumber is not null);
+        RuleFor(x => x.Data.Location).MaximumLength(200).When(x => x.Data.Location is not null);
+    }
+}
 
 public class CreateAssetHandler(IAssetRepository repo) : IRequestHandler<CreateAssetCommand, AssetResponseModel>
 {

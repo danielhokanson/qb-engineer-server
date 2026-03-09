@@ -36,6 +36,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<FileAttachment> FileAttachments => Set<FileAttachment>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<TerminologyEntry> TerminologyEntries => Set<TerminologyEntry>();
+    public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -46,6 +46,21 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
             await context.Response.WriteAsJsonAsync(problem);
         }
+        catch (InvalidOperationException ex)
+        {
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            context.Response.ContentType = "application/problem+json";
+
+            var problem = new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Conflict",
+                Detail = ex.Message,
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.10"
+            };
+
+            await context.Response.WriteAsJsonAsync(problem);
+        }
         catch (UnauthorizedAccessException ex)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;

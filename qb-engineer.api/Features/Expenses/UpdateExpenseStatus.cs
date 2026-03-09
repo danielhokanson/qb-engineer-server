@@ -13,7 +13,7 @@ public class UpdateExpenseStatusHandler(IExpenseRepository repo, IHttpContextAcc
     public async Task<ExpenseResponseModel> Handle(UpdateExpenseStatusCommand request, CancellationToken cancellationToken)
     {
         var expense = await repo.FindAsync(request.Id, cancellationToken)
-            ?? throw new InvalidOperationException("Expense not found.");
+            ?? throw new KeyNotFoundException("Expense not found.");
 
         var userId = int.Parse(httpContext.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
