@@ -21,6 +21,9 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using QBEngineer.Api.Jobs;
 using QuestPDF.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using QBEngineer.Api.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -199,11 +202,15 @@ try
     builder.Services.AddScoped<OverdueInvoiceJob>();
     builder.Services.AddScoped<ScheduledTaskJob>();
     builder.Services.AddScoped<DailyDigestJob>();
+    builder.Services.AddTransient<DatabaseBackupJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
         .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
-            name: "postgresql");
+            name: "postgresql")
+        .AddHangfire(options => { options.MinimumAvailableServers = 1; }, name: "hangfire")
+        .AddCheck<MinioHealthCheck>("minio")
+        .AddCheck<SignalRHealthCheck>("signalr");
 
     // Rate limiting
     builder.Services.AddRateLimiter(options =>
@@ -285,7 +292,26 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
-    app.MapHealthChecks("/api/v1/health");
+    app.MapHealthChecks("/api/v1/health", new HealthCheckOptions
+    {
+        ResponseWriter = async (context, report) =>
+        {
+            context.Response.ContentType = "application/json";
+            var result = new
+            {
+                status = report.Status.ToString(),
+                checks = report.Entries.Select(e => new
+                {
+                    name = e.Key,
+                    status = e.Value.Status.ToString(),
+                    description = e.Value.Description,
+                    duration = e.Value.Duration.TotalMilliseconds
+                }),
+                totalDuration = report.TotalDuration.TotalMilliseconds
+            };
+            await context.Response.WriteAsJsonAsync(result);
+        }
+    });
 
     // Hangfire dashboard + recurring jobs
     app.MapHangfireDashboard("/hangfire");
@@ -309,6 +335,10 @@ try
         "send-daily-digest",
         job => job.SendDailyDigestAsync(),
         Cron.Daily(7)); // 7 AM UTC daily
+    RecurringJob.AddOrUpdate<DatabaseBackupJob>(
+        "database-backup",
+        job => job.RunBackupAsync(),
+        Cron.Daily(3)); // 3 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

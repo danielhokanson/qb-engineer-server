@@ -1,0 +1,33 @@
+using Riok.Mapperly.Abstractions;
+
+using QBEngineer.Core.Entities;
+using QBEngineer.Core.Models;
+
+namespace QBEngineer.Api.Mappers;
+
+[Mapper]
+public static partial class CustomerMapper
+{
+    [MapperIgnoreSource(nameof(Customer.Contacts))]
+    [MapperIgnoreSource(nameof(Customer.Jobs))]
+    [MapperIgnoreSource(nameof(Customer.Addresses))]
+    [MapperIgnoreSource(nameof(Customer.SalesOrders))]
+    [MapperIgnoreSource(nameof(Customer.Quotes))]
+    [MapperIgnoreSource(nameof(Customer.Invoices))]
+    [MapperIgnoreSource(nameof(Customer.Payments))]
+    [MapperIgnoreSource(nameof(Customer.PriceLists))]
+    [MapperIgnoreSource(nameof(Customer.RecurringOrders))]
+    [MapperIgnoreSource(nameof(Customer.IsActive))]
+    [MapperIgnoreSource(nameof(Customer.ExternalId))]
+    [MapperIgnoreSource(nameof(Customer.ExternalRef))]
+    [MapperIgnoreSource(nameof(Customer.Provider))]
+    [MapperIgnoreSource(nameof(Customer.CompanyName))]
+    [MapperIgnoreSource(nameof(Customer.Email))]
+    [MapperIgnoreSource(nameof(Customer.Phone))]
+    [MapperIgnoreSource(nameof(BaseAuditableEntity.CreatedAt))]
+    [MapperIgnoreSource(nameof(BaseAuditableEntity.UpdatedAt))]
+    [MapperIgnoreSource(nameof(BaseAuditableEntity.DeletedAt))]
+    [MapperIgnoreSource(nameof(BaseAuditableEntity.DeletedBy))]
+    [MapperIgnoreSource(nameof(BaseAuditableEntity.IsDeleted))]
+    public static partial CustomerResponseModel ToResponseModel(this Customer customer);
+}
