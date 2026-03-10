@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using QBEngineer.Api.HealthChecks;
 using Scalar.AspNetCore;
+using QBEngineer.Api.Extensions;
 using Serilog;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -221,6 +222,9 @@ try
         builder.Services.AddSingleton<IShippingService, MockShippingService>();
         builder.Services.AddSingleton<IAiService, MockAiService>();
     }
+
+    // Resilient HTTP clients
+    builder.Services.AddResilientHttpClients();
 
     // MediatR
     builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
