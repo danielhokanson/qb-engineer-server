@@ -48,11 +48,25 @@ public class InvoicesController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:int}/email")]
+    public async Task<IActionResult> EmailInvoice(int id, SendInvoiceEmailRequestModel request)
+    {
+        await mediator.Send(new SendInvoiceEmailCommand(id, request.RecipientEmail));
+        return NoContent();
+    }
+
     [HttpPost("{id:int}/void")]
     public async Task<IActionResult> VoidInvoice(int id)
     {
         await mediator.Send(new VoidInvoiceCommand(id));
         return NoContent();
+    }
+
+    [HttpGet("{id:int}/pdf")]
+    public async Task<IActionResult> GetInvoicePdf(int id)
+    {
+        var pdf = await mediator.Send(new GenerateInvoicePdfQuery(id));
+        return File(pdf, "application/pdf", $"invoice-{id}.pdf");
     }
 
     [HttpDelete("{id:int}")]

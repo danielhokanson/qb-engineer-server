@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -13,6 +14,20 @@ public record UpdateSalesOrderCommand(
     string? CustomerPO,
     string? Notes,
     decimal? TaxRate) : IRequest;
+
+public class UpdateSalesOrderValidator : AbstractValidator<UpdateSalesOrderCommand>
+{
+    public UpdateSalesOrderValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.ShippingAddressId).GreaterThan(0).When(x => x.ShippingAddressId.HasValue);
+        RuleFor(x => x.BillingAddressId).GreaterThan(0).When(x => x.BillingAddressId.HasValue);
+        RuleFor(x => x.CreditTerms).MaximumLength(50).When(x => x.CreditTerms is not null);
+        RuleFor(x => x.CustomerPO).MaximumLength(100).When(x => x.CustomerPO is not null);
+        RuleFor(x => x.Notes).MaximumLength(2000).When(x => x.Notes is not null);
+        RuleFor(x => x.TaxRate).InclusiveBetween(0, 1).When(x => x.TaxRate.HasValue);
+    }
+}
 
 public class UpdateSalesOrderHandler(ISalesOrderRepository repo)
     : IRequestHandler<UpdateSalesOrderCommand>

@@ -17,4 +17,11 @@ public class DashboardController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetDashboardQuery());
         return Ok(result);
     }
+
+    [HttpGet("open-orders")]
+    public async Task<ActionResult<OpenOrdersSummaryModel>> GetOpenOrders()
+    {
+        var result = await mediator.Send(new GetOpenOrdersSummaryQuery());
+        return Ok(result);
+    }
 }

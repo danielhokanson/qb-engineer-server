@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using QBEngineer.Core.Models;
@@ -13,6 +14,20 @@ public record CreateAdminUserCommand(
     string? AvatarColor,
     string Password,
     string Role) : IRequest<AdminUserResponseModel>;
+
+public class CreateAdminUserValidator : AbstractValidator<CreateAdminUserCommand>
+{
+    public CreateAdminUserValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(256);
+        RuleFor(x => x.FirstName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Initials).MaximumLength(4).When(x => x.Initials is not null);
+        RuleFor(x => x.AvatarColor).MaximumLength(20).When(x => x.AvatarColor is not null);
+        RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(128);
+        RuleFor(x => x.Role).NotEmpty().MaximumLength(50);
+    }
+}
 
 public class CreateAdminUserHandler(UserManager<ApplicationUser> userManager)
     : IRequestHandler<CreateAdminUserCommand, AdminUserResponseModel>

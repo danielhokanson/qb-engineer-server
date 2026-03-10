@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,6 +10,20 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Notifications;
 
 public record CreateNotificationCommand(CreateNotificationRequestModel Data) : IRequest<NotificationResponseModel>;
+
+public class CreateNotificationValidator : AbstractValidator<CreateNotificationCommand>
+{
+    public CreateNotificationValidator()
+    {
+        RuleFor(x => x.Data.UserId).GreaterThan(0);
+        RuleFor(x => x.Data.Type).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Data.Severity).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.Data.Source).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Data.Title).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Data.Message).NotEmpty().MaximumLength(2000);
+        RuleFor(x => x.Data.EntityType).MaximumLength(50).When(x => x.Data.EntityType is not null);
+    }
+}
 
 public class CreateNotificationHandler(
     INotificationRepository repo,

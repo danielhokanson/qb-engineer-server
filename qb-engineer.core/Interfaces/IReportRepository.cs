@@ -16,4 +16,9 @@ public interface IReportRepository
     Task<List<CustomerActivityReportItem>> GetCustomerActivityAsync(CancellationToken ct);
     Task<List<MyWorkHistoryReportItem>> GetMyWorkHistoryAsync(int userId, CancellationToken ct);
     Task<List<MyTimeLogReportItem>> GetMyTimeLogAsync(int userId, DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+
+    // Financial reports
+    Task<List<ArAgingReportItem>> GetArAgingAsync(CancellationToken ct);
+    Task<List<RevenueReportItem>> GetRevenueAsync(DateTimeOffset start, DateTimeOffset end, string groupBy, CancellationToken ct);
+    Task<List<SimplePnlReportItem>> GetSimplePnlAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
 }

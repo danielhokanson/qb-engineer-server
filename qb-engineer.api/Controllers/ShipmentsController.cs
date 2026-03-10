@@ -54,6 +54,13 @@ public class ShipmentsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id:int}/packing-slip")]
+    public async Task<IActionResult> GetPackingSlip(int id)
+    {
+        var pdf = await mediator.Send(new GeneratePackingSlipPdfQuery(id));
+        return File(pdf, "application/pdf", $"packing-slip-{id}.pdf");
+    }
+
     [HttpPost("{id:int}/deliver")]
     public async Task<IActionResult> DeliverShipment(int id)
     {

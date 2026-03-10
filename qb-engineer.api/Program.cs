@@ -17,8 +17,14 @@ using QBEngineer.Data.Context;
 using QBEngineer.Data.Repositories;
 using QBEngineer.Integrations;
 using System.Threading.RateLimiting;
+using Hangfire;
+using Hangfire.PostgreSql;
+using QBEngineer.Api.Jobs;
+using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
 using Serilog;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -132,6 +138,7 @@ try
     // Integration services (mock or real based on config)
     var useMocks = builder.Configuration.GetValue<bool>("MockIntegrations");
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection(MinioOptions.SectionName));
+    builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 
     if (useMocks)
     {
@@ -139,11 +146,13 @@ try
         builder.Services.AddSingleton<IAccountingService, MockAccountingService>();
         builder.Services.AddSingleton<IShippingService, MockShippingService>();
         builder.Services.AddSingleton<IAiService, MockAiService>();
+        builder.Services.AddSingleton<IEmailService, MockEmailService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
     {
         builder.Services.AddSingleton<IStorageService, MinioStorageService>();
+        builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
         // Real accounting/shipping/AI services registered here when implemented
         builder.Services.AddSingleton<IAccountingService, MockAccountingService>();
         builder.Services.AddSingleton<IShippingService, MockShippingService>();
@@ -176,6 +185,18 @@ try
                 .AllowCredentials();
         });
     });
+
+    // Hangfire
+    builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(options =>
+            options.UseNpgsqlConnection(
+                builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty)));
+    builder.Services.AddHangfireServer();
+    builder.Services.AddScoped<RecurringOrderJob>();
+    builder.Services.AddScoped<OverdueInvoiceJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -263,6 +284,17 @@ try
 
     app.MapControllers();
     app.MapHealthChecks("/api/v1/health");
+
+    // Hangfire dashboard + recurring jobs
+    app.MapHangfireDashboard("/hangfire");
+    RecurringJob.AddOrUpdate<RecurringOrderJob>(
+        "generate-recurring-orders",
+        job => job.GenerateDueOrdersAsync(),
+        Cron.Daily(6)); // 6 AM UTC daily
+    RecurringJob.AddOrUpdate<OverdueInvoiceJob>(
+        "mark-overdue-invoices",
+        job => job.MarkOverdueInvoicesAsync(),
+        Cron.Daily(1)); // 1 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

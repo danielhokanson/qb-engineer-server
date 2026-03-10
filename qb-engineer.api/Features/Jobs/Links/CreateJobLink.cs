@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using QBEngineer.Api.Hubs;
@@ -12,6 +13,16 @@ public record CreateJobLinkCommand(
     int JobId,
     int TargetJobId,
     string LinkType) : IRequest<JobLinkResponseModel>;
+
+public class CreateJobLinkValidator : AbstractValidator<CreateJobLinkCommand>
+{
+    public CreateJobLinkValidator()
+    {
+        RuleFor(x => x.JobId).GreaterThan(0);
+        RuleFor(x => x.TargetJobId).GreaterThan(0);
+        RuleFor(x => x.LinkType).NotEmpty().MaximumLength(50);
+    }
+}
 
 public class CreateJobLinkHandler(
     IJobLinkRepository repo,

@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -5,6 +6,20 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.PlanningCycles;
 
 public record UpdateEntryOrderCommand(int CycleId, List<EntryOrderItem> Items) : IRequest;
+
+public class UpdateEntryOrderValidator : AbstractValidator<UpdateEntryOrderCommand>
+{
+    public UpdateEntryOrderValidator()
+    {
+        RuleFor(x => x.CycleId).GreaterThan(0);
+        RuleFor(x => x.Items).NotEmpty().WithMessage("At least one entry is required");
+        RuleForEach(x => x.Items).ChildRules(item =>
+        {
+            item.RuleFor(i => i.JobId).GreaterThan(0);
+            item.RuleFor(i => i.SortOrder).GreaterThanOrEqualTo(0);
+        });
+    }
+}
 
 public class UpdateEntryOrderHandler(IPlanningCycleRepository repo)
     : IRequestHandler<UpdateEntryOrderCommand>

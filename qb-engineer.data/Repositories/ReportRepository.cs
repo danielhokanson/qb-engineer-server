@@ -279,6 +279,119 @@ public class ReportRepository(AppDbContext db) : IReportRepository
             .ToListAsync(ct);
     }
 
+    // ─── Financial Reports ───
+
+    public async Task<List<ArAgingReportItem>> GetArAgingAsync(CancellationToken ct)
+    {
+        var today = DateTime.UtcNow.Date;
+
+        var invoices = await db.Invoices
+            .Include(i => i.Customer)
+            .Include(i => i.Lines)
+            .Include(i => i.PaymentApplications)
+            .Where(i => i.Status != QBEngineer.Core.Enums.InvoiceStatus.Voided
+                && i.Status != QBEngineer.Core.Enums.InvoiceStatus.Draft)
+            .ToListAsync(ct);
+
+        return invoices
+            .Where(i => i.BalanceDue > 0)
+            .Select(i =>
+            {
+                var daysOverdue = Math.Max(0, (int)(today - i.DueDate.Date).TotalDays);
+                var bucket = daysOverdue switch
+                {
+                    0 => "Current",
+                    <= 30 => "1-30 Days",
+                    <= 60 => "31-60 Days",
+                    <= 90 => "61-90 Days",
+                    _ => "90+ Days",
+                };
+
+                return new ArAgingReportItem(
+                    i.Id, i.InvoiceNumber, i.Customer.Name,
+                    i.InvoiceDate, i.DueDate,
+                    i.Total, i.AmountPaid, i.BalanceDue,
+                    daysOverdue, bucket);
+            })
+            .OrderByDescending(r => r.DaysOverdue)
+            .ToList();
+    }
+
+    public async Task<List<RevenueReportItem>> GetRevenueAsync(
+        DateTimeOffset start, DateTimeOffset end, string groupBy, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+
+        var invoices = await db.Invoices
+            .Include(i => i.Customer)
+            .Include(i => i.Lines)
+            .Include(i => i.PaymentApplications)
+            .Where(i => i.InvoiceDate >= startUtc && i.InvoiceDate <= endUtc
+                && i.Status != QBEngineer.Core.Enums.InvoiceStatus.Voided
+                && i.Status != QBEngineer.Core.Enums.InvoiceStatus.Draft)
+            .ToListAsync(ct);
+
+        if (groupBy == "customer")
+        {
+            return invoices
+                .GroupBy(i => i.Customer.Name)
+                .Select(g => new RevenueReportItem(
+                    g.Key, g.Key, g.Count(),
+                    g.Sum(i => i.Subtotal), g.Sum(i => i.TaxAmount),
+                    g.Sum(i => i.Total), g.Sum(i => i.AmountPaid)))
+                .OrderByDescending(r => r.Total)
+                .ToList();
+        }
+
+        // Default: group by month
+        return invoices
+            .GroupBy(i => new { i.InvoiceDate.Year, i.InvoiceDate.Month })
+            .Select(g => new RevenueReportItem(
+                new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
+                null, g.Count(),
+                g.Sum(i => i.Subtotal), g.Sum(i => i.TaxAmount),
+                g.Sum(i => i.Total), g.Sum(i => i.AmountPaid)))
+            .OrderBy(r => r.Period)
+            .ToList();
+    }
+
+    public async Task<List<SimplePnlReportItem>> GetSimplePnlAsync(
+        DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+        var result = new List<SimplePnlReportItem>();
+
+        // Revenue from invoices
+        var invoices = await db.Invoices
+            .Include(i => i.Lines)
+            .Where(i => i.InvoiceDate >= startUtc && i.InvoiceDate <= endUtc
+                && i.Status != QBEngineer.Core.Enums.InvoiceStatus.Voided
+                && i.Status != QBEngineer.Core.Enums.InvoiceStatus.Draft)
+            .ToListAsync(ct);
+
+        var totalRevenue = invoices.Sum(i => i.Subtotal);
+        var totalTax = invoices.Sum(i => i.TaxAmount);
+        result.Add(new SimplePnlReportItem("Sales Revenue", "Revenue", totalRevenue));
+        result.Add(new SimplePnlReportItem("Sales Tax Collected", "Revenue", totalTax));
+
+        // Expenses by category
+        var expenses = await db.Expenses
+            .Where(e => e.ExpenseDate >= startUtc && e.ExpenseDate <= endUtc
+                && e.Status == QBEngineer.Core.Enums.ExpenseStatus.Approved)
+            .GroupBy(e => e.Category)
+            .Select(g => new { Category = g.Key, Total = g.Sum(e => e.Amount) })
+            .ToListAsync(ct);
+
+        foreach (var expense in expenses.OrderByDescending(e => e.Total))
+        {
+            result.Add(new SimplePnlReportItem(expense.Category, "Expense", expense.Total));
+        }
+
+        return result;
+    }
+
     private static string? ExtractStageName(string description)
     {
         var prefix = "Moved to ";

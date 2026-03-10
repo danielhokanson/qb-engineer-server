@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using QBEngineer.Api.Hubs;
@@ -12,6 +13,17 @@ public record UpdateSubtaskCommand(
     string? Text,
     bool? IsCompleted,
     int? AssigneeId) : IRequest<SubtaskResponseModel>;
+
+public class UpdateSubtaskValidator : AbstractValidator<UpdateSubtaskCommand>
+{
+    public UpdateSubtaskValidator()
+    {
+        RuleFor(x => x.JobId).GreaterThan(0);
+        RuleFor(x => x.SubtaskId).GreaterThan(0);
+        RuleFor(x => x.Text).MaximumLength(500).When(x => x.Text is not null);
+        RuleFor(x => x.AssigneeId).GreaterThan(0).When(x => x.AssigneeId.HasValue);
+    }
+}
 
 public class UpdateSubtaskHandler(
     ISubtaskRepository repo,

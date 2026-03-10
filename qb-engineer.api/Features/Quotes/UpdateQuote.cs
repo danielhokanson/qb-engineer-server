@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -10,6 +11,17 @@ public record UpdateQuoteCommand(
     DateTime? ExpirationDate,
     string? Notes,
     decimal? TaxRate) : IRequest;
+
+public class UpdateQuoteValidator : AbstractValidator<UpdateQuoteCommand>
+{
+    public UpdateQuoteValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.ShippingAddressId).GreaterThan(0).When(x => x.ShippingAddressId.HasValue);
+        RuleFor(x => x.Notes).MaximumLength(2000).When(x => x.Notes is not null);
+        RuleFor(x => x.TaxRate).InclusiveBetween(0, 1).When(x => x.TaxRate.HasValue);
+    }
+}
 
 public class UpdateQuoteHandler(IQuoteRepository repo)
     : IRequestHandler<UpdateQuoteCommand>

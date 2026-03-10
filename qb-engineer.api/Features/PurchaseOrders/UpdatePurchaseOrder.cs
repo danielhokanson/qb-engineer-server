@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -5,6 +6,15 @@ using QBEngineer.Core.Interfaces;
 namespace QBEngineer.Api.Features.PurchaseOrders;
 
 public record UpdatePurchaseOrderCommand(int Id, string? Notes, DateTime? ExpectedDeliveryDate) : IRequest;
+
+public class UpdatePurchaseOrderValidator : AbstractValidator<UpdatePurchaseOrderCommand>
+{
+    public UpdatePurchaseOrderValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Notes).MaximumLength(2000).When(x => x.Notes is not null);
+    }
+}
 
 public class UpdatePurchaseOrderHandler(IPurchaseOrderRepository repo)
     : IRequestHandler<UpdatePurchaseOrderCommand>

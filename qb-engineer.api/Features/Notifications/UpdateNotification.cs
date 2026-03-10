@@ -1,5 +1,6 @@
 using System.Security.Claims;
 
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
@@ -8,6 +9,14 @@ using QBEngineer.Core.Interfaces;
 namespace QBEngineer.Api.Features.Notifications;
 
 public record UpdateNotificationCommand(int Id, bool? IsRead, bool? IsPinned, bool? IsDismissed) : IRequest;
+
+public class UpdateNotificationValidator : AbstractValidator<UpdateNotificationCommand>
+{
+    public UpdateNotificationValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+    }
+}
 
 public class UpdateNotificationHandler(
     INotificationRepository repo,

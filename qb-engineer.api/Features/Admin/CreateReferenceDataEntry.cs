@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Entities;
@@ -12,6 +13,17 @@ public record CreateReferenceDataCommand(
     string Label,
     int SortOrder,
     string? Metadata) : IRequest<ReferenceDataResponseModel>;
+
+public class CreateReferenceDataValidator : AbstractValidator<CreateReferenceDataCommand>
+{
+    public CreateReferenceDataValidator()
+    {
+        RuleFor(x => x.GroupCode).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Code).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Label).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.SortOrder).GreaterThanOrEqualTo(0);
+    }
+}
 
 public class CreateReferenceDataHandler(AppDbContext db)
     : IRequestHandler<CreateReferenceDataCommand, ReferenceDataResponseModel>

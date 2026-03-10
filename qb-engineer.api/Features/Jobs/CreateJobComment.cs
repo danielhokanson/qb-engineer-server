@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
@@ -12,6 +13,15 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Jobs;
 
 public record CreateJobCommentCommand(int JobId, string Comment) : IRequest<ActivityResponseModel>;
+
+public class CreateJobCommentValidator : AbstractValidator<CreateJobCommentCommand>
+{
+    public CreateJobCommentValidator()
+    {
+        RuleFor(x => x.JobId).GreaterThan(0);
+        RuleFor(x => x.Comment).NotEmpty().MaximumLength(5000);
+    }
+}
 
 public class CreateJobCommentHandler(
     IActivityLogRepository activityRepo,

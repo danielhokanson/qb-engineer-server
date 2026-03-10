@@ -27,6 +27,15 @@ public class JobsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("calendar.ics")]
+    public async Task<IActionResult> ExportCalendar(
+        [FromQuery] int? assigneeId,
+        [FromQuery] int? trackTypeId)
+    {
+        var ics = await mediator.Send(new ExportJobsCalendarQuery(assigneeId, trackTypeId));
+        return File(ics, "text/calendar", "jobs.ics");
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<JobDetailResponseModel>> GetJob(int id)
     {

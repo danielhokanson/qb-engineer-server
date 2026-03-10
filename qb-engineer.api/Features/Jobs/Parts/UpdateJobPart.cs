@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Models;
@@ -10,6 +11,17 @@ public record UpdateJobPartCommand(
     int JobPartId,
     decimal Quantity,
     string? Notes) : IRequest<JobPartResponseModel>;
+
+public class UpdateJobPartValidator : AbstractValidator<UpdateJobPartCommand>
+{
+    public UpdateJobPartValidator()
+    {
+        RuleFor(x => x.JobId).GreaterThan(0);
+        RuleFor(x => x.JobPartId).GreaterThan(0);
+        RuleFor(x => x.Quantity).GreaterThan(0);
+        RuleFor(x => x.Notes).MaximumLength(2000).When(x => x.Notes is not null);
+    }
+}
 
 public class UpdateJobPartHandler(AppDbContext db) : IRequestHandler<UpdateJobPartCommand, JobPartResponseModel>
 {

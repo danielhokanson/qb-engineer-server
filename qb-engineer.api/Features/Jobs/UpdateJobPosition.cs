@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using QBEngineer.Api.Hubs;
@@ -7,6 +8,15 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Jobs;
 
 public record UpdateJobPositionCommand(int JobId, int Position) : IRequest<Unit>;
+
+public class UpdateJobPositionValidator : AbstractValidator<UpdateJobPositionCommand>
+{
+    public UpdateJobPositionValidator()
+    {
+        RuleFor(x => x.JobId).GreaterThan(0);
+        RuleFor(x => x.Position).GreaterThanOrEqualTo(0);
+    }
+}
 
 public class UpdateJobPositionHandler(
     IJobRepository repo,

@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using QBEngineer.Core.Models;
@@ -13,6 +14,19 @@ public record UpdateAdminUserCommand(
     string? AvatarColor,
     bool? IsActive,
     string? Role) : IRequest<AdminUserResponseModel>;
+
+public class UpdateAdminUserValidator : AbstractValidator<UpdateAdminUserCommand>
+{
+    public UpdateAdminUserValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.FirstName).MaximumLength(100).When(x => x.FirstName is not null);
+        RuleFor(x => x.LastName).MaximumLength(100).When(x => x.LastName is not null);
+        RuleFor(x => x.Initials).MaximumLength(4).When(x => x.Initials is not null);
+        RuleFor(x => x.AvatarColor).MaximumLength(20).When(x => x.AvatarColor is not null);
+        RuleFor(x => x.Role).MaximumLength(50).When(x => x.Role is not null);
+    }
+}
 
 public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager)
     : IRequestHandler<UpdateAdminUserCommand, AdminUserResponseModel>

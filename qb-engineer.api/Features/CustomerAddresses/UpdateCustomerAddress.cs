@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -15,6 +16,22 @@ public record UpdateCustomerAddressCommand(
     string PostalCode,
     string Country,
     bool IsDefault) : IRequest;
+
+public class UpdateCustomerAddressValidator : AbstractValidator<UpdateCustomerAddressCommand>
+{
+    public UpdateCustomerAddressValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Label).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.AddressType).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Line1).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Line2).MaximumLength(200).When(x => x.Line2 is not null);
+        RuleFor(x => x.City).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.State).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.PostalCode).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.Country).NotEmpty().MaximumLength(100);
+    }
+}
 
 public class UpdateCustomerAddressHandler(ICustomerAddressRepository repo)
     : IRequestHandler<UpdateCustomerAddressCommand>

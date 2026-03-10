@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Models;
@@ -11,6 +12,16 @@ public record UpdateReferenceDataCommand(
     int? SortOrder,
     bool? IsActive,
     string? Metadata) : IRequest<ReferenceDataResponseModel>;
+
+public class UpdateReferenceDataValidator : AbstractValidator<UpdateReferenceDataCommand>
+{
+    public UpdateReferenceDataValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Label).MaximumLength(200).When(x => x.Label is not null);
+        RuleFor(x => x.SortOrder).GreaterThanOrEqualTo(0).When(x => x.SortOrder.HasValue);
+    }
+}
 
 public class UpdateReferenceDataHandler(AppDbContext db)
     : IRequestHandler<UpdateReferenceDataCommand, ReferenceDataResponseModel>

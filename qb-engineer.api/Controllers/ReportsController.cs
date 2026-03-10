@@ -98,4 +98,30 @@ public class ReportsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetMyTimeLogQuery(start, end));
         return Ok(result);
     }
+
+    // ─── Financial Reports ───
+
+    [HttpGet("ar-aging")]
+    public async Task<ActionResult<List<ArAgingReportItem>>> GetArAging()
+    {
+        var result = await mediator.Send(new GetArAgingReportQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("revenue")]
+    public async Task<ActionResult<List<RevenueReportItem>>> GetRevenue(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end,
+        [FromQuery] string groupBy = "period")
+    {
+        var result = await mediator.Send(new GetRevenueReportQuery(start, end, groupBy));
+        return Ok(result);
+    }
+
+    [HttpGet("simple-pnl")]
+    public async Task<ActionResult<List<SimplePnlReportItem>>> GetSimplePnl(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetSimplePnlReportQuery(start, end));
+        return Ok(result);
+    }
 }
