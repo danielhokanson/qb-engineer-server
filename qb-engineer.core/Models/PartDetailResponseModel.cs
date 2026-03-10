@@ -16,6 +16,8 @@ public record PartDetailResponseModel(
     string? Provider,
     int? PreferredVendorId,
     string? PreferredVendorName,
+    decimal? MinStockThreshold,
+    decimal? ReorderPoint,
     List<BOMEntryResponseModel> BomEntries,
     List<BOMUsageResponseModel> UsedIn,
     DateTime CreatedAt,

@@ -95,6 +95,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.Provider,
             part.PreferredVendorId,
             part.PreferredVendor?.CompanyName,
+            part.MinStockThreshold,
+            part.ReorderPoint,
             bomEntries,
             usedIn,
             part.CreatedAt,

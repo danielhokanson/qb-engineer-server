@@ -1,6 +1,13 @@
+using System.Security.Claims;
+
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 using QBEngineer.Api.Features.Auth;
 
 namespace QBEngineer.Api.Controllers;
@@ -64,4 +71,87 @@ public class AuthController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(command);
         return Ok(result);
     }
+
+    [HttpGet("sso/providers")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSsoProviders()
+        => Ok(await mediator.Send(new GetSsoProvidersQuery()));
+
+    [HttpGet("sso/{provider}/login")]
+    [AllowAnonymous]
+    public IActionResult SsoLogin(string provider, [FromQuery] string? returnUrl)
+    {
+        var scheme = ResolveScheme(provider);
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = $"/api/v1/auth/sso/{provider}/callback",
+        };
+
+        return Challenge(properties, scheme);
+    }
+
+    [HttpGet("sso/{provider}/callback")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SsoCallback(string provider)
+    {
+        // Authenticate against the temporary cookie set during the OAuth round-trip
+        var result = await HttpContext.AuthenticateAsync("SsoExternalCookie");
+
+        if (!result.Succeeded)
+            return Redirect("/sso/callback?error=sso_failed");
+
+        var externalId = result.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? throw new InvalidOperationException("No external ID found in SSO claims");
+        var email = result.Principal?.FindFirst(ClaimTypes.Email)?.Value
+            ?? throw new InvalidOperationException("No email found in SSO claims");
+
+        try
+        {
+            var loginResponse = await mediator.Send(new SsoCallbackCommand(provider, externalId, email));
+
+            // Clean up the temporary external cookie
+            await HttpContext.SignOutAsync("SsoExternalCookie");
+
+            return Redirect($"/sso/callback?sso_token={loginResponse.Token}");
+        }
+        catch (InvalidOperationException)
+        {
+            await HttpContext.SignOutAsync("SsoExternalCookie");
+            return Redirect("/sso/callback?error=no_account");
+        }
+    }
+
+    [HttpPost("sso/link")]
+    [Authorize]
+    public async Task<IActionResult> LinkSso([FromBody] LinkSsoIdentityCommand command)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Send(command with { UserId = userId });
+        return NoContent();
+    }
+
+    [HttpDelete("sso/unlink/{provider}")]
+    [Authorize]
+    public async Task<IActionResult> UnlinkSso(string provider)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Send(new UnlinkSsoIdentityCommand(userId, provider));
+        return NoContent();
+    }
+
+    [HttpGet("sso/linked")]
+    [Authorize]
+    public async Task<IActionResult> GetLinkedProviders()
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        return Ok(await mediator.Send(new GetLinkedSsoProvidersQuery(userId)));
+    }
+
+    private static string ResolveScheme(string provider) => provider switch
+    {
+        "google" => GoogleDefaults.AuthenticationScheme,
+        "microsoft" => MicrosoftAccountDefaults.AuthenticationScheme,
+        "oidc" => OpenIdConnectDefaults.AuthenticationScheme,
+        _ => throw new InvalidOperationException($"Unknown SSO provider: {provider}")
+    };
 }

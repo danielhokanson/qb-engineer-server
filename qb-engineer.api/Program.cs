@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -63,7 +66,7 @@ try
 
     // JWT Authentication
     var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-secret-key-change-in-production-min-32-chars!!";
-    builder.Services.AddAuthentication(options =>
+    var authBuilder = builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -96,6 +99,63 @@ try
             }
         };
     });
+
+    // SSO Configuration (optional — each provider independently enabled)
+    var ssoOptions = builder.Configuration.GetSection("Sso").Get<SsoOptions>() ?? new SsoOptions();
+    builder.Services.Configure<SsoOptions>(builder.Configuration.GetSection("Sso"));
+    var anySsoEnabled = ssoOptions.Google.Enabled || ssoOptions.Microsoft.Enabled || ssoOptions.Oidc.Enabled;
+
+    if (anySsoEnabled)
+    {
+        // Add a temporary cookie scheme for the OAuth redirect flow
+        // (JWT is the default auth scheme; this cookie is only used during SSO round-trip)
+        authBuilder.AddCookie("SsoExternalCookie", options =>
+        {
+            options.Cookie.Name = "qbe-sso-ext";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+        });
+    }
+
+    if (ssoOptions.Google.Enabled)
+    {
+        authBuilder.AddGoogle(options =>
+        {
+            options.ClientId = ssoOptions.Google.ClientId;
+            options.ClientSecret = ssoOptions.Google.ClientSecret;
+            options.SignInScheme = "SsoExternalCookie";
+        });
+        Log.Information("SSO: Google authentication enabled");
+    }
+
+    if (ssoOptions.Microsoft.Enabled)
+    {
+        authBuilder.AddMicrosoftAccount(options =>
+        {
+            options.ClientId = ssoOptions.Microsoft.ClientId;
+            options.ClientSecret = ssoOptions.Microsoft.ClientSecret;
+            options.SignInScheme = "SsoExternalCookie";
+        });
+        Log.Information("SSO: Microsoft authentication enabled");
+    }
+
+    if (ssoOptions.Oidc.Enabled)
+    {
+        authBuilder.AddOpenIdConnect(options =>
+        {
+            options.Authority = ssoOptions.Oidc.Authority;
+            options.ClientId = ssoOptions.Oidc.ClientId;
+            options.ClientSecret = ssoOptions.Oidc.ClientSecret;
+            options.ResponseType = "code";
+            options.SaveTokens = true;
+            options.GetClaimsFromUserInfoEndpoint = true;
+            options.Scope.Add("email");
+            options.Scope.Add("profile");
+            options.SignInScheme = "SsoExternalCookie";
+        });
+        Log.Information("SSO: OIDC authentication enabled ({DisplayName})", ssoOptions.Oidc.DisplayName ?? "Generic");
+    }
 
     builder.Services.AddAuthorization();
 

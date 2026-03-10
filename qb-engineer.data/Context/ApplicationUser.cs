@@ -21,4 +21,10 @@ public class ApplicationUser : IdentityUser<int>
 
     // Barcode for kiosk scan
     public string? EmployeeBarcode { get; set; }
+
+    // SSO identity linking
+    public string? GoogleId { get; set; }
+    public string? MicrosoftId { get; set; }
+    public string? OidcSubjectId { get; set; }
+    public string? OidcProvider { get; set; }
 }

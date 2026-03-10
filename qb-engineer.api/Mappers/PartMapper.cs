@@ -31,6 +31,8 @@ public static partial class PartMapper
             Provider: part.Provider,
             PreferredVendorId: part.PreferredVendorId,
             PreferredVendorName: part.PreferredVendor?.CompanyName,
+            MinStockThreshold: part.MinStockThreshold,
+            ReorderPoint: part.ReorderPoint,
             BomEntries: bomEntries ?? [],
             UsedIn: usedIn ?? [],
             CreatedAt: part.CreatedAt,
