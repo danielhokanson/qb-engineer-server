@@ -29,6 +29,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using QBEngineer.Api.HealthChecks;
 using Scalar.AspNetCore;
 using QBEngineer.Api.Extensions;
+using QBEngineer.Api.Services;
 using Serilog;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -197,6 +198,7 @@ try
     builder.Services.AddScoped<IPriceListRepository, PriceListRepository>();
     builder.Services.AddScoped<IRecurringOrderRepository, RecurringOrderRepository>();
     builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
+    builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddHttpContextAccessor();
 
     // Integration services (mock or real based on config)
@@ -293,25 +295,33 @@ try
 
     var app = builder.Build();
 
-    // Database initialization
+    // Database initialization (skip migrations for in-memory provider used in integration tests)
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var recreateDb = builder.Configuration.GetValue<bool>("RECREATE_DB");
 
-        if (recreateDb)
+        if (db.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
         {
-            Log.Information("RECREATE_DB=true — dropping and recreating database...");
-            await db.Database.EnsureDeletedAsync();
-            await db.Database.MigrateAsync();
-            Log.Information("Database recreated successfully");
-
-            // Seed default data
-            await SeedData.SeedAsync(scope.ServiceProvider);
+            await db.Database.EnsureCreatedAsync();
         }
         else
         {
-            await db.Database.MigrateAsync();
+            var recreateDb = builder.Configuration.GetValue<bool>("RECREATE_DB");
+
+            if (recreateDb)
+            {
+                Log.Information("RECREATE_DB=true — dropping and recreating database...");
+                await db.Database.EnsureDeletedAsync();
+                await db.Database.MigrateAsync();
+                Log.Information("Database recreated successfully");
+
+                // Seed default data
+                await SeedData.SeedAsync(scope.ServiceProvider);
+            }
+            else
+            {
+                await db.Database.MigrateAsync();
+            }
         }
     }
 
@@ -421,3 +431,6 @@ finally
 {
     await Log.CloseAndFlushAsync();
 }
+
+// Make Program accessible to integration tests via WebApplicationFactory
+public partial class Program { }
