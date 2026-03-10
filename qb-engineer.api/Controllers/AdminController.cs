@@ -102,6 +102,36 @@ public class AdminController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // ── Logo ──
+
+    [AllowAnonymous]
+    [HttpGet("logo")]
+    public async Task<IActionResult> GetLogo()
+    {
+        var result = await mediator.Send(new GetLogoQuery());
+        if (result == null) return NotFound();
+        return File(result.Stream, result.ContentType);
+    }
+
+    [HttpPost("logo")]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    public async Task<IActionResult> UploadLogo(IFormFile file)
+    {
+        if (file.Length == 0) return BadRequest("No file provided");
+        if (!file.ContentType.StartsWith("image/")) return BadRequest("File must be an image");
+
+        await using var stream = file.OpenReadStream();
+        await mediator.Send(new UploadLogoCommand(stream, file.ContentType));
+        return NoContent();
+    }
+
+    [HttpDelete("logo")]
+    public async Task<IActionResult> DeleteLogo()
+    {
+        await mediator.Send(new DeleteLogoCommand());
+        return NoContent();
+    }
+
     // ── System Settings ──
 
     [HttpGet("system-settings")]
@@ -115,6 +145,85 @@ public class AdminController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<List<SystemSettingResponseModel>>> UpsertSystemSettings(UpsertSystemSettingsCommand command)
     {
         var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    // ── Setup Token & Invite ──
+
+    [HttpPost("users/{id:int}/setup-token")]
+    public async Task<ActionResult<SetupTokenResponseModel>> GenerateSetupToken(int id)
+    {
+        var result = await mediator.Send(new GenerateSetupTokenCommand(id));
+        return Ok(result);
+    }
+
+    [HttpPost("users/{id:int}/send-invite")]
+    public async Task<IActionResult> SendSetupInvite(int id, [FromQuery] string baseUrl)
+    {
+        await mediator.Send(new SendSetupInviteCommand(id, baseUrl));
+        return NoContent();
+    }
+
+    [HttpPost("users/{id:int}/reset-pin")]
+    public async Task<IActionResult> ResetUserPin(int id)
+    {
+        await mediator.Send(new ResetUserPinCommand(id));
+        return NoContent();
+    }
+
+    // ── User Lifecycle ──
+
+    [HttpPost("users/{id:int}/deactivate")]
+    public async Task<IActionResult> DeactivateUser(int id)
+    {
+        await mediator.Send(new DeactivateUserCommand(id));
+        return NoContent();
+    }
+
+    [HttpPost("users/{id:int}/reactivate")]
+    public async Task<IActionResult> ReactivateUser(int id)
+    {
+        await mediator.Send(new ReactivateUserCommand(id));
+        return NoContent();
+    }
+
+    // ── Employee Documents / Certifications ──
+
+    [HttpGet("users/{id:int}/documents")]
+    public async Task<ActionResult<List<EmployeeDocumentResponseModel>>> GetEmployeeDocuments(int id)
+    {
+        var result = await mediator.Send(new GetEmployeeDocumentsQuery(id));
+        return Ok(result);
+    }
+
+    // ── Audit Log ──
+
+    [HttpGet("audit-log")]
+    public async Task<ActionResult<PaginatedResult<AuditLogEntryResponseModel>>> GetAuditLog(
+        [FromQuery] int? userId, [FromQuery] string? action, [FromQuery] string? entityType,
+        [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 25)
+    {
+        var result = await mediator.Send(new GetAuditLogQuery(userId, action, entityType, from, to, page, pageSize));
+        return Ok(result);
+    }
+
+    // ── Storage Usage ──
+
+    [HttpGet("storage-usage")]
+    public async Task<ActionResult<List<StorageUsageResponseModel>>> GetStorageUsage()
+    {
+        var result = await mediator.Send(new GetStorageUsageQuery());
+        return Ok(result);
+    }
+
+    // ── Accounting Mode ──
+
+    [AllowAnonymous]
+    [HttpGet("accounting-mode")]
+    public async Task<ActionResult<AccountingModeResponseModel>> GetAccountingMode()
+    {
+        var result = await mediator.Send(new GetAccountingModeQuery());
         return Ok(result);
     }
 }

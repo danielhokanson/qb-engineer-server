@@ -25,5 +25,16 @@ public interface IInventoryRepository
     // Movement history
     Task<List<BinMovementResponseModel>> GetMovementsAsync(int? locationId, string? entityType, int? entityId, int take, CancellationToken ct);
 
+    // Receiving
+    Task<List<ReceivingRecordResponseModel>> GetReceivingHistoryAsync(int? purchaseOrderId, int? partId, int take, CancellationToken ct);
+
+    // Transfer / Adjust
+    Task<BinContent?> FindBinContentWithLocationAsync(int id, CancellationToken ct);
+
+    // Cycle counts
+    Task<CycleCount?> FindCycleCountAsync(int id, CancellationToken ct);
+    Task<List<CycleCountResponseModel>> GetCycleCountsAsync(int? locationId, string? status, CancellationToken ct);
+    Task AddCycleCountAsync(CycleCount cycleCount, CancellationToken ct);
+
     Task SaveChangesAsync(CancellationToken ct);
 }

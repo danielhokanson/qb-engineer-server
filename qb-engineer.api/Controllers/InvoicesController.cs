@@ -75,4 +75,34 @@ public class InvoicesController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteInvoiceCommand(id));
         return NoContent();
     }
+
+    [HttpGet("uninvoiced-jobs")]
+    public async Task<ActionResult<List<UninvoicedJobResponseModel>>> GetUninvoicedJobs()
+    {
+        var result = await mediator.Send(new GetUninvoicedJobsQuery());
+        return Ok(result);
+    }
+
+    [HttpPost("from-job/{jobId:int}")]
+    public async Task<ActionResult<InvoiceListItemModel>> CreateInvoiceFromJob(int jobId)
+    {
+        var result = await mediator.Send(new CreateInvoiceFromJobCommand(jobId));
+        return CreatedAtAction(nameof(GetInvoice), new { id = result.Id }, result);
+    }
+
+    [HttpGet("queue-settings")]
+    [Authorize(Roles = "Admin,Manager,OfficeManager")]
+    public async Task<ActionResult<InvoiceQueueSettingsResponse>> GetQueueSettings()
+    {
+        var result = await mediator.Send(new GetInvoiceQueueSettingsQuery());
+        return Ok(result);
+    }
+
+    [HttpPut("queue-settings")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateQueueSettings(UpdateInvoiceQueueSettingsCommand command)
+    {
+        await mediator.Send(command);
+        return NoContent();
+    }
 }

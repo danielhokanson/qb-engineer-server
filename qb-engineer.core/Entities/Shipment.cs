@@ -19,5 +19,6 @@ public class Shipment : BaseAuditableEntity
     public SalesOrder SalesOrder { get; set; } = null!;
     public CustomerAddress? ShippingAddress { get; set; }
     public ICollection<ShipmentLine> Lines { get; set; } = [];
+    public ICollection<ShipmentPackage> Packages { get; set; } = [];
     public Invoice? Invoice { get; set; }
 }

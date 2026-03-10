@@ -1,0 +1,15 @@
+namespace QBEngineer.Core.Models;
+
+public record ScheduledTaskResponseModel(
+    int Id,
+    string Name,
+    string? Description,
+    int TrackTypeId,
+    string TrackTypeName,
+    int? InternalProjectTypeId,
+    int? AssigneeId,
+    string CronExpression,
+    bool IsActive,
+    DateTime? LastRunAt,
+    DateTime? NextRunAt,
+    DateTime CreatedAt);

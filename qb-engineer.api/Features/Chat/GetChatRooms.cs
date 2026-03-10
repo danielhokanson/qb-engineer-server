@@ -1,0 +1,41 @@
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+
+namespace QBEngineer.Api.Features.Chat;
+
+public record GetChatRoomsQuery(int UserId) : IRequest<List<ChatRoomResponseModel>>;
+
+public class GetChatRoomsHandler(AppDbContext db) : IRequestHandler<GetChatRoomsQuery, List<ChatRoomResponseModel>>
+{
+    public async Task<List<ChatRoomResponseModel>> Handle(GetChatRoomsQuery request, CancellationToken ct)
+    {
+        var rooms = await db.Set<Core.Entities.ChatRoom>()
+            .Include(r => r.Members)
+            .Where(r => r.Members.Any(m => m.UserId == request.UserId))
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync(ct);
+
+        var allUserIds = rooms.SelectMany(r => r.Members.Select(m => m.UserId)).Distinct().ToList();
+        var users = await db.Users
+            .Where(u => allUserIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, ct);
+
+        return rooms.Select(r => new ChatRoomResponseModel(
+            r.Id,
+            r.Name,
+            r.IsGroup,
+            r.CreatedById,
+            r.CreatedAt,
+            r.Members.Select(m =>
+            {
+                var u = users.GetValueOrDefault(m.UserId);
+                return new ChatRoomMemberResponseModel(
+                    m.UserId,
+                    u != null ? (u.FirstName + " " + u.LastName).Trim() : "Unknown",
+                    u?.Initials ?? "??",
+                    u?.AvatarColor ?? "#94a3b8");
+            }).ToList())).ToList();
+    }
+}

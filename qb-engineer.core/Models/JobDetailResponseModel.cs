@@ -22,5 +22,7 @@ public record JobDetailResponseModel(
     DateTime? CompletedDate,
     bool IsArchived,
     int BoardPosition,
+    int IterationCount,
+    string? IterationNotes,
     DateTime CreatedAt,
     DateTime UpdatedAt);

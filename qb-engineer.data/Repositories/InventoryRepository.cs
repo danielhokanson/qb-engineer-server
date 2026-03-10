@@ -222,6 +222,113 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
         }).ToList();
     }
 
+    public async Task<List<ReceivingRecordResponseModel>> GetReceivingHistoryAsync(
+        int? purchaseOrderId, int? partId, int take, CancellationToken ct)
+    {
+        var query = db.ReceivingRecords
+            .Include(r => r.PurchaseOrderLine)
+                .ThenInclude(l => l.PurchaseOrder)
+            .Include(r => r.PurchaseOrderLine)
+                .ThenInclude(l => l.Part)
+            .Include(r => r.StorageLocation)
+            .AsQueryable();
+
+        if (purchaseOrderId.HasValue)
+            query = query.Where(r => r.PurchaseOrderLine.PurchaseOrderId == purchaseOrderId.Value);
+
+        if (partId.HasValue)
+            query = query.Where(r => r.PurchaseOrderLine.PartId == partId.Value);
+
+        var records = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(take)
+            .ToListAsync(ct);
+
+        return records.Select(r => new ReceivingRecordResponseModel(
+            r.Id,
+            r.PurchaseOrderLineId,
+            r.PurchaseOrderLine.PurchaseOrder.PONumber,
+            r.PurchaseOrderLine.PartId,
+            r.PurchaseOrderLine.Part.PartNumber,
+            r.QuantityReceived,
+            r.ReceivedBy,
+            r.StorageLocationId,
+            r.StorageLocation?.Name,
+            null,
+            r.Notes,
+            r.CreatedAt
+        )).ToList();
+    }
+
+    public Task<BinContent?> FindBinContentWithLocationAsync(int id, CancellationToken ct)
+        => db.BinContents.Include(c => c.Location).FirstOrDefaultAsync(c => c.Id == id && c.RemovedAt == null, ct);
+
+    public async Task<CycleCount?> FindCycleCountAsync(int id, CancellationToken ct)
+        => await db.CycleCounts
+            .Include(c => c.Location)
+            .Include(c => c.Lines)
+            .FirstOrDefaultAsync(c => c.Id == id, ct);
+
+    public async Task<List<CycleCountResponseModel>> GetCycleCountsAsync(
+        int? locationId, string? status, CancellationToken ct)
+    {
+        var query = db.CycleCounts
+            .Include(c => c.Location)
+            .Include(c => c.Lines)
+            .AsQueryable();
+
+        if (locationId.HasValue)
+            query = query.Where(c => c.LocationId == locationId.Value);
+
+        if (!string.IsNullOrWhiteSpace(status))
+            query = query.Where(c => c.Status == status);
+
+        var counts = await query
+            .OrderByDescending(c => c.CountedAt)
+            .ToListAsync(ct);
+
+        var userIds = counts.Select(c => c.CountedById).Distinct().ToList();
+        var users = await db.Users.Where(u => userIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, ct);
+
+        var partIds = counts.SelectMany(c => c.Lines)
+            .Where(l => l.EntityType == "part")
+            .Select(l => l.EntityId)
+            .Distinct()
+            .ToList();
+        var parts = await db.Parts.Where(p => partIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
+
+        return counts.Select(c => new CycleCountResponseModel(
+            c.Id,
+            c.LocationId,
+            c.Location.Name,
+            c.CountedById,
+            users.TryGetValue(c.CountedById, out var user) ? $"{user.FirstName} {user.LastName}" : "Unknown",
+            c.CountedAt,
+            c.Status,
+            c.Notes,
+            c.Lines.Select(l => new CycleCountLineResponseModel(
+                l.Id,
+                l.BinContentId,
+                l.EntityType,
+                l.EntityId,
+                l.EntityType == "part" && parts.TryGetValue(l.EntityId, out var part)
+                    ? $"{part.PartNumber} — {part.Description}"
+                    : $"{l.EntityType}:{l.EntityId}",
+                l.ExpectedQuantity,
+                l.ActualQuantity,
+                l.Variance,
+                l.Notes
+            )).ToList(),
+            c.CreatedAt
+        )).ToList();
+    }
+
+    public async Task AddCycleCountAsync(CycleCount cycleCount, CancellationToken ct)
+    {
+        await db.CycleCounts.AddAsync(cycleCount, ct);
+        await db.SaveChangesAsync(ct);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct)
         => db.SaveChangesAsync(ct);
 }

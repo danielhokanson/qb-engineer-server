@@ -10,4 +10,6 @@ public record FileAttachmentResponseModel(
     int EntityId,
     int UploadedById,
     string UploadedByName,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    int? PartRevisionId,
+    string? RequiredRole);

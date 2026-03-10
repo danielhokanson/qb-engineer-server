@@ -124,4 +124,110 @@ public class ReportsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetSimplePnlReportQuery(start, end));
         return Ok(result);
     }
+
+    // ─── Additional Reports ───
+
+    [HttpGet("my-expense-history")]
+    public async Task<ActionResult<List<MyExpenseHistoryReportItem>>> GetMyExpenseHistory(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetMyExpenseHistoryQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("quote-to-close")]
+    public async Task<ActionResult<List<QuoteToCloseReportItem>>> GetQuoteToClose(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetQuoteToCloseReportQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("shipping-summary")]
+    public async Task<ActionResult<List<ShippingSummaryReportItem>>> GetShippingSummary(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetShippingSummaryReportQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("time-in-stage")]
+    public async Task<ActionResult<List<TimeInStageReportItem>>> GetTimeInStage([FromQuery] int? trackTypeId)
+    {
+        var result = await mediator.Send(new GetTimeInStageReportQuery(trackTypeId));
+        return Ok(result);
+    }
+
+    // ─── Batch 4 Reports ───
+
+    [HttpGet("employee-productivity")]
+    public async Task<ActionResult<List<EmployeeProductivityReportItem>>> GetEmployeeProductivity(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetEmployeeProductivityReportQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("inventory-levels")]
+    public async Task<ActionResult<List<InventoryLevelReportItem>>> GetInventoryLevels()
+    {
+        var result = await mediator.Send(new GetInventoryLevelsReportQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("maintenance")]
+    public async Task<ActionResult<List<MaintenanceReportItem>>> GetMaintenance(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetMaintenanceReportQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("quality-scrap")]
+    public async Task<ActionResult<List<QualityScrapReportItem>>> GetQualityScrap(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetQualityScrapReportQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("cycle-review")]
+    public async Task<ActionResult<List<CycleReviewReportItem>>> GetCycleReview()
+    {
+        var result = await mediator.Send(new GetCycleReviewReportQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("job-margin")]
+    public async Task<ActionResult<List<JobMarginReportItem>>> GetJobMargin(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetJobMarginReportQuery(start, end));
+        return Ok(result);
+    }
+
+    // ─── Batch 5 Reports ───
+
+    [HttpGet("my-cycle-summary")]
+    public async Task<ActionResult<List<MyCycleSummaryReportItem>>> GetMyCycleSummary()
+    {
+        var result = await mediator.Send(new GetMyCycleSummaryReportQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("lead-sales")]
+    public async Task<ActionResult<LeadSalesReportItem>> GetLeadSales(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetLeadSalesReportQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("rd")]
+    public async Task<ActionResult<List<RdReportItem>>> GetRdReport(
+        [FromQuery] DateTimeOffset? start, [FromQuery] DateTimeOffset? end)
+    {
+        var result = await mediator.Send(new GetRdReportQuery(start, end));
+        return Ok(result);
+    }
 }

@@ -67,4 +67,36 @@ public class ShipmentsController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeliverShipmentCommand(id));
         return NoContent();
     }
+
+    // ── Packages ──
+
+    [HttpGet("{id:int}/packages")]
+    public async Task<ActionResult<List<ShipmentPackageResponseModel>>> GetPackages(int id)
+    {
+        var result = await mediator.Send(new GetShipmentPackagesQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/packages")]
+    public async Task<ActionResult<ShipmentPackageResponseModel>> AddPackage(int id, AddShipmentPackageCommand command)
+    {
+        var cmd = command with { ShipmentId = id };
+        var result = await mediator.Send(cmd);
+        return CreatedAtAction(nameof(GetPackages), new { id }, result);
+    }
+
+    [HttpPatch("{id:int}/packages/{packageId:int}")]
+    public async Task<ActionResult<ShipmentPackageResponseModel>> UpdatePackage(int id, int packageId, UpdateShipmentPackageCommand command)
+    {
+        var cmd = command with { ShipmentId = id, PackageId = packageId };
+        var result = await mediator.Send(cmd);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}/packages/{packageId:int}")]
+    public async Task<IActionResult> RemovePackage(int id, int packageId)
+    {
+        await mediator.Send(new RemoveShipmentPackageCommand(id, packageId));
+        return NoContent();
+    }
 }

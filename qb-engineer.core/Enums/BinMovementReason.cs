@@ -9,5 +9,7 @@ public enum BinMovementReason
     Ship,
     Move,
     Adjustment,
-    Return
+    Return,
+    Transfer,
+    CycleCount
 }

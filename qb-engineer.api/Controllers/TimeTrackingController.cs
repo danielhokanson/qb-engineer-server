@@ -73,4 +73,21 @@ public class TimeTrackingController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteTimeEntryCommand(id));
         return NoContent();
     }
+
+    // ─── Pay Period ───
+
+    [HttpGet("pay-period")]
+    public async Task<ActionResult<PayPeriodResponseModel>> GetCurrentPayPeriod()
+    {
+        var result = await mediator.Send(new GetCurrentPayPeriodQuery());
+        return Ok(result);
+    }
+
+    [HttpPut("pay-period/settings")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdatePayPeriodSettings([FromBody] UpdatePayPeriodSettingsCommand command)
+    {
+        await mediator.Send(command);
+        return NoContent();
+    }
 }

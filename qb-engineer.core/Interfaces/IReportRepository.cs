@@ -21,4 +21,17 @@ public interface IReportRepository
     Task<List<ArAgingReportItem>> GetArAgingAsync(CancellationToken ct);
     Task<List<RevenueReportItem>> GetRevenueAsync(DateTimeOffset start, DateTimeOffset end, string groupBy, CancellationToken ct);
     Task<List<SimplePnlReportItem>> GetSimplePnlAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+
+    // Additional reports
+    Task<List<MyExpenseHistoryReportItem>> GetMyExpenseHistoryAsync(int userId, DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+    Task<List<QuoteToCloseReportItem>> GetQuoteToCloseAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+    Task<List<ShippingSummaryReportItem>> GetShippingSummaryAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+    Task<List<TimeInStageReportItem>> GetTimeInStageAsync(int? trackTypeId, CancellationToken ct);
+
+    // Batch 4 reports
+    Task<List<EmployeeProductivityReportItem>> GetEmployeeProductivityAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+    Task<List<InventoryLevelReportItem>> GetInventoryLevelsAsync(CancellationToken ct);
+    Task<List<MaintenanceReportItem>> GetMaintenanceAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+    Task<List<QualityScrapReportItem>> GetQualityScrapAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
+    Task<List<CycleReviewReportItem>> GetCycleReviewAsync(CancellationToken ct);
 }

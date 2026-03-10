@@ -74,6 +74,21 @@ public class PartsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id:int}/revisions")]
+    public async Task<ActionResult<List<PartRevisionResponseModel>>> GetPartRevisions(int id)
+    {
+        var result = await mediator.Send(new GetPartRevisionsQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/revisions")]
+    public async Task<ActionResult<PartRevisionResponseModel>> CreatePartRevision(int id, [FromBody] CreatePartRevisionRequestModel request)
+    {
+        var result = await mediator.Send(new CreatePartRevisionCommand(
+            id, request.Revision, request.ChangeDescription, request.ChangeReason, request.EffectiveDate));
+        return Created($"/api/v1/parts/{id}/revisions/{result.Id}", result);
+    }
+
     [HttpGet("{id:int}/activity")]
     public async Task<ActionResult<List<ActivityResponseModel>>> GetPartActivity(int id)
     {

@@ -17,9 +17,17 @@ public class Part : BaseAuditableEntity
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
 
+    // Preferred vendor
+    public int? PreferredVendorId { get; set; }
+
+    // Inventory thresholds
+    public decimal? MinStockThreshold { get; set; }
+    public decimal? ReorderPoint { get; set; }
+
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 
+    public Vendor? PreferredVendor { get; set; }
     public ICollection<BOMEntry> BOMEntries { get; set; } = [];
     public ICollection<BOMEntry> UsedInBOM { get; set; } = [];
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];

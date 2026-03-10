@@ -14,6 +14,8 @@ public record PartDetailResponseModel(
     string? ExternalId,
     string? ExternalRef,
     string? Provider,
+    int? PreferredVendorId,
+    string? PreferredVendorName,
     List<BOMEntryResponseModel> BomEntries,
     List<BOMUsageResponseModel> UsedIn,
     DateTime CreatedAt,

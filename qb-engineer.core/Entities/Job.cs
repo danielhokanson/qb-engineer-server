@@ -24,6 +24,14 @@ public class Job : BaseAuditableEntity
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
 
+    // R&D iteration tracking
+    public int IterationCount { get; set; }
+    public string? IterationNotes { get; set; }
+
+    // Internal projects
+    public bool IsInternal { get; set; }
+    public int? InternalProjectTypeId { get; set; }
+
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 

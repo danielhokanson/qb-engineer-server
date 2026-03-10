@@ -65,6 +65,46 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<PriceListEntry> PriceListEntries => Set<PriceListEntry>();
     public DbSet<RecurringOrder> RecurringOrders => Set<RecurringOrder>();
     public DbSet<RecurringOrderLine> RecurringOrderLines => Set<RecurringOrderLine>();
+    public DbSet<CustomerReturn> CustomerReturns => Set<CustomerReturn>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
+    public DbSet<ChatRoomMember> ChatRoomMembers => Set<ChatRoomMember>();
+
+    // Asset Maintenance
+    public DbSet<MaintenanceSchedule> MaintenanceSchedules => Set<MaintenanceSchedule>();
+    public DbSet<MaintenanceLog> MaintenanceLogs => Set<MaintenanceLog>();
+
+    // Production
+    public DbSet<ProductionRun> ProductionRuns => Set<ProductionRun>();
+
+    // Part Revisions
+    public DbSet<PartRevision> PartRevisions => Set<PartRevision>();
+
+    // Downtime
+    public DbSet<DowntimeLog> DowntimeLogs => Set<DowntimeLog>();
+
+    // Sales Tax
+    public DbSet<SalesTaxRate> SalesTaxRates => Set<SalesTaxRate>();
+
+    // Quality & Traceability
+    public DbSet<QcChecklistTemplate> QcChecklistTemplates => Set<QcChecklistTemplate>();
+    public DbSet<QcChecklistItem> QcChecklistItems => Set<QcChecklistItem>();
+    public DbSet<QcInspection> QcInspections => Set<QcInspection>();
+    public DbSet<QcInspectionResult> QcInspectionResults => Set<QcInspectionResult>();
+    public DbSet<LotRecord> LotRecords => Set<LotRecord>();
+
+    // Cycle Counts
+    public DbSet<CycleCount> CycleCounts => Set<CycleCount>();
+    public DbSet<CycleCountLine> CycleCountLines => Set<CycleCountLine>();
+
+    // Audit
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    // Shipment Packages
+    public DbSet<ShipmentPackage> ShipmentPackages => Set<ShipmentPackage>();
+
+    // Scheduled Tasks
+    public DbSet<ScheduledTask> ScheduledTasks => Set<ScheduledTask>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

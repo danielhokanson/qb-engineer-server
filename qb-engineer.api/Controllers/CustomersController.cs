@@ -87,4 +87,11 @@ public class CustomersController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetEntityActivityQuery("Customer", id));
         return Ok(result);
     }
+
+    [HttpGet("{id:int}/statement")]
+    public async Task<IActionResult> GetStatement(int id)
+    {
+        var pdf = await mediator.Send(new GenerateCustomerStatementQuery(id));
+        return File(pdf, "application/pdf", $"statement-{id}.pdf");
+    }
 }

@@ -16,6 +16,21 @@ public class SystemSettingRepository(AppDbContext db) : ISystemSettingRepository
     public async Task AddAsync(SystemSetting setting, CancellationToken ct)
         => await db.SystemSettings.AddAsync(setting, ct);
 
+    public async Task UpsertAsync(string key, string value, string? description, CancellationToken ct)
+    {
+        var existing = await db.SystemSettings.FirstOrDefaultAsync(s => s.Key == key, ct);
+        if (existing != null)
+        {
+            existing.Value = value;
+            if (description != null) existing.Description = description;
+        }
+        else
+        {
+            await db.SystemSettings.AddAsync(new SystemSetting { Key = key, Value = value, Description = description }, ct);
+        }
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task SaveChangesAsync(CancellationToken ct)
         => await db.SaveChangesAsync(ct);
 }

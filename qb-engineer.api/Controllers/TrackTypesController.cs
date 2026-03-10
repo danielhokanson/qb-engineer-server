@@ -24,4 +24,20 @@ public class TrackTypesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetTrackTypeByIdQuery(id));
         return Ok(result);
     }
+
+    [HttpGet("{id:int}/custom-fields")]
+    public async Task<ActionResult<List<CustomFieldDefinitionModel>>> GetCustomFieldDefinitions(int id)
+    {
+        var result = await mediator.Send(new GetCustomFieldDefinitionsQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPut("{id:int}/custom-fields")]
+    public async Task<ActionResult<List<CustomFieldDefinitionModel>>> UpdateCustomFieldDefinitions(
+        int id, UpdateCustomFieldDefinitionsCommand command)
+    {
+        var cmd = command with { TrackTypeId = id };
+        var result = await mediator.Send(cmd);
+        return Ok(result);
+    }
 }

@@ -21,5 +21,11 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
         builder.Property(e => e.CustomFieldValues).HasColumnType("jsonb");
+
+        builder.HasIndex(e => e.PreferredVendorId);
+        builder.HasOne(e => e.PreferredVendor)
+            .WithMany()
+            .HasForeignKey(e => e.PreferredVendorId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

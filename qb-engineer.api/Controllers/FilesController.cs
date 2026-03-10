@@ -34,6 +34,13 @@ public class FilesController(IMediator mediator) : ControllerBase
         return File(result.Stream, result.ContentType, result.FileName);
     }
 
+    [HttpGet("parts/{partId:int}/revisions/{revisionId:int}/files")]
+    public async Task<ActionResult<List<FileAttachmentResponseModel>>> GetFilesByRevision(int partId, int revisionId)
+    {
+        var result = await mediator.Send(new GetFilesByRevisionQuery(partId, revisionId));
+        return Ok(result);
+    }
+
     [HttpDelete("files/{id:int}")]
     public async Task<IActionResult> DeleteFile(int id)
     {

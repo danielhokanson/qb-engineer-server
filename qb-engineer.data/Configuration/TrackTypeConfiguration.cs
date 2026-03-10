@@ -14,5 +14,6 @@ public class TrackTypeConfiguration : IEntityTypeConfiguration<TrackType>
         builder.Property(e => e.Name).HasMaxLength(100);
         builder.Property(e => e.Code).HasMaxLength(50);
         builder.Property(e => e.Description).HasMaxLength(500);
+        builder.Property(e => e.CustomFieldDefinitions).HasColumnType("jsonb");
     }
 }

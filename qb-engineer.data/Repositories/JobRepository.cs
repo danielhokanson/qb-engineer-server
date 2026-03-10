@@ -35,6 +35,9 @@ public class JobRepository(AppDbContext db) : IJobRepository
         }
 
         var jobs = await query
+            .Include(j => j.SalesOrderLine)
+                .ThenInclude(sol => sol!.SalesOrder)
+                    .ThenInclude(so => so.Invoices)
             .OrderBy(j => j.CurrentStage.SortOrder)
             .ThenBy(j => j.BoardPosition)
             .ToListAsync(ct);
@@ -55,6 +58,13 @@ public class JobRepository(AppDbContext db) : IJobRepository
         return jobs.Select(j =>
         {
             var assignee = j.AssigneeId.HasValue && assignees.TryGetValue(j.AssigneeId.Value, out var u) ? u : null;
+            string? billingStatus = null;
+            if (j.CompletedDate != null)
+            {
+                var hasInvoice = j.SalesOrderLine?.SalesOrder?.Invoices?.Any() == true;
+                billingStatus = hasInvoice ? "Invoiced" : "Uninvoiced";
+            }
+
             return new JobListResponseModel(
                 j.Id,
                 j.JobNumber,
@@ -66,7 +76,8 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 j.Priority.ToString(),
                 j.DueDate,
                 j.DueDate.HasValue && j.DueDate.Value < DateTime.UtcNow && j.CompletedDate == null,
-                j.Customer?.Name);
+                j.Customer?.Name,
+                billingStatus);
         }).ToList();
     }
 
@@ -106,6 +117,8 @@ public class JobRepository(AppDbContext db) : IJobRepository
             job.CompletedDate,
             job.IsArchived,
             job.BoardPosition,
+            job.IterationCount,
+            job.IterationNotes,
             job.CreatedAt,
             job.UpdatedAt);
     }

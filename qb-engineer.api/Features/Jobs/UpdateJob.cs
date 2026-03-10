@@ -15,7 +15,9 @@ public record UpdateJobCommand(
     int? AssigneeId,
     int? CustomerId,
     JobPriority? Priority,
-    DateTime? DueDate) : IRequest<JobDetailResponseModel>;
+    DateTime? DueDate,
+    int? IterationCount,
+    string? IterationNotes) : IRequest<JobDetailResponseModel>;
 
 public class UpdateJobCommandValidator : AbstractValidator<UpdateJobCommand>
 {
@@ -54,6 +56,12 @@ public class UpdateJobHandler(
 
         if (request.DueDate.HasValue)
             job.DueDate = request.DueDate.Value;
+
+        if (request.IterationCount.HasValue)
+            job.IterationCount = request.IterationCount.Value;
+
+        if (request.IterationNotes is not null)
+            job.IterationNotes = request.IterationNotes;
 
         await repo.SaveChangesAsync(cancellationToken);
 

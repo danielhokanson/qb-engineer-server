@@ -1,0 +1,32 @@
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using QBEngineer.Api.Features.ScheduledTasks;
+using QBEngineer.Data.Context;
+
+namespace QBEngineer.Api.Jobs;
+
+public class ScheduledTaskJob(AppDbContext db, IMediator mediator, ILogger<ScheduledTaskJob> logger)
+{
+    public async Task RunDueTasksAsync()
+    {
+        var now = DateTime.UtcNow;
+        var dueTasks = await db.ScheduledTasks
+            .Where(t => t.IsActive && t.DeletedAt == null && t.NextRunAt <= now)
+            .ToListAsync();
+
+        logger.LogInformation("Found {Count} scheduled tasks due for execution", dueTasks.Count);
+
+        foreach (var task in dueTasks)
+        {
+            try
+            {
+                var jobId = await mediator.Send(new RunScheduledTaskCommand(task.Id));
+                logger.LogInformation("Scheduled task {TaskId} ({Name}) created job {JobId}", task.Id, task.Name, jobId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to run scheduled task {TaskId} ({Name})", task.Id, task.Name);
+            }
+        }
+    }
+}

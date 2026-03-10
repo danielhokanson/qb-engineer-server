@@ -50,4 +50,20 @@ public class ExpensesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetEntityActivityQuery("Expense", id));
         return Ok(result);
     }
+
+    [HttpGet("settings")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<ExpenseSettingsResponse>> GetSettings()
+    {
+        var result = await mediator.Send(new GetExpenseSettingsQuery());
+        return Ok(result);
+    }
+
+    [HttpPut("settings")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateSettings([FromBody] UpdateExpenseSettingsCommand command)
+    {
+        await mediator.Send(command);
+        return NoContent();
+    }
 }

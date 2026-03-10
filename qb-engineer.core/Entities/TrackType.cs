@@ -9,6 +9,9 @@ public class TrackType : BaseAuditableEntity
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
 
+    // Custom field definitions (JSONB)
+    public string? CustomFieldDefinitions { get; set; }
+
     public ICollection<JobStage> Stages { get; set; } = [];
     public ICollection<Job> Jobs { get; set; } = [];
 }

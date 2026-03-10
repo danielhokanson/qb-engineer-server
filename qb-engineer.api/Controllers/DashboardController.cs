@@ -24,4 +24,18 @@ public class DashboardController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetOpenOrdersSummaryQuery());
         return Ok(result);
     }
+
+    [HttpGet("margin-summary")]
+    public async Task<ActionResult<MarginSummaryResponseModel>> GetMarginSummary()
+    {
+        var result = await mediator.Send(new GetMarginSummaryQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("layout")]
+    public async Task<ActionResult<DashboardLayoutResponseModel>> GetDefaultLayout()
+    {
+        var result = await mediator.Send(new GetDefaultDashboardLayoutQuery());
+        return Ok(result);
+    }
 }

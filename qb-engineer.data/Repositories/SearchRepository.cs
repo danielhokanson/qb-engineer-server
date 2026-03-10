@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -12,64 +13,79 @@ public class SearchRepository(AppDbContext db) : ISearchRepository
         var perEntity = Math.Max(limit / 4, 3);
         var results = new List<SearchResultModel>();
 
-        var pattern = $"%{term}%";
+        // Use full-text search (tsvector + plainto_tsquery) with ILIKE fallback for partial matches
+        // GIN indexes on search_vector columns provide O(log n) performance
+        var sql = """
+            (SELECT 'Job' AS entity_type, id AS entity_id, job_number AS title,
+                    title AS subtitle, 'work' AS icon, '/kanban' AS url,
+                    ts_rank(search_vector, plainto_tsquery('english', @term)) AS rank
+             FROM jobs
+             WHERE deleted_at IS NULL AND is_archived = false
+               AND (search_vector @@ plainto_tsquery('english', @term)
+                    OR job_number ILIKE @pattern OR title ILIKE @pattern)
+             ORDER BY rank DESC, updated_at DESC LIMIT @per)
+            UNION ALL
+            (SELECT 'Customer', id, name, company_name, 'people', '/customers',
+                    ts_rank(search_vector, plainto_tsquery('english', @term))
+             FROM customers
+             WHERE deleted_at IS NULL
+               AND (search_vector @@ plainto_tsquery('english', @term)
+                    OR name ILIKE @pattern OR company_name ILIKE @pattern)
+             ORDER BY ts_rank(search_vector, plainto_tsquery('english', @term)) DESC LIMIT @per)
+            UNION ALL
+            (SELECT 'Part', id, part_number, description, 'inventory_2', '/parts',
+                    ts_rank(search_vector, plainto_tsquery('english', @term))
+             FROM parts
+             WHERE deleted_at IS NULL
+               AND (search_vector @@ plainto_tsquery('english', @term)
+                    OR part_number ILIKE @pattern OR description ILIKE @pattern)
+             ORDER BY ts_rank(search_vector, plainto_tsquery('english', @term)) DESC LIMIT @per)
+            UNION ALL
+            (SELECT 'Lead', id, company_name, contact_name, 'trending_up', '/leads',
+                    ts_rank(search_vector, plainto_tsquery('english', @term))
+             FROM leads
+             WHERE deleted_at IS NULL
+               AND (search_vector @@ plainto_tsquery('english', @term)
+                    OR company_name ILIKE @pattern OR contact_name ILIKE @pattern)
+             ORDER BY ts_rank(search_vector, plainto_tsquery('english', @term)) DESC LIMIT @per)
+            UNION ALL
+            (SELECT 'Asset', id, name, serial_number, 'precision_manufacturing', '/assets',
+                    ts_rank(search_vector, plainto_tsquery('english', @term))
+             FROM assets
+             WHERE deleted_at IS NULL
+               AND (search_vector @@ plainto_tsquery('english', @term)
+                    OR name ILIKE @pattern OR serial_number ILIKE @pattern)
+             ORDER BY ts_rank(search_vector, plainto_tsquery('english', @term)) DESC LIMIT @per)
+            UNION ALL
+            (SELECT 'Expense', id, description, category, 'receipt_long', '/expenses',
+                    ts_rank(search_vector, plainto_tsquery('english', @term))
+             FROM expenses
+             WHERE deleted_at IS NULL
+               AND (search_vector @@ plainto_tsquery('english', @term)
+                    OR description ILIKE @pattern OR category ILIKE @pattern)
+             ORDER BY ts_rank(search_vector, plainto_tsquery('english', @term)) DESC LIMIT @per)
+            """;
 
-        // Jobs
-        var jobs = await db.Jobs
-            .Where(j => !j.IsArchived &&
-                (EF.Functions.ILike(j.Title, pattern) || EF.Functions.ILike(j.JobNumber, pattern)))
-            .OrderByDescending(j => EF.Functions.ILike(j.JobNumber, pattern))
-            .ThenByDescending(j => j.UpdatedAt)
-            .Take(perEntity)
-            .Select(j => new SearchResultModel("Job", j.Id, j.JobNumber, j.Title, "work", "/kanban"))
-            .ToListAsync(ct);
-        results.AddRange(jobs);
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync(ct);
 
-        // Customers
-        var customers = await db.Customers
-            .Where(c => EF.Functions.ILike(c.Name, pattern) ||
-                (c.CompanyName != null && EF.Functions.ILike(c.CompanyName, pattern)) ||
-                (c.Email != null && EF.Functions.ILike(c.Email, pattern)))
-            .Take(perEntity)
-            .Select(c => new SearchResultModel("Customer", c.Id, c.Name, c.CompanyName, "people", "/customers"))
-            .ToListAsync(ct);
-        results.AddRange(customers);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.Add(new NpgsqlParameter("term", term));
+        command.Parameters.Add(new NpgsqlParameter("pattern", $"%{term}%"));
+        command.Parameters.Add(new NpgsqlParameter("per", perEntity));
 
-        // Parts
-        var parts = await db.Parts
-            .Where(p => EF.Functions.ILike(p.PartNumber, pattern) ||
-                (p.Description != null && EF.Functions.ILike(p.Description, pattern)))
-            .Take(perEntity)
-            .Select(p => new SearchResultModel("Part", p.Id, p.PartNumber, p.Description, "inventory_2", "/parts"))
-            .ToListAsync(ct);
-        results.AddRange(parts);
-
-        // Leads
-        var leads = await db.Leads
-            .Where(l => EF.Functions.ILike(l.CompanyName, pattern) ||
-                (l.ContactName != null && EF.Functions.ILike(l.ContactName, pattern)) ||
-                (l.Email != null && EF.Functions.ILike(l.Email, pattern)))
-            .Take(perEntity)
-            .Select(l => new SearchResultModel("Lead", l.Id, l.CompanyName, l.ContactName, "trending_up", "/leads"))
-            .ToListAsync(ct);
-        results.AddRange(leads);
-
-        // Assets
-        var assets = await db.Assets
-            .Where(a => EF.Functions.ILike(a.Name, pattern) ||
-                (a.SerialNumber != null && EF.Functions.ILike(a.SerialNumber, pattern)))
-            .Take(perEntity)
-            .Select(a => new SearchResultModel("Asset", a.Id, a.Name, a.SerialNumber, "precision_manufacturing", "/assets"))
-            .ToListAsync(ct);
-        results.AddRange(assets);
-
-        // Expenses
-        var expenses = await db.Expenses
-            .Where(e => EF.Functions.ILike(e.Description, pattern) || EF.Functions.ILike(e.Category, pattern))
-            .Take(perEntity)
-            .Select(e => new SearchResultModel("Expense", e.Id, e.Description, e.Category, "receipt_long", "/expenses"))
-            .ToListAsync(ct);
-        results.AddRange(expenses);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            results.Add(new SearchResultModel(
+                reader.GetString(0),
+                reader.GetInt32(1),
+                reader.GetString(2),
+                reader.IsDBNull(3) ? null : reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5)));
+        }
 
         return results.Take(limit).ToList();
     }

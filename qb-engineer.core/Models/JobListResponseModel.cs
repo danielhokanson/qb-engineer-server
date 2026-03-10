@@ -11,4 +11,5 @@ public record JobListResponseModel(
     string PriorityName,
     DateTime? DueDate,
     bool IsOverdue,
-    string? CustomerName);
+    string? CustomerName,
+    string? BillingStatus);

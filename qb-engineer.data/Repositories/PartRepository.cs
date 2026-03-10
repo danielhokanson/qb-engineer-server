@@ -51,6 +51,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
         var part = await db.Parts
             .Include(p => p.BOMEntries).ThenInclude(b => b.ChildPart)
             .Include(p => p.UsedInBOM).ThenInclude(b => b.ParentPart)
+            .Include(p => p.PreferredVendor)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
         if (part is null)
@@ -92,6 +93,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.ExternalId,
             part.ExternalRef,
             part.Provider,
+            part.PreferredVendorId,
+            part.PreferredVendor?.CompanyName,
             bomEntries,
             usedIn,
             part.CreatedAt,

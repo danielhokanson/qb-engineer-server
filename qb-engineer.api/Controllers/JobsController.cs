@@ -5,6 +5,7 @@ using QBEngineer.Api.Features.Jobs;
 using QBEngineer.Api.Features.Jobs.Bulk;
 using QBEngineer.Api.Features.Jobs.Links;
 using QBEngineer.Api.Features.Jobs.Parts;
+using QBEngineer.Api.Features.Jobs.ProductionRuns;
 using QBEngineer.Api.Features.Jobs.Subtasks;
 using QBEngineer.Core.Models;
 
@@ -165,6 +166,58 @@ public class JobsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    // Custom fields
+    [HttpGet("{id:int}/custom-fields")]
+    public async Task<ActionResult<Dictionary<string, object?>>> GetCustomFieldValues(int id)
+    {
+        var result = await mediator.Send(new GetCustomFieldValuesQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPut("{id:int}/custom-fields")]
+    public async Task<ActionResult<Dictionary<string, object?>>> UpdateCustomFieldValues(
+        int id, UpdateCustomFieldValuesCommand command)
+    {
+        var cmd = command with { JobId = id };
+        var result = await mediator.Send(cmd);
+        return Ok(result);
+    }
+
+    // Production Runs
+    [HttpGet("{id:int}/production-runs")]
+    public async Task<ActionResult<List<ProductionRunResponseModel>>> GetProductionRuns(int id)
+    {
+        var result = await mediator.Send(new GetProductionRunsQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/production-runs")]
+    public async Task<ActionResult<ProductionRunResponseModel>> CreateProductionRun(
+        int id, CreateProductionRunRequestModel request)
+    {
+        var command = new CreateProductionRunCommand(id, request.PartId, request.TargetQuantity, request.OperatorId, request.Notes);
+        var result = await mediator.Send(command);
+        return CreatedAtAction(nameof(GetProductionRuns), new { id }, result);
+    }
+
+    [HttpPut("{id:int}/production-runs/{runId:int}")]
+    public async Task<ActionResult<ProductionRunResponseModel>> UpdateProductionRun(
+        int id, int runId, UpdateProductionRunRequestModel request)
+    {
+        var command = new UpdateProductionRunCommand(
+            id, runId, request.CompletedQuantity, request.ScrapQuantity,
+            request.Status, request.Notes, request.SetupTimeMinutes, request.RunTimeMinutes);
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}/production-runs/{runId:int}")]
+    public async Task<ActionResult> DeleteProductionRun(int id, int runId)
+    {
+        await mediator.Send(new DeleteProductionRunCommand(id, runId));
+        return NoContent();
+    }
+
     // Bulk operations
     [HttpPatch("bulk/stage")]
     public async Task<ActionResult<BulkOperationResponseModel>> BulkMoveStage(BulkMoveJobStageCommand command)
@@ -191,6 +244,22 @@ public class JobsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<BulkOperationResponseModel>> BulkArchive(BulkArchiveJobsCommand command)
     {
         var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    // R&D Handoff
+    [HttpPost("{id:int}/handoff-to-production")]
+    public async Task<ActionResult<object>> HandoffToProduction(int id)
+    {
+        var prodJobId = await mediator.Send(new HandoffToProductionCommand(id));
+        return Created($"/api/v1/jobs/{prodJobId}", new { jobId = prodJobId });
+    }
+
+    // Internal Project Types
+    [HttpGet("internal-project-types")]
+    public async Task<ActionResult<List<ReferenceDataResponseModel>>> GetInternalProjectTypes()
+    {
+        var result = await mediator.Send(new GetInternalProjectTypesQuery());
         return Ok(result);
     }
 }

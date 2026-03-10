@@ -392,6 +392,301 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         return result;
     }
 
+    public async Task<List<MyExpenseHistoryReportItem>> GetMyExpenseHistoryAsync(
+        int userId, DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+
+        return await db.Expenses
+            .Where(e => e.UserId == userId && e.ExpenseDate >= startUtc && e.ExpenseDate <= endUtc)
+            .OrderByDescending(e => e.ExpenseDate)
+            .Select(e => new MyExpenseHistoryReportItem(
+                e.Id, e.Category, e.Description, e.Amount,
+                e.Status.ToString(), e.ExpenseDate, null))
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<QuoteToCloseReportItem>> GetQuoteToCloseAsync(
+        DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+
+        return await db.Quotes
+            .Where(q => q.CreatedAt >= startUtc && q.CreatedAt <= endUtc)
+            .GroupBy(q => q.Status)
+            .Select(g => new QuoteToCloseReportItem(
+                g.Key.ToString(),
+                g.Count(),
+                g.Sum(q => q.Lines.Sum(l => l.LineTotal))))
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<ShippingSummaryReportItem>> GetShippingSummaryAsync(
+        DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+
+        var shipments = await db.Shipments
+            .Include(s => s.Lines)
+            .Include(s => s.SalesOrder)
+            .Where(s => s.CreatedAt >= startUtc && s.CreatedAt <= endUtc)
+            .ToListAsync(ct);
+
+        return shipments
+            .GroupBy(s => s.Status.ToString())
+            .Select(g => new ShippingSummaryReportItem(
+                g.Key,
+                g.Count(),
+                g.Sum(s => s.Lines.Sum(l => l.Quantity)),
+                g.Count(s => s.ShippedDate.HasValue && s.SalesOrder != null && s.SalesOrder.RequestedDeliveryDate.HasValue
+                    && s.ShippedDate.Value.Date <= s.SalesOrder.RequestedDeliveryDate.Value.Date),
+                g.Count(s => s.ShippedDate.HasValue && s.SalesOrder != null && s.SalesOrder.RequestedDeliveryDate.HasValue
+                    && s.ShippedDate.Value.Date > s.SalesOrder.RequestedDeliveryDate.Value.Date)))
+            .ToList();
+    }
+
+    public async Task<List<TimeInStageReportItem>> GetTimeInStageAsync(int? trackTypeId, CancellationToken ct)
+    {
+        var stageMoves = await db.Set<QBEngineer.Core.Entities.JobActivityLog>()
+            .Where(a => a.Action == QBEngineer.Core.Enums.ActivityAction.StageMoved)
+            .OrderBy(a => a.JobId).ThenBy(a => a.CreatedAt)
+            .ToListAsync(ct);
+
+        // Optionally filter by track type
+        HashSet<int>? trackJobIds = null;
+        if (trackTypeId.HasValue)
+        {
+            trackJobIds = (await db.Jobs
+                .Where(j => j.TrackTypeId == trackTypeId.Value)
+                .Select(j => j.Id)
+                .ToListAsync(ct)).ToHashSet();
+        }
+
+        var stageData = new Dictionary<string, (List<double> Days, int Count)>();
+        var byJob = stageMoves.GroupBy(a => a.JobId);
+        foreach (var group in byJob)
+        {
+            if (trackJobIds != null && !trackJobIds.Contains(group.Key))
+                continue;
+
+            var moves = group.OrderBy(m => m.CreatedAt).ToList();
+            for (var i = 0; i < moves.Count - 1; i++)
+            {
+                var stageName = ExtractStageName(moves[i].Description);
+                if (stageName is null) continue;
+                var days = (moves[i + 1].CreatedAt - moves[i].CreatedAt).TotalDays;
+                if (!stageData.ContainsKey(stageName))
+                    stageData[stageName] = (new List<double>(), 0);
+                stageData[stageName].Days.Add(days);
+            }
+        }
+
+        var stages = await db.Set<QBEngineer.Core.Entities.JobStage>()
+            .Select(s => new { s.Name, s.Color })
+            .Distinct()
+            .ToListAsync(ct);
+        var colorMap = stages.ToDictionary(s => s.Name, s => s.Color ?? "#94a3b8");
+
+        var result = stageData
+            .Select(kv => new TimeInStageReportItem(
+                kv.Key,
+                colorMap.GetValueOrDefault(kv.Key, "#94a3b8"),
+                Math.Round((decimal)kv.Value.Days.Average(), 1),
+                kv.Value.Days.Count,
+                false))
+            .OrderByDescending(r => r.AverageDays)
+            .ToList();
+
+        // Mark the top bottleneck (longest average time)
+        if (result.Count > 0)
+        {
+            var maxDays = result[0].AverageDays;
+            result = result.Select(r => r with { IsBottleneck = r.AverageDays == maxDays }).ToList();
+        }
+
+        return result;
+    }
+
+    // ─── Batch 4 Reports ───
+
+    public async Task<List<EmployeeProductivityReportItem>> GetEmployeeProductivityAsync(
+        DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+        var startDate = DateOnly.FromDateTime(startUtc.Date);
+        var endDate = DateOnly.FromDateTime(endUtc.Date);
+
+        // Hours per user from time entries
+        var hoursByUser = await db.TimeEntries
+            .Where(t => t.Date >= startDate && t.Date <= endDate)
+            .GroupBy(t => t.UserId)
+            .Select(g => new { UserId = g.Key, TotalMinutes = g.Sum(t => t.DurationMinutes) })
+            .ToDictionaryAsync(g => g.UserId, g => g.TotalMinutes, ct);
+
+        // Jobs completed by assignee in date range
+        var completedByUser = await db.Jobs
+            .Where(j => j.AssigneeId.HasValue
+                && j.CompletedDate.HasValue
+                && j.CompletedDate.Value >= startUtc
+                && j.CompletedDate.Value <= endUtc)
+            .GroupBy(j => j.AssigneeId!.Value)
+            .Select(g => new
+            {
+                UserId = g.Key,
+                JobsCompleted = g.Count(),
+                OnTime = g.Count(j => !j.DueDate.HasValue || j.CompletedDate!.Value.Date <= j.DueDate.Value.Date),
+            })
+            .ToDictionaryAsync(g => g.UserId, ct);
+
+        var allUserIds = hoursByUser.Keys.Union(completedByUser.Keys).ToList();
+        var users = await db.Users
+            .Where(u => allUserIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.LastName}".Trim(), ct);
+
+        return allUserIds
+            .Where(id => users.ContainsKey(id))
+            .Select(id =>
+            {
+                var totalHours = Math.Round((decimal)hoursByUser.GetValueOrDefault(id, 0) / 60, 1);
+                var completed = completedByUser.GetValueOrDefault(id);
+                var jobsCompleted = completed?.JobsCompleted ?? 0;
+                var onTime = completed?.OnTime ?? 0;
+                var avgHours = jobsCompleted > 0 ? Math.Round(totalHours / jobsCompleted, 1) : 0;
+                var onTimePct = jobsCompleted > 0 ? Math.Round((decimal)onTime / jobsCompleted * 100, 1) : 0;
+
+                return new EmployeeProductivityReportItem(
+                    id, users[id], totalHours, jobsCompleted, avgHours, onTimePct);
+            })
+            .OrderByDescending(r => r.TotalHours)
+            .ToList();
+    }
+
+    public async Task<List<InventoryLevelReportItem>> GetInventoryLevelsAsync(CancellationToken ct)
+    {
+        var parts = await db.Parts
+            .Select(p => new { p.Id, p.PartNumber, p.Description, p.MinStockThreshold, p.ReorderPoint })
+            .ToListAsync(ct);
+
+        var stockByPart = await db.BinContents
+            .Where(b => b.EntityType == "part" && b.Status == QBEngineer.Core.Enums.BinContentStatus.Stored)
+            .GroupBy(b => b.EntityId)
+            .Select(g => new { PartId = g.Key, Stock = g.Sum(b => b.Quantity) })
+            .ToDictionaryAsync(g => g.PartId, g => g.Stock, ct);
+
+        return parts
+            .Select(p =>
+            {
+                var stock = stockByPart.GetValueOrDefault(p.Id, 0);
+                var isLow = p.MinStockThreshold.HasValue && stock < p.MinStockThreshold.Value;
+                return new InventoryLevelReportItem(
+                    p.Id, p.PartNumber, p.Description ?? "", stock,
+                    p.MinStockThreshold, p.ReorderPoint, isLow);
+            })
+            .OrderBy(r => r.PartNumber)
+            .ToList();
+    }
+
+    public async Task<List<MaintenanceReportItem>> GetMaintenanceAsync(
+        DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+        var now = DateTime.UtcNow;
+
+        var assets = await db.Assets
+            .Select(a => new { a.Id, a.Name })
+            .ToListAsync(ct);
+
+        var schedules = await db.MaintenanceSchedules
+            .Where(s => s.IsActive)
+            .ToListAsync(ct);
+
+        var logs = await db.MaintenanceLogs
+            .Where(l => l.PerformedAt >= startUtc && l.PerformedAt <= endUtc)
+            .ToListAsync(ct);
+
+        var assetMap = assets.ToDictionary(a => a.Id, a => a.Name);
+
+        return assets
+            .Select(a =>
+            {
+                var assetSchedules = schedules.Where(s => s.AssetId == a.Id).ToList();
+                var assetLogs = logs.Where(l => assetSchedules.Any(s => s.Id == l.MaintenanceScheduleId)).ToList();
+                var overdue = assetSchedules.Count(s => s.NextDueAt < now);
+                var totalCost = assetLogs.Sum(l => l.Cost ?? 0);
+
+                return new MaintenanceReportItem(
+                    a.Id, a.Name,
+                    assetSchedules.Count,
+                    assetLogs.Count,
+                    overdue,
+                    totalCost);
+            })
+            .Where(r => r.ScheduledCount > 0 || r.CompletedCount > 0)
+            .OrderByDescending(r => r.OverdueCount)
+            .ThenByDescending(r => r.TotalCost)
+            .ToList();
+    }
+
+    public async Task<List<QualityScrapReportItem>> GetQualityScrapAsync(
+        DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        var startUtc = start.UtcDateTime;
+        var endUtc = end.UtcDateTime;
+
+        var runs = await db.ProductionRuns
+            .Include(r => r.Part)
+            .Where(r => r.CompletedAt.HasValue && r.CompletedAt.Value >= startUtc && r.CompletedAt.Value <= endUtc)
+            .GroupBy(r => new { r.PartId, r.Part.PartNumber })
+            .Select(g => new
+            {
+                g.Key.PartId,
+                g.Key.PartNumber,
+                TotalProduced = g.Sum(r => r.CompletedQuantity),
+                TotalScrapped = g.Sum(r => r.ScrapQuantity),
+            })
+            .ToListAsync(ct);
+
+        return runs
+            .Select(r =>
+            {
+                var totalOutput = r.TotalProduced + r.TotalScrapped;
+                var scrapRate = totalOutput > 0 ? Math.Round((decimal)r.TotalScrapped / totalOutput * 100, 1) : 0;
+                var yieldRate = totalOutput > 0 ? Math.Round((decimal)r.TotalProduced / totalOutput * 100, 1) : 0;
+
+                return new QualityScrapReportItem(
+                    r.PartId, r.PartNumber, r.TotalProduced, r.TotalScrapped, scrapRate, yieldRate);
+            })
+            .OrderByDescending(r => r.ScrapRate)
+            .ToList();
+    }
+
+    public async Task<List<CycleReviewReportItem>> GetCycleReviewAsync(CancellationToken ct)
+    {
+        var cycles = await db.PlanningCycles
+            .Include(c => c.Entries)
+            .OrderByDescending(c => c.StartDate)
+            .ToListAsync(ct);
+
+        return cycles
+            .Select(c =>
+            {
+                var total = c.Entries.Count;
+                var completed = c.Entries.Count(e => e.CompletedAt.HasValue);
+                var rolledOver = c.Entries.Count(e => e.IsRolledOver);
+                var rate = total > 0 ? Math.Round((decimal)completed / total * 100, 1) : 0;
+
+                return new CycleReviewReportItem(
+                    c.Id, c.Name, c.StartDate, c.EndDate,
+                    total, completed, rate, rolledOver);
+            })
+            .ToList();
+    }
+
     private static string? ExtractStageName(string description)
     {
         var prefix = "Moved to ";

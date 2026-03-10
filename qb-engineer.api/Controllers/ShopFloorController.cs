@@ -18,4 +18,18 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetShopFloorOverviewQuery());
         return Ok(result);
     }
+
+    [HttpGet("clock-status")]
+    public async Task<ActionResult<List<ClockWorkerModel>>> GetClockStatus()
+    {
+        var result = await mediator.Send(new GetClockStatusQuery());
+        return Ok(result);
+    }
+
+    [HttpPost("clock")]
+    public async Task<IActionResult> ClockInOut([FromBody] ClockInOutRequestModel model)
+    {
+        await mediator.Send(new ClockInOutCommand(model.UserId, model.EventType));
+        return NoContent();
+    }
 }

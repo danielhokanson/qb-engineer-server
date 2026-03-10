@@ -197,6 +197,8 @@ try
     builder.Services.AddHangfireServer();
     builder.Services.AddScoped<RecurringOrderJob>();
     builder.Services.AddScoped<OverdueInvoiceJob>();
+    builder.Services.AddScoped<ScheduledTaskJob>();
+    builder.Services.AddScoped<DailyDigestJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -295,11 +297,24 @@ try
         "mark-overdue-invoices",
         job => job.MarkOverdueInvoicesAsync(),
         Cron.Daily(1)); // 1 AM UTC daily
+    RecurringJob.AddOrUpdate<UninvoicedJobNudgeJob>(
+        "nudge-uninvoiced-jobs",
+        job => job.NudgeUninvoicedJobsAsync(),
+        Cron.Daily(8)); // 8 AM UTC daily
+    RecurringJob.AddOrUpdate<ScheduledTaskJob>(
+        "run-scheduled-tasks",
+        job => job.RunDueTasksAsync(),
+        "*/15 * * * *"); // Every 15 minutes
+    RecurringJob.AddOrUpdate<DailyDigestJob>(
+        "send-daily-digest",
+        job => job.SendDailyDigestAsync(),
+        Cron.Daily(7)); // 7 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");
     app.MapHub<NotificationHub>("/hubs/notifications");
     app.MapHub<TimerHub>("/hubs/timer");
+    app.MapHub<ChatHub>("/hubs/chat");
 
     Log.Information("QB Engineer API starting on {Urls}", string.Join(", ", app.Urls));
     await app.RunAsync();

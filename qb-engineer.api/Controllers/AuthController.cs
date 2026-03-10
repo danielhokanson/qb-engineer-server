@@ -40,4 +40,28 @@ public class AuthController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(command);
         return Ok(result);
     }
+
+    [HttpPost("complete-setup")]
+    [AllowAnonymous]
+    public async Task<ActionResult<LoginResponse>> CompleteSetup(CompleteSetupCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPost("set-pin")]
+    [Authorize]
+    public async Task<IActionResult> SetPin(SetPinCommand command)
+    {
+        await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpPost("kiosk-login")]
+    [AllowAnonymous]
+    public async Task<ActionResult<LoginResponse>> KioskLogin(KioskLoginCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
 }

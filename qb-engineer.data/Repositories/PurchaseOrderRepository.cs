@@ -66,6 +66,7 @@ public class PurchaseOrderRepository(AppDbContext db) : IPurchaseOrderRepository
     {
         return await db.PurchaseOrderLines
             .Include(l => l.PurchaseOrder)
+            .Include(l => l.Part)
             .FirstOrDefaultAsync(l => l.Id == lineId, ct);
     }
 

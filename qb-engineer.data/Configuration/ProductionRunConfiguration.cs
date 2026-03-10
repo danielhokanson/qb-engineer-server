@@ -1,0 +1,31 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using QBEngineer.Core.Entities;
+
+namespace QBEngineer.Data.Configuration;
+
+public class ProductionRunConfiguration : IEntityTypeConfiguration<ProductionRun>
+{
+    public void Configure(EntityTypeBuilder<ProductionRun> builder)
+    {
+        builder.HasOne(pr => pr.Job)
+            .WithMany()
+            .HasForeignKey(pr => pr.JobId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(pr => pr.Part)
+            .WithMany()
+            .HasForeignKey(pr => pr.PartId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(pr => pr.JobId);
+        builder.HasIndex(pr => pr.PartId);
+        builder.HasIndex(pr => pr.Status);
+        builder.HasIndex(pr => pr.RunNumber).IsUnique();
+
+        builder.Property(pr => pr.RunNumber).HasMaxLength(50);
+        builder.Property(pr => pr.Notes).HasMaxLength(2000);
+        builder.Property(pr => pr.SetupTimeMinutes).HasPrecision(10, 2);
+        builder.Property(pr => pr.RunTimeMinutes).HasPrecision(10, 2);
+    }
+}

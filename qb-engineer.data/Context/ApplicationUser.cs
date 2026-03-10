@@ -11,4 +11,14 @@ public class ApplicationUser : IdentityUser<int>
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // Setup token flow (admin creates user → employee completes account)
+    public string? SetupToken { get; set; }
+    public DateTime? SetupTokenExpiresAt { get; set; }
+
+    // PIN for kiosk auth (Tier 2: barcode + PIN)
+    public string? PinHash { get; set; }
+
+    // Barcode for kiosk scan
+    public string? EmployeeBarcode { get; set; }
 }

@@ -50,4 +50,85 @@ public class AssetsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetEntityActivityQuery("Asset", id));
         return Ok(result);
     }
+
+    [HttpGet("{id:int}/maintenance")]
+    public async Task<ActionResult<List<MaintenanceScheduleResponseModel>>> GetAssetMaintenanceSchedules(int id)
+    {
+        var result = await mediator.Send(new GetMaintenanceSchedulesQuery(id));
+        return Ok(result);
+    }
+
+    [HttpGet("maintenance")]
+    public async Task<ActionResult<List<MaintenanceScheduleResponseModel>>> GetAllMaintenanceSchedules()
+    {
+        var result = await mediator.Send(new GetMaintenanceSchedulesQuery(null));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/maintenance")]
+    public async Task<ActionResult<MaintenanceScheduleResponseModel>> CreateMaintenanceSchedule(
+        int id, [FromBody] CreateMaintenanceScheduleRequestModel request)
+    {
+        var command = new CreateMaintenanceScheduleCommand(request with { AssetId = id });
+        var result = await mediator.Send(command);
+        return Created($"/api/v1/assets/{id}/maintenance/{result.Id}", result);
+    }
+
+    [HttpPost("maintenance/{scheduleId:int}/log")]
+    public async Task<ActionResult<MaintenanceLogResponseModel>> LogMaintenance(
+        int scheduleId, [FromBody] LogMaintenanceRequestModel request)
+    {
+        var result = await mediator.Send(new LogMaintenanceCommand(scheduleId, request));
+        return Created($"/api/v1/assets/maintenance/{scheduleId}/log/{result.Id}", result);
+    }
+
+    [HttpDelete("maintenance/{scheduleId:int}")]
+    public async Task<IActionResult> DeleteMaintenanceSchedule(int scheduleId)
+    {
+        await mediator.Send(new DeleteMaintenanceScheduleCommand(scheduleId));
+        return NoContent();
+    }
+
+    // ─── Machine Hours ───
+
+    [HttpPatch("{id:int}/hours")]
+    public async Task<ActionResult<AssetResponseModel>> UpdateMachineHours(
+        int id, [FromBody] UpdateMachineHoursRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateMachineHoursCommand(id, request));
+        return Ok(result);
+    }
+
+    // ─── Downtime Logging ───
+
+    [HttpGet("{id:int}/downtime")]
+    public async Task<ActionResult<List<DowntimeLogResponseModel>>> GetAssetDowntime(int id)
+    {
+        var result = await mediator.Send(new GetDowntimeLogsQuery(id));
+        return Ok(result);
+    }
+
+    [HttpGet("downtime")]
+    public async Task<ActionResult<List<DowntimeLogResponseModel>>> GetAllDowntime()
+    {
+        var result = await mediator.Send(new GetDowntimeLogsQuery(null));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/downtime")]
+    public async Task<ActionResult<DowntimeLogResponseModel>> CreateDowntimeLog(
+        int id, [FromBody] CreateDowntimeLogRequestModel request)
+    {
+        var result = await mediator.Send(new CreateDowntimeLogCommand(request with { AssetId = id }));
+        return Created($"/api/v1/assets/{id}/downtime/{result.Id}", result);
+    }
+
+    // ─── Maintenance Job Linking ───
+
+    [HttpPost("maintenance/{scheduleId:int}/create-job")]
+    public async Task<ActionResult<object>> CreateMaintenanceJob(int scheduleId)
+    {
+        var jobId = await mediator.Send(new CreateMaintenanceJobCommand(scheduleId));
+        return Created($"/api/v1/jobs/{jobId}", new { jobId });
+    }
 }

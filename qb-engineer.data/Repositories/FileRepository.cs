@@ -44,6 +44,7 @@ public class FileRepository(AppDbContext db) : IFileRepository
             f.Id, f.FileName, f.ContentType, f.Size,
             $"/api/v1/files/{f.Id}/download",
             f.EntityType, f.EntityId, f.UploadedById,
-            uploaderName, f.CreatedAt);
+            uploaderName, f.CreatedAt, f.PartRevisionId,
+            f.RequiredRole);
     }
 }

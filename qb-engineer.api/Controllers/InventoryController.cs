@@ -77,4 +77,75 @@ public class InventoryController(IMediator mediator) : ControllerBase
         await mediator.Send(new RemoveBinContentCommand(id));
         return NoContent();
     }
+
+    [HttpGet("low-stock")]
+    public async Task<ActionResult<List<LowStockAlertModel>>> GetLowStockAlerts()
+    {
+        var result = await mediator.Send(new GetLowStockAlertsQuery());
+        return Ok(result);
+    }
+
+    // ── Receiving ──
+
+    [HttpPost("receive")]
+    public async Task<ActionResult<ReceivingRecordResponseModel>> ReceiveGoods(
+        [FromBody] ReceivePurchaseOrderRequestModel request)
+    {
+        var result = await mediator.Send(new ReceivePurchaseOrderCommand(request));
+        return Created($"/api/v1/inventory/receiving-history", result);
+    }
+
+    [HttpGet("receiving-history")]
+    public async Task<ActionResult<List<ReceivingRecordResponseModel>>> GetReceivingHistory(
+        [FromQuery] int? purchaseOrderId,
+        [FromQuery] int? partId,
+        [FromQuery] int take = 50)
+    {
+        var result = await mediator.Send(new GetReceivingHistoryQuery(purchaseOrderId, partId, take));
+        return Ok(result);
+    }
+
+    // ── Stock Operations ──
+
+    [HttpPost("transfer")]
+    public async Task<IActionResult> TransferStock([FromBody] TransferStockRequestModel request)
+    {
+        await mediator.Send(new TransferStockCommand(request));
+        return NoContent();
+    }
+
+    [HttpPost("adjust")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> AdjustStock([FromBody] AdjustStockRequestModel request)
+    {
+        await mediator.Send(new AdjustStockCommand(request));
+        return NoContent();
+    }
+
+    // ── Cycle Counts ──
+
+    [HttpGet("cycle-counts")]
+    public async Task<ActionResult<List<CycleCountResponseModel>>> GetCycleCounts(
+        [FromQuery] int? locationId,
+        [FromQuery] string? status)
+    {
+        var result = await mediator.Send(new GetCycleCountsQuery(locationId, status));
+        return Ok(result);
+    }
+
+    [HttpPost("cycle-counts")]
+    public async Task<ActionResult<CycleCountResponseModel>> CreateCycleCount(
+        [FromBody] CreateCycleCountRequestModel request)
+    {
+        var result = await mediator.Send(new CreateCycleCountCommand(request));
+        return Created($"/api/v1/inventory/cycle-counts/{result.Id}", result);
+    }
+
+    [HttpPut("cycle-counts/{id:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> UpdateCycleCount(int id, [FromBody] UpdateCycleCountRequestModel request)
+    {
+        await mediator.Send(new UpdateCycleCountCommand(id, request));
+        return NoContent();
+    }
 }
