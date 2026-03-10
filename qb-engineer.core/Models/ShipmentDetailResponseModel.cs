@@ -1,0 +1,21 @@
+namespace QBEngineer.Core.Models;
+
+public record ShipmentDetailResponseModel(
+    int Id,
+    string ShipmentNumber,
+    int SalesOrderId,
+    string SalesOrderNumber,
+    string CustomerName,
+    int? ShippingAddressId,
+    string Status,
+    string? Carrier,
+    string? TrackingNumber,
+    DateTime? ShippedDate,
+    DateTime? DeliveredDate,
+    decimal? ShippingCost,
+    decimal? Weight,
+    string? Notes,
+    int? InvoiceId,
+    List<ShipmentLineResponseModel> Lines,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);

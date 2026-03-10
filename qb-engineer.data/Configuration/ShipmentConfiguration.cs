@@ -1,0 +1,34 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using QBEngineer.Core.Entities;
+
+namespace QBEngineer.Data.Configuration;
+
+public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
+{
+    public void Configure(EntityTypeBuilder<Shipment> builder)
+    {
+        builder.Ignore(e => e.IsDeleted);
+
+        builder.Property(e => e.ShipmentNumber).HasMaxLength(20);
+        builder.Property(e => e.Carrier).HasMaxLength(100);
+        builder.Property(e => e.TrackingNumber).HasMaxLength(100);
+        builder.Property(e => e.Notes).HasMaxLength(2000);
+        builder.Property(e => e.ShippingCost).HasPrecision(18, 4);
+        builder.Property(e => e.Weight).HasPrecision(12, 4);
+
+        builder.HasIndex(e => e.ShipmentNumber).IsUnique();
+        builder.HasIndex(e => e.SalesOrderId);
+        builder.HasIndex(e => e.Status);
+
+        builder.HasOne(e => e.ShippingAddress)
+            .WithMany()
+            .HasForeignKey(e => e.ShippingAddressId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(e => e.Lines)
+            .WithOne(l => l.Shipment)
+            .HasForeignKey(l => l.ShipmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

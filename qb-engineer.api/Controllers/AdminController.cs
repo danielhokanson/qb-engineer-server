@@ -91,4 +91,30 @@ public class AdminController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(cmd);
         return Ok(result);
     }
+
+    // ── Brand Settings (public — no auth required for login screen theming) ──
+
+    [AllowAnonymous]
+    [HttpGet("brand")]
+    public async Task<ActionResult<BrandSettingsResponseModel>> GetBrandSettings()
+    {
+        var result = await mediator.Send(new GetBrandSettingsQuery());
+        return Ok(result);
+    }
+
+    // ── System Settings ──
+
+    [HttpGet("system-settings")]
+    public async Task<ActionResult<List<SystemSettingResponseModel>>> GetSystemSettings()
+    {
+        var result = await mediator.Send(new GetSystemSettingsQuery());
+        return Ok(result);
+    }
+
+    [HttpPut("system-settings")]
+    public async Task<ActionResult<List<SystemSettingResponseModel>>> UpsertSystemSettings(UpsertSystemSettingsCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
 }

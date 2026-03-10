@@ -16,6 +16,9 @@ public sealed class DeleteTimeEntryHandler(ITimeTrackingRepository repo)
         if (entry.IsLocked)
             throw new InvalidOperationException("Locked time entries cannot be deleted.");
 
+        if (entry.Date < DateOnly.FromDateTime(DateTime.UtcNow))
+            throw new InvalidOperationException("Time entries from previous days cannot be deleted.");
+
         entry.DeletedAt = DateTime.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }

@@ -37,6 +37,34 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<TerminologyEntry> TerminologyEntries => Set<TerminologyEntry>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+    public DbSet<PlanningCycle> PlanningCycles => Set<PlanningCycle>();
+    public DbSet<PlanningCycleEntry> PlanningCycleEntries => Set<PlanningCycleEntry>();
+    public DbSet<Vendor> Vendors => Set<Vendor>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
+    public DbSet<ReceivingRecord> ReceivingRecords => Set<ReceivingRecord>();
+    public DbSet<JobPart> JobParts => Set<JobPart>();
+
+    // Order Management
+    public DbSet<CustomerAddress> CustomerAddresses => Set<CustomerAddress>();
+    public DbSet<Quote> Quotes => Set<Quote>();
+    public DbSet<QuoteLine> QuoteLines => Set<QuoteLine>();
+    public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
+    public DbSet<SalesOrderLine> SalesOrderLines => Set<SalesOrderLine>();
+    public DbSet<Shipment> Shipments => Set<Shipment>();
+    public DbSet<ShipmentLine> ShipmentLines => Set<ShipmentLine>();
+
+    // Standalone Financial (⚡ Accounting Boundary)
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentApplication> PaymentApplications => Set<PaymentApplication>();
+
+    // Pricing
+    public DbSet<PriceList> PriceLists => Set<PriceList>();
+    public DbSet<PriceListEntry> PriceListEntries => Set<PriceListEntry>();
+    public DbSet<RecurringOrder> RecurringOrders => Set<RecurringOrder>();
+    public DbSet<RecurringOrderLine> RecurringOrderLines => Set<RecurringOrderLine>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

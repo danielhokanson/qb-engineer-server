@@ -17,6 +17,7 @@ public class Job : BaseAuditableEntity
     public DateTime? CompletedDate { get; set; }
     public bool IsArchived { get; set; }
     public int BoardPosition { get; set; }
+    public int? SalesOrderLineId { get; set; }
 
     // Accounting integration
     public string? ExternalId { get; set; }
@@ -32,4 +33,8 @@ public class Job : BaseAuditableEntity
     public Customer? Customer { get; set; }
     public ICollection<JobSubtask> Subtasks { get; set; } = [];
     public ICollection<JobActivityLog> ActivityLogs { get; set; } = [];
+    public ICollection<PlanningCycleEntry> PlanningCycleEntries { get; set; } = [];
+    public SalesOrderLine? SalesOrderLine { get; set; }
+    public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
+    public ICollection<JobPart> JobParts { get; set; } = [];
 }

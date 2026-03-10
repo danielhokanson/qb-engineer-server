@@ -54,4 +54,48 @@ public class ReportsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetJobCompletionTrendQuery(months));
         return Ok(result);
     }
+
+    [HttpGet("on-time-delivery")]
+    public async Task<ActionResult<OnTimeDeliveryReportItem>> GetOnTimeDelivery(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetOnTimeDeliveryReportQuery(start, end));
+        return Ok(result);
+    }
+
+    [HttpGet("average-lead-time")]
+    public async Task<ActionResult<List<AverageLeadTimeReportItem>>> GetAverageLeadTime()
+    {
+        var result = await mediator.Send(new GetAverageLeadTimeReportQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("team-workload")]
+    public async Task<ActionResult<List<TeamWorkloadReportItem>>> GetTeamWorkload()
+    {
+        var result = await mediator.Send(new GetTeamWorkloadReportQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("customer-activity")]
+    public async Task<ActionResult<List<CustomerActivityReportItem>>> GetCustomerActivity()
+    {
+        var result = await mediator.Send(new GetCustomerActivityReportQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("my-work-history")]
+    public async Task<ActionResult<List<MyWorkHistoryReportItem>>> GetMyWorkHistory()
+    {
+        var result = await mediator.Send(new GetMyWorkHistoryQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("my-time-log")]
+    public async Task<ActionResult<List<MyTimeLogReportItem>>> GetMyTimeLog(
+        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+    {
+        var result = await mediator.Send(new GetMyTimeLogQuery(start, end));
+        return Ok(result);
+    }
 }

@@ -22,4 +22,5 @@ public class Part : BaseAuditableEntity
 
     public ICollection<BOMEntry> BOMEntries { get; set; } = [];
     public ICollection<BOMEntry> UsedInBOM { get; set; } = [];
+    public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];
 }

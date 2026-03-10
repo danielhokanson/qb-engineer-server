@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Features.Jobs;
 using QBEngineer.Api.Features.Jobs.Bulk;
 using QBEngineer.Api.Features.Jobs.Links;
+using QBEngineer.Api.Features.Jobs.Parts;
 using QBEngineer.Api.Features.Jobs.Subtasks;
 using QBEngineer.Core.Models;
 
@@ -121,6 +122,37 @@ public class JobsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult> DeleteJobLink(int id, int linkId)
     {
         await mediator.Send(new DeleteJobLinkCommand(id, linkId));
+        return NoContent();
+    }
+
+    // Parts
+    [HttpGet("{id:int}/parts")]
+    public async Task<ActionResult<List<JobPartResponseModel>>> GetJobParts(int id)
+    {
+        var result = await mediator.Send(new GetJobPartsQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/parts")]
+    public async Task<ActionResult<JobPartResponseModel>> AddJobPart(int id, AddJobPartCommand command)
+    {
+        var cmd = command with { JobId = id };
+        var result = await mediator.Send(cmd);
+        return CreatedAtAction(nameof(GetJobParts), new { id }, result);
+    }
+
+    [HttpPatch("{id:int}/parts/{jobPartId:int}")]
+    public async Task<ActionResult<JobPartResponseModel>> UpdateJobPart(int id, int jobPartId, UpdateJobPartCommand command)
+    {
+        var cmd = command with { JobId = id, JobPartId = jobPartId };
+        var result = await mediator.Send(cmd);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}/parts/{jobPartId:int}")]
+    public async Task<ActionResult> RemoveJobPart(int id, int jobPartId)
+    {
+        await mediator.Send(new RemoveJobPartCommand(id, jobPartId));
         return NoContent();
     }
 

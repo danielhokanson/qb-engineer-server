@@ -1,0 +1,32 @@
+using MediatR;
+using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
+
+namespace QBEngineer.Api.Features.Quotes;
+
+public record UpdateQuoteCommand(
+    int Id,
+    int? ShippingAddressId,
+    DateTime? ExpirationDate,
+    string? Notes,
+    decimal? TaxRate) : IRequest;
+
+public class UpdateQuoteHandler(IQuoteRepository repo)
+    : IRequestHandler<UpdateQuoteCommand>
+{
+    public async Task Handle(UpdateQuoteCommand request, CancellationToken cancellationToken)
+    {
+        var quote = await repo.FindAsync(request.Id, cancellationToken)
+            ?? throw new KeyNotFoundException($"Quote {request.Id} not found");
+
+        if (quote.Status != QuoteStatus.Draft)
+            throw new InvalidOperationException("Only Draft quotes can be updated");
+
+        if (request.ShippingAddressId.HasValue) quote.ShippingAddressId = request.ShippingAddressId;
+        if (request.ExpirationDate.HasValue) quote.ExpirationDate = request.ExpirationDate;
+        if (request.Notes != null) quote.Notes = request.Notes;
+        if (request.TaxRate.HasValue) quote.TaxRate = request.TaxRate.Value;
+
+        await repo.SaveChangesAsync(cancellationToken);
+    }
+}

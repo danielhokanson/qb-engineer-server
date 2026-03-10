@@ -115,6 +115,18 @@ try
     builder.Services.AddScoped<ITerminologyRepository, TerminologyRepository>();
     builder.Services.AddScoped<IReportRepository, ReportRepository>();
     builder.Services.AddScoped<ISearchRepository, SearchRepository>();
+    builder.Services.AddScoped<IPlanningCycleRepository, PlanningCycleRepository>();
+    builder.Services.AddScoped<IVendorRepository, VendorRepository>();
+    builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
+    builder.Services.AddScoped<ISalesOrderRepository, SalesOrderRepository>();
+    builder.Services.AddScoped<IQuoteRepository, QuoteRepository>();
+    builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
+    builder.Services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
+    builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+    builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+    builder.Services.AddScoped<IPriceListRepository, PriceListRepository>();
+    builder.Services.AddScoped<IRecurringOrderRepository, RecurringOrderRepository>();
+    builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
     builder.Services.AddHttpContextAccessor();
 
     // Integration services (mock or real based on config)

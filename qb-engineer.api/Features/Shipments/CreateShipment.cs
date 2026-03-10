@@ -1,0 +1,93 @@
+using FluentValidation;
+using MediatR;
+using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
+
+namespace QBEngineer.Api.Features.Shipments;
+
+public record CreateShipmentCommand(
+    int SalesOrderId,
+    int? ShippingAddressId,
+    string? Carrier,
+    string? TrackingNumber,
+    decimal? ShippingCost,
+    decimal? Weight,
+    string? Notes,
+    List<CreateShipmentLineModel> Lines) : IRequest<ShipmentListItemModel>;
+
+public class CreateShipmentValidator : AbstractValidator<CreateShipmentCommand>
+{
+    public CreateShipmentValidator()
+    {
+        RuleFor(x => x.SalesOrderId).GreaterThan(0);
+        RuleFor(x => x.Lines).NotEmpty().WithMessage("At least one line item is required");
+        RuleForEach(x => x.Lines).ChildRules(line =>
+        {
+            line.RuleFor(l => l.SalesOrderLineId).GreaterThan(0);
+            line.RuleFor(l => l.Quantity).GreaterThan(0);
+        });
+    }
+}
+
+public class CreateShipmentHandler(IShipmentRepository shipmentRepo, ISalesOrderRepository orderRepo)
+    : IRequestHandler<CreateShipmentCommand, ShipmentListItemModel>
+{
+    public async Task<ShipmentListItemModel> Handle(CreateShipmentCommand request, CancellationToken cancellationToken)
+    {
+        var order = await orderRepo.FindWithDetailsAsync(request.SalesOrderId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Sales order {request.SalesOrderId} not found");
+
+        if (order.Status == SalesOrderStatus.Draft || order.Status == SalesOrderStatus.Cancelled)
+            throw new InvalidOperationException("Cannot create shipment for Draft or Cancelled orders");
+
+        var shipmentNumber = await shipmentRepo.GenerateNextShipmentNumberAsync(cancellationToken);
+
+        var shipment = new Shipment
+        {
+            ShipmentNumber = shipmentNumber,
+            SalesOrderId = request.SalesOrderId,
+            ShippingAddressId = request.ShippingAddressId ?? order.ShippingAddressId,
+            Carrier = request.Carrier,
+            TrackingNumber = request.TrackingNumber,
+            ShippingCost = request.ShippingCost,
+            Weight = request.Weight,
+            Notes = request.Notes,
+        };
+
+        foreach (var line in request.Lines)
+        {
+            var orderLine = order.Lines.FirstOrDefault(l => l.Id == line.SalesOrderLineId)
+                ?? throw new KeyNotFoundException($"Sales order line {line.SalesOrderLineId} not found");
+
+            if (line.Quantity > orderLine.RemainingQuantity)
+                throw new InvalidOperationException(
+                    $"Cannot ship {line.Quantity} of line {orderLine.LineNumber} — only {orderLine.RemainingQuantity} remaining");
+
+            orderLine.ShippedQuantity += line.Quantity;
+
+            shipment.Lines.Add(new ShipmentLine
+            {
+                SalesOrderLineId = line.SalesOrderLineId,
+                Quantity = line.Quantity,
+                Notes = line.Notes,
+            });
+        }
+
+        // Update order status based on fulfillment
+        if (order.Lines.All(l => l.IsFullyShipped))
+            order.Status = SalesOrderStatus.Shipped;
+        else if (order.Lines.Any(l => l.ShippedQuantity > 0))
+            order.Status = SalesOrderStatus.PartiallyShipped;
+
+        await shipmentRepo.AddAsync(shipment, cancellationToken);
+        await shipmentRepo.SaveChangesAsync(cancellationToken);
+
+        return new ShipmentListItemModel(
+            shipment.Id, shipment.ShipmentNumber, shipment.SalesOrderId,
+            order.OrderNumber, order.Customer.Name, shipment.Status.ToString(),
+            shipment.Carrier, shipment.TrackingNumber, shipment.ShippedDate,
+            shipment.CreatedAt);
+    }
+}

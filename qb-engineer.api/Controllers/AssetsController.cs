@@ -10,7 +10,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/assets")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager")]
 public class AssetsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

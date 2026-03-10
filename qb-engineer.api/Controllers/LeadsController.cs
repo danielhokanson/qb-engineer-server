@@ -10,7 +10,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/leads")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,PM")]
 public class LeadsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

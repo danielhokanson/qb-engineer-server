@@ -19,4 +19,19 @@ public class UserRepository(AppDbContext db) : IUserRepository
                 u.AvatarColor ?? "#94a3b8"))
             .ToListAsync(ct);
     }
+
+    public async Task<List<UserResponseModel>> FindByNamesAsync(IEnumerable<string> names, CancellationToken ct)
+    {
+        var nameList = names.Select(n => n.ToLower()).ToList();
+        return await db.Users
+            .Where(u => u.IsActive)
+            .Where(u => nameList.Contains(u.FirstName!.ToLower())
+                     || nameList.Contains((u.FirstName + " " + u.LastName).Trim().ToLower().Replace(" ", "")))
+            .Select(u => new UserResponseModel(
+                u.Id,
+                u.Initials ?? "??",
+                (u.FirstName + " " + u.LastName).Trim(),
+                u.AvatarColor ?? "#94a3b8"))
+            .ToListAsync(ct);
+    }
 }
