@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -5,8 +6,10 @@ using QBEngineer.Core.Entities;
 
 namespace QBEngineer.Data.Context;
 
-public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
+public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>, IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }

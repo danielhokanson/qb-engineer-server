@@ -30,6 +30,7 @@ using QBEngineer.Api.HealthChecks;
 using Scalar.AspNetCore;
 using QBEngineer.Api.Extensions;
 using QBEngineer.Api.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Serilog;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -200,7 +201,13 @@ try
     builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddSingleton<IImageService, ImageService>();
+    builder.Services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
     builder.Services.AddHttpContextAccessor();
+
+    // Data Protection (OAuth token encryption, key storage in PostgreSQL)
+    builder.Services.AddDataProtection()
+        .PersistKeysToDbContext<AppDbContext>()
+        .SetApplicationName("qb-engineer");
 
     // Integration services (mock or real based on config)
     var useMocks = builder.Configuration.GetValue<bool>("MockIntegrations");
