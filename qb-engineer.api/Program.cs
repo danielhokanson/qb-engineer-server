@@ -337,7 +337,7 @@ try
             {
                 Log.Information("RECREATE_DB=true — dropping and recreating database...");
                 await db.Database.EnsureDeletedAsync();
-                await db.Database.MigrateAsync();
+                await db.Database.EnsureCreatedAsync();
                 Log.Information("Database recreated successfully");
 
                 // Seed default data
