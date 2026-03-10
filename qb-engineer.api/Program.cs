@@ -199,6 +199,7 @@ try
     builder.Services.AddScoped<IRecurringOrderRepository, RecurringOrderRepository>();
     builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
+    builder.Services.AddSingleton<IImageService, ImageService>();
     builder.Services.AddHttpContextAccessor();
 
     // Integration services (mock or real based on config)
