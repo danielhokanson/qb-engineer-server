@@ -43,6 +43,9 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    // Load secrets file (gitignored)
+    builder.Configuration.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
+
     // Serilog
     builder.Host.UseSerilog((context, services, config) => config
         .ReadFrom.Configuration(context.Configuration)
@@ -213,6 +216,19 @@ try
     var useMocks = builder.Configuration.GetValue<bool>("MockIntegrations");
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection(MinioOptions.SectionName));
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
+    builder.Services.Configure<QuickBooksOptions>(builder.Configuration.GetSection(QuickBooksOptions.SectionName));
+
+    // QuickBooks token service (always registered — handles OAuth token lifecycle)
+    builder.Services.AddScoped<IQuickBooksTokenService, QuickBooksTokenService>();
+
+    // Session (used for OAuth state parameter)
+    builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddSession(options =>
+    {
+        options.IdleTimeout = TimeSpan.FromMinutes(10);
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+    });
 
     if (useMocks)
     {
@@ -227,8 +243,9 @@ try
     {
         builder.Services.AddSingleton<IStorageService, MinioStorageService>();
         builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
-        // Real accounting/shipping/AI services registered here when implemented
-        builder.Services.AddSingleton<IAccountingService, MockAccountingService>();
+        // Real QuickBooks accounting service (uses OAuth tokens from SystemSettings)
+        builder.Services.AddScoped<IAccountingService, QuickBooksAccountingService>();
+        // Real shipping/AI services registered here when implemented
         builder.Services.AddSingleton<IShippingService, MockShippingService>();
         builder.Services.AddSingleton<IAiService, MockAiService>();
     }
@@ -370,6 +387,7 @@ try
         });
     }
 
+    app.UseSession();
     app.UseAuthentication();
     app.UseAuthorization();
 
