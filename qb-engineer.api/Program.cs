@@ -325,6 +325,7 @@ try
     builder.Services.AddScoped<ItemSyncJob>();
     builder.Services.AddScoped<RecurringExpenseJob>();
     builder.Services.AddScoped<DocumentIndexJob>();
+    builder.Services.AddScoped<OverdueMaintenanceJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -470,6 +471,10 @@ try
         "send-daily-digest",
         job => job.SendDailyDigestAsync(),
         Cron.Daily(7)); // 7 AM UTC daily
+    RecurringJob.AddOrUpdate<OverdueMaintenanceJob>(
+        "check-overdue-maintenance",
+        job => job.CheckOverdueMaintenanceAsync(),
+        Cron.Daily(2)); // 2 AM UTC daily
     RecurringJob.AddOrUpdate<DatabaseBackupJob>(
         "database-backup",
         job => job.RunBackupAsync(),
