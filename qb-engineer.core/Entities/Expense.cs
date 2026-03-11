@@ -14,6 +14,12 @@ public class Expense : BaseAuditableEntity
     public int? ApprovedBy { get; set; }
     public string? ApprovalNotes { get; set; }
     public string? ExternalExpenseId { get; set; }
+
+    // Standardized accounting integration fields
+    public string? ExternalId { get; set; }
+    public string? ExternalRef { get; set; }
+    public string? Provider { get; set; }
+
     public DateTime ExpenseDate { get; set; }
 
     public Job? Job { get; set; }

@@ -38,6 +38,7 @@ public class JobRepository(AppDbContext db) : IJobRepository
             .Include(j => j.SalesOrderLine)
                 .ThenInclude(sol => sol!.SalesOrder)
                     .ThenInclude(so => so.Invoices)
+            .Include(j => j.ChildJobs)
             .OrderBy(j => j.CurrentStage.SortOrder)
             .ThenBy(j => j.BoardPosition)
             .ToListAsync(ct);
@@ -77,7 +78,11 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 j.DueDate,
                 j.DueDate.HasValue && j.DueDate.Value < DateTime.UtcNow && j.CompletedDate == null,
                 j.Customer?.Name,
-                billingStatus);
+                billingStatus,
+                j.Disposition?.ToString(),
+                j.ChildJobs.Count(c => c.DeletedAt == null),
+                j.ExternalRef,
+                null);
         }).ToList();
     }
 
@@ -87,6 +92,9 @@ public class JobRepository(AppDbContext db) : IJobRepository
             .Include(j => j.CurrentStage)
             .Include(j => j.TrackType)
             .Include(j => j.Customer)
+            .Include(j => j.Part)
+            .Include(j => j.ParentJob)
+            .Include(j => j.ChildJobs)
             .FirstOrDefaultAsync(j => j.Id == id, ct);
 
         if (job is null) return null;
@@ -119,6 +127,17 @@ public class JobRepository(AppDbContext db) : IJobRepository
             job.BoardPosition,
             job.IterationCount,
             job.IterationNotes,
+            job.ExternalId,
+            job.ExternalRef,
+            job.Provider,
+            job.Disposition?.ToString(),
+            job.DispositionNotes,
+            job.DispositionAt,
+            job.PartId,
+            job.Part?.PartNumber,
+            job.ParentJobId,
+            job.ParentJob?.JobNumber,
+            job.ChildJobs.Count(c => c.DeletedAt == null),
             job.CreatedAt,
             job.UpdatedAt);
     }
@@ -156,6 +175,25 @@ public class JobRepository(AppDbContext db) : IJobRepository
         return await db.Jobs
             .Include(j => j.CurrentStage)
             .Where(j => ids.Contains(j.Id))
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<ChildJobResponseModel>> GetChildJobsAsync(int parentJobId, CancellationToken ct)
+    {
+        return await db.Jobs
+            .Where(j => j.ParentJobId == parentJobId)
+            .Include(j => j.CurrentStage)
+            .Include(j => j.Part)
+            .Include(j => j.JobParts)
+            .OrderBy(j => j.CreatedAt)
+            .Select(j => new ChildJobResponseModel(
+                j.Id,
+                j.JobNumber,
+                j.Title,
+                j.CurrentStage.Name,
+                j.Part != null ? j.Part.PartNumber : null,
+                j.JobParts.Select(jp => (decimal?)jp.Quantity).FirstOrDefault(),
+                j.CreatedAt))
             .ToListAsync(ct);
     }
 

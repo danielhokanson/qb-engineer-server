@@ -11,4 +11,5 @@ public record BOMEntryResponseModel(
     string? ReferenceDesignator,
     int SortOrder,
     BOMSourceType SourceType,
+    int? LeadTimeDays,
     string? Notes);

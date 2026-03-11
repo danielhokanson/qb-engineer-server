@@ -54,6 +54,7 @@ public class UpdateJobHandlerTests
             job.AssigneeId, null, null, null, job.Priority.ToString(),
             job.CustomerId, null, job.DueDate, null, null, false,
             job.BoardPosition, job.IterationCount, job.IterationNotes,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
     }
 

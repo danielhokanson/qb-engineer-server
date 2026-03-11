@@ -31,6 +31,7 @@ public class UpdateBOMEntryHandler(IPartRepository repo) : IRequestHandler<Updat
         if (data.Quantity.HasValue) entry.Quantity = data.Quantity.Value;
         if (data.ReferenceDesignator is not null) entry.ReferenceDesignator = data.ReferenceDesignator.Trim();
         if (data.SourceType.HasValue) entry.SourceType = data.SourceType.Value;
+        if (data.LeadTimeDays is not null) entry.LeadTimeDays = data.LeadTimeDays;
         if (data.Notes is not null) entry.Notes = data.Notes.Trim();
 
         await repo.SaveChangesAsync(cancellationToken);

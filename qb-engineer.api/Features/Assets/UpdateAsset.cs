@@ -36,6 +36,12 @@ public class UpdateAssetHandler(IAssetRepository repo) : IRequestHandler<UpdateA
         if (data.Status.HasValue) asset.Status = data.Status.Value;
         if (data.CurrentHours.HasValue) asset.CurrentHours = data.CurrentHours.Value;
         if (data.Notes is not null) asset.Notes = data.Notes.Trim();
+        if (data.IsCustomerOwned.HasValue) asset.IsCustomerOwned = data.IsCustomerOwned.Value;
+        if (data.CavityCount.HasValue) asset.CavityCount = data.CavityCount.Value;
+        if (data.ToolLifeExpectancy.HasValue) asset.ToolLifeExpectancy = data.ToolLifeExpectancy.Value;
+        if (data.CurrentShotCount.HasValue) asset.CurrentShotCount = data.CurrentShotCount.Value;
+        if (data.SourceJobId.HasValue) asset.SourceJobId = data.SourceJobId.Value;
+        if (data.SourcePartId.HasValue) asset.SourcePartId = data.SourcePartId.Value;
 
         await repo.SaveChangesAsync(cancellationToken);
         return (await repo.GetByIdAsync(asset.Id, cancellationToken))!;

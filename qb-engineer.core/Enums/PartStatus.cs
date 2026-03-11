@@ -4,5 +4,6 @@ public enum PartStatus
 {
     Active,
     Obsolete,
-    Draft
+    Draft,
+    Prototype
 }

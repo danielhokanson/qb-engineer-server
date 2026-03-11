@@ -29,6 +29,10 @@ public class UpdateMachineHoursHandler(AppDbContext db) : IRequestHandler<Update
         return new AssetResponseModel(
             asset.Id, asset.Name, asset.AssetType, asset.Location, asset.Manufacturer,
             asset.Model, asset.SerialNumber, asset.Status, asset.PhotoFileId,
-            asset.CurrentHours, asset.Notes, asset.CreatedAt, asset.UpdatedAt);
+            asset.CurrentHours, asset.Notes,
+            asset.IsCustomerOwned, asset.CavityCount, asset.ToolLifeExpectancy,
+            asset.CurrentShotCount, asset.SourceJobId, asset.SourceJob?.JobNumber,
+            asset.SourcePartId, asset.SourcePart?.PartNumber,
+            asset.CreatedAt, asset.UpdatedAt);
     }
 }

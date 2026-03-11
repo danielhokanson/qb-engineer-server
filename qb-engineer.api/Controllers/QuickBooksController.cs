@@ -18,6 +18,7 @@ public class QuickBooksController(
     IOptions<QuickBooksOptions> options,
     IQuickBooksTokenService tokenService,
     IHttpClientFactory httpClientFactory,
+    IConfiguration configuration,
     ILogger<QuickBooksController> logger) : ControllerBase
 {
     /// <summary>
@@ -98,7 +99,8 @@ public class QuickBooksController(
         logger.LogInformation("QuickBooks connected successfully. RealmId: {RealmId}", realmId);
 
         // Redirect to the Angular admin page after successful OAuth
-        return Redirect("/admin?tab=integrations&qb=connected");
+        var frontendUrl = configuration["FrontendBaseUrl"] ?? "http://localhost:4200";
+        return Redirect($"{frontendUrl}/admin/integrations?qb=connected");
     }
 
     /// <summary>

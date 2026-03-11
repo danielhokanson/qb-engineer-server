@@ -34,8 +34,8 @@ public class PartsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<PartDetailResponseModel>> CreatePart([FromBody] CreatePartRequestModel request)
     {
         var result = await mediator.Send(new CreatePartCommand(
-            request.PartNumber, request.Description, request.Revision,
-            request.PartType, request.Material, request.MoldToolRef));
+            request.Description, request.Revision,
+            request.PartType, request.Material, request.MoldToolRef, request.ExternalPartNumber));
         return Created($"/api/v1/parts/{result.Id}", result);
     }
 
@@ -87,6 +87,39 @@ public class PartsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new CreatePartRevisionCommand(
             id, request.Revision, request.ChangeDescription, request.ChangeReason, request.EffectiveDate));
         return Created($"/api/v1/parts/{id}/revisions/{result.Id}", result);
+    }
+
+    [HttpGet("{id:int}/process-steps")]
+    public async Task<ActionResult<List<ProcessStepResponseModel>>> GetProcessSteps(int id)
+        => Ok(await mediator.Send(new GetProcessStepsQuery(id)));
+
+    [HttpPost("{id:int}/process-steps")]
+    public async Task<ActionResult<ProcessStepResponseModel>> CreateProcessStep(int id, [FromBody] CreateProcessStepRequestModel request)
+        => StatusCode(201, await mediator.Send(new CreateProcessStepCommand(id, request)));
+
+    [HttpPatch("{id:int}/process-steps/{stepId:int}")]
+    public async Task<ActionResult<ProcessStepResponseModel>> UpdateProcessStep(int id, int stepId, [FromBody] UpdateProcessStepRequestModel request)
+        => Ok(await mediator.Send(new UpdateProcessStepCommand(id, stepId, request)));
+
+    [HttpDelete("{id:int}/process-steps/{stepId:int}")]
+    public async Task<IActionResult> DeleteProcessStep(int id, int stepId)
+    {
+        await mediator.Send(new DeleteProcessStepCommand(id, stepId));
+        return NoContent();
+    }
+
+    [HttpPost("{id:int}/link-accounting-item")]
+    public async Task<IActionResult> LinkAccountingItem(int id, [FromBody] LinkAccountingItemRequestModel request)
+    {
+        await mediator.Send(new LinkPartToAccountingItemCommand(id, request.ExternalId, request.ExternalRef));
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}/link-accounting-item")]
+    public async Task<IActionResult> UnlinkAccountingItem(int id)
+    {
+        await mediator.Send(new UnlinkPartFromAccountingItemCommand(id));
+        return NoContent();
     }
 
     [HttpGet("{id:int}/activity")]

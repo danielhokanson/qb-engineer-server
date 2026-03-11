@@ -7,4 +7,5 @@ public record CreateBOMEntryRequestModel(
     decimal Quantity,
     string? ReferenceDesignator,
     BOMSourceType SourceType,
+    int? LeadTimeDays,
     string? Notes);

@@ -8,4 +8,6 @@ public record UpdatePartRequestModel(
     PartStatus? Status,
     PartType? PartType,
     string? Material,
-    string? MoldToolRef);
+    string? MoldToolRef,
+    string? ExternalPartNumber,
+    int? ToolingAssetId);

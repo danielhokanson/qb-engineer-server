@@ -25,7 +25,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
             query = query.Where(p =>
                 p.PartNumber.ToLower().Contains(term) ||
                 p.Description.ToLower().Contains(term) ||
-                (p.Material != null && p.Material.ToLower().Contains(term)));
+                (p.Material != null && p.Material.ToLower().Contains(term)) ||
+                (p.ExternalPartNumber != null && p.ExternalPartNumber.ToLower().Contains(term)));
         }
 
         var parts = await query
@@ -41,6 +42,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
             p.Status,
             p.PartType,
             p.Material,
+            p.ExternalPartNumber,
             p.BOMEntries.Count,
             p.CreatedAt
         )).ToList();
@@ -52,6 +54,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
             .Include(p => p.BOMEntries).ThenInclude(b => b.ChildPart)
             .Include(p => p.UsedInBOM).ThenInclude(b => b.ParentPart)
             .Include(p => p.PreferredVendor)
+            .Include(p => p.ToolingAsset)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
         if (part is null)
@@ -68,6 +71,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 b.ReferenceDesignator,
                 b.SortOrder,
                 b.SourceType,
+                b.LeadTimeDays,
                 b.Notes))
             .ToList();
 
@@ -90,6 +94,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.PartType,
             part.Material,
             part.MoldToolRef,
+            part.ExternalPartNumber,
             part.ExternalId,
             part.ExternalRef,
             part.Provider,
@@ -97,6 +102,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.PreferredVendor?.CompanyName,
             part.MinStockThreshold,
             part.ReorderPoint,
+            part.ToolingAssetId,
+            part.ToolingAsset?.Name,
             bomEntries,
             usedIn,
             part.CreatedAt,
@@ -112,6 +119,31 @@ public class PartRepository(AppDbContext db) : IPartRepository
         if (excludeId.HasValue)
             query = query.Where(p => p.Id != excludeId.Value);
         return query.AnyAsync(ct);
+    }
+
+    public async Task<string> GetNextPartNumberAsync(PartType partType, CancellationToken ct)
+    {
+        var prefix = partType switch
+        {
+            PartType.Part => "PRT-",
+            PartType.Assembly => "ASM-",
+            PartType.RawMaterial => "RAW-",
+            PartType.Consumable => "CON-",
+            PartType.Tooling => "TLG-",
+            PartType.Fastener => "FST-",
+            PartType.Electronic => "ELC-",
+            PartType.Packaging => "PKG-",
+            _ => "PRT-",
+        };
+
+        var maxNumber = await db.Parts
+            .Where(p => p.PartNumber.StartsWith(prefix))
+            .Select(p => p.PartNumber.Substring(prefix.Length))
+            .Select(p => Convert.ToInt32(p))
+            .DefaultIfEmpty(0)
+            .MaxAsync(ct);
+
+        return $"{prefix}{maxNumber + 1:D5}";
     }
 
     public async Task AddAsync(Part part, CancellationToken ct)
@@ -142,6 +174,31 @@ public class PartRepository(AppDbContext db) : IPartRepository
         db.BOMEntries.Remove(entry);
         return db.SaveChangesAsync(default);
     }
+
+    public async Task<List<ProcessStepResponseModel>> GetProcessStepsAsync(int partId, CancellationToken ct)
+    {
+        return await db.ProcessSteps
+            .Where(s => s.PartId == partId)
+            .Include(s => s.WorkCenter)
+            .OrderBy(s => s.StepNumber)
+            .Select(s => new ProcessStepResponseModel(
+                s.Id,
+                s.PartId,
+                s.StepNumber,
+                s.Title,
+                s.Instructions,
+                s.WorkCenterId,
+                s.WorkCenter != null ? s.WorkCenter.Name : null,
+                s.EstimatedMinutes,
+                s.IsQcCheckpoint,
+                s.QcCriteria,
+                s.CreatedAt,
+                s.UpdatedAt))
+            .ToListAsync(ct);
+    }
+
+    public Task<ProcessStep?> FindProcessStepAsync(int stepId, CancellationToken ct)
+        => db.ProcessSteps.FirstOrDefaultAsync(s => s.Id == stepId, ct);
 
     public Task SaveChangesAsync(CancellationToken ct)
         => db.SaveChangesAsync(ct);

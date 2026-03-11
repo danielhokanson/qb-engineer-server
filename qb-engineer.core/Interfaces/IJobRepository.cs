@@ -11,6 +11,7 @@ public interface IJobRepository
     Task<string> GenerateNextJobNumberAsync(CancellationToken ct);
     Task<int> GetMaxBoardPositionAsync(int stageId, CancellationToken ct);
     Task<List<Job>> FindMultipleAsync(List<int> ids, CancellationToken ct);
+    Task<List<ChildJobResponseModel>> GetChildJobsAsync(int parentJobId, CancellationToken ct);
     Task AddAsync(Job job, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }

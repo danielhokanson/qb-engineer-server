@@ -43,6 +43,17 @@ public static partial class JobMapper
             BoardPosition: job.BoardPosition,
             IterationCount: job.IterationCount,
             IterationNotes: job.IterationNotes,
+            ExternalId: job.ExternalId,
+            ExternalRef: job.ExternalRef,
+            Provider: job.Provider,
+            Disposition: job.Disposition?.ToString(),
+            DispositionNotes: job.DispositionNotes,
+            DispositionAt: job.DispositionAt,
+            PartId: job.PartId,
+            PartNumber: job.Part?.PartNumber,
+            ParentJobId: job.ParentJobId,
+            ParentJobNumber: job.ParentJob?.JobNumber,
+            ChildJobCount: job.ChildJobs?.Count(c => c.DeletedAt == null) ?? 0,
             CreatedAt: job.CreatedAt,
             UpdatedAt: job.UpdatedAt);
     }
@@ -70,6 +81,10 @@ public static partial class JobMapper
             DueDate: job.DueDate,
             IsOverdue: job.DueDate.HasValue && job.DueDate.Value < DateTime.UtcNow && job.CompletedDate == null,
             CustomerName: job.Customer?.Name,
-            BillingStatus: billingStatus);
+            BillingStatus: billingStatus,
+            Disposition: job.Disposition?.ToString(),
+            ChildJobCount: job.ChildJobs?.Count(c => c.DeletedAt == null) ?? 0,
+            ExternalRef: job.ExternalRef,
+            AccountingDocumentType: job.CurrentStage?.AccountingDocumentType?.ToString());
     }
 }

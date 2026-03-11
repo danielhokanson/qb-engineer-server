@@ -66,4 +66,46 @@ public class ExpensesController(IMediator mediator) : ControllerBase
         await mediator.Send(command);
         return NoContent();
     }
+
+    // ─── Recurring Expenses ───
+
+    [HttpGet("recurring")]
+    public async Task<ActionResult<List<RecurringExpenseResponseModel>>> GetRecurringExpenses(
+        [FromQuery] string? classification)
+    {
+        var result = await mediator.Send(new GetRecurringExpensesQuery(classification));
+        return Ok(result);
+    }
+
+    [HttpPost("recurring")]
+    public async Task<ActionResult<RecurringExpenseResponseModel>> CreateRecurringExpense(
+        [FromBody] CreateRecurringExpenseRequestModel request)
+    {
+        var result = await mediator.Send(new CreateRecurringExpenseCommand(request));
+        return Created($"/api/v1/expenses/recurring/{result.Id}", result);
+    }
+
+    [HttpPatch("recurring/{id:int}")]
+    public async Task<ActionResult<RecurringExpenseResponseModel>> UpdateRecurringExpense(
+        int id, [FromBody] UpdateRecurringExpenseRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateRecurringExpenseCommand(id, request));
+        return Ok(result);
+    }
+
+    [HttpDelete("recurring/{id:int}")]
+    public async Task<IActionResult> DeleteRecurringExpense(int id)
+    {
+        await mediator.Send(new DeleteRecurringExpenseCommand(id));
+        return NoContent();
+    }
+
+    [HttpGet("upcoming")]
+    public async Task<ActionResult<List<UpcomingExpenseResponseModel>>> GetUpcomingExpenses(
+        [FromQuery] int daysAhead = 90,
+        [FromQuery] string? classification = null)
+    {
+        var result = await mediator.Send(new GetUpcomingExpensesQuery(daysAhead, classification));
+        return Ok(result);
+    }
 }

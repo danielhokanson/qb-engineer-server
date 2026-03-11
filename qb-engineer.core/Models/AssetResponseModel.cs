@@ -14,5 +14,13 @@ public record AssetResponseModel(
     string? PhotoFileId,
     decimal CurrentHours,
     string? Notes,
+    bool IsCustomerOwned,
+    int? CavityCount,
+    int? ToolLifeExpectancy,
+    int CurrentShotCount,
+    int? SourceJobId,
+    string? SourceJobNumber,
+    int? SourcePartId,
+    string? SourcePartNumber,
     DateTime CreatedAt,
     DateTime UpdatedAt);

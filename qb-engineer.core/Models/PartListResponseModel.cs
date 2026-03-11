@@ -10,5 +10,6 @@ public record PartListResponseModel(
     PartStatus Status,
     PartType PartType,
     string? Material,
+    string? ExternalPartNumber,
     int BomEntryCount,
     DateTime CreatedAt);

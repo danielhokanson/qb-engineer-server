@@ -9,4 +9,9 @@ public record CreateAssetRequestModel(
     string? Manufacturer,
     string? Model,
     string? SerialNumber,
-    string? Notes);
+    string? Notes,
+    bool? IsCustomerOwned,
+    int? CavityCount,
+    int? ToolLifeExpectancy,
+    int? SourceJobId,
+    int? SourcePartId);

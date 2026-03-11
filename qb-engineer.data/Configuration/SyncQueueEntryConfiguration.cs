@@ -8,12 +8,18 @@ public class SyncQueueEntryConfiguration : IEntityTypeConfiguration<SyncQueueEnt
 {
     public void Configure(EntityTypeBuilder<SyncQueueEntry> builder)
     {
-        builder.HasIndex(e => e.Status);
-        builder.HasIndex(e => e.CreatedAt);
+        builder.ToTable("sync_queue_entries");
 
-        builder.Property(e => e.EntityType).HasMaxLength(50);
-        builder.Property(e => e.Operation).HasMaxLength(50);
-        builder.Property(e => e.Payload).HasColumnType("jsonb");
+        builder.Property(e => e.EntityType).HasMaxLength(100).IsRequired();
+        builder.Property(e => e.Operation).HasMaxLength(100).IsRequired();
         builder.Property(e => e.ErrorMessage).HasMaxLength(2000);
+
+        // Efficient query for the worker: find pending entries ordered by age
+        builder.HasIndex(e => new { e.Status, e.CreatedAt })
+            .HasDatabaseName("ix_sync_queue_entries_status_created_at");
+
+        // Efficient lookup of all queued entries for a given entity
+        builder.HasIndex(e => new { e.EntityType, e.EntityId })
+            .HasDatabaseName("ix_sync_queue_entries_entity_type_entity_id");
     }
 }

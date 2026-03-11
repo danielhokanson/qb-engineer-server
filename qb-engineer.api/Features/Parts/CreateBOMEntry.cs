@@ -41,6 +41,7 @@ public class CreateBOMEntryHandler(IPartRepository repo) : IRequestHandler<Creat
             ReferenceDesignator = request.Data.ReferenceDesignator?.Trim(),
             SortOrder = maxSort + 1,
             SourceType = request.Data.SourceType,
+            LeadTimeDays = request.Data.LeadTimeDays,
             Notes = request.Data.Notes?.Trim(),
         };
 

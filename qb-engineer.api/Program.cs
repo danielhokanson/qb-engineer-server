@@ -202,6 +202,8 @@ try
     builder.Services.AddScoped<IPriceListRepository, PriceListRepository>();
     builder.Services.AddScoped<IRecurringOrderRepository, RecurringOrderRepository>();
     builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
+    builder.Services.AddScoped<ISyncQueueRepository, SyncQueueRepository>();
+    builder.Services.AddScoped<IStatusEntryRepository, StatusEntryRepository>();
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddSingleton<IImageService, ImageService>();
     builder.Services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
@@ -217,6 +219,7 @@ try
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection(MinioOptions.SectionName));
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
     builder.Services.Configure<QuickBooksOptions>(builder.Configuration.GetSection(QuickBooksOptions.SectionName));
+    builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
 
     // QuickBooks token service (always registered — handles OAuth token lifecycle)
     builder.Services.AddScoped<IQuickBooksTokenService, QuickBooksTokenService>();
@@ -243,12 +246,19 @@ try
     {
         builder.Services.AddSingleton<IStorageService, MinioStorageService>();
         builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
-        // Real QuickBooks accounting service (uses OAuth tokens from SystemSettings)
+        // Accounting providers — register all available implementations
         builder.Services.AddScoped<IAccountingService, QuickBooksAccountingService>();
-        // Real shipping/AI services registered here when implemented
+        // Additional providers register here when implemented:
+        // builder.Services.AddScoped<IAccountingService, XeroAccountingService>();
+        // builder.Services.AddScoped<IAccountingService, FreshBooksAccountingService>();
+        // builder.Services.AddScoped<IAccountingService, SageAccountingService>();
+        // Real shipping service registered here when carrier APIs implemented
         builder.Services.AddSingleton<IShippingService, MockShippingService>();
-        builder.Services.AddSingleton<IAiService, MockAiService>();
+        builder.Services.AddHttpClient<IAiService, OllamaAiService>();
     }
+
+    // Accounting provider factory — resolves active provider from system settings
+    builder.Services.AddScoped<IAccountingProviderFactory, AccountingProviderFactory>();
 
     // Resilient HTTP clients
     builder.Services.AddResilientHttpClients();
@@ -294,6 +304,12 @@ try
     builder.Services.AddScoped<ScheduledTaskJob>();
     builder.Services.AddScoped<DailyDigestJob>();
     builder.Services.AddTransient<DatabaseBackupJob>();
+    builder.Services.AddScoped<SyncQueueProcessorJob>();
+    builder.Services.AddScoped<CustomerSyncJob>();
+    builder.Services.AddScoped<AccountingCacheSyncJob>();
+    builder.Services.AddScoped<OrphanDetectionJob>();
+    builder.Services.AddScoped<ItemSyncJob>();
+    builder.Services.AddScoped<RecurringExpenseJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -419,6 +435,10 @@ try
         "generate-recurring-orders",
         job => job.GenerateDueOrdersAsync(),
         Cron.Daily(6)); // 6 AM UTC daily
+    RecurringJob.AddOrUpdate<RecurringExpenseJob>(
+        "generate-recurring-expenses",
+        job => job.GenerateDueExpensesAsync(),
+        Cron.Daily(5)); // 5 AM UTC daily
     RecurringJob.AddOrUpdate<OverdueInvoiceJob>(
         "mark-overdue-invoices",
         job => job.MarkOverdueInvoicesAsync(),
@@ -439,6 +459,28 @@ try
         "database-backup",
         job => job.RunBackupAsync(),
         Cron.Daily(3)); // 3 AM UTC daily
+
+    // Accounting sync jobs
+    RecurringJob.AddOrUpdate<SyncQueueProcessorJob>(
+        "sync-queue-processor",
+        job => job.ProcessQueueAsync(),
+        "*/2 * * * *"); // Every 2 minutes
+    RecurringJob.AddOrUpdate<CustomerSyncJob>(
+        "customer-sync",
+        job => job.SyncCustomersAsync(),
+        "0 */4 * * *"); // Every 4 hours
+    RecurringJob.AddOrUpdate<AccountingCacheSyncJob>(
+        "accounting-cache-sync",
+        job => job.RefreshCacheAsync(),
+        "0 */6 * * *"); // Every 6 hours
+    RecurringJob.AddOrUpdate<OrphanDetectionJob>(
+        "orphan-detection",
+        job => job.DetectOrphansAsync(),
+        "0 3 * * *"); // Daily at 3 AM
+    RecurringJob.AddOrUpdate<ItemSyncJob>(
+        "item-sync",
+        job => job.SyncItemsAsync(),
+        "0 */4 * * *"); // Every 4 hours
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

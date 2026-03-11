@@ -21,6 +21,7 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
+        builder.Property(e => e.DispositionNotes).HasMaxLength(2000);
         builder.Property(e => e.CustomFieldValues).HasColumnType("jsonb");
 
         builder.HasOne(e => e.TrackType)
@@ -37,5 +38,17 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
             .WithMany(c => c.Jobs)
             .HasForeignKey(e => e.CustomerId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(e => e.PartId);
+        builder.HasOne(e => e.Part)
+            .WithMany()
+            .HasForeignKey(e => e.PartId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.ParentJobId);
+        builder.HasMany(j => j.ChildJobs)
+            .WithOne(j => j.ParentJob)
+            .HasForeignKey(j => j.ParentJobId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

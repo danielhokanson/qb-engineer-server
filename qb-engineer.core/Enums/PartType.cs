@@ -3,5 +3,11 @@ namespace QBEngineer.Core.Enums;
 public enum PartType
 {
     Part,
-    Assembly
+    Assembly,
+    RawMaterial,
+    Consumable,
+    Tooling,
+    Fastener,
+    Electronic,
+    Packaging
 }

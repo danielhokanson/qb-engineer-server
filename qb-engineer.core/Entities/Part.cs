@@ -11,6 +11,7 @@ public class Part : BaseAuditableEntity
     public PartType PartType { get; set; } = PartType.Part;
     public string? Material { get; set; }
     public string? MoldToolRef { get; set; }
+    public string? ExternalPartNumber { get; set; }
 
     // Accounting integration
     public string? ExternalId { get; set; }
@@ -27,8 +28,13 @@ public class Part : BaseAuditableEntity
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 
+    // Tooling association
+    public int? ToolingAssetId { get; set; }
+    public Asset? ToolingAsset { get; set; }
+
     public Vendor? PreferredVendor { get; set; }
     public ICollection<BOMEntry> BOMEntries { get; set; } = [];
     public ICollection<BOMEntry> UsedInBOM { get; set; } = [];
+    public ICollection<ProcessStep> ProcessSteps { get; set; } = [];
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];
 }

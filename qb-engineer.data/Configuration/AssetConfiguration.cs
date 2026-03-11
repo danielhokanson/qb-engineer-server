@@ -20,5 +20,17 @@ public class AssetConfiguration : IEntityTypeConfiguration<Asset>
         builder.Property(e => e.Notes).HasMaxLength(2000);
 
         builder.HasIndex(e => e.SerialNumber);
+        builder.HasIndex(e => e.SourceJobId);
+        builder.HasIndex(e => e.SourcePartId);
+
+        builder.HasOne(e => e.SourceJob)
+            .WithMany()
+            .HasForeignKey(e => e.SourceJobId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(e => e.SourcePart)
+            .WithMany()
+            .HasForeignKey(e => e.SourcePartId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

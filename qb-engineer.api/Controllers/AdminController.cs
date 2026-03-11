@@ -217,13 +217,4 @@ public class AdminController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    // ── Accounting Mode ──
-
-    [AllowAnonymous]
-    [HttpGet("accounting-mode")]
-    public async Task<ActionResult<AccountingModeResponseModel>> GetAccountingMode()
-    {
-        var result = await mediator.Send(new GetAccountingModeQuery());
-        return Ok(result);
-    }
 }

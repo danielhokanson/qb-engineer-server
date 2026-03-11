@@ -32,6 +32,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<BinMovement> BinMovements => Set<BinMovement>();
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<RecurringExpense> RecurringExpenses => Set<RecurringExpense>();
     public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
     public DbSet<ClockEvent> ClockEvents => Set<ClockEvent>();
@@ -96,9 +97,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<QcInspectionResult> QcInspectionResults => Set<QcInspectionResult>();
     public DbSet<LotRecord> LotRecords => Set<LotRecord>();
 
+    // Process Steps
+    public DbSet<ProcessStep> ProcessSteps => Set<ProcessStep>();
+
     // Cycle Counts
     public DbSet<CycleCount> CycleCounts => Set<CycleCount>();
     public DbSet<CycleCountLine> CycleCountLines => Set<CycleCountLine>();
+
+    // Status Tracking
+    public DbSet<StatusEntry> StatusEntries => Set<StatusEntry>();
 
     // Audit
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();

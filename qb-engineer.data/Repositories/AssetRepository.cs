@@ -28,13 +28,20 @@ public class AssetRepository(AppDbContext db) : IAssetRepository
                 (a.SerialNumber != null && a.SerialNumber.ToLower().Contains(term)));
         }
 
-        var assets = await query.OrderBy(a => a.Name).ToListAsync(ct);
+        var assets = await query
+            .Include(a => a.SourceJob)
+            .Include(a => a.SourcePart)
+            .OrderBy(a => a.Name)
+            .ToListAsync(ct);
         return assets.Select(ToResponseModel).ToList();
     }
 
     public async Task<AssetResponseModel?> GetByIdAsync(int id, CancellationToken ct)
     {
-        var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == id, ct);
+        var asset = await db.Assets
+            .Include(a => a.SourceJob)
+            .Include(a => a.SourcePart)
+            .FirstOrDefaultAsync(a => a.Id == id, ct);
         return asset is null ? null : ToResponseModel(asset);
     }
 
@@ -53,5 +60,7 @@ public class AssetRepository(AppDbContext db) : IAssetRepository
     private static AssetResponseModel ToResponseModel(Asset a) => new(
         a.Id, a.Name, a.AssetType, a.Location, a.Manufacturer, a.Model,
         a.SerialNumber, a.Status, a.PhotoFileId, a.CurrentHours, a.Notes,
+        a.IsCustomerOwned, a.CavityCount, a.ToolLifeExpectancy, a.CurrentShotCount,
+        a.SourceJobId, a.SourceJob?.JobNumber, a.SourcePartId, a.SourcePart?.PartNumber,
         a.CreatedAt, a.UpdatedAt);
 }

@@ -1,0 +1,14 @@
+using QBEngineer.Core.Enums;
+
+namespace QBEngineer.Core.Models;
+
+public record UpcomingExpenseResponseModel(
+    int RecurringExpenseId,
+    string Description,
+    string Category,
+    string Classification,
+    string? Vendor,
+    decimal Amount,
+    DateTime DueDate,
+    RecurrenceFrequency Frequency,
+    bool AutoApprove);

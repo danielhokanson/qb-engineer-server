@@ -1,13 +1,16 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Moq;
 using QBEngineer.Api.Features.TimeTracking;
 using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
 
 namespace QBEngineer.Tests.Handlers.TimeTracking;
 
@@ -24,7 +27,20 @@ public class StopTimerHandlerTests
     {
         SetupHttpContext(TestUserId);
         SetupHubMock();
-        _handler = new StopTimerHandler(_repo.Object, _httpContext.Object, _timerHub.Object);
+        var userManagerMock = new Mock<UserManager<ApplicationUser>>(
+            Mock.Of<IUserStore<ApplicationUser>>(),
+            null, null, null, null, null, null, null, null);
+
+        _handler = new StopTimerHandler(
+            _repo.Object,
+            _httpContext.Object,
+            _timerHub.Object,
+            Mock.Of<ISyncQueueRepository>(),
+            Mock.Of<IAccountingProviderFactory>(),
+            userManagerMock.Object,
+            Mock.Of<IJobRepository>(),
+            Mock.Of<ICustomerRepository>(),
+            Mock.Of<ILogger<StopTimerHandler>>());
     }
 
     private void SetupHttpContext(int userId)

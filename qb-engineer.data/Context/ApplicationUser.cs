@@ -22,6 +22,9 @@ public class ApplicationUser : IdentityUser<int>
     // Barcode for kiosk scan
     public string? EmployeeBarcode { get; set; }
 
+    // Accounting integration (QB Employee ID for time activity sync)
+    public string? AccountingEmployeeId { get; set; }
+
     // SSO identity linking
     public string? GoogleId { get; set; }
     public string? MicrosoftId { get; set; }

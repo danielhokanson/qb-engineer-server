@@ -10,6 +10,7 @@ public class BOMEntry : BaseAuditableEntity
     public string? ReferenceDesignator { get; set; }
     public int SortOrder { get; set; }
     public BOMSourceType SourceType { get; set; } = BOMSourceType.Buy;
+    public int? LeadTimeDays { get; set; }
     public string? Notes { get; set; }
 
     public Part ParentPart { get; set; } = null!;

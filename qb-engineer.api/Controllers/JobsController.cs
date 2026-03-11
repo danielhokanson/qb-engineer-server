@@ -247,6 +247,11 @@ public class JobsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // Disposition
+    [HttpPost("{id:int}/dispose")]
+    public async Task<ActionResult<JobDetailResponseModel>> DisposeJob(int id, DisposeJobRequestModel request)
+        => Ok(await mediator.Send(new DisposeJobCommand(id, request)));
+
     // R&D Handoff
     [HttpPost("{id:int}/handoff-to-production")]
     public async Task<ActionResult<object>> HandoffToProduction(int id)
@@ -254,6 +259,16 @@ public class JobsController(IMediator mediator) : ControllerBase
         var prodJobId = await mediator.Send(new HandoffToProductionCommand(id));
         return Created($"/api/v1/jobs/{prodJobId}", new { jobId = prodJobId });
     }
+
+    // BOM Explosion
+    [HttpPost("{id:int}/explode-bom")]
+    public async Task<ActionResult<BomExplosionResponseModel>> ExplodeJobBom(int id)
+        => Ok(await mediator.Send(new ExplodeJobBomCommand(id)));
+
+    // Child Jobs
+    [HttpGet("{id:int}/child-jobs")]
+    public async Task<ActionResult<List<ChildJobResponseModel>>> GetChildJobs(int id)
+        => Ok(await mediator.Send(new GetChildJobsQuery(id)));
 
     // Internal Project Types
     [HttpGet("internal-project-types")]

@@ -15,6 +15,32 @@ public interface IAccountingService
     Task<AccountingPayment?> GetPaymentAsync(string externalId, CancellationToken ct);
     Task<string> CreateTimeActivityAsync(AccountingTimeActivity activity, CancellationToken ct);
 
+    // Item (Part) sync
+    Task<List<AccountingItem>> GetItemsAsync(CancellationToken ct);
+    Task<AccountingItem?> GetItemAsync(string externalId, CancellationToken ct);
+    Task<string> CreateItemAsync(AccountingItem item, CancellationToken ct);
+    Task UpdateItemAsync(string externalId, AccountingItem item, CancellationToken ct);
+
+    // Expense (Purchase) sync
+    Task<string> CreateExpenseAsync(AccountingExpense expense, CancellationToken ct);
+
+    // Employee sync
+    Task<List<AccountingEmployee>> GetEmployeesAsync(CancellationToken ct);
+    Task<AccountingEmployee?> GetEmployeeAsync(string externalId, CancellationToken ct);
+
+    // Inventory quantity sync
+    Task UpdateInventoryQuantityAsync(string externalItemId, decimal quantityOnHand, CancellationToken ct);
+
     Task<bool> TestConnectionAsync(CancellationToken ct);
     Task<AccountingSyncStatus> GetSyncStatusAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Provider identifier (e.g., "quickbooks", "xero", "mock").
+    /// </summary>
+    string ProviderId { get; }
+
+    /// <summary>
+    /// Human-readable provider name.
+    /// </summary>
+    string ProviderName { get; }
 }

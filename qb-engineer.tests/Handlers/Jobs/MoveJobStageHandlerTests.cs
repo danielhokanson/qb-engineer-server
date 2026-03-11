@@ -2,6 +2,7 @@ using Bogus;
 using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Moq;
 using QBEngineer.Api.Features.Jobs;
 using QBEngineer.Api.Hubs;
@@ -31,8 +32,15 @@ public class MoveJobStageHandlerTests
         _boardHub.Setup(h => h.Clients).Returns(mockClients.Object);
 
         _handler = new MoveJobStageHandler(
-            _jobRepo.Object, _trackRepo.Object, _actRepo.Object,
-            _mediator.Object, _boardHub.Object);
+            _jobRepo.Object,
+            _trackRepo.Object,
+            _actRepo.Object,
+            Mock.Of<ICustomerRepository>(),
+            Mock.Of<IAccountingService>(),
+            Mock.Of<ISyncQueueRepository>(),
+            _mediator.Object,
+            _boardHub.Object,
+            Mock.Of<ILogger<MoveJobStageHandler>>());
     }
 
     [Fact]
@@ -65,6 +73,7 @@ public class MoveJobStageHandlerTests
             10, "JOB-0001", "Test Job", null, trackTypeId, "Production",
             toStageId, "Order Confirmed", "#22c55e", null, null, null, null,
             "Normal", null, null, null, null, null, false, 8, 0, null,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
 
         _mediator.Setup(m => m.Send(It.IsAny<GetJobByIdQuery>(), It.IsAny<CancellationToken>()))
@@ -159,6 +168,7 @@ public class MoveJobStageHandlerTests
             1, "JOB-0001", "Test", null, trackTypeId, "Production",
             toStageId, "Materials Received", "#22c55e", null, null, null, null,
             "Normal", null, null, null, null, null, false, 1, 0, null,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
 
         _mediator.Setup(m => m.Send(It.IsAny<GetJobByIdQuery>(), It.IsAny<CancellationToken>()))
@@ -200,6 +210,7 @@ public class MoveJobStageHandlerTests
             1, "JOB-0001", "Test", null, trackTypeId, "Production",
             toStageId, "Order Confirmed", "#22c55e", null, null, null, null,
             "Normal", null, null, null, null, null, false, 3, 0, null,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
 
         _mediator.Setup(m => m.Send(It.IsAny<GetJobByIdQuery>(), It.IsAny<CancellationToken>()))

@@ -17,6 +17,8 @@ public class Job : BaseAuditableEntity
     public DateTime? CompletedDate { get; set; }
     public bool IsArchived { get; set; }
     public int BoardPosition { get; set; }
+    public int? PartId { get; set; }
+    public int? ParentJobId { get; set; }
     public int? SalesOrderLineId { get; set; }
 
     // Accounting integration
@@ -32,10 +34,18 @@ public class Job : BaseAuditableEntity
     public bool IsInternal { get; set; }
     public int? InternalProjectTypeId { get; set; }
 
+    // Disposition
+    public JobDisposition? Disposition { get; set; }
+    public string? DispositionNotes { get; set; }
+    public DateTime? DispositionAt { get; set; }
+
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 
     // Navigation
+    public Part? Part { get; set; }
+    public Job? ParentJob { get; set; }
+    public ICollection<Job> ChildJobs { get; set; } = [];
     public TrackType TrackType { get; set; } = null!;
     public JobStage CurrentStage { get; set; } = null!;
     public Customer? Customer { get; set; }

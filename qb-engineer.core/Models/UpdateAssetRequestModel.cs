@@ -11,4 +11,10 @@ public record UpdateAssetRequestModel(
     string? SerialNumber,
     AssetStatus? Status,
     decimal? CurrentHours,
-    string? Notes);
+    string? Notes,
+    bool? IsCustomerOwned,
+    int? CavityCount,
+    int? ToolLifeExpectancy,
+    int? CurrentShotCount,
+    int? SourceJobId,
+    int? SourcePartId);

@@ -1,0 +1,140 @@
+using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+
+using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+
+namespace QBEngineer.Api.Features.Jobs;
+
+public record ExplodeJobBomCommand(int JobId) : IRequest<BomExplosionResponseModel>;
+
+public class ExplodeJobBomValidator : AbstractValidator<ExplodeJobBomCommand>
+{
+    public ExplodeJobBomValidator()
+    {
+        RuleFor(x => x.JobId).GreaterThan(0);
+    }
+}
+
+public class ExplodeJobBomHandler(AppDbContext db, IJobRepository jobRepo) : IRequestHandler<ExplodeJobBomCommand, BomExplosionResponseModel>
+{
+    public async Task<BomExplosionResponseModel> Handle(ExplodeJobBomCommand request, CancellationToken ct)
+    {
+        var parentJob = await db.Jobs
+            .Include(j => j.TrackType)
+                .ThenInclude(t => t.Stages.OrderBy(s => s.SortOrder))
+            .FirstOrDefaultAsync(j => j.Id == request.JobId, ct)
+            ?? throw new KeyNotFoundException($"Job {request.JobId} not found.");
+
+        if (!parentJob.PartId.HasValue)
+            throw new InvalidOperationException($"Job {request.JobId} has no associated part. Set PartId before exploding BOM.");
+
+        var part = await db.Parts
+            .Include(p => p.BOMEntries)
+                .ThenInclude(b => b.ChildPart)
+                    .ThenInclude(cp => cp.PreferredVendor)
+            .FirstOrDefaultAsync(p => p.Id == parentJob.PartId.Value, ct)
+            ?? throw new KeyNotFoundException($"Part {parentJob.PartId.Value} not found.");
+
+        if (part.BOMEntries.Count == 0)
+            throw new InvalidOperationException($"Part {part.PartNumber} has no BOM entries.");
+
+        var firstStage = parentJob.TrackType.Stages.FirstOrDefault()
+            ?? throw new InvalidOperationException($"Track type '{parentJob.TrackType.Name}' has no stages configured.");
+
+        var createdJobs = new List<BomExplosionChildJobModel>();
+        var buyItems = new List<BomExplosionBuyItemModel>();
+        var stockItems = new List<BomExplosionStockItemModel>();
+
+        foreach (var bomEntry in part.BOMEntries.OrderBy(b => b.SortOrder))
+        {
+            var childPart = bomEntry.ChildPart;
+
+            switch (bomEntry.SourceType)
+            {
+                case BOMSourceType.Make:
+                {
+                    var jobNumber = await jobRepo.GenerateNextJobNumberAsync(ct);
+                    var maxPos = await jobRepo.GetMaxBoardPositionAsync(firstStage.Id, ct);
+
+                    var childJob = new Job
+                    {
+                        JobNumber = jobNumber,
+                        Title = childPart.Description,
+                        TrackTypeId = parentJob.TrackTypeId,
+                        CurrentStageId = firstStage.Id,
+                        CustomerId = parentJob.CustomerId,
+                        BoardPosition = maxPos + 1,
+                        PartId = childPart.Id,
+                        ParentJobId = parentJob.Id,
+                    };
+
+                    await jobRepo.AddAsync(childJob, ct);
+
+                    // Create bidirectional links
+                    db.Set<JobLink>().Add(new JobLink
+                    {
+                        SourceJobId = parentJob.Id,
+                        TargetJobId = childJob.Id,
+                        LinkType = JobLinkType.Parent,
+                    });
+
+                    db.Set<JobLink>().Add(new JobLink
+                    {
+                        SourceJobId = childJob.Id,
+                        TargetJobId = parentJob.Id,
+                        LinkType = JobLinkType.Child,
+                    });
+
+                    // Create JobPart for the child job
+                    db.Set<JobPart>().Add(new JobPart
+                    {
+                        JobId = childJob.Id,
+                        PartId = childPart.Id,
+                        Quantity = bomEntry.Quantity,
+                    });
+
+                    createdJobs.Add(new BomExplosionChildJobModel(
+                        childJob.Id,
+                        childJob.JobNumber,
+                        childJob.Title,
+                        childPart.Id,
+                        childPart.PartNumber,
+                        bomEntry.Quantity));
+                    break;
+                }
+
+                case BOMSourceType.Buy:
+                    buyItems.Add(new BomExplosionBuyItemModel(
+                        childPart.Id,
+                        childPart.PartNumber,
+                        childPart.Description,
+                        bomEntry.Quantity,
+                        childPart.PreferredVendorId,
+                        childPart.PreferredVendor?.CompanyName,
+                        bomEntry.LeadTimeDays));
+                    break;
+
+                case BOMSourceType.Stock:
+                    stockItems.Add(new BomExplosionStockItemModel(
+                        childPart.Id,
+                        childPart.PartNumber,
+                        childPart.Description,
+                        bomEntry.Quantity));
+                    break;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        return new BomExplosionResponseModel(
+            parentJob.Id,
+            createdJobs,
+            buyItems,
+            stockItems);
+    }
+}

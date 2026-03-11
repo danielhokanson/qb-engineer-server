@@ -60,6 +60,7 @@ public class CreateJobHandlerTests
             1, jobNumber, title, description, trackTypeId, "Production",
             stageId, stageName, "#94a3b8", assigneeId, "JD", "John Doe", "#3b82f6",
             "Normal", customerId, "Acme Corp", dueDate, null, null, false, 4, 0, null,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
 
         _mediator.Setup(m => m.Send(It.IsAny<GetJobByIdQuery>(), It.IsAny<CancellationToken>()))
@@ -127,6 +128,7 @@ public class CreateJobHandlerTests
             1, "JOB-0001", "Test", null, 1, "Production",
             stageId, "Quote", "#94a3b8", null, null, null, null,
             "Normal", null, null, null, null, null, false, 1, 0, null,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
 
         _mediator.Setup(m => m.Send(It.IsAny<GetJobByIdQuery>(), It.IsAny<CancellationToken>()))
@@ -161,6 +163,7 @@ public class CreateJobHandlerTests
             1, "JOB-0042", "Test", null, 1, "Production",
             stageId, "Quote", "#94a3b8", null, null, null, null,
             "Normal", null, null, null, null, null, false, 1, 0, null,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
 
         _mediator.Setup(m => m.Send(It.IsAny<GetJobByIdQuery>(), It.IsAny<CancellationToken>()))
@@ -198,6 +201,7 @@ public class CreateJobHandlerTests
             1, "JOB-0001", "Test", null, trackTypeId, "R&D",
             stageId, "Quote", "#94a3b8", null, null, null, null,
             "Normal", null, null, null, null, null, false, 1, 0, null,
+            null, null, null, null, null, null, null, null, null, null, 0,
             DateTime.UtcNow, DateTime.UtcNow);
 
         _mediator.Setup(m => m.Send(It.IsAny<GetJobByIdQuery>(), It.IsAny<CancellationToken>()))

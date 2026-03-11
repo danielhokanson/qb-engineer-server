@@ -12,4 +12,8 @@ public record JobListResponseModel(
     DateTime? DueDate,
     bool IsOverdue,
     string? CustomerName,
-    string? BillingStatus);
+    string? BillingStatus,
+    string? Disposition,
+    int ChildJobCount,
+    string? ExternalRef,
+    string? AccountingDocumentType);

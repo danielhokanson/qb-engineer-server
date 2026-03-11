@@ -17,6 +17,7 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.Property(e => e.Revision).HasMaxLength(10);
         builder.Property(e => e.Material).HasMaxLength(200);
         builder.Property(e => e.MoldToolRef).HasMaxLength(100);
+        builder.Property(e => e.ExternalPartNumber).HasMaxLength(100);
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
@@ -26,6 +27,12 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.HasOne(e => e.PreferredVendor)
             .WithMany()
             .HasForeignKey(e => e.PreferredVendorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(e => e.ToolingAssetId);
+        builder.HasOne(e => e.ToolingAsset)
+            .WithMany()
+            .HasForeignKey(e => e.ToolingAssetId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -32,6 +32,11 @@ public class CreateAssetHandler(IAssetRepository repo) : IRequestHandler<CreateA
             Model = data.Model?.Trim(),
             SerialNumber = data.SerialNumber?.Trim(),
             Notes = data.Notes?.Trim(),
+            IsCustomerOwned = data.IsCustomerOwned ?? false,
+            CavityCount = data.CavityCount,
+            ToolLifeExpectancy = data.ToolLifeExpectancy,
+            SourceJobId = data.SourceJobId,
+            SourcePartId = data.SourcePartId,
         };
 
         await repo.AddAsync(asset, cancellationToken);

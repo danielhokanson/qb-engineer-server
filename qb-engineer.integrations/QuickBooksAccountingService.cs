@@ -175,6 +175,215 @@ public class QuickBooksAccountingService(
         return id;
     }
 
+    public async Task<List<AccountingItem>> GetItemsAsync(CancellationToken ct)
+    {
+        var json = await QueryAsync("SELECT * FROM Item WHERE Active = true MAXRESULTS 1000", ct);
+        if (json is null) return [];
+
+        var items = new List<AccountingItem>();
+        if (json.RootElement.TryGetProperty("QueryResponse", out var qr) &&
+            qr.TryGetProperty("Item", out var arr))
+        {
+            foreach (var i in arr.EnumerateArray())
+            {
+                items.Add(MapItem(i));
+            }
+        }
+
+        logger.LogInformation("[QuickBooks] GetItems — returned {Count} items", items.Count);
+        return items;
+    }
+
+    public async Task<AccountingItem?> GetItemAsync(string externalId, CancellationToken ct)
+    {
+        var json = await QueryAsync($"SELECT * FROM Item WHERE Id = '{externalId}'", ct);
+        if (json is null) return null;
+
+        if (json.RootElement.TryGetProperty("QueryResponse", out var qr) &&
+            qr.TryGetProperty("Item", out var arr))
+        {
+            foreach (var i in arr.EnumerateArray())
+            {
+                return MapItem(i);
+            }
+        }
+
+        return null;
+    }
+
+    public async Task<string> CreateItemAsync(AccountingItem item, CancellationToken ct)
+    {
+        var payload = new
+        {
+            Name = item.Name,
+            Description = item.Description,
+            Type = item.Type ?? "NonInventory",
+            UnitPrice = item.UnitPrice,
+            PurchaseCost = item.PurchaseCost,
+            Sku = item.Sku,
+            IncomeAccountRef = new { value = "1" },
+            ExpenseAccountRef = new { value = "1" },
+        };
+
+        var result = await PostEntityAsync("item", payload, ct);
+        var id = result?.RootElement.GetProperty("Item").GetProperty("Id").GetString()
+            ?? throw new InvalidOperationException("Failed to create QuickBooks item");
+
+        logger.LogInformation("[QuickBooks] CreateItem({Name}) — assigned {Id}", item.Name, id);
+        return id;
+    }
+
+    public async Task UpdateItemAsync(string externalId, AccountingItem item, CancellationToken ct)
+    {
+        // QB requires SyncToken for updates — fetch current first
+        var current = await QueryAsync($"SELECT * FROM Item WHERE Id = '{externalId}'", ct);
+        if (current is null) throw new InvalidOperationException($"QuickBooks item {externalId} not found");
+
+        var syncToken = "0";
+        if (current.RootElement.TryGetProperty("QueryResponse", out var qr) &&
+            qr.TryGetProperty("Item", out var arr))
+        {
+            foreach (var i in arr.EnumerateArray())
+            {
+                syncToken = i.GetProperty("SyncToken").GetString() ?? "0";
+            }
+        }
+
+        var payload = new
+        {
+            Id = externalId,
+            SyncToken = syncToken,
+            Name = item.Name,
+            Description = item.Description,
+            UnitPrice = item.UnitPrice,
+            PurchaseCost = item.PurchaseCost,
+            Sku = item.Sku,
+        };
+
+        await PostEntityAsync("item", payload, ct);
+        logger.LogInformation("[QuickBooks] UpdateItem({ExternalId}) — updated", externalId);
+    }
+
+    public async Task<string> CreateExpenseAsync(AccountingExpense expense, CancellationToken ct)
+    {
+        var line = new[]
+        {
+            new
+            {
+                DetailType = "AccountBasedExpenseLineDetail",
+                Amount = expense.Amount,
+                AccountBasedExpenseLineDetail = new
+                {
+                    AccountRef = new { value = "1" },
+                    CustomerRef = expense.CustomerExternalId is not null
+                        ? new { value = expense.CustomerExternalId }
+                        : null,
+                },
+                Description = expense.Description ?? expense.Category,
+            },
+        };
+
+        var payload = new
+        {
+            PayType = "Cash",
+            Line = line,
+            EntityRef = expense.VendorExternalId is not null
+                ? new { value = expense.VendorExternalId, type = "Vendor" }
+                : null,
+            TxnDate = expense.Date.ToString("yyyy-MM-dd"),
+            DocNumber = expense.RefNumber,
+        };
+
+        var result = await PostEntityAsync("purchase", payload, ct);
+        var id = result?.RootElement.GetProperty("Purchase").GetProperty("Id").GetString()
+            ?? throw new InvalidOperationException("Failed to create QuickBooks expense");
+
+        logger.LogInformation("[QuickBooks] CreateExpense, {Amount:C} — assigned {Id}", expense.Amount, id);
+        return id;
+    }
+
+    public string ProviderId => "quickbooks";
+    public string ProviderName => "QuickBooks Online";
+
+    public async Task<List<AccountingEmployee>> GetEmployeesAsync(CancellationToken ct)
+    {
+        var json = await QueryAsync("SELECT * FROM Employee WHERE Active = true MAXRESULTS 1000", ct);
+        if (json is null) return [];
+
+        var employees = new List<AccountingEmployee>();
+        if (json.RootElement.TryGetProperty("QueryResponse", out var qr) &&
+            qr.TryGetProperty("Employee", out var arr))
+        {
+            foreach (var e in arr.EnumerateArray())
+            {
+                employees.Add(MapEmployee(e));
+            }
+        }
+
+        logger.LogInformation("[QuickBooks] GetEmployees — returned {Count} employees", employees.Count);
+        return employees;
+    }
+
+    public async Task<AccountingEmployee?> GetEmployeeAsync(string externalId, CancellationToken ct)
+    {
+        var json = await QueryAsync($"SELECT * FROM Employee WHERE Id = '{externalId}'", ct);
+        if (json is null) return null;
+
+        if (json.RootElement.TryGetProperty("QueryResponse", out var qr) &&
+            qr.TryGetProperty("Employee", out var arr))
+        {
+            foreach (var e in arr.EnumerateArray())
+            {
+                return MapEmployee(e);
+            }
+        }
+
+        return null;
+    }
+
+    public async Task UpdateInventoryQuantityAsync(string externalItemId, decimal quantityOnHand, CancellationToken ct)
+    {
+        // QB tracks inventory via InventoryAdjustment transactions
+        var current = await QueryAsync($"SELECT * FROM Item WHERE Id = '{externalItemId}'", ct);
+        if (current is null) throw new InvalidOperationException($"QuickBooks item {externalItemId} not found");
+
+        var syncToken = "0";
+        decimal currentQty = 0;
+        if (current.RootElement.TryGetProperty("QueryResponse", out var qr) &&
+            qr.TryGetProperty("Item", out var arr))
+        {
+            foreach (var i in arr.EnumerateArray())
+            {
+                syncToken = i.GetProperty("SyncToken").GetString() ?? "0";
+                if (i.TryGetProperty("QtyOnHand", out var qty))
+                    currentQty = qty.GetDecimal();
+            }
+        }
+
+        var adjustment = quantityOnHand - currentQty;
+        if (adjustment == 0) return;
+
+        var payload = new
+        {
+            AdjDate = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            Line = new[]
+            {
+                new
+                {
+                    DetailType = "ItemAdjustmentLineDetail",
+                    ItemAdjustmentLineDetail = new
+                    {
+                        ItemRef = new { value = externalItemId },
+                        QtyDiff = adjustment,
+                    },
+                },
+            },
+        };
+
+        await PostEntityAsync("inventoryadjustment", payload, ct);
+        logger.LogInformation("[QuickBooks] UpdateInventoryQuantity({ExternalItemId}) — adjusted by {Adjustment}", externalItemId, adjustment);
+    }
+
     public async Task<bool> TestConnectionAsync(CancellationToken ct)
     {
         try
@@ -302,6 +511,36 @@ public class QuickBooksAccountingService(
             DocNumber = document.RefNumber,
             TxnDate = document.Date.ToString("yyyy-MM-dd"),
         };
+    }
+
+    private static AccountingItem MapItem(JsonElement i)
+    {
+        return new AccountingItem(
+            ExternalId: i.GetProperty("Id").GetString()!,
+            Name: i.GetProperty("Name").GetString()!,
+            Description: i.TryGetProperty("Description", out var desc) ? desc.GetString() : null,
+            Type: i.TryGetProperty("Type", out var type) ? type.GetString() : null,
+            UnitPrice: i.TryGetProperty("UnitPrice", out var price) ? price.GetDecimal() : null,
+            PurchaseCost: i.TryGetProperty("PurchaseCost", out var cost) ? cost.GetDecimal() : null,
+            Sku: i.TryGetProperty("Sku", out var sku) ? sku.GetString() : null,
+            Active: !i.TryGetProperty("Active", out var active) || active.GetBoolean());
+    }
+
+    private static AccountingEmployee MapEmployee(JsonElement e)
+    {
+        var name = e.TryGetProperty("DisplayName", out var dn) ? dn.GetString()! :
+            $"{(e.TryGetProperty("GivenName", out var gn) ? gn.GetString() : "")} {(e.TryGetProperty("FamilyName", out var fn) ? fn.GetString() : "")}".Trim();
+
+        return new AccountingEmployee(
+            ExternalId: e.GetProperty("Id").GetString()!,
+            DisplayName: name,
+            Email: e.TryGetProperty("PrimaryEmailAddr", out var email)
+                ? email.GetProperty("Address").GetString()
+                : null,
+            Phone: e.TryGetProperty("PrimaryPhone", out var phone)
+                ? phone.GetProperty("FreeFormNumber").GetString()
+                : null,
+            Active: !e.TryGetProperty("Active", out var active) || active.GetBoolean());
     }
 
     private static AccountingCustomer MapCustomer(JsonElement c)

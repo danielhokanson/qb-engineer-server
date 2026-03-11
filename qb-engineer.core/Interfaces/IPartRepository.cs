@@ -10,10 +10,13 @@ public interface IPartRepository
     Task<PartDetailResponseModel?> GetDetailAsync(int id, CancellationToken ct);
     Task<Part?> FindAsync(int id, CancellationToken ct);
     Task<bool> PartNumberExistsAsync(string partNumber, int? excludeId, CancellationToken ct);
+    Task<string> GetNextPartNumberAsync(PartType partType, CancellationToken ct);
     Task AddAsync(Part part, CancellationToken ct);
     Task<BOMEntry?> FindBomEntryAsync(int bomEntryId, int parentPartId, CancellationToken ct);
     Task<int> GetMaxBomSortOrderAsync(int parentPartId, CancellationToken ct);
     Task AddBomEntryAsync(BOMEntry entry, CancellationToken ct);
     Task RemoveBomEntryAsync(BOMEntry entry);
+    Task<List<ProcessStepResponseModel>> GetProcessStepsAsync(int partId, CancellationToken ct);
+    Task<ProcessStep?> FindProcessStepAsync(int stepId, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
