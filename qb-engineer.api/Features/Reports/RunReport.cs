@@ -27,7 +27,11 @@ public class RunReportCommandValidator : AbstractValidator<RunReportCommand>
     [
         "Jobs", "Parts", "Customers", "Expenses", "TimeEntries",
         "Invoices", "Leads", "Assets", "PurchaseOrders", "SalesOrders",
-        "Quotes", "Shipments", "Inventory"
+        "Quotes", "Shipments", "Inventory", "Payments", "Vendors",
+        "ProductionRuns", "LotRecords", "QcInspections",
+        "MaintenanceSchedules", "MaintenanceLogs", "DowntimeLogs",
+        "CustomerReturns", "BinMovements", "PlanningCycles",
+        "InvoiceLines", "SalesOrderLines", "PurchaseOrderLines", "QuoteLines"
     ];
 
     public RunReportCommandValidator()
@@ -60,10 +64,15 @@ public class RunReportHandler(AppDbContext context) : IRequestHandler<RunReportC
                     .Include(j => j.Customer)
                     .Include(j => j.TrackType)
                     .Include(j => j.CurrentStage)
+                    .Include(j => j.Part)
+                    .Include(j => j.ParentJob)
                     .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             "Parts" => await ExecuteReport(
-                context.Parts.AsNoTracking(),
+                context.Parts
+                    .Include(p => p.PreferredVendor)
+                    .Include(p => p.ToolingAsset)
+                    .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             "Customers" => await ExecuteReport(
                 context.Customers.AsNoTracking(),
@@ -81,13 +90,20 @@ public class RunReportHandler(AppDbContext context) : IRequestHandler<RunReportC
             "Invoices" => await ExecuteReport(
                 context.Invoices
                     .Include(i => i.Customer)
+                    .Include(i => i.SalesOrder)
+                    .Include(i => i.Shipment)
                     .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             "Leads" => await ExecuteReport(
-                context.Leads.AsNoTracking(),
+                context.Leads
+                    .Include(l => l.ConvertedCustomer)
+                    .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             "Assets" => await ExecuteReport(
-                context.Assets.AsNoTracking(),
+                context.Assets
+                    .Include(a => a.SourceJob)
+                    .Include(a => a.SourcePart)
+                    .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             "PurchaseOrders" => await ExecuteReport(
                 context.PurchaseOrders
@@ -98,6 +114,7 @@ public class RunReportHandler(AppDbContext context) : IRequestHandler<RunReportC
             "SalesOrders" => await ExecuteReport(
                 context.SalesOrders
                     .Include(s => s.Customer)
+                    .Include(s => s.Quote)
                     .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             "Quotes" => await ExecuteReport(
@@ -108,11 +125,103 @@ public class RunReportHandler(AppDbContext context) : IRequestHandler<RunReportC
             "Shipments" => await ExecuteReport(
                 context.Shipments
                     .Include(s => s.SalesOrder)
+                        .ThenInclude(so => so.Customer)
                     .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             "Inventory" => await ExecuteReport(
                 context.BinContents
                     .Include(b => b.Location)
+                    .Include(b => b.Job)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "Payments" => await ExecuteReport(
+                context.Payments
+                    .Include(p => p.Customer)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "Vendors" => await ExecuteReport(
+                context.Vendors.AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "ProductionRuns" => await ExecuteReport(
+                context.ProductionRuns
+                    .Include(pr => pr.Job)
+                    .Include(pr => pr.Part)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "LotRecords" => await ExecuteReport(
+                context.LotRecords
+                    .Include(lr => lr.Part)
+                    .Include(lr => lr.Job)
+                    .Include(lr => lr.ProductionRun)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "QcInspections" => await ExecuteReport(
+                context.QcInspections
+                    .Include(qi => qi.Job)
+                    .Include(qi => qi.ProductionRun)
+                        .ThenInclude(pr => pr!.Part)
+                    .Include(qi => qi.Template)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "MaintenanceSchedules" => await ExecuteReport(
+                context.MaintenanceSchedules
+                    .Include(ms => ms.Asset)
+                    .Include(ms => ms.MaintenanceJob)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "MaintenanceLogs" => await ExecuteReport(
+                context.MaintenanceLogs
+                    .Include(ml => ml.Schedule)
+                        .ThenInclude(s => s.Asset)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "DowntimeLogs" => await ExecuteReport(
+                context.DowntimeLogs
+                    .Include(dl => dl.Asset)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "CustomerReturns" => await ExecuteReport(
+                context.CustomerReturns
+                    .Include(cr => cr.Customer)
+                    .Include(cr => cr.OriginalJob)
+                    .Include(cr => cr.ReworkJob)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "BinMovements" => await ExecuteReport(
+                context.BinMovements
+                    .Include(bm => bm.FromLocation)
+                    .Include(bm => bm.ToLocation)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "PlanningCycles" => await ExecuteReport(
+                context.PlanningCycles.AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "InvoiceLines" => await ExecuteReport(
+                context.InvoiceLines
+                    .Include(il => il.Invoice)
+                        .ThenInclude(i => i.Customer)
+                    .Include(il => il.Part)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "SalesOrderLines" => await ExecuteReport(
+                context.SalesOrderLines
+                    .Include(sol => sol.SalesOrder)
+                        .ThenInclude(so => so.Customer)
+                    .Include(sol => sol.Part)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "PurchaseOrderLines" => await ExecuteReport(
+                context.PurchaseOrderLines
+                    .Include(pol => pol.PurchaseOrder)
+                        .ThenInclude(po => po.Vendor)
+                    .Include(pol => pol.Part)
+                    .AsNoTracking(),
+                request, page, pageSize, cancellationToken),
+            "QuoteLines" => await ExecuteReport(
+                context.QuoteLines
+                    .Include(ql => ql.Quote)
+                        .ThenInclude(q => q.Customer)
+                    .Include(ql => ql.Part)
                     .AsNoTracking(),
                 request, page, pageSize, cancellationToken),
             _ => throw new ArgumentException($"Unknown entity source: {request.EntitySource}")
