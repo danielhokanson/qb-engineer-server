@@ -72,6 +72,14 @@ public class AuthController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("nfc-login")]
+    [AllowAnonymous]
+    public async Task<ActionResult<LoginResponse>> NfcLogin(NfcKioskLoginCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
     [HttpGet("sso/providers")]
     [AllowAnonymous]
     public async Task<IActionResult> GetSsoProviders()

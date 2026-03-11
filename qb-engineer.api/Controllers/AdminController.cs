@@ -208,6 +208,29 @@ public class AdminController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // ── Scan Identifiers (NFC/RFID/Barcode) ──
+
+    [HttpGet("users/{userId:int}/scan-identifiers")]
+    public async Task<ActionResult<List<ScanIdentifierResponseModel>>> GetScanIdentifiers(int userId)
+    {
+        var result = await mediator.Send(new GetUserScanIdentifiersQuery(userId));
+        return Ok(result);
+    }
+
+    [HttpPost("users/{userId:int}/scan-identifiers")]
+    public async Task<IActionResult> AddScanIdentifier(int userId, [FromBody] AddScanIdentifierRequestModel request)
+    {
+        var result = await mediator.Send(new AddScanIdentifierCommand(userId, request.IdentifierType, request.IdentifierValue));
+        return Created($"/api/v1/admin/users/{userId}/scan-identifiers/{result.Id}", result);
+    }
+
+    [HttpDelete("users/{userId:int}/scan-identifiers/{id:int}")]
+    public async Task<IActionResult> RemoveScanIdentifier(int userId, int id)
+    {
+        await mediator.Send(new RemoveScanIdentifierCommand(id));
+        return NoContent();
+    }
+
     // ── Storage Usage ──
 
     [HttpGet("storage-usage")]

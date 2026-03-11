@@ -122,6 +122,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Scheduled Tasks
     public DbSet<ScheduledTask> ScheduledTasks => Set<ScheduledTask>();
 
+    // Scan Identifiers (NFC/RFID/Barcode)
+    public DbSet<UserScanIdentifier> UserScanIdentifiers => Set<UserScanIdentifier>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
