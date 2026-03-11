@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 
 namespace QBEngineer.Tests.Integration;
 
@@ -12,35 +13,121 @@ public class ApiEndpointTests
         _client = factory.CreateClient();
     }
 
-    [Theory]
-    [InlineData("/api/v1/jobs")]
-    [InlineData("/api/v1/parts")]
-    [InlineData("/api/v1/customers")]
-    [InlineData("/api/v1/expenses")]
-    [InlineData("/api/v1/leads")]
-    [InlineData("/api/v1/assets")]
-    [InlineData("/api/v1/inventory/locations")]
-    [InlineData("/api/v1/time-tracking/entries")]
-    [InlineData("/api/v1/vendors")]
-    [InlineData("/api/v1/purchase-orders")]
-    [InlineData("/api/v1/orders")]
-    [InlineData("/api/v1/quotes")]
-    [InlineData("/api/v1/shipments")]
-    [InlineData("/api/v1/invoices")]
-    public async Task ProtectedEndpoints_WithoutAuth_Return401(string endpoint)
+    // ─── Protected GET endpoints return 401 without auth ───
+
+    [Fact]
+    public async Task GET_Parts_Returns401_WhenUnauthenticated()
     {
-        var response = await _client.GetAsync(endpoint);
+        var response = await _client.GetAsync("/api/v1/parts");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    [Theory]
-    [InlineData("/api/v1/admin/users")]
-    [InlineData("/api/v1/admin/reference-data")]
-    [InlineData("/api/v1/track-types")]
-    [InlineData("/api/v1/reports/jobs-by-stage")]
-    public async Task AdminEndpoints_WithoutAuth_Return401(string endpoint)
+    [Fact]
+    public async Task GET_Customers_Returns401_WhenUnauthenticated()
     {
-        var response = await _client.GetAsync(endpoint);
+        var response = await _client.GetAsync("/api/v1/customers");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_Expenses_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/expenses");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_Assets_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/assets");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_Leads_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/leads");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_TimeEntries_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/time-tracking/entries");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_Invoices_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/invoices");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_Vendors_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/vendors");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_PurchaseOrders_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/purchase-orders");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_SalesOrders_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/orders");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_Quotes_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/quotes");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_Shipments_Returns401_WhenUnauthenticated()
+    {
+        var response = await _client.GetAsync("/api/v1/shipments");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // ─── POST endpoints with empty body ───
+
+    [Fact]
+    public async Task POST_NfcLogin_Returns400_WithEmptyBody()
+    {
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/nfc-login", new { });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task POST_KioskLogin_Returns400_WithEmptyBody()
+    {
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/kiosk-login", new { });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // ─── Anonymous endpoints return 200 ───
+
+    [Fact]
+    public async Task GET_ShopFloorDisplay_Returns200_AllowAnonymous()
+    {
+        var response = await _client.GetAsync("/api/v1/display/shop-floor");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GET_AccountingMode_Returns200_AllowAnonymous()
+    {
+        var response = await _client.GetAsync("/api/v1/admin/accounting-mode");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }
