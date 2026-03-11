@@ -297,6 +297,308 @@ public static class SeedData
             Log.Information("Seeded activity log entries");
         }
 
+        // ── 9. Pre-packaged Reports ─────────────────────────────────────
+        if (!await db.SavedReports.AnyAsync())
+        {
+            var adminUser = await userManager.FindByEmailAsync("admin@qbengineer.local");
+            var adminId = adminUser!.Id;
+
+            db.SavedReports.AddRange(
+                // ── My Reports (user-scoped at runtime, seeded as shared templates) ──
+                new SavedReport
+                {
+                    Name = "My Work History",
+                    Description = "Your assigned jobs with stage, customer, and dates",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","Customer.Name","CurrentStage.Name","Priority","DueDate","CompletedDate","CreatedAt"]""",
+                    SortField = "CreatedAt", SortDirection = "desc",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "My Time Log",
+                    Description = "Your time entries with job and duration details",
+                    EntitySource = "TimeEntries",
+                    ColumnsJson = """["Date","Job.JobNumber","Job.Title","Category","DurationMinutes","Notes","IsManual"]""",
+                    SortField = "Date", SortDirection = "desc",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "My Expense History",
+                    Description = "Your expense submissions with status and amounts",
+                    EntitySource = "Expenses",
+                    ColumnsJson = """["ExpenseDate","Category","Description","Amount","Status","Job.JobNumber"]""",
+                    SortField = "ExpenseDate", SortDirection = "desc",
+                    IsShared = true, UserId = adminId,
+                },
+                // ── Job Reports ──
+                new SavedReport
+                {
+                    Name = "Jobs by Stage",
+                    Description = "All jobs grouped by their current stage",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","Customer.Name","CurrentStage.Name","Priority","DueDate","TrackType.Name"]""",
+                    GroupByField = "CurrentStage.Name",
+                    SortField = "CurrentStage.Name", SortDirection = "asc",
+                    ChartType = "bar", ChartLabelField = "CurrentStage.Name", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Overdue Jobs",
+                    Description = "Jobs past their due date",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","Customer.Name","CurrentStage.Name","Priority","DueDate","TrackType.Name"]""",
+                    FiltersJson = """[{"Field":"DueDate","Operator":"LessThan","Value":"now"},{"Field":"CompletedDate","Operator":"IsNull"}]""",
+                    SortField = "DueDate", SortDirection = "asc",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Job Completion Trend",
+                    Description = "Jobs created vs completed over time",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","CreatedAt","CompletedDate","Customer.Name","TrackType.Name"]""",
+                    SortField = "CreatedAt", SortDirection = "desc",
+                    ChartType = "line", ChartLabelField = "CreatedAt", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "On-Time Delivery Rate",
+                    Description = "Completed jobs analyzed by on-time vs late delivery",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","DueDate","CompletedDate","Customer.Name","CurrentStage.Name"]""",
+                    FiltersJson = """[{"Field":"CompletedDate","Operator":"IsNotNull"}]""",
+                    SortField = "CompletedDate", SortDirection = "desc",
+                    ChartType = "pie", ChartLabelField = "TrackType.Name", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Average Lead Time",
+                    Description = "Average time jobs spend in each stage",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","CurrentStage.Name","CreatedAt","CompletedDate","TrackType.Name"]""",
+                    GroupByField = "CurrentStage.Name",
+                    ChartType = "bar", ChartLabelField = "CurrentStage.Name", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Time in Stage (Bottleneck)",
+                    Description = "Identify bottleneck stages where jobs spend the most time",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","CurrentStage.Name","DueDate","CreatedAt","Priority"]""",
+                    GroupByField = "CurrentStage.Name",
+                    SortField = "CurrentStage.Name", SortDirection = "asc",
+                    ChartType = "bar", ChartLabelField = "CurrentStage.Name", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "R&D Reports",
+                    Description = "R&D jobs with iterations, hours, and current stage",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","IterationCount","CurrentStage.Name","IsInternal","CreatedAt","CompletedDate"]""",
+                    FiltersJson = """[{"Field":"IsInternal","Operator":"Equals","Value":"true"}]""",
+                    SortField = "CreatedAt", SortDirection = "desc",
+                    IsShared = true, UserId = adminId,
+                },
+                // ── Team & Labor Reports ──
+                new SavedReport
+                {
+                    Name = "Team Workload",
+                    Description = "Active and overdue jobs per team member",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["JobNumber","Title","Priority","DueDate","CurrentStage.Name","IsArchived","Customer.Name"]""",
+                    FiltersJson = """[{"Field":"IsArchived","Operator":"Equals","Value":"false"}]""",
+                    SortField = "Priority", SortDirection = "asc",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Employee Productivity",
+                    Description = "Time entries and job completions per employee",
+                    EntitySource = "TimeEntries",
+                    ColumnsJson = """["Date","Job.JobNumber","Job.Title","Category","DurationMinutes","IsManual"]""",
+                    GroupByField = "Category",
+                    SortField = "Date", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Category", ChartValueField = "DurationMinutes",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Labor Hours by Job",
+                    Description = "Total time entries grouped by job",
+                    EntitySource = "TimeEntries",
+                    ColumnsJson = """["Job.JobNumber","Job.Title","Date","DurationMinutes","Category","Notes"]""",
+                    GroupByField = "Job.JobNumber",
+                    SortField = "DurationMinutes", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Job.JobNumber", ChartValueField = "DurationMinutes",
+                    IsShared = true, UserId = adminId,
+                },
+                // ── Financial Reports ──
+                new SavedReport
+                {
+                    Name = "Expense Summary",
+                    Description = "Expenses grouped by category with totals",
+                    EntitySource = "Expenses",
+                    ColumnsJson = """["ExpenseDate","Category","Description","Amount","Status","Job.JobNumber"]""",
+                    GroupByField = "Category",
+                    SortField = "ExpenseDate", SortDirection = "desc",
+                    ChartType = "pie", ChartLabelField = "Category", ChartValueField = "Amount",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Invoice Summary",
+                    Description = "All invoices with status, dates, and customer",
+                    EntitySource = "Invoices",
+                    ColumnsJson = """["InvoiceNumber","Customer.Name","Status","InvoiceDate","DueDate","TaxRate","CreatedAt"]""",
+                    GroupByField = "Status",
+                    SortField = "InvoiceDate", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Status", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                // ── Customer & Sales Reports ──
+                new SavedReport
+                {
+                    Name = "Customer Activity",
+                    Description = "Job activity per customer (active, completed, total)",
+                    EntitySource = "Jobs",
+                    ColumnsJson = """["Customer.Name","JobNumber","Title","CurrentStage.Name","Priority","DueDate","CompletedDate"]""",
+                    GroupByField = "Customer.Name",
+                    SortField = "Customer.Name", SortDirection = "asc",
+                    ChartType = "bar", ChartLabelField = "Customer.Name", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Quote-to-Close Rate",
+                    Description = "Quote conversion analysis — sent vs accepted vs expired",
+                    EntitySource = "Quotes",
+                    ColumnsJson = """["QuoteNumber","Customer.Name","Status","SentDate","AcceptedDate","ExpirationDate","CreatedAt"]""",
+                    GroupByField = "Status",
+                    SortField = "CreatedAt", SortDirection = "desc",
+                    ChartType = "pie", ChartLabelField = "Status", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Lead Pipeline",
+                    Description = "Leads grouped by status through the pipeline",
+                    EntitySource = "Leads",
+                    ColumnsJson = """["CompanyName","ContactName","Source","Status","FollowUpDate","CreatedAt"]""",
+                    GroupByField = "Status",
+                    SortField = "CreatedAt", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Status", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Lead & Sales Summary",
+                    Description = "Lead sources and conversion metrics",
+                    EntitySource = "Leads",
+                    ColumnsJson = """["CompanyName","ContactName","Source","Status","Email","Phone","CreatedAt"]""",
+                    GroupByField = "Source",
+                    SortField = "Source", SortDirection = "asc",
+                    ChartType = "bar", ChartLabelField = "Source", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                // ── Inventory & Supply Chain ──
+                new SavedReport
+                {
+                    Name = "Inventory Levels",
+                    Description = "Bin content levels by location",
+                    EntitySource = "Inventory",
+                    ColumnsJson = """["Location.Name","EntityType","Quantity","ReservedQuantity","LotNumber","Status","PlacedAt"]""",
+                    GroupByField = "Location.Name",
+                    SortField = "Location.Name", SortDirection = "asc",
+                    ChartType = "bar", ChartLabelField = "Location.Name", ChartValueField = "Quantity",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Shipping Summary",
+                    Description = "Shipments by carrier and status",
+                    EntitySource = "Shipments",
+                    ColumnsJson = """["ShipmentNumber","SalesOrder.OrderNumber","Carrier","Status","ShippedDate","DeliveredDate","ShippingCost","TrackingNumber"]""",
+                    GroupByField = "Carrier",
+                    SortField = "ShippedDate", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Carrier", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Purchase Order Summary",
+                    Description = "Purchase orders by status and vendor",
+                    EntitySource = "PurchaseOrders",
+                    ColumnsJson = """["PONumber","Vendor.Name","Status","SubmittedDate","ExpectedDeliveryDate","ReceivedDate"]""",
+                    GroupByField = "Status",
+                    SortField = "CreatedAt", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Status", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Sales Order Summary",
+                    Description = "Sales orders by status and customer",
+                    EntitySource = "SalesOrders",
+                    ColumnsJson = """["OrderNumber","Customer.Name","Status","ConfirmedDate","RequestedDeliveryDate","CustomerPO"]""",
+                    GroupByField = "Status",
+                    SortField = "CreatedAt", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Status", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                // ── Operations ──
+                new SavedReport
+                {
+                    Name = "Maintenance Reports",
+                    Description = "Asset maintenance, downtime hours, and reliability",
+                    EntitySource = "Assets",
+                    ColumnsJson = """["Name","AssetType","Status","Location","Manufacturer","CurrentHours","CavityCount","CurrentShotCount","CreatedAt"]""",
+                    GroupByField = "AssetType",
+                    SortField = "CurrentHours", SortDirection = "desc",
+                    ChartType = "bar", ChartLabelField = "Name", ChartValueField = "CurrentHours",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Quality / Scrap Rate",
+                    Description = "Parts and jobs with quality inspection outcomes",
+                    EntitySource = "Parts",
+                    ColumnsJson = """["PartNumber","Description","Status","PartType","Material","Revision","CreatedAt"]""",
+                    GroupByField = "Status",
+                    SortField = "PartNumber", SortDirection = "asc",
+                    ChartType = "pie", ChartLabelField = "Status", ChartValueField = "Id",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Customer List",
+                    Description = "All customers with contact information and activity status",
+                    EntitySource = "Customers",
+                    ColumnsJson = """["Name","CompanyName","Email","Phone","IsActive","CreatedAt"]""",
+                    SortField = "Name", SortDirection = "asc",
+                    IsShared = true, UserId = adminId,
+                },
+                new SavedReport
+                {
+                    Name = "Parts Catalog",
+                    Description = "Complete parts listing with revision and stock info",
+                    EntitySource = "Parts",
+                    ColumnsJson = """["PartNumber","Description","Revision","Status","PartType","Material","MinStockThreshold","ReorderPoint"]""",
+                    SortField = "PartNumber", SortDirection = "asc",
+                    IsShared = true, UserId = adminId,
+                }
+            );
+
+            await db.SaveChangesAsync();
+            Log.Information("Seeded {Count} pre-packaged reports", 27);
+        }
+
         Log.Information("Database seeding complete");
     }
 

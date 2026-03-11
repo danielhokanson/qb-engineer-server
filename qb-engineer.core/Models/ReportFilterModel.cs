@@ -1,0 +1,9 @@
+using QBEngineer.Core.Enums;
+
+namespace QBEngineer.Core.Models;
+
+public record ReportFilterModel(
+    string Field,
+    ReportFilterOperator Operator,
+    string? Value,
+    string? Value2);

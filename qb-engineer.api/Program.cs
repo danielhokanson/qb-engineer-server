@@ -206,6 +206,7 @@ try
     builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
     builder.Services.AddScoped<ISyncQueueRepository, SyncQueueRepository>();
     builder.Services.AddScoped<IStatusEntryRepository, StatusEntryRepository>();
+    builder.Services.AddScoped<IReportBuilderRepository, ReportBuilderRepository>();
     builder.Services.AddScoped<IEmbeddingRepository, EmbeddingRepository>();
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddSingleton<IImageService, ImageService>();

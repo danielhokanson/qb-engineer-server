@@ -1,0 +1,22 @@
+using QBEngineer.Core.Enums;
+
+namespace QBEngineer.Core.Models;
+
+public record SavedReportResponseModel(
+    int Id,
+    string Name,
+    string? Description,
+    string EntitySource,
+    string[] Columns,
+    ReportFilterModel[] Filters,
+    string? GroupByField,
+    string? SortField,
+    string? SortDirection,
+    string? ChartType,
+    string? ChartLabelField,
+    string? ChartValueField,
+    bool IsShared,
+    int UserId,
+    string? UserName,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);

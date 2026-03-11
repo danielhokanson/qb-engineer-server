@@ -125,6 +125,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Scan Identifiers (NFC/RFID/Barcode)
     public DbSet<UserScanIdentifier> UserScanIdentifiers => Set<UserScanIdentifier>();
 
+    // Report Builder
+    public DbSet<SavedReport> SavedReports => Set<SavedReport>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
