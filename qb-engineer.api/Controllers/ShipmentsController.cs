@@ -68,6 +68,36 @@ public class ShipmentsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    // ── Shipping Rates / Labels / Tracking ──
+
+    [HttpPost("{id:int}/rates")]
+    public async Task<ActionResult<List<ShippingRate>>> GetShippingRates(int id, GetShippingRatesRequestModel request)
+    {
+        var result = await mediator.Send(new GetShippingRatesQuery(id, request));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/label")]
+    public async Task<ActionResult<ShippingLabel>> CreateShippingLabel(int id, CreateShippingLabelRequestModel request)
+    {
+        var result = await mediator.Send(new CreateShippingLabelCommand(id, request.CarrierId));
+        return Ok(result);
+    }
+
+    [HttpGet("{id:int}/tracking")]
+    public async Task<ActionResult<ShipmentTracking?>> GetShipmentTracking(int id)
+    {
+        var result = await mediator.Send(new GetShipmentTrackingQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("validate-address")]
+    public async Task<ActionResult<AddressValidationResponseModel>> ValidateAddress(ValidateAddressRequestModel request)
+    {
+        var result = await mediator.Send(new ValidateShippingAddressCommand(request));
+        return Ok(result);
+    }
+
     // ── Packages ──
 
     [HttpGet("{id:int}/packages")]

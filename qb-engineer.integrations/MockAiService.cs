@@ -34,6 +34,12 @@ public class MockAiService : IAiService
         return Task.FromResult(new List<AiSearchResult>());
     }
 
+    public Task<float[]> GetEmbeddingAsync(string text, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockAI] GetEmbedding ({Length} chars)", text.Length);
+        return Task.FromResult(new float[384]);
+    }
+
     public Task<bool> IsAvailableAsync(CancellationToken ct)
     {
         _logger.LogInformation("[MockAI] IsAvailable — returning true");

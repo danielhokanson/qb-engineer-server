@@ -62,6 +62,23 @@ public class MockShippingService : IShippingService
         return Task.FromResult<ShipmentTracking?>(tracking);
     }
 
+    public Task<AddressValidationResponseModel> ValidateAddressAsync(ShippingAddress address, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockShipping] ValidateAddress for {City}, {State} {Zip}",
+            address.City, address.State, address.Zip);
+
+        var result = new AddressValidationResponseModel(
+            true,
+            address.Street,
+            address.City,
+            address.State,
+            address.Zip,
+            address.Country,
+            []);
+
+        return Task.FromResult(result);
+    }
+
     public Task<bool> TestConnectionAsync(CancellationToken ct)
     {
         _logger.LogInformation("[MockShipping] TestConnection — returning true");

@@ -104,6 +104,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<CycleCount> CycleCounts => Set<CycleCount>();
     public DbSet<CycleCountLine> CycleCountLines => Set<CycleCountLine>();
 
+    // AI / RAG
+    public DbSet<DocumentEmbedding> DocumentEmbeddings => Set<DocumentEmbedding>();
+
     // Status Tracking
     public DbSet<StatusEntry> StatusEntries => Set<StatusEntry>();
 
@@ -119,6 +122,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.HasPostgresExtension("vector");
 
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using QBEngineer.Api.Features.Ai;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
 
@@ -44,5 +45,26 @@ public class AiController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(command, ct);
         return Ok(result);
+    }
+
+    [HttpPost("search")]
+    public async Task<IActionResult> RagSearch([FromBody] RagSearchCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("index")]
+    public async Task<IActionResult> IndexDocument([FromBody] IndexDocumentRequestModel request, CancellationToken ct)
+    {
+        var chunkCount = await mediator.Send(new IndexDocumentCommand(request.EntityType, request.EntityId), ct);
+        return Ok(new { chunksIndexed = chunkCount });
+    }
+
+    [HttpPost("bulk-index")]
+    public async Task<IActionResult> BulkIndex([FromBody] BulkIndexDocumentsCommand command, CancellationToken ct)
+    {
+        var totalChunks = await mediator.Send(command, ct);
+        return Ok(new { totalChunksIndexed = totalChunks });
     }
 }

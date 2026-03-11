@@ -2,6 +2,7 @@ using System.Text;
 
 using FluentValidation;
 using MediatR;
+using Pgvector;
 
 using QBEngineer.Core.Interfaces;
 
@@ -19,7 +20,9 @@ public class AiHelpChatValidator : AbstractValidator<AiHelpChatCommand>
     }
 }
 
-public class AiHelpChatHandler(IAiService aiService) : IRequestHandler<AiHelpChatCommand, AiHelpChatResponse>
+public class AiHelpChatHandler(
+    IAiService aiService,
+    IEmbeddingRepository embeddingRepo) : IRequestHandler<AiHelpChatCommand, AiHelpChatResponse>
 {
     private const string SystemContext = """
         You are QB Engineer's built-in help assistant. QB Engineer is a manufacturing operations platform for small-to-mid job shops.
@@ -74,17 +77,53 @@ public class AiHelpChatHandler(IAiService aiService) : IRequestHandler<AiHelpCha
 
     public async Task<AiHelpChatResponse> Handle(AiHelpChatCommand request, CancellationToken ct)
     {
+        // Retrieve RAG context from indexed documents
+        var ragContext = await BuildRagContextAsync(request.Question, ct);
+
         var fullPrompt = $"""
             {SystemContext}
 
+            {ragContext}
             {FormatHistory(request.History)}
             User question: {request.Question}
 
             Provide a helpful, concise answer. Use bullet points for lists. Reference specific pages/features by name and URL path.
+            If relevant context from the knowledge base is provided above, incorporate it into your answer.
             """;
 
         var answer = await aiService.GenerateTextAsync(fullPrompt, ct);
         return new AiHelpChatResponse(answer);
+    }
+
+    private async Task<string> BuildRagContextAsync(string question, CancellationToken ct)
+    {
+        try
+        {
+            var queryEmbeddingArray = await aiService.GetEmbeddingAsync(question, ct);
+
+            if (queryEmbeddingArray.Length == 0)
+                return string.Empty;
+
+            var queryVector = new Vector(queryEmbeddingArray);
+            var similar = await embeddingRepo.SearchSimilarAsync(queryVector, 5, null, ct);
+
+            if (similar.Count == 0)
+                return string.Empty;
+
+            var sb = new StringBuilder("Relevant knowledge base context:\n");
+            foreach (var doc in similar)
+            {
+                sb.AppendLine($"[{doc.EntityType} #{doc.EntityId} — {doc.SourceField}]: {doc.ChunkText}");
+            }
+            sb.AppendLine();
+
+            return sb.ToString();
+        }
+        catch
+        {
+            // RAG context is supplementary — don't fail the whole request
+            return string.Empty;
+        }
     }
 
     private static string FormatHistory(List<AiHelpMessage>? history)

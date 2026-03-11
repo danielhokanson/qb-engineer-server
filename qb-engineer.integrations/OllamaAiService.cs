@@ -89,11 +89,28 @@ public class OllamaAiService : IAiService
         return [];
     }
 
+    public async Task<float[]> GetEmbeddingAsync(string text, CancellationToken ct)
+    {
+        _logger.LogInformation("Ollama GetEmbedding ({Length} chars)", text.Length);
+
+        var request = new OllamaEmbeddingRequest
+        {
+            Model = _options.EmbeddingModel,
+            Prompt = text,
+        };
+
+        var response = await _httpClient.PostAsJsonAsync("/api/embeddings", request, JsonOptions, ct);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<OllamaEmbeddingResponse>(JsonOptions, ct);
+        return result?.Embedding ?? [];
+    }
+
     public async Task<bool> IsAvailableAsync(CancellationToken ct)
     {
         try
         {
-            var response = await _httpClient.GetAsync("/api/version", ct);
+            var response = await _httpClient.GetAsync("/api/tags", ct);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -121,5 +138,16 @@ public class OllamaAiService : IAiService
         public long LoadDuration { get; set; }
         public int PromptEvalCount { get; set; }
         public int EvalCount { get; set; }
+    }
+
+    private sealed class OllamaEmbeddingRequest
+    {
+        public string Model { get; set; } = string.Empty;
+        public string Prompt { get; set; } = string.Empty;
+    }
+
+    private sealed class OllamaEmbeddingResponse
+    {
+        public float[] Embedding { get; set; } = [];
     }
 }

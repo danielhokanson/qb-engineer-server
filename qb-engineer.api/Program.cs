@@ -53,9 +53,11 @@ try
         .WriteTo.Console()
         .Enrich.FromLogContext());
 
-    // EF Core + PostgreSQL
+    // EF Core + PostgreSQL (with pgvector for AI embeddings)
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            npgsqlOptions => npgsqlOptions.UseVector()));
 
     // ASP.NET Identity
     builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
@@ -204,6 +206,7 @@ try
     builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
     builder.Services.AddScoped<ISyncQueueRepository, SyncQueueRepository>();
     builder.Services.AddScoped<IStatusEntryRepository, StatusEntryRepository>();
+    builder.Services.AddScoped<IEmbeddingRepository, EmbeddingRepository>();
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddSingleton<IImageService, ImageService>();
     builder.Services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
@@ -220,6 +223,7 @@ try
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
     builder.Services.Configure<QuickBooksOptions>(builder.Configuration.GetSection(QuickBooksOptions.SectionName));
     builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
+    builder.Services.Configure<EasyPostOptions>(builder.Configuration.GetSection(EasyPostOptions.SectionName));
 
     // QuickBooks token service (always registered — handles OAuth token lifecycle)
     builder.Services.AddScoped<IQuickBooksTokenService, QuickBooksTokenService>();
@@ -252,8 +256,18 @@ try
         // builder.Services.AddScoped<IAccountingService, XeroAccountingService>();
         // builder.Services.AddScoped<IAccountingService, FreshBooksAccountingService>();
         // builder.Services.AddScoped<IAccountingService, SageAccountingService>();
-        // Real shipping service registered here when carrier APIs implemented
-        builder.Services.AddSingleton<IShippingService, MockShippingService>();
+        // Shipping: EasyPost when API key configured, otherwise mock
+        var easyPostKey = builder.Configuration.GetSection(EasyPostOptions.SectionName)["ApiKey"];
+        if (!string.IsNullOrEmpty(easyPostKey))
+        {
+            builder.Services.AddSingleton<IShippingService, EasyPostShippingService>();
+            Log.Information("EasyPost shipping integration enabled");
+        }
+        else
+        {
+            builder.Services.AddSingleton<IShippingService, MockShippingService>();
+            Log.Information("EasyPost API key not configured — using mock shipping service");
+        }
         builder.Services.AddHttpClient<IAiService, OllamaAiService>();
     }
 
@@ -310,6 +324,7 @@ try
     builder.Services.AddScoped<OrphanDetectionJob>();
     builder.Services.AddScoped<ItemSyncJob>();
     builder.Services.AddScoped<RecurringExpenseJob>();
+    builder.Services.AddScoped<DocumentIndexJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -481,6 +496,10 @@ try
         "item-sync",
         job => job.SyncItemsAsync(),
         "0 */4 * * *"); // Every 4 hours
+    RecurringJob.AddOrUpdate<DocumentIndexJob>(
+        "document-index",
+        job => job.IndexRecentlyUpdatedAsync(),
+        "*/30 * * * *"); // Every 30 minutes
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");
