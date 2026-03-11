@@ -56,6 +56,22 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 .ToDictionaryAsync(u => u.Id, ct)
             : [];
 
+        // Load active holds for all jobs in the result set
+        var jobIds = jobs.Select(j => j.Id).ToList();
+        var activeHoldsByJobId = jobIds.Count > 0
+            ? await db.StatusEntries
+                .Where(se =>
+                    se.EntityType == "Job" &&
+                    jobIds.Contains(se.EntityId) &&
+                    se.Category == "hold" &&
+                    se.EndedAt == null)
+                .GroupBy(se => se.EntityId)
+                .ToDictionaryAsync(
+                    g => g.Key,
+                    g => g.Select(se => se.StatusLabel).ToList(),
+                    ct)
+            : [];
+
         return jobs.Select(j =>
         {
             var assignee = j.AssigneeId.HasValue && assignees.TryGetValue(j.AssigneeId.Value, out var u) ? u : null;
@@ -65,6 +81,8 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 var hasInvoice = j.SalesOrderLine?.SalesOrder?.Invoices?.Any() == true;
                 billingStatus = hasInvoice ? "Invoiced" : "Uninvoiced";
             }
+
+            var activeHolds = activeHoldsByJobId.TryGetValue(j.Id, out var holds) ? holds : [];
 
             return new JobListResponseModel(
                 j.Id,
@@ -82,7 +100,8 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 j.Disposition?.ToString(),
                 j.ChildJobs.Count(c => c.DeletedAt == null),
                 j.ExternalRef,
-                null);
+                null,
+                activeHolds);
         }).ToList();
     }
 

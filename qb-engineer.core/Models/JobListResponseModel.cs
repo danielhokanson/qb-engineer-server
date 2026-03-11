@@ -16,4 +16,5 @@ public record JobListResponseModel(
     string? Disposition,
     int ChildJobCount,
     string? ExternalRef,
-    string? AccountingDocumentType);
+    string? AccountingDocumentType,
+    List<string> ActiveHolds);

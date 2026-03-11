@@ -120,12 +120,48 @@ public class ExplodeJobBomHandler(AppDbContext db, IJobRepository jobRepo) : IRe
                     break;
 
                 case BOMSourceType.Stock:
+                {
+                    var needed = bomEntry.Quantity;
+                    var reserved = 0m;
+
+                    // Auto-reserve available stock across bins (oldest first)
+                    var bins = await db.BinContents
+                        .Where(b => b.EntityType == "part"
+                            && b.EntityId == childPart.Id
+                            && b.RemovedAt == null
+                            && (b.Quantity - b.ReservedQuantity) > 0)
+                        .OrderBy(b => b.PlacedAt)
+                        .ToListAsync(ct);
+
+                    foreach (var bin in bins)
+                    {
+                        if (reserved >= needed) break;
+
+                        var available = bin.Quantity - bin.ReservedQuantity;
+                        var toReserve = Math.Min(available, needed - reserved);
+
+                        db.Set<Reservation>().Add(new Reservation
+                        {
+                            PartId = childPart.Id,
+                            BinContentId = bin.Id,
+                            JobId = parentJob.Id,
+                            Quantity = toReserve,
+                            Notes = $"Auto-reserved via BOM explosion for job {parentJob.JobNumber}",
+                        });
+
+                        bin.ReservedQuantity += toReserve;
+                        reserved += toReserve;
+                    }
+
                     stockItems.Add(new BomExplosionStockItemModel(
                         childPart.Id,
                         childPart.PartNumber,
                         childPart.Description,
-                        bomEntry.Quantity));
+                        needed,
+                        reserved,
+                        reserved < needed));
                     break;
+                }
             }
         }
 

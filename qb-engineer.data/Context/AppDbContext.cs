@@ -104,6 +104,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<CycleCount> CycleCounts => Set<CycleCount>();
     public DbSet<CycleCountLine> CycleCountLines => Set<CycleCountLine>();
 
+    // Reservations
+    public DbSet<Reservation> Reservations => Set<Reservation>();
+
     // AI / RAG
     public DbSet<DocumentEmbedding> DocumentEmbeddings => Set<DocumentEmbedding>();
 

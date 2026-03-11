@@ -148,4 +148,30 @@ public class InventoryController(IMediator mediator) : ControllerBase
         await mediator.Send(new UpdateCycleCountCommand(id, request));
         return NoContent();
     }
+
+    // ── Reservations ──
+
+    [HttpGet("reservations")]
+    public async Task<ActionResult<List<ReservationResponseModel>>> GetReservations(
+        [FromQuery] int? partId,
+        [FromQuery] int? jobId)
+    {
+        var result = await mediator.Send(new GetReservationsQuery(partId, jobId));
+        return Ok(result);
+    }
+
+    [HttpPost("reservations")]
+    public async Task<ActionResult<ReservationResponseModel>> CreateReservation(
+        [FromBody] CreateReservationRequestModel request)
+    {
+        var result = await mediator.Send(new CreateReservationCommand(request));
+        return Created($"/api/v1/inventory/reservations/{result.Id}", result);
+    }
+
+    [HttpDelete("reservations/{id:int}")]
+    public async Task<IActionResult> ReleaseReservation(int id)
+    {
+        await mediator.Send(new ReleaseReservationCommand(id));
+        return NoContent();
+    }
 }

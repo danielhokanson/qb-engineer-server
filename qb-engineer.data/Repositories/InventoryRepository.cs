@@ -161,7 +161,7 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
             {
                 var bins = contentsByPart[p.Id].ToList();
                 var onHand = bins.Sum(b => b.Quantity);
-                var reserved = bins.Where(b => b.Status == BinContentStatus.Reserved).Sum(b => b.Quantity);
+                var reserved = bins.Sum(b => b.ReservedQuantity);
 
                 return new InventoryPartSummaryResponseModel(
                     p.Id, p.PartNumber, p.Description, p.Material,
@@ -169,7 +169,8 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
                     bins.Select(b => new BinStockResponseModel(
                         b.LocationId, b.Location.Name,
                         BuildPath(b.Location, locById),
-                        b.Quantity, b.Status, b.LotNumber
+                        b.Quantity, b.ReservedQuantity, b.Quantity - b.ReservedQuantity,
+                        b.Status, b.LotNumber
                     )).ToList());
             }).ToList();
     }
@@ -327,6 +328,58 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
     {
         await db.CycleCounts.AddAsync(cycleCount, ct);
         await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<ReservationResponseModel>> GetReservationsAsync(int? partId, int? jobId, CancellationToken ct)
+    {
+        var query = db.Reservations
+            .Include(r => r.Part)
+            .Include(r => r.BinContent)
+                .ThenInclude(b => b.Location)
+            .Include(r => r.Job)
+            .Where(r => r.DeletedAt == null)
+            .AsQueryable();
+
+        if (partId.HasValue)
+            query = query.Where(r => r.PartId == partId.Value);
+
+        if (jobId.HasValue)
+            query = query.Where(r => r.JobId == jobId.Value);
+
+        var reservations = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync(ct);
+
+        var allLocations = await db.StorageLocations
+            .Where(l => l.DeletedAt == null)
+            .ToListAsync(ct);
+        var locById = allLocations.ToDictionary(l => l.Id);
+
+        return reservations.Select(r => new ReservationResponseModel(
+            r.Id,
+            r.PartId,
+            r.Part.PartNumber,
+            r.Part.Description,
+            r.BinContentId,
+            BuildPath(r.BinContent.Location, locById),
+            r.JobId,
+            r.Job?.Title,
+            r.Job?.JobNumber,
+            r.SalesOrderLineId,
+            r.Quantity,
+            r.Notes,
+            r.CreatedAt
+        )).ToList();
+    }
+
+    public Task<Reservation?> FindReservationAsync(int id, CancellationToken ct)
+        => db.Reservations
+            .Include(r => r.BinContent)
+            .FirstOrDefaultAsync(r => r.Id == id && r.DeletedAt == null, ct);
+
+    public async Task AddReservationAsync(Reservation reservation, CancellationToken ct)
+    {
+        await db.Reservations.AddAsync(reservation, ct);
     }
 
     public Task SaveChangesAsync(CancellationToken ct)

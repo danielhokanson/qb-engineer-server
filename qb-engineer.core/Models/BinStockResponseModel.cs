@@ -7,5 +7,7 @@ public record BinStockResponseModel(
     string LocationName,
     string LocationPath,
     decimal Quantity,
+    decimal ReservedQuantity,
+    decimal AvailableQuantity,
     BinContentStatus Status,
     string? LotNumber);

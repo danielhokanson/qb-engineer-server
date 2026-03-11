@@ -12,6 +12,7 @@ public class BinContentConfiguration : IEntityTypeConfiguration<BinContent>
         builder.Property(e => e.LotNumber).HasMaxLength(100);
         builder.Property(e => e.Notes).HasMaxLength(500);
         builder.Property(e => e.Quantity).HasPrecision(18, 4);
+        builder.Property(e => e.ReservedQuantity).HasPrecision(18, 4);
 
         builder.HasOne(e => e.Location)
             .WithMany(e => e.Contents)

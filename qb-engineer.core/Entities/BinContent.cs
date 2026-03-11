@@ -17,6 +17,9 @@ public class BinContent : BaseEntity
     public int? RemovedBy { get; set; }
     public string? Notes { get; set; }
 
+    public decimal ReservedQuantity { get; set; }
+
     public StorageLocation Location { get; set; } = null!;
     public Job? Job { get; set; }
+    public ICollection<Reservation> Reservations { get; set; } = [];
 }

@@ -85,6 +85,7 @@ public static partial class JobMapper
             Disposition: job.Disposition?.ToString(),
             ChildJobCount: job.ChildJobs?.Count(c => c.DeletedAt == null) ?? 0,
             ExternalRef: job.ExternalRef,
-            AccountingDocumentType: job.CurrentStage?.AccountingDocumentType?.ToString());
+            AccountingDocumentType: job.CurrentStage?.AccountingDocumentType?.ToString(),
+            ActiveHolds: []);
     }
 }

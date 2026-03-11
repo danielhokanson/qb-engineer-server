@@ -27,6 +27,29 @@ public class FilesController(IMediator mediator) : ControllerBase
         return Created($"/api/v1/files/{result.Id}", result);
     }
 
+    [HttpPost("{entityType}/{entityId:int}/files/chunked")]
+    [DisableRequestSizeLimit]
+    public async Task<ActionResult<ChunkedUploadResponseModel>> UploadFileChunk(
+        string entityType,
+        int entityId,
+        [FromForm] string uploadId,
+        [FromForm] string fileName,
+        [FromForm] string contentType,
+        [FromForm] int chunkIndex,
+        [FromForm] int totalChunks,
+        IFormFile chunk)
+    {
+        var result = await mediator.Send(new UploadFileChunkCommand(
+            entityType, entityId, uploadId, fileName, contentType, chunkIndex, totalChunks, chunk));
+
+        if (!result.IsComplete)
+        {
+            return Ok(result);
+        }
+
+        return Created($"/api/v1/files/{result.FileAttachment!.Id}", result);
+    }
+
     [HttpGet("files/{id:int}/download")]
     public async Task<IActionResult> DownloadFile(int id)
     {
