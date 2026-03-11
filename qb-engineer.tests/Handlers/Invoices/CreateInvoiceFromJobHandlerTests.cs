@@ -1,6 +1,5 @@
 using Bogus;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 
 using QBEngineer.Api.Features.Invoices;
@@ -8,6 +7,7 @@ using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
+using QBEngineer.Tests.Helpers;
 
 namespace QBEngineer.Tests.Handlers.Invoices;
 
@@ -21,11 +21,7 @@ public class CreateInvoiceFromJobHandlerTests
 
     public CreateInvoiceFromJobHandlerTests()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
-            .Options;
-
-        _dbContext = new AppDbContext(options);
+        _dbContext = TestDbContextFactory.Create();
         _handler = new CreateInvoiceFromJobHandler(_dbContext, _invoiceRepo.Object);
     }
 
