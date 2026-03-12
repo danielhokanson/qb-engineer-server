@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -18,7 +19,7 @@ public class CreateStorageLocationCommandValidator : AbstractValidator<CreateSto
     }
 }
 
-public class CreateStorageLocationHandler(IInventoryRepository repo) : IRequestHandler<CreateStorageLocationCommand, StorageLocationResponseModel>
+public class CreateStorageLocationHandler(IInventoryRepository repo, IBarcodeService barcodeService) : IRequestHandler<CreateStorageLocationCommand, StorageLocationResponseModel>
 {
     public async Task<StorageLocationResponseModel> Handle(CreateStorageLocationCommand request, CancellationToken cancellationToken)
     {
@@ -43,6 +44,9 @@ public class CreateStorageLocationHandler(IInventoryRepository repo) : IRequestH
         };
 
         await repo.AddLocationAsync(location, cancellationToken);
+
+        await barcodeService.CreateBarcodeAsync(
+            BarcodeEntityType.StorageLocation, location.Id, location.Name, cancellationToken);
 
         return new StorageLocationResponseModel(
             location.Id, location.Name, location.LocationType, location.ParentId,

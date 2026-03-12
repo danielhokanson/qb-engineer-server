@@ -23,7 +23,7 @@ public class AdminController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("users")]
-    public async Task<ActionResult<AdminUserResponseModel>> CreateUser(CreateAdminUserCommand command)
+    public async Task<ActionResult<CreateAdminUserResponseModel>> CreateUser(CreateAdminUserCommand command)
     {
         var result = await mediator.Send(command);
         return CreatedAtAction(nameof(GetUsers), result);

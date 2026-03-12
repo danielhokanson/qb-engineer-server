@@ -3,5 +3,7 @@ namespace QBEngineer.Core.Enums;
 public enum ClockEventType
 {
     ClockIn,
-    ClockOut
+    ClockOut,
+    BreakStart,
+    BreakEnd
 }

@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -27,7 +28,7 @@ public class CreatePurchaseOrderValidator : AbstractValidator<CreatePurchaseOrde
     }
 }
 
-public class CreatePurchaseOrderHandler(IPurchaseOrderRepository poRepo, IVendorRepository vendorRepo, IPartRepository partRepo)
+public class CreatePurchaseOrderHandler(IPurchaseOrderRepository poRepo, IVendorRepository vendorRepo, IPartRepository partRepo, IBarcodeService barcodeService)
     : IRequestHandler<CreatePurchaseOrderCommand, PurchaseOrderListItemModel>
 {
     public async Task<PurchaseOrderListItemModel> Handle(CreatePurchaseOrderCommand request, CancellationToken cancellationToken)
@@ -62,6 +63,9 @@ public class CreatePurchaseOrderHandler(IPurchaseOrderRepository poRepo, IVendor
 
         await poRepo.AddAsync(po, cancellationToken);
         await poRepo.SaveChangesAsync(cancellationToken);
+
+        await barcodeService.CreateBarcodeAsync(
+            BarcodeEntityType.PurchaseOrder, po.Id, po.PONumber, cancellationToken);
 
         return new PurchaseOrderListItemModel(
             po.Id, po.PONumber, po.VendorId, vendor.CompanyName,

@@ -48,6 +48,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
         catch (InvalidOperationException ex)
         {
+            logger.LogWarning(ex, "InvalidOperationException caught — returning 409");
             context.Response.StatusCode = StatusCodes.Status409Conflict;
             context.Response.ContentType = "application/problem+json";
 

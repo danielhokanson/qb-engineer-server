@@ -18,7 +18,7 @@ public class CreateSalesOrderHandlerTests
 
     public CreateSalesOrderHandlerTests()
     {
-        _handler = new CreateSalesOrderHandler(_orderRepo.Object, _customerRepo.Object);
+        _handler = new CreateSalesOrderHandler(_orderRepo.Object, _customerRepo.Object, Mock.Of<IBarcodeService>());
     }
 
     [Fact]

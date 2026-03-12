@@ -32,6 +32,7 @@ public class CreatePartHandler(
     IPartRepository repo,
     ISyncQueueRepository syncQueue,
     IAccountingProviderFactory providerFactory,
+    IBarcodeService barcodeService,
     ILogger<CreatePartHandler> logger) : IRequestHandler<CreatePartCommand, PartDetailResponseModel>
 {
     public async Task<PartDetailResponseModel> Handle(CreatePartCommand request, CancellationToken cancellationToken)
@@ -51,6 +52,9 @@ public class CreatePartHandler(
         };
 
         await repo.AddAsync(part, cancellationToken);
+
+        await barcodeService.CreateBarcodeAsync(
+            BarcodeEntityType.Part, part.Id, part.PartNumber, cancellationToken);
 
         // Enqueue QB Item creation if accounting is connected
         try

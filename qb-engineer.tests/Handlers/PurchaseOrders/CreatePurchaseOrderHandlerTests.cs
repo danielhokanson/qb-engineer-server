@@ -19,7 +19,7 @@ public class CreatePurchaseOrderHandlerTests
 
     public CreatePurchaseOrderHandlerTests()
     {
-        _handler = new CreatePurchaseOrderHandler(_poRepo.Object, _vendorRepo.Object, _partRepo.Object);
+        _handler = new CreatePurchaseOrderHandler(_poRepo.Object, _vendorRepo.Object, _partRepo.Object, Mock.Of<IBarcodeService>());
     }
 
     [Fact]

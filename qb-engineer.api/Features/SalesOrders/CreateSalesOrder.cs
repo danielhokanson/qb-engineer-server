@@ -35,7 +35,7 @@ public class CreateSalesOrderValidator : AbstractValidator<CreateSalesOrderComma
     }
 }
 
-public class CreateSalesOrderHandler(ISalesOrderRepository repo, ICustomerRepository customerRepo)
+public class CreateSalesOrderHandler(ISalesOrderRepository repo, ICustomerRepository customerRepo, IBarcodeService barcodeService)
     : IRequestHandler<CreateSalesOrderCommand, SalesOrderListItemModel>
 {
     public async Task<SalesOrderListItemModel> Handle(CreateSalesOrderCommand request, CancellationToken cancellationToken)
@@ -79,6 +79,9 @@ public class CreateSalesOrderHandler(ISalesOrderRepository repo, ICustomerReposi
 
         await repo.AddAsync(order, cancellationToken);
         await repo.SaveChangesAsync(cancellationToken);
+
+        await barcodeService.CreateBarcodeAsync(
+            BarcodeEntityType.SalesOrder, order.Id, order.OrderNumber, cancellationToken);
 
         var total = order.Lines.Sum(l => l.Quantity * l.UnitPrice);
 

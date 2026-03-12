@@ -13,6 +13,7 @@ using QBEngineer.Api.Behaviors;
 using QBEngineer.Api.Data;
 using QBEngineer.Api.Hubs;
 using QBEngineer.Api.Middleware;
+using QBEngineer.Api.Services;
 using Microsoft.Extensions.Options;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -29,7 +30,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using QBEngineer.Api.HealthChecks;
 using Scalar.AspNetCore;
 using QBEngineer.Api.Extensions;
-using QBEngineer.Api.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Serilog;
 
@@ -208,6 +208,7 @@ try
     builder.Services.AddScoped<IStatusEntryRepository, StatusEntryRepository>();
     builder.Services.AddScoped<IReportBuilderRepository, ReportBuilderRepository>();
     builder.Services.AddScoped<IEmbeddingRepository, EmbeddingRepository>();
+    builder.Services.AddScoped<IBarcodeService, BarcodeService>();
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddSingleton<IImageService, ImageService>();
     builder.Services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();

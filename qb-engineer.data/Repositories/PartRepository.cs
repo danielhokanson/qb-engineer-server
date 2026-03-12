@@ -136,12 +136,15 @@ public class PartRepository(AppDbContext db) : IPartRepository
             _ => "PRT-",
         };
 
-        var maxNumber = await db.Parts
+        var suffixes = await db.Parts
             .Where(p => p.PartNumber.StartsWith(prefix))
             .Select(p => p.PartNumber.Substring(prefix.Length))
-            .Select(p => Convert.ToInt32(p))
+            .ToListAsync(ct);
+
+        var maxNumber = suffixes
+            .Select(s => int.TryParse(s, out var n) ? n : 0)
             .DefaultIfEmpty(0)
-            .MaxAsync(ct);
+            .Max();
 
         return $"{prefix}{maxNumber + 1:D5}";
     }

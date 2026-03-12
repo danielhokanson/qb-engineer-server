@@ -22,6 +22,9 @@ public class ApplicationUser : IdentityUser<int>
     // Barcode for kiosk scan
     public string? EmployeeBarcode { get; set; }
 
+    // Team assignment
+    public int? TeamId { get; set; }
+
     // Accounting integration (QB Employee ID for time activity sync)
     public string? AccountingEmployeeId { get; set; }
 

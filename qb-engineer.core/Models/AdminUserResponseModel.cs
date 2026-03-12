@@ -9,4 +9,8 @@ public record AdminUserResponseModel(
     string? AvatarColor,
     bool IsActive,
     string[] Roles,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    bool HasPassword,
+    bool HasPendingSetupToken,
+    bool HasRfidIdentifier,
+    bool HasBarcodeIdentifier);

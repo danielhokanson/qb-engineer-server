@@ -6,6 +6,7 @@ public record JobListResponseModel(
     string Title,
     string StageName,
     string StageColor,
+    int? AssigneeId,
     string? AssigneeInitials,
     string? AssigneeColor,
     string PriorityName,

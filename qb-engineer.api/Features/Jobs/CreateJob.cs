@@ -35,7 +35,8 @@ public class CreateJobHandler(
     IJobRepository jobRepo,
     ITrackTypeRepository trackRepo,
     IMediator mediator,
-    IHubContext<BoardHub> boardHub) : IRequestHandler<CreateJobCommand, JobDetailResponseModel>
+    IHubContext<BoardHub> boardHub,
+    IBarcodeService barcodeService) : IRequestHandler<CreateJobCommand, JobDetailResponseModel>
 {
     public async Task<JobDetailResponseModel> Handle(CreateJobCommand request, CancellationToken cancellationToken)
     {
@@ -69,6 +70,9 @@ public class CreateJobHandler(
 
         await jobRepo.AddAsync(job, cancellationToken);
         await jobRepo.SaveChangesAsync(cancellationToken);
+
+        await barcodeService.CreateBarcodeAsync(
+            Core.Enums.BarcodeEntityType.Job, job.Id, job.JobNumber, cancellationToken);
 
         var result = await mediator.Send(new GetJobByIdQuery(job.Id), cancellationToken);
 

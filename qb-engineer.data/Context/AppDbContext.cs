@@ -128,6 +128,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Report Builder
     public DbSet<SavedReport> SavedReports => Set<SavedReport>();
 
+    // Teams & Kiosk Terminals
+    public DbSet<Team> Teams => Set<Team>();
+    public DbSet<KioskTerminal> KioskTerminals => Set<KioskTerminal>();
+
+    // Central Barcode Registry
+    public DbSet<Barcode> Barcodes => Set<Barcode>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

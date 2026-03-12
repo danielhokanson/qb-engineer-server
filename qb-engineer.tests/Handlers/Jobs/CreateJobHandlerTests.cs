@@ -30,7 +30,7 @@ public class CreateJobHandlerTests
         mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(mockClientProxy.Object);
         _boardHub.Setup(h => h.Clients).Returns(mockClients.Object);
 
-        _handler = new CreateJobHandler(_jobRepo.Object, _trackRepo.Object, _mediator.Object, _boardHub.Object);
+        _handler = new CreateJobHandler(_jobRepo.Object, _trackRepo.Object, _mediator.Object, _boardHub.Object, Mock.Of<IBarcodeService>());
     }
 
     [Fact]

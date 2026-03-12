@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -28,7 +29,7 @@ public class UpdateAdminUserValidator : AbstractValidator<UpdateAdminUserCommand
     }
 }
 
-public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager)
+public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, AppDbContext db)
     : IRequestHandler<UpdateAdminUserCommand, AdminUserResponseModel>
 {
     public async Task<AdminUserResponseModel> Handle(UpdateAdminUserCommand request, CancellationToken cancellationToken)
@@ -59,6 +60,14 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager)
         }
 
         var roles = await userManager.GetRolesAsync(user);
+        var hasPassword = await userManager.HasPasswordAsync(user);
+        var hasPendingToken = user.SetupToken != null
+            && user.SetupTokenExpiresAt.HasValue
+            && user.SetupTokenExpiresAt.Value > DateTime.UtcNow;
+        var userScans = await db.Set<QBEngineer.Core.Entities.UserScanIdentifier>()
+            .Where(s => s.UserId == user.Id && s.IsActive && s.DeletedAt == null)
+            .Select(s => s.IdentifierType)
+            .ToListAsync(cancellationToken);
 
         return new AdminUserResponseModel(
             user.Id,
@@ -69,6 +78,10 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager)
             user.AvatarColor,
             user.IsActive,
             roles.ToArray(),
-            user.CreatedAt);
+            user.CreatedAt,
+            hasPassword,
+            hasPendingToken,
+            userScans.Any(t => t == "rfid" || t == "nfc"),
+            userScans.Any(t => t == "barcode"));
     }
 }

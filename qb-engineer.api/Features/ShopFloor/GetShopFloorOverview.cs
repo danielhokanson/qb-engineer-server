@@ -8,7 +8,7 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.ShopFloor;
 
-public record GetShopFloorOverviewQuery : IRequest<ShopFloorOverviewResponseModel>;
+public record GetShopFloorOverviewQuery(int? TeamId = null) : IRequest<ShopFloorOverviewResponseModel>;
 
 public class GetShopFloorOverviewHandler(AppDbContext db)
     : IRequestHandler<GetShopFloorOverviewQuery, ShopFloorOverviewResponseModel>
@@ -96,8 +96,12 @@ public class GetShopFloorOverviewHandler(AppDbContext db)
 
         if (clockedInUserIds.Count > 0)
         {
-            var clockedInUsers = await db.Users
-                .Where(u => clockedInUserIds.Contains(u.Id))
+            var clockedInUsersQuery = db.Users
+                .Where(u => clockedInUserIds.Contains(u.Id));
+            if (request.TeamId.HasValue)
+                clockedInUsersQuery = clockedInUsersQuery.Where(u => u.TeamId == request.TeamId.Value);
+
+            var clockedInUsers = await clockedInUsersQuery
                 .Select(u => new
                 {
                     u.Id,

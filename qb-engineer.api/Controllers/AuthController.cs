@@ -48,6 +48,14 @@ public class AuthController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("validate-token/{token}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SetupTokenInfoResponse>> ValidateToken(string token)
+    {
+        var result = await mediator.Send(new ValidateSetupTokenQuery(token));
+        return Ok(result);
+    }
+
     [HttpPost("complete-setup")]
     [AllowAnonymous]
     public async Task<ActionResult<LoginResponse>> CompleteSetup(CompleteSetupCommand command)
@@ -78,6 +86,36 @@ public class AuthController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(command);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Unified scan login — accepts any scan identifier (RFID, NFC, barcode, biometric).
+    /// Checks UserScanIdentifiers first, then falls back to EmployeeBarcode field.
+    /// </summary>
+    [HttpPost("scan-login")]
+    [AllowAnonymous]
+    public async Task<ActionResult<LoginResponse>> ScanLogin(ScanLoginCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<ActionResult<AuthUserResponseModel>> UpdateProfile(UpdateProfileCommand command)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var result = await mediator.Send(command with { UserId = userId });
+        return Ok(result);
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordCommand command)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Send(command with { UserId = userId });
+        return NoContent();
     }
 
     [HttpGet("sso/providers")]

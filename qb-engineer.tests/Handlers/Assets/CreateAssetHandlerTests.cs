@@ -18,7 +18,7 @@ public class CreateAssetHandlerTests
 
     public CreateAssetHandlerTests()
     {
-        _handler = new CreateAssetHandler(_assetRepo.Object);
+        _handler = new CreateAssetHandler(_assetRepo.Object, Mock.Of<IBarcodeService>());
     }
 
     [Fact]

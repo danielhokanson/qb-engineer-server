@@ -23,6 +23,7 @@ public class CreatePartHandlerTests
             _partRepo.Object,
             Mock.Of<ISyncQueueRepository>(),
             Mock.Of<IAccountingProviderFactory>(),
+            Mock.Of<IBarcodeService>(),
             Mock.Of<ILogger<CreatePartHandler>>());
     }
 

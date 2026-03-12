@@ -90,6 +90,7 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 j.Title,
                 j.CurrentStage.Name,
                 j.CurrentStage.Color,
+                j.AssigneeId,
                 assignee?.Initials,
                 assignee?.AvatarColor,
                 j.Priority.ToString(),

@@ -15,8 +15,8 @@ public class ClockInOutValidator : AbstractValidator<ClockInOutCommand>
     {
         RuleFor(x => x.UserId).GreaterThan(0);
         RuleFor(x => x.EventType)
-            .Must(t => t is "ClockIn" or "ClockOut")
-            .WithMessage("EventType must be ClockIn or ClockOut");
+            .Must(t => t is "ClockIn" or "ClockOut" or "BreakStart" or "BreakEnd")
+            .WithMessage("EventType must be ClockIn, ClockOut, BreakStart, or BreakEnd");
     }
 }
 

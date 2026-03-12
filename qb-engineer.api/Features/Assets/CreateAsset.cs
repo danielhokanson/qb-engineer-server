@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -18,7 +19,7 @@ public class CreateAssetCommandValidator : AbstractValidator<CreateAssetCommand>
     }
 }
 
-public class CreateAssetHandler(IAssetRepository repo) : IRequestHandler<CreateAssetCommand, AssetResponseModel>
+public class CreateAssetHandler(IAssetRepository repo, IBarcodeService barcodeService) : IRequestHandler<CreateAssetCommand, AssetResponseModel>
 {
     public async Task<AssetResponseModel> Handle(CreateAssetCommand request, CancellationToken cancellationToken)
     {
@@ -40,6 +41,11 @@ public class CreateAssetHandler(IAssetRepository repo) : IRequestHandler<CreateA
         };
 
         await repo.AddAsync(asset, cancellationToken);
+
+        var naturalId = asset.SerialNumber ?? asset.Name;
+        await barcodeService.CreateBarcodeAsync(
+            BarcodeEntityType.Asset, asset.Id, naturalId, cancellationToken);
+
         return (await repo.GetByIdAsync(asset.Id, cancellationToken))!;
     }
 }

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Features.Search;
 using QBEngineer.Api.Features.ShopFloor;
 using QBEngineer.Core.Models;
 
@@ -12,17 +13,41 @@ namespace QBEngineer.Api.Controllers;
 [AllowAnonymous]
 public class ShopFloorController(IMediator mediator) : ControllerBase
 {
+    private static readonly HashSet<string> KioskEntityTypes = new(["Job", "Part"]);
+
     [HttpGet]
-    public async Task<ActionResult<ShopFloorOverviewResponseModel>> GetOverview()
+    public async Task<ActionResult<ShopFloorOverviewResponseModel>> GetOverview([FromQuery] int? teamId = null)
     {
-        var result = await mediator.Send(new GetShopFloorOverviewQuery());
+        var result = await mediator.Send(new GetShopFloorOverviewQuery(teamId));
         return Ok(result);
     }
 
     [HttpGet("clock-status")]
-    public async Task<ActionResult<List<ClockWorkerModel>>> GetClockStatus()
+    public async Task<ActionResult<List<ClockWorkerModel>>> GetClockStatus([FromQuery] int? teamId = null)
     {
-        var result = await mediator.Send(new GetClockStatusQuery());
+        var result = await mediator.Send(new GetClockStatusQuery(teamId));
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<List<SearchResultModel>>> KioskSearch(
+        [FromQuery] string q, [FromQuery] int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+            return Ok(new List<SearchResultModel>());
+
+        var all = await mediator.Send(new GlobalSearchQuery(q.Trim(), Math.Min(limit, 20)));
+        var filtered = all.Where(r => KioskEntityTypes.Contains(r.EntityType)).ToList();
+        return Ok(filtered);
+    }
+
+    [HttpPost("identify-scan")]
+    public async Task<ActionResult<ScanIdentificationResult>> IdentifyScan([FromBody] IdentifyScanRequestModel model)
+    {
+        if (string.IsNullOrWhiteSpace(model.ScanValue))
+            return BadRequest("scanValue is required");
+
+        var result = await mediator.Send(new IdentifyScanQuery(model.ScanValue));
         return Ok(result);
     }
 
@@ -32,4 +57,44 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         await mediator.Send(new ClockInOutCommand(model.UserId, model.EventType));
         return NoContent();
     }
+
+    // ─── Teams ───
+    [HttpGet("teams")]
+    public async Task<ActionResult<List<TeamModel>>> GetTeams()
+    {
+        var result = await mediator.Send(new GetTeamsQuery());
+        return Ok(result);
+    }
+
+    [HttpPost("teams")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<TeamModel>> CreateTeam([FromBody] CreateTeamCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Created($"/api/v1/display/shop-floor/teams/{result.Id}", result);
+    }
+
+    // ─── Terminal Setup ───
+    [HttpGet("terminal")]
+    public async Task<ActionResult<KioskTerminalModel>> GetTerminal([FromQuery] string deviceToken)
+    {
+        if (string.IsNullOrWhiteSpace(deviceToken))
+            return BadRequest("deviceToken is required");
+
+        var result = await mediator.Send(new GetKioskTerminalQuery(deviceToken));
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
+    [HttpPost("terminal")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<KioskTerminalModel>> SetupTerminal([FromBody] SetupTerminalRequestModel model)
+    {
+        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        var result = await mediator.Send(new SetupKioskTerminalCommand(model.Name, model.DeviceToken, model.TeamId, userId));
+        return Ok(result);
+    }
 }
+
+public record SetupTerminalRequestModel(string Name, string DeviceToken, int TeamId);
+public record IdentifyScanRequestModel(string ScanValue);

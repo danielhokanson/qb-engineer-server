@@ -75,6 +75,7 @@ public static partial class JobMapper
             Title: job.Title,
             StageName: job.CurrentStage?.Name ?? string.Empty,
             StageColor: job.CurrentStage?.Color ?? string.Empty,
+            AssigneeId: job.AssigneeId,
             AssigneeInitials: assigneeInitials,
             AssigneeColor: assigneeColor,
             PriorityName: job.Priority.ToString(),
