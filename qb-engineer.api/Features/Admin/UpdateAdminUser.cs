@@ -34,7 +34,9 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, Ap
 {
     public async Task<AdminUserResponseModel> Handle(UpdateAdminUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByIdAsync(request.Id.ToString())
+        var user = await db.Users
+            .Include(u => u.WorkLocation)
+            .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"User with ID {request.Id} not found.");
 
         if (request.FirstName is not null) user.FirstName = request.FirstName;
@@ -69,6 +71,34 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, Ap
             .Select(s => s.IdentifierType)
             .ToListAsync(cancellationToken);
 
+        var profile = await db.EmployeeProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
+
+        var complianceItems = new (string Label, bool IsComplete, bool BlocksAssignment)[]
+        {
+            ("W-4 Federal Tax Withholding", profile?.W4CompletedAt is not null, true),
+            ("I-9 Employment Eligibility", profile?.I9CompletedAt is not null, true),
+            ("State Tax Withholding", profile?.StateWithholdingCompletedAt is not null, true),
+            ("Emergency Contact",
+                profile is not null &&
+                !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
+                !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone), true),
+            ("Home Address",
+                profile is not null &&
+                !string.IsNullOrWhiteSpace(profile.Street1) &&
+                !string.IsNullOrWhiteSpace(profile.City) &&
+                !string.IsNullOrWhiteSpace(profile.State) &&
+                !string.IsNullOrWhiteSpace(profile.ZipCode), false),
+            ("Direct Deposit", profile?.DirectDepositCompletedAt is not null, false),
+            ("Workers' Comp", profile?.WorkersCompAcknowledgedAt is not null, false),
+            ("Employee Handbook", profile?.HandbookAcknowledgedAt is not null, false),
+        };
+
+        var completedCount = complianceItems.Count(i => i.IsComplete);
+        var canBeAssigned = complianceItems.Where(i => i.BlocksAssignment).All(i => i.IsComplete);
+        var missingItems = complianceItems.Where(i => !i.IsComplete).Select(i => i.Label).ToArray();
+
         return new AdminUserResponseModel(
             user.Id,
             user.Email!,
@@ -82,6 +112,12 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, Ap
             hasPassword,
             hasPendingToken,
             userScans.Any(t => t == "rfid" || t == "nfc"),
-            userScans.Any(t => t == "barcode"));
+            userScans.Any(t => t == "barcode"),
+            canBeAssigned,
+            completedCount,
+            complianceItems.Length,
+            missingItems,
+            user.WorkLocationId,
+            user.WorkLocation?.Name);
     }
 }

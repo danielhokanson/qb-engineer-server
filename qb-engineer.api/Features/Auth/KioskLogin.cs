@@ -46,7 +46,7 @@ public class KioskLoginHandler(
             DateTime.UtcNow.AddHours(8),
             new AuthUserResponseModel(
                 user.Id, user.Email!, user.FirstName, user.LastName,
-                user.Initials, user.AvatarColor, roles.ToArray()));
+                user.Initials, user.AvatarColor, roles.ToArray(), false));
     }
 
     private string GenerateJwt(ApplicationUser user, IList<string> roles)

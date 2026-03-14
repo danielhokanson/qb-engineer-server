@@ -4,6 +4,7 @@ using System.Text;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QBEngineer.Data.Context;
 
@@ -16,7 +17,8 @@ public record AuthUserResponseModel(
     string LastName,
     string? Initials,
     string? AvatarColor,
-    string[] Roles);
+    string[] Roles,
+    bool ProfileComplete);
 
 // --- Login ---
 
@@ -37,7 +39,7 @@ public class LoginValidator : AbstractValidator<LoginCommand>
     }
 }
 
-public class LoginHandler(UserManager<ApplicationUser> userManager, IConfiguration config)
+public class LoginHandler(UserManager<ApplicationUser> userManager, IConfiguration config, AppDbContext db)
     : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -58,6 +60,8 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
 
         var expiresAt = DateTime.UtcNow.AddHours(24);
 
+        var profileComplete = await CheckProfileComplete(user.Id, cancellationToken);
+
         var userResponse = new AuthUserResponseModel(
             user.Id,
             user.Email!,
@@ -65,7 +69,8 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
             user.LastName,
             user.Initials,
             user.AvatarColor,
-            roles.ToArray());
+            roles.ToArray(),
+            profileComplete);
 
         return new LoginResponse(token, expiresAt, userResponse);
     }
@@ -103,13 +108,35 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    private async Task<bool> CheckProfileComplete(int userId, CancellationToken ct)
+    {
+        var profile = await db.EmployeeProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == userId, ct);
+
+        if (profile is null) return false;
+
+        return !string.IsNullOrWhiteSpace(profile.Street1) &&
+               !string.IsNullOrWhiteSpace(profile.City) &&
+               !string.IsNullOrWhiteSpace(profile.State) &&
+               !string.IsNullOrWhiteSpace(profile.ZipCode) &&
+               !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
+               !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone) &&
+               profile.W4CompletedAt is not null &&
+               profile.I9CompletedAt is not null &&
+               profile.StateWithholdingCompletedAt is not null &&
+               profile.DirectDepositCompletedAt is not null &&
+               profile.WorkersCompAcknowledgedAt is not null &&
+               profile.HandbookAcknowledgedAt is not null;
+    }
 }
 
 // --- Get Current User ---
 
 public record GetCurrentUserQuery(ClaimsPrincipal User) : IRequest<AuthUserResponseModel>;
 
-public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager)
+public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager, AppDbContext db)
     : IRequestHandler<GetCurrentUserQuery, AuthUserResponseModel>
 {
     public async Task<AuthUserResponseModel> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
@@ -125,6 +152,24 @@ public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager)
 
         var roles = await userManager.GetRolesAsync(user);
 
+        var profile = await db.EmployeeProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
+
+        var profileComplete = profile is not null &&
+            !string.IsNullOrWhiteSpace(profile.Street1) &&
+            !string.IsNullOrWhiteSpace(profile.City) &&
+            !string.IsNullOrWhiteSpace(profile.State) &&
+            !string.IsNullOrWhiteSpace(profile.ZipCode) &&
+            !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
+            !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone) &&
+            profile.W4CompletedAt is not null &&
+            profile.I9CompletedAt is not null &&
+            profile.StateWithholdingCompletedAt is not null &&
+            profile.DirectDepositCompletedAt is not null &&
+            profile.WorkersCompAcknowledgedAt is not null &&
+            profile.HandbookAcknowledgedAt is not null;
+
         return new AuthUserResponseModel(
             user.Id,
             user.Email!,
@@ -132,6 +177,7 @@ public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager)
             user.LastName,
             user.Initials,
             user.AvatarColor,
-            roles.ToArray());
+            roles.ToArray(),
+            profileComplete);
     }
 }

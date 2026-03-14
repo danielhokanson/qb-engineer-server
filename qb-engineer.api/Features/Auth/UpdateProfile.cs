@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Data.Context;
 
@@ -35,7 +36,7 @@ public class UpdateProfileValidator : AbstractValidator<UpdateProfileCommand>
     }
 }
 
-public class UpdateProfileHandler(UserManager<ApplicationUser> userManager)
+public class UpdateProfileHandler(UserManager<ApplicationUser> userManager, AppDbContext db)
     : IRequestHandler<UpdateProfileCommand, AuthUserResponseModel>
 {
     public async Task<AuthUserResponseModel> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
@@ -53,6 +54,24 @@ public class UpdateProfileHandler(UserManager<ApplicationUser> userManager)
 
         var roles = await userManager.GetRolesAsync(user);
 
+        var profile = await db.EmployeeProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
+
+        var profileComplete = profile is not null &&
+            !string.IsNullOrWhiteSpace(profile.Street1) &&
+            !string.IsNullOrWhiteSpace(profile.City) &&
+            !string.IsNullOrWhiteSpace(profile.State) &&
+            !string.IsNullOrWhiteSpace(profile.ZipCode) &&
+            !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
+            !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone) &&
+            profile.W4CompletedAt is not null &&
+            profile.I9CompletedAt is not null &&
+            profile.StateWithholdingCompletedAt is not null &&
+            profile.DirectDepositCompletedAt is not null &&
+            profile.WorkersCompAcknowledgedAt is not null &&
+            profile.HandbookAcknowledgedAt is not null;
+
         return new AuthUserResponseModel(
             user.Id,
             user.Email!,
@@ -60,6 +79,7 @@ public class UpdateProfileHandler(UserManager<ApplicationUser> userManager)
             user.LastName,
             user.Initials,
             user.AvatarColor,
-            roles.ToArray());
+            roles.ToArray(),
+            profileComplete);
     }
 }

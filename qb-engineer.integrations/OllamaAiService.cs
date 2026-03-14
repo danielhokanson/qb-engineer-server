@@ -35,7 +35,10 @@ public class OllamaAiService : IAiService
         _httpClient.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
     }
 
-    public async Task<string> GenerateTextAsync(string prompt, CancellationToken ct)
+    public Task<string> GenerateTextAsync(string prompt, CancellationToken ct)
+        => GenerateTextAsync(prompt, null, null, ct);
+
+    public async Task<string> GenerateTextAsync(string prompt, string? systemPrompt, double? temperature, CancellationToken ct)
     {
         _logger.LogInformation("Ollama GenerateText ({Model}): {Prompt}",
             _options.Model, prompt.Length > 80 ? prompt[..80] + "..." : prompt);
@@ -45,6 +48,8 @@ public class OllamaAiService : IAiService
             Model = _options.Model,
             Prompt = prompt,
             Stream = false,
+            System = systemPrompt,
+            Options = temperature.HasValue ? new OllamaGenerateOptions { Temperature = temperature.Value } : null,
         };
 
         var response = await _httpClient.PostAsJsonAsync("/api/generate", request, JsonOptions, ct);
@@ -128,6 +133,12 @@ public class OllamaAiService : IAiService
         public string Prompt { get; set; } = string.Empty;
         public bool Stream { get; set; }
         public string? System { get; set; }
+        public OllamaGenerateOptions? Options { get; set; }
+    }
+
+    private sealed class OllamaGenerateOptions
+    {
+        public double Temperature { get; set; }
     }
 
     private sealed class OllamaGenerateResponse

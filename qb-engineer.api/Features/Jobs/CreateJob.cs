@@ -6,6 +6,7 @@ using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Jobs;
 
@@ -36,10 +37,14 @@ public class CreateJobHandler(
     ITrackTypeRepository trackRepo,
     IMediator mediator,
     IHubContext<BoardHub> boardHub,
-    IBarcodeService barcodeService) : IRequestHandler<CreateJobCommand, JobDetailResponseModel>
+    IBarcodeService barcodeService,
+    AppDbContext db) : IRequestHandler<CreateJobCommand, JobDetailResponseModel>
 {
     public async Task<JobDetailResponseModel> Handle(CreateJobCommand request, CancellationToken cancellationToken)
     {
+        if (request.AssigneeId.HasValue)
+            await AssigneeComplianceCheck.EnsureCanBeAssigned(db, request.AssigneeId.Value, cancellationToken);
+
         var firstStage = await trackRepo.FindFirstActiveStageAsync(request.TrackTypeId, cancellationToken)
             ?? throw new KeyNotFoundException($"No active stages found for TrackType {request.TrackTypeId}.");
 
@@ -60,13 +65,11 @@ public class CreateJobHandler(
             BoardPosition = maxPosition + 1,
         };
 
-        var log = new JobActivityLog
+        job.ActivityLogs.Add(new JobActivityLog
         {
-            JobId = job.Id,
             Action = ActivityAction.Created,
             Description = $"Job {jobNumber} created.",
-        };
-        job.ActivityLogs.Add(log);
+        });
 
         await jobRepo.AddAsync(job, cancellationToken);
         await jobRepo.SaveChangesAsync(cancellationToken);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using QBEngineer.Api.Features.Ai;
+using QBEngineer.Api.Features.AiAssistants;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -67,4 +68,13 @@ public class AiController(IMediator mediator) : ControllerBase
         var totalChunks = await mediator.Send(command, ct);
         return Ok(new { totalChunksIndexed = totalChunks });
     }
+
+    [HttpPost("assistants/{assistantId:int}/chat")]
+    public async Task<IActionResult> AssistantChat(int assistantId, [FromBody] AssistantChatBody body, CancellationToken ct)
+    {
+        var result = await mediator.Send(new AssistantChatCommand(assistantId, body.Question, body.History), ct);
+        return Ok(result);
+    }
 }
+
+public record AssistantChatBody(string Question, List<AiHelpMessage>? History = null);

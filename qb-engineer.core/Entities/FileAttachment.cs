@@ -14,6 +14,7 @@ public class FileAttachment : BaseAuditableEntity
     public DateTime? ExpirationDate { get; set; }
     public int? PartRevisionId { get; set; }
     public string? RequiredRole { get; set; }
+    public string? Sensitivity { get; set; }
 
     public PartRevision? PartRevision { get; set; }
 }

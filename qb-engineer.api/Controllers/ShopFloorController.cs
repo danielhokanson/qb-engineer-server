@@ -10,11 +10,12 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/display/shop-floor")]
-[AllowAnonymous]
+[Authorize]
 public class ShopFloorController(IMediator mediator) : ControllerBase
 {
     private static readonly HashSet<string> KioskEntityTypes = new(["Job", "Part"]);
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ShopFloorOverviewResponseModel>> GetOverview([FromQuery] int? teamId = null)
     {
@@ -22,6 +23,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [AllowAnonymous]
     [HttpGet("clock-status")]
     public async Task<ActionResult<List<ClockWorkerModel>>> GetClockStatus([FromQuery] int? teamId = null)
     {
@@ -29,6 +31,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [AllowAnonymous]
     [HttpGet("search")]
     public async Task<ActionResult<List<SearchResultModel>>> KioskSearch(
         [FromQuery] string q, [FromQuery] int limit = 10)
@@ -41,6 +44,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(filtered);
     }
 
+    [AllowAnonymous]
     [HttpPost("identify-scan")]
     public async Task<ActionResult<ScanIdentificationResult>> IdentifyScan([FromBody] IdentifyScanRequestModel model)
     {
@@ -51,6 +55,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [AllowAnonymous]
     [HttpPost("clock")]
     public async Task<IActionResult> ClockInOut([FromBody] ClockInOutRequestModel model)
     {
@@ -59,6 +64,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
     }
 
     // ─── Teams ───
+    [AllowAnonymous]
     [HttpGet("teams")]
     public async Task<ActionResult<List<TeamModel>>> GetTeams()
     {
@@ -74,7 +80,50 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Created($"/api/v1/display/shop-floor/teams/{result.Id}", result);
     }
 
+    [HttpPut("teams/{id:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<TeamModel>> UpdateTeam(int id, [FromBody] UpdateTeamCommand command)
+    {
+        if (id != command.Id) return BadRequest("ID mismatch");
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpDelete("teams/{id:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> DeleteTeam(int id)
+    {
+        await mediator.Send(new DeleteTeamCommand(id));
+        return NoContent();
+    }
+
+    [HttpGet("teams/{id:int}/members")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<TeamMemberModel>>> GetTeamMembers(int id)
+    {
+        var result = await mediator.Send(new GetTeamMembersQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPut("teams/{id:int}/members")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> AssignTeamMembers(int id, [FromBody] AssignTeamMembersRequestModel model)
+    {
+        await mediator.Send(new AssignTeamMembersCommand(id, model.UserIds));
+        return NoContent();
+    }
+
+    // ─── Terminals (Admin) ───
+    [HttpGet("terminals")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<KioskTerminalModel>>> GetTerminals()
+    {
+        var result = await mediator.Send(new GetKioskTerminalsQuery());
+        return Ok(result);
+    }
+
     // ─── Terminal Setup ───
+    [AllowAnonymous]
     [HttpGet("terminal")]
     public async Task<ActionResult<KioskTerminalModel>> GetTerminal([FromQuery] string deviceToken)
     {
@@ -98,3 +147,4 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
 
 public record SetupTerminalRequestModel(string Name, string DeviceToken, int TeamId);
 public record IdentifyScanRequestModel(string ScanValue);
+public record AssignTeamMembersRequestModel(List<int> UserIds);

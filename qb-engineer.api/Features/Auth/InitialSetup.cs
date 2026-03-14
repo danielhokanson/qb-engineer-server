@@ -4,8 +4,10 @@ using System.Text;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QBEngineer.Api.Data;
+using QBEngineer.Core.Entities;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Auth;
@@ -14,7 +16,20 @@ public record InitialSetupCommand(
     string Email,
     string Password,
     string FirstName,
-    string LastName) : IRequest<LoginResponse>;
+    string LastName,
+    // Company profile (optional)
+    string? CompanyName,
+    string? CompanyPhone,
+    string? CompanyEmail,
+    string? CompanyEin,
+    string? CompanyWebsite,
+    // Primary location (optional)
+    string? LocationName,
+    string? LocationLine1,
+    string? LocationLine2,
+    string? LocationCity,
+    string? LocationState,
+    string? LocationPostalCode) : IRequest<LoginResponse>;
 
 public class InitialSetupValidator : AbstractValidator<InitialSetupCommand>
 {
@@ -81,6 +96,56 @@ public class InitialSetupHandler(
         // Seed essential operational data
         await SeedData.SeedEssentialDataAsync(db);
 
+        // Save company profile settings if provided
+        if (!string.IsNullOrWhiteSpace(request.CompanyName))
+        {
+            var settingMap = new Dictionary<string, string>
+            {
+                ["company.name"] = request.CompanyName.Trim(),
+                ["company.phone"] = request.CompanyPhone?.Trim() ?? "",
+                ["company.email"] = request.CompanyEmail?.Trim() ?? "",
+                ["company.ein"] = request.CompanyEin?.Trim() ?? "",
+                ["company.website"] = request.CompanyWebsite?.Trim() ?? "",
+            };
+
+            foreach (var (key, value) in settingMap)
+            {
+                var setting = await db.SystemSettings.FirstOrDefaultAsync(s => s.Key == key, cancellationToken);
+                if (setting != null)
+                    setting.Value = value;
+            }
+
+            // Also set the display name
+            var appName = await db.SystemSettings.FirstOrDefaultAsync(s => s.Key == "app.company_name", cancellationToken);
+            if (appName != null)
+                appName.Value = request.CompanyName.Trim();
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        // Create primary location if address provided
+        if (!string.IsNullOrWhiteSpace(request.LocationLine1))
+        {
+            var location = new CompanyLocation
+            {
+                Name = request.LocationName?.Trim() ?? "Main Office",
+                Line1 = request.LocationLine1.Trim(),
+                Line2 = request.LocationLine2?.Trim(),
+                City = request.LocationCity?.Trim() ?? "",
+                State = request.LocationState?.Trim() ?? "",
+                PostalCode = request.LocationPostalCode?.Trim() ?? "",
+                Country = "US",
+                IsDefault = true,
+                IsActive = true,
+            };
+            db.CompanyLocations.Add(location);
+            await db.SaveChangesAsync(cancellationToken);
+
+            // Assign admin to this location
+            user.WorkLocationId = location.Id;
+            await userManager.UpdateAsync(user);
+        }
+
         // Generate JWT
         var userRoles = await userManager.GetRolesAsync(user);
         var token = GenerateJwtToken(user, userRoles);
@@ -88,7 +153,7 @@ public class InitialSetupHandler(
 
         var userResponse = new AuthUserResponseModel(
             user.Id, user.Email!, user.FirstName, user.LastName,
-            user.Initials, user.AvatarColor, userRoles.ToArray());
+            user.Initials, user.AvatarColor, userRoles.ToArray(), false);
 
         return new LoginResponse(token, expiresAt, userResponse);
     }

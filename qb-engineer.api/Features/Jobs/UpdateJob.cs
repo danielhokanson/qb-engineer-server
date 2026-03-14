@@ -5,6 +5,7 @@ using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Jobs;
 
@@ -32,12 +33,16 @@ public class UpdateJobCommandValidator : AbstractValidator<UpdateJobCommand>
 public class UpdateJobHandler(
     IJobRepository repo,
     IMediator mediator,
-    IHubContext<BoardHub> boardHub) : IRequestHandler<UpdateJobCommand, JobDetailResponseModel>
+    IHubContext<BoardHub> boardHub,
+    AppDbContext db) : IRequestHandler<UpdateJobCommand, JobDetailResponseModel>
 {
     public async Task<JobDetailResponseModel> Handle(UpdateJobCommand request, CancellationToken cancellationToken)
     {
         var job = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Job with ID {request.Id} not found.");
+
+        if (request.AssigneeId.HasValue)
+            await AssigneeComplianceCheck.EnsureCanBeAssigned(db, request.AssigneeId.Value, cancellationToken);
 
         if (request.Title is not null)
             job.Title = request.Title;

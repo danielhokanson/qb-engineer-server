@@ -734,6 +734,176 @@ public static class SeedData
             await db.SaveChangesAsync();
             Log.Information("Seeded reference data");
         }
+
+        // State Withholding Forms — all US states with form info + DocuSeal template IDs where pre-loaded
+        if (!await db.ReferenceData.AnyAsync(r => r.GroupCode == "state_withholding"))
+        {
+            db.ReferenceData.AddRange(
+                // States with NO income tax — marked as "none" category
+                new ReferenceData { GroupCode = "state_withholding", Code = "AK", Label = "Alaska", SortOrder = 1, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "FL", Label = "Florida", SortOrder = 2, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "NV", Label = "Nevada", SortOrder = 3, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "NH", Label = "New Hampshire", SortOrder = 4, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "SD", Label = "South Dakota", SortOrder = 5, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "TN", Label = "Tennessee", SortOrder = 6, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "TX", Label = "Texas", SortOrder = 7, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "WA", Label = "Washington", SortOrder = 8, Metadata = """{"category":"no_tax"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "WY", Label = "Wyoming", SortOrder = 9, Metadata = """{"category":"no_tax"}""" },
+
+                // States that accept federal W-4 only — marked as "federal" category
+                new ReferenceData { GroupCode = "state_withholding", Code = "CO", Label = "Colorado", SortOrder = 10, Metadata = """{"category":"federal","formName":"Uses Federal W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "MT", Label = "Montana", SortOrder = 11, Metadata = """{"category":"federal","formName":"Uses Federal W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "NM", Label = "New Mexico", SortOrder = 12, Metadata = """{"category":"federal","formName":"Uses Federal W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "ND", Label = "North Dakota", SortOrder = 13, Metadata = """{"category":"federal","formName":"Uses Federal W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "UT", Label = "Utah", SortOrder = 14, Metadata = """{"category":"federal","formName":"Uses Federal W-4"}""" },
+
+                // States with own forms — pre-loaded in DocuSeal (docuSealTemplateId set)
+                new ReferenceData { GroupCode = "state_withholding", Code = "AR", Label = "Arkansas", SortOrder = 15, Metadata = """{"category":"state_form","formName":"AR4EC","docuSealTemplateId":3}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "CA", Label = "California", SortOrder = 16, Metadata = """{"category":"state_form","formName":"DE 4","docuSealTemplateId":4}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "KS", Label = "Kansas", SortOrder = 17, Metadata = """{"category":"state_form","formName":"K-4","docuSealTemplateId":5}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "MA", Label = "Massachusetts", SortOrder = 18, Metadata = """{"category":"state_form","formName":"M-4","docuSealTemplateId":6}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "NJ", Label = "New Jersey", SortOrder = 19, Metadata = """{"category":"state_form","formName":"NJ-W4","docuSealTemplateId":7}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "NY", Label = "New York", SortOrder = 20, Metadata = """{"category":"state_form","formName":"IT-2104","docuSealTemplateId":8}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "OR", Label = "Oregon", SortOrder = 21, Metadata = """{"category":"state_form","formName":"OR-W-4","docuSealTemplateId":9}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "PA", Label = "Pennsylvania", SortOrder = 22, Metadata = """{"category":"state_form","formName":"REV-419","docuSealTemplateId":10}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "VA", Label = "Virginia", SortOrder = 23, Metadata = """{"category":"state_form","formName":"VA-4","docuSealTemplateId":11}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "VT", Label = "Vermont", SortOrder = 24, Metadata = """{"category":"state_form","formName":"W-4VT","docuSealTemplateId":12}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "WI", Label = "Wisconsin", SortOrder = 25, Metadata = """{"category":"state_form","formName":"WT-4","docuSealTemplateId":13}""" },
+
+                // States with own forms — NOT pre-loaded (admin must upload via DocuSeal web UI)
+                new ReferenceData { GroupCode = "state_withholding", Code = "AL", Label = "Alabama", SortOrder = 26, Metadata = """{"category":"state_form","formName":"A-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "AZ", Label = "Arizona", SortOrder = 27, Metadata = """{"category":"state_form","formName":"A-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "CT", Label = "Connecticut", SortOrder = 28, Metadata = """{"category":"state_form","formName":"CT-W4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "DC", Label = "District of Columbia", SortOrder = 29, Metadata = """{"category":"state_form","formName":"D-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "DE", Label = "Delaware", SortOrder = 30, Metadata = """{"category":"state_form","formName":"W-4 (DE)"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "GA", Label = "Georgia", SortOrder = 31, Metadata = """{"category":"state_form","formName":"G-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "HI", Label = "Hawaii", SortOrder = 32, Metadata = """{"category":"state_form","formName":"HW-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "IA", Label = "Iowa", SortOrder = 33, Metadata = """{"category":"state_form","formName":"IA W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "ID", Label = "Idaho", SortOrder = 34, Metadata = """{"category":"state_form","formName":"ID W-4","docuSealTemplateId":14}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "IL", Label = "Illinois", SortOrder = 35, Metadata = """{"category":"state_form","formName":"IL-W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "IN", Label = "Indiana", SortOrder = 36, Metadata = """{"category":"state_form","formName":"WH-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "KY", Label = "Kentucky", SortOrder = 37, Metadata = """{"category":"state_form","formName":"K-4 (KY)"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "LA", Label = "Louisiana", SortOrder = 38, Metadata = """{"category":"state_form","formName":"L-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "MD", Label = "Maryland", SortOrder = 39, Metadata = """{"category":"state_form","formName":"MW507"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "ME", Label = "Maine", SortOrder = 40, Metadata = """{"category":"state_form","formName":"W-4ME"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "MI", Label = "Michigan", SortOrder = 41, Metadata = """{"category":"state_form","formName":"MI-W4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "MN", Label = "Minnesota", SortOrder = 42, Metadata = """{"category":"state_form","formName":"W-4MN"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "MO", Label = "Missouri", SortOrder = 43, Metadata = """{"category":"state_form","formName":"MO W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "MS", Label = "Mississippi", SortOrder = 44, Metadata = """{"category":"state_form","formName":"89-350"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "NC", Label = "North Carolina", SortOrder = 45, Metadata = """{"category":"state_form","formName":"NC-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "NE", Label = "Nebraska", SortOrder = 46, Metadata = """{"category":"state_form","formName":"W-4N"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "OH", Label = "Ohio", SortOrder = 47, Metadata = """{"category":"state_form","formName":"IT-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "OK", Label = "Oklahoma", SortOrder = 48, Metadata = """{"category":"state_form","formName":"OK-W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "RI", Label = "Rhode Island", SortOrder = 49, Metadata = """{"category":"state_form","formName":"RI W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "SC", Label = "South Carolina", SortOrder = 50, Metadata = """{"category":"state_form","formName":"SC W-4"}""" },
+                new ReferenceData { GroupCode = "state_withholding", Code = "WV", Label = "West Virginia", SortOrder = 51, Metadata = """{"category":"state_form","formName":"WV/IT-104"}""" }
+            );
+            await db.SaveChangesAsync();
+            Log.Information("Seeded state withholding reference data (51 entries)");
+        }
+
+        // Compliance Form Templates
+        if (!await db.ComplianceFormTemplates.AnyAsync())
+        {
+            db.ComplianceFormTemplates.AddRange(
+                new ComplianceFormTemplate
+                {
+                    Name = "W-4 Federal Tax Withholding",
+                    FormType = ComplianceFormType.W4,
+                    Description = "Employee's Withholding Certificate — determines federal income tax withholding from your paycheck.",
+                    Icon = "request_quote",
+                    SourceUrl = "https://www.irs.gov/pub/irs-pdf/fw4.pdf",
+                    IsAutoSync = true,
+                    IsActive = true,
+                    SortOrder = 1,
+                    RequiresIdentityDocs = false,
+                    BlocksJobAssignment = true,
+                    ProfileCompletionKey = "w4",
+                },
+                new ComplianceFormTemplate
+                {
+                    Name = "I-9 Employment Eligibility",
+                    FormType = ComplianceFormType.I9,
+                    Description = "Employment Eligibility Verification — verifies identity and authorization to work in the United States.",
+                    Icon = "verified_user",
+                    SourceUrl = "https://www.uscis.gov/sites/default/files/document/forms/i-9.pdf",
+                    IsAutoSync = true,
+                    IsActive = true,
+                    SortOrder = 2,
+                    RequiresIdentityDocs = true,
+                    BlocksJobAssignment = true,
+                    ProfileCompletionKey = "i9",
+                },
+                new ComplianceFormTemplate
+                {
+                    Name = "State Tax Withholding",
+                    FormType = ComplianceFormType.StateWithholding,
+                    Description = "State-specific income tax withholding form — varies by state. Upload the form for your state.",
+                    Icon = "account_balance",
+                    IsAutoSync = false,
+                    IsActive = true,
+                    SortOrder = 3,
+                    RequiresIdentityDocs = false,
+                    BlocksJobAssignment = true,
+                    ProfileCompletionKey = "stateWithholding",
+                },
+                new ComplianceFormTemplate
+                {
+                    Name = "Direct Deposit Authorization",
+                    FormType = ComplianceFormType.DirectDeposit,
+                    Description = "Authorize electronic deposit of your paycheck to your bank account.",
+                    Icon = "account_balance_wallet",
+                    IsAutoSync = false,
+                    IsActive = true,
+                    SortOrder = 4,
+                    RequiresIdentityDocs = false,
+                    BlocksJobAssignment = false,
+                    ProfileCompletionKey = "directDeposit",
+                },
+                new ComplianceFormTemplate
+                {
+                    Name = "Workers' Comp Acknowledgment",
+                    FormType = ComplianceFormType.WorkersComp,
+                    Description = "Acknowledge receipt and understanding of workers' compensation coverage and procedures.",
+                    Icon = "health_and_safety",
+                    IsAutoSync = false,
+                    IsActive = true,
+                    SortOrder = 5,
+                    RequiresIdentityDocs = false,
+                    BlocksJobAssignment = false,
+                    ProfileCompletionKey = "workersComp",
+                },
+                new ComplianceFormTemplate
+                {
+                    Name = "Employee Handbook Acknowledgment",
+                    FormType = ComplianceFormType.Handbook,
+                    Description = "Acknowledge receipt and understanding of the employee handbook and company policies.",
+                    Icon = "menu_book",
+                    IsAutoSync = false,
+                    IsActive = true,
+                    SortOrder = 6,
+                    RequiresIdentityDocs = false,
+                    BlocksJobAssignment = false,
+                    ProfileCompletionKey = "handbook",
+                }
+            );
+            await db.SaveChangesAsync();
+            Log.Information("Seeded compliance form templates");
+        }
+
+        // Company Profile Settings
+        if (!await db.SystemSettings.AnyAsync(s => s.Key == "company.name"))
+        {
+            db.SystemSettings.AddRange(
+                new SystemSetting { Key = "company.name", Value = "", Description = "Legal business name" },
+                new SystemSetting { Key = "company.phone", Value = "", Description = "Main company phone" },
+                new SystemSetting { Key = "company.email", Value = "", Description = "Main company email" },
+                new SystemSetting { Key = "company.ein", Value = "", Description = "Federal tax identification number (EIN)" },
+                new SystemSetting { Key = "company.website", Value = "", Description = "Company website URL" }
+            );
+            await db.SaveChangesAsync();
+            Log.Information("Seeded company profile settings");
+        }
     }
 
     private static async Task<ApplicationUser> EnsureUserAsync(

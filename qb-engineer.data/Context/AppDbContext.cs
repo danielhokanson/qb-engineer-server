@@ -109,6 +109,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
 
     // AI / RAG
     public DbSet<DocumentEmbedding> DocumentEmbeddings => Set<DocumentEmbedding>();
+    public DbSet<AiAssistant> AiAssistants => Set<AiAssistant>();
 
     // Status Tracking
     public DbSet<StatusEntry> StatusEntries => Set<StatusEntry>();
@@ -134,6 +135,22 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
 
     // Central Barcode Registry
     public DbSet<Barcode> Barcodes => Set<Barcode>();
+
+    // Employee Profiles
+    public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
+
+    // Company Locations
+    public DbSet<CompanyLocation> CompanyLocations => Set<CompanyLocation>();
+
+    // Compliance & Document Signing
+    public DbSet<ComplianceFormTemplate> ComplianceFormTemplates => Set<ComplianceFormTemplate>();
+    public DbSet<ComplianceFormSubmission> ComplianceFormSubmissions => Set<ComplianceFormSubmission>();
+    public DbSet<IdentityDocument> IdentityDocuments => Set<IdentityDocument>();
+
+    // Payroll
+    public DbSet<PayStub> PayStubs => Set<PayStub>();
+    public DbSet<PayStubDeduction> PayStubDeductions => Set<PayStubDeduction>();
+    public DbSet<TaxDocument> TaxDocuments => Set<TaxDocument>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -28,6 +28,24 @@ public class EmbeddingRepository(AppDbContext context) : IEmbeddingRepository
             .ToListAsync(ct);
     }
 
+    public async Task<List<DocumentEmbedding>> SearchSimilarAsync(
+        Vector queryVector, int topK, List<string>? entityTypeFilters, CancellationToken ct)
+    {
+        var query = context.DocumentEmbeddings
+            .AsNoTracking()
+            .Where(e => e.Embedding != null);
+
+        if (entityTypeFilters is { Count: > 0 })
+        {
+            query = query.Where(e => entityTypeFilters.Contains(e.EntityType));
+        }
+
+        return await query
+            .OrderBy(e => e.Embedding!.CosineDistance(queryVector))
+            .Take(topK)
+            .ToListAsync(ct);
+    }
+
     public async Task UpsertEmbeddingsAsync(
         string entityType, int entityId, List<DocumentEmbedding> embeddings, CancellationToken ct)
     {

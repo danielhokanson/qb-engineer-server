@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using QBEngineer.Api.Features.Jobs;
 using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Jobs.Bulk;
 
@@ -13,10 +15,14 @@ public record BulkAssignJobCommand(List<int> JobIds, int? AssigneeId) : IRequest
 public class BulkAssignJobHandler(
     IJobRepository jobRepo,
     IActivityLogRepository actRepo,
-    IHubContext<BoardHub> boardHub) : IRequestHandler<BulkAssignJobCommand, BulkOperationResponseModel>
+    IHubContext<BoardHub> boardHub,
+    AppDbContext db) : IRequestHandler<BulkAssignJobCommand, BulkOperationResponseModel>
 {
     public async Task<BulkOperationResponseModel> Handle(BulkAssignJobCommand request, CancellationToken ct)
     {
+        if (request.AssigneeId.HasValue)
+            await AssigneeComplianceCheck.EnsureCanBeAssigned(db, request.AssigneeId.Value, ct);
+
         var jobs = await jobRepo.FindMultipleAsync(request.JobIds, ct);
         var errors = new List<BulkOperationError>();
         var successCount = 0;

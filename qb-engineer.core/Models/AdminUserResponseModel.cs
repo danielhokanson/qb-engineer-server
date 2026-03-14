@@ -13,4 +13,10 @@ public record AdminUserResponseModel(
     bool HasPassword,
     bool HasPendingSetupToken,
     bool HasRfidIdentifier,
-    bool HasBarcodeIdentifier);
+    bool HasBarcodeIdentifier,
+    bool CanBeAssignedJobs,
+    int ComplianceCompletedItems,
+    int ComplianceTotalItems,
+    string[] MissingComplianceItems,
+    int? WorkLocationId,
+    string? WorkLocationName);

@@ -1,0 +1,59 @@
+using Microsoft.Extensions.Logging;
+
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
+
+namespace QBEngineer.Integrations;
+
+public class MockDocumentSigningService : IDocumentSigningService
+{
+    private readonly ILogger<MockDocumentSigningService> _logger;
+    private int _nextTemplateId = 1000;
+    private int _nextSubmissionId = 5000;
+
+    public MockDocumentSigningService(ILogger<MockDocumentSigningService> logger)
+    {
+        _logger = logger;
+    }
+
+    public Task<bool> IsAvailableAsync(CancellationToken ct)
+    {
+        _logger.LogInformation("[MockDocuSeal] IsAvailable — returning true");
+        return Task.FromResult(true);
+    }
+
+    public Task<int> CreateTemplateFromPdfAsync(string name, byte[] pdfBytes, CancellationToken ct)
+    {
+        var templateId = Interlocked.Increment(ref _nextTemplateId);
+        _logger.LogInformation("[MockDocuSeal] CreateTemplate: {Name} ({Size} bytes) → template {Id}",
+            name, pdfBytes.Length, templateId);
+        return Task.FromResult(templateId);
+    }
+
+    public Task<DocumentSigningSubmission> CreateSubmissionAsync(int templateId, string signerEmail, string signerName, CancellationToken ct)
+    {
+        var submissionId = Interlocked.Increment(ref _nextSubmissionId);
+        var submitUrl = $"http://localhost:3000/s/{submissionId}";
+        _logger.LogInformation("[MockDocuSeal] CreateSubmission: template {TemplateId} for {Email} → submission {Id}",
+            templateId, signerEmail, submissionId);
+        return Task.FromResult(new DocumentSigningSubmission(submissionId, submitUrl));
+    }
+
+    public Task<byte[]> GetSignedPdfAsync(int submissionId, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockDocuSeal] GetSignedPdf: submission {Id}", submissionId);
+        return Task.FromResult(Array.Empty<byte>());
+    }
+
+    public Task<DocumentSigningSubmissionStatus> GetSubmissionStatusAsync(int submissionId, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockDocuSeal] GetSubmissionStatus: submission {Id}", submissionId);
+        return Task.FromResult(new DocumentSigningSubmissionStatus("completed", DateTime.UtcNow));
+    }
+
+    public Task DeleteTemplateAsync(int templateId, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockDocuSeal] DeleteTemplate: {Id}", templateId);
+        return Task.CompletedTask;
+    }
+}

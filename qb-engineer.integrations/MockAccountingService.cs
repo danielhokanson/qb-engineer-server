@@ -145,6 +145,77 @@ public class MockAccountingService : IAccountingService
         return Task.CompletedTask;
     }
 
+    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockAccounting] GetPayStubs({ExternalId}, from={From}, to={To})", employeeExternalId, fromDate, toDate);
+        var stubs = new List<AccountingPayStub>
+        {
+            new("MOCK-PAYSTUB-001",
+                DateTime.UtcNow.AddDays(-28), DateTime.UtcNow.AddDays(-15), DateTime.UtcNow.AddDays(-14),
+                3500.00m, 2612.50m,
+                [
+                    new("FederalTax", "Federal Income Tax", 420.00m),
+                    new("StateTax", "State Income Tax", 175.00m),
+                    new("SocialSecurity", "Social Security", 217.00m),
+                    new("Medicare", "Medicare", 50.75m),
+                    new("HealthInsurance", "Health Insurance Premium", 24.75m),
+                ]),
+            new("MOCK-PAYSTUB-002",
+                DateTime.UtcNow.AddDays(-42), DateTime.UtcNow.AddDays(-29), DateTime.UtcNow.AddDays(-28),
+                3500.00m, 2612.50m,
+                [
+                    new("FederalTax", "Federal Income Tax", 420.00m),
+                    new("StateTax", "State Income Tax", 175.00m),
+                    new("SocialSecurity", "Social Security", 217.00m),
+                    new("Medicare", "Medicare", 50.75m),
+                    new("HealthInsurance", "Health Insurance Premium", 24.75m),
+                ]),
+            new("MOCK-PAYSTUB-003",
+                DateTime.UtcNow.AddDays(-56), DateTime.UtcNow.AddDays(-43), DateTime.UtcNow.AddDays(-42),
+                3500.00m, 2612.50m,
+                [
+                    new("FederalTax", "Federal Income Tax", 420.00m),
+                    new("StateTax", "State Income Tax", 175.00m),
+                    new("SocialSecurity", "Social Security", 217.00m),
+                    new("Medicare", "Medicare", 50.75m),
+                    new("HealthInsurance", "Health Insurance Premium", 24.75m),
+                ]),
+        };
+
+        if (fromDate.HasValue)
+            stubs = stubs.Where(s => s.PayDate >= fromDate.Value).ToList();
+        if (toDate.HasValue)
+            stubs = stubs.Where(s => s.PayDate <= toDate.Value).ToList();
+
+        return Task.FromResult(stubs);
+    }
+
+    public Task<byte[]?> GetPayStubPdfAsync(string payStubExternalId, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockAccounting] GetPayStubPdf({ExternalId}) — no mock PDFs", payStubExternalId);
+        return Task.FromResult<byte[]?>(null);
+    }
+
+    public Task<List<AccountingTaxDocument>> GetTaxDocumentsAsync(string employeeExternalId, int? taxYear, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockAccounting] GetTaxDocuments({ExternalId}, year={Year})", employeeExternalId, taxYear);
+        var docs = new List<AccountingTaxDocument>
+        {
+            new("MOCK-W2-2025", "W2", 2025, "QB Engineer Co."),
+        };
+
+        if (taxYear.HasValue)
+            docs = docs.Where(d => d.TaxYear == taxYear.Value).ToList();
+
+        return Task.FromResult(docs);
+    }
+
+    public Task<byte[]?> GetTaxDocumentPdfAsync(string taxDocumentExternalId, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockAccounting] GetTaxDocumentPdf({ExternalId}) — no mock PDFs", taxDocumentExternalId);
+        return Task.FromResult<byte[]?>(null);
+    }
+
     public Task<bool> TestConnectionAsync(CancellationToken ct)
     {
         _logger.LogInformation("[MockAccounting] TestConnection — returning true");

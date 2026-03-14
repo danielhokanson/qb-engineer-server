@@ -15,6 +15,9 @@ public class MockAiService : IAiService
     }
 
     public Task<string> GenerateTextAsync(string prompt, CancellationToken ct)
+        => GenerateTextAsync(prompt, null, null, ct);
+
+    public Task<string> GenerateTextAsync(string prompt, string? systemPrompt, double? temperature, CancellationToken ct)
     {
         var truncated = prompt.Length > 80 ? prompt[..80] + "..." : prompt;
         _logger.LogInformation("[MockAI] GenerateText: {Prompt}", truncated);

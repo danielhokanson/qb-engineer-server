@@ -1583,6 +1583,170 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("downtime_logs");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.EmployeeProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_of_birth");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Department")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("department");
+
+                    b.Property<DateTime?>("DirectDepositCompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("direct_deposit_completed_at");
+
+                    b.Property<string>("EmergencyContactName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("emergency_contact_name");
+
+                    b.Property<string>("EmergencyContactPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("emergency_contact_phone");
+
+                    b.Property<string>("EmergencyContactRelationship")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("emergency_contact_relationship");
+
+                    b.Property<string>("EmployeeNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("employee_number");
+
+                    b.Property<string>("Gender")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("gender");
+
+                    b.Property<DateTime?>("HandbookAcknowledgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("handbook_acknowledged_at");
+
+                    b.Property<decimal?>("HourlyRate")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("hourly_rate");
+
+                    b.Property<DateTime?>("I9CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("i9_completed_at");
+
+                    b.Property<DateTime?>("I9ExpirationDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("i9_expiration_date");
+
+                    b.Property<string>("JobTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("job_title");
+
+                    b.Property<int?>("PayType")
+                        .HasColumnType("integer")
+                        .HasColumnName("pay_type");
+
+                    b.Property<string>("PersonalEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("personal_email");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<decimal?>("SalaryAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("salary_amount");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("state");
+
+                    b.Property<DateTime?>("StateWithholdingCompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("state_withholding_completed_at");
+
+                    b.Property<string>("Street1")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("street1");
+
+                    b.Property<string>("Street2")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("street2");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime?>("W4CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("w4_completed_at");
+
+                    b.Property<DateTime?>("WorkersCompAcknowledgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("workers_comp_acknowledged_at");
+
+                    b.Property<string>("ZipCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("zip_code");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_profiles");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employee_profiles_user_id");
+
+                    b.ToTable("employee_profiles");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.Expense", b =>
                 {
                     b.Property<int>("Id")

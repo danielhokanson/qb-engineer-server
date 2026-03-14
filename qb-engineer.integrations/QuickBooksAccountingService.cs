@@ -384,6 +384,30 @@ public class QuickBooksAccountingService(
         logger.LogInformation("[QuickBooks] UpdateInventoryQuantity({ExternalItemId}) — adjusted by {Adjustment}", externalItemId, adjustment);
     }
 
+    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    {
+        logger.LogWarning("QB Payroll API not yet implemented — GetPayStubsAsync");
+        return Task.FromResult(new List<AccountingPayStub>());
+    }
+
+    public Task<byte[]?> GetPayStubPdfAsync(string payStubExternalId, CancellationToken ct)
+    {
+        logger.LogWarning("QB Payroll API not yet implemented — GetPayStubPdfAsync");
+        return Task.FromResult<byte[]?>(null);
+    }
+
+    public Task<List<AccountingTaxDocument>> GetTaxDocumentsAsync(string employeeExternalId, int? taxYear, CancellationToken ct)
+    {
+        logger.LogWarning("QB Payroll API not yet implemented — GetTaxDocumentsAsync");
+        return Task.FromResult(new List<AccountingTaxDocument>());
+    }
+
+    public Task<byte[]?> GetTaxDocumentPdfAsync(string taxDocumentExternalId, CancellationToken ct)
+    {
+        logger.LogWarning("QB Payroll API not yet implemented — GetTaxDocumentPdfAsync");
+        return Task.FromResult<byte[]?>(null);
+    }
+
     public async Task<bool> TestConnectionAsync(CancellationToken ct)
     {
         try

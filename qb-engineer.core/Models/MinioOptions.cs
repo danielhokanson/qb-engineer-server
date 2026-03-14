@@ -11,4 +11,5 @@ public class MinioOptions
     public string JobFilesBucket { get; set; } = "qb-engineer-job-files";
     public string ReceiptsBucket { get; set; } = "qb-engineer-receipts";
     public string EmployeeDocsBucket { get; set; } = "qb-engineer-employee-docs";
+    public string PiiDocsBucket { get; set; } = "qb-engineer-pii-docs";
 }

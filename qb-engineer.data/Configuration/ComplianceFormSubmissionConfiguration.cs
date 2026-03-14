@@ -1,0 +1,30 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+using QBEngineer.Core.Entities;
+
+namespace QBEngineer.Data.Configuration;
+
+public class ComplianceFormSubmissionConfiguration : IEntityTypeConfiguration<ComplianceFormSubmission>
+{
+    public void Configure(EntityTypeBuilder<ComplianceFormSubmission> builder)
+    {
+        builder.Ignore(e => e.IsDeleted);
+
+        builder.Property(e => e.DocuSealSubmitUrl).HasMaxLength(1000);
+
+        builder.HasIndex(e => new { e.UserId, e.TemplateId });
+
+        builder.HasOne(e => e.Template)
+            .WithMany(t => t.Submissions)
+            .HasForeignKey(e => e.TemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => e.UserId);
+
+        builder.HasOne(e => e.SignedPdfFile)
+            .WithMany()
+            .HasForeignKey(e => e.SignedPdfFileId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}

@@ -226,6 +226,7 @@ try
     builder.Services.Configure<QuickBooksOptions>(builder.Configuration.GetSection(QuickBooksOptions.SectionName));
     builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
     builder.Services.Configure<EasyPostOptions>(builder.Configuration.GetSection(EasyPostOptions.SectionName));
+    builder.Services.Configure<DocuSealOptions>(builder.Configuration.GetSection(DocuSealOptions.SectionName));
 
     // QuickBooks token service (always registered — handles OAuth token lifecycle)
     builder.Services.AddScoped<IQuickBooksTokenService, QuickBooksTokenService>();
@@ -246,6 +247,7 @@ try
         builder.Services.AddSingleton<IShippingService, MockShippingService>();
         builder.Services.AddSingleton<IAiService, MockAiService>();
         builder.Services.AddSingleton<IEmailService, MockEmailService>();
+        builder.Services.AddSingleton<IDocumentSigningService, MockDocumentSigningService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -271,6 +273,7 @@ try
             Log.Information("EasyPost API key not configured — using mock shipping service");
         }
         builder.Services.AddHttpClient<IAiService, OllamaAiService>();
+        builder.Services.AddHttpClient<IDocumentSigningService, DocuSealSigningService>();
     }
 
     // Accounting provider factory — resolves active provider from system settings
@@ -328,6 +331,7 @@ try
     builder.Services.AddScoped<RecurringExpenseJob>();
     builder.Services.AddScoped<DocumentIndexJob>();
     builder.Services.AddScoped<OverdueMaintenanceJob>();
+    builder.Services.AddScoped<ComplianceFormSyncJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -373,14 +377,17 @@ try
                 await db.Database.EnsureDeletedAsync();
                 await db.Database.EnsureCreatedAsync();
                 Log.Information("Database recreated successfully");
-
-                // Seed default data
-                await SeedData.SeedAsync(scope.ServiceProvider);
             }
             else
             {
                 await db.Database.MigrateAsync();
             }
+
+            // Seed essential data idempotently (roles, users, track types, reference data, etc.)
+            await SeedData.SeedAsync(scope.ServiceProvider);
+
+            // Seed built-in AI assistants (idempotent)
+            await QBEngineer.Api.Features.AiAssistants.SeedAiAssistants.EnsureSeededAsync(db);
         }
     }
 
@@ -507,6 +514,10 @@ try
         "document-index",
         job => job.IndexRecentlyUpdatedAsync(),
         "*/30 * * * *"); // Every 30 minutes
+    RecurringJob.AddOrUpdate<ComplianceFormSyncJob>(
+        "compliance-form-sync",
+        job => job.SyncFederalFormsAsync(),
+        Cron.Weekly(DayOfWeek.Sunday, 4)); // Sunday 4 AM UTC
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

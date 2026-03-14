@@ -12,11 +12,22 @@ public class UserRepository(AppDbContext db) : IUserRepository
         return await db.Users
             .Where(u => u.IsActive)
             .OrderBy(u => u.FirstName)
-            .Select(u => new UserResponseModel(
-                u.Id,
-                u.Initials ?? "??",
-                (u.FirstName + " " + u.LastName).Trim(),
-                u.AvatarColor ?? "#94a3b8"))
+            .GroupJoin(
+                db.EmployeeProfiles,
+                u => u.Id,
+                p => p.UserId,
+                (u, profiles) => new { User = u, Profile = profiles.FirstOrDefault() })
+            .Select(x => new UserResponseModel(
+                x.User.Id,
+                x.User.Initials ?? "??",
+                (x.User.FirstName + " " + x.User.LastName).Trim(),
+                x.User.AvatarColor ?? "#94a3b8",
+                x.Profile != null &&
+                    x.Profile.W4CompletedAt != null &&
+                    x.Profile.I9CompletedAt != null &&
+                    x.Profile.StateWithholdingCompletedAt != null &&
+                    !string.IsNullOrWhiteSpace(x.Profile.EmergencyContactName) &&
+                    !string.IsNullOrWhiteSpace(x.Profile.EmergencyContactPhone)))
             .ToListAsync(ct);
     }
 
@@ -27,11 +38,22 @@ public class UserRepository(AppDbContext db) : IUserRepository
             .Where(u => u.IsActive)
             .Where(u => nameList.Contains(u.FirstName!.ToLower())
                      || nameList.Contains((u.FirstName + " " + u.LastName).Trim().ToLower().Replace(" ", "")))
-            .Select(u => new UserResponseModel(
-                u.Id,
-                u.Initials ?? "??",
-                (u.FirstName + " " + u.LastName).Trim(),
-                u.AvatarColor ?? "#94a3b8"))
+            .GroupJoin(
+                db.EmployeeProfiles,
+                u => u.Id,
+                p => p.UserId,
+                (u, profiles) => new { User = u, Profile = profiles.FirstOrDefault() })
+            .Select(x => new UserResponseModel(
+                x.User.Id,
+                x.User.Initials ?? "??",
+                (x.User.FirstName + " " + x.User.LastName).Trim(),
+                x.User.AvatarColor ?? "#94a3b8",
+                x.Profile != null &&
+                    x.Profile.W4CompletedAt != null &&
+                    x.Profile.I9CompletedAt != null &&
+                    x.Profile.StateWithholdingCompletedAt != null &&
+                    !string.IsNullOrWhiteSpace(x.Profile.EmergencyContactName) &&
+                    !string.IsNullOrWhiteSpace(x.Profile.EmergencyContactPhone)))
             .ToListAsync(ct);
     }
 }

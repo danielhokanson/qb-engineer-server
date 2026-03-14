@@ -105,7 +105,7 @@ public class AiHelpChatHandler(
                 return string.Empty;
 
             var queryVector = new Vector(queryEmbeddingArray);
-            var similar = await embeddingRepo.SearchSimilarAsync(queryVector, 5, null, ct);
+            var similar = await embeddingRepo.SearchSimilarAsync(queryVector, 5, (string?)null, ct);
 
             if (similar.Count == 0)
                 return string.Empty;

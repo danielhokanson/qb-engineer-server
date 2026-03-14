@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Features.Admin;
+using QBEngineer.Api.Features.CompanyLocations;
+using QBEngineer.Api.Features.EmployeeProfile;
 using QBEngineer.Api.Features.ReferenceData;
 using QBEngineer.Api.Features.TrackTypes;
 using QBEngineer.Core.Models;
@@ -237,6 +239,49 @@ public class AdminController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<List<StorageUsageResponseModel>>> GetStorageUsage()
     {
         var result = await mediator.Send(new GetStorageUsageQuery());
+        return Ok(result);
+    }
+
+    // ── Employee Profiles ──
+
+    [HttpGet("users/{userId:int}/employee-profile")]
+    public async Task<ActionResult<EmployeeProfileResponseModel>> GetEmployeeProfile(int userId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetAdminEmployeeProfileQuery(userId), ct);
+        return Ok(result);
+    }
+
+    [HttpPut("users/{userId:int}/employee-profile")]
+    public async Task<ActionResult<EmployeeProfileResponseModel>> UpdateEmployeeProfile(
+        int userId, [FromBody] AdminUpdateEmployeeProfileRequestModel data, CancellationToken ct)
+    {
+        var result = await mediator.Send(new AdminUpdateEmployeeProfileCommand(userId, data), ct);
+        return Ok(result);
+    }
+
+    // ── Work Location Assignment ──
+
+    [HttpPatch("users/{userId:int}/work-location")]
+    public async Task<IActionResult> UpdateUserWorkLocation(int userId, [FromBody] UpdateUserWorkLocationRequestModel request)
+    {
+        await mediator.Send(new UpdateUserWorkLocationCommand(userId, request.WorkLocationId));
+        return NoContent();
+    }
+
+    // ── Company Profile ──
+
+    [HttpGet("company-profile")]
+    public async Task<ActionResult<CompanyProfileResponseModel>> GetCompanyProfile()
+    {
+        var result = await mediator.Send(new GetCompanyProfileQuery());
+        return Ok(result);
+    }
+
+    [HttpPatch("company-profile")]
+    public async Task<ActionResult<CompanyProfileResponseModel>> UpdateCompanyProfile(CompanyProfileRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateCompanyProfileCommand(
+            request.Name, request.Phone, request.Email, request.Ein, request.Website));
         return Ok(result);
     }
 

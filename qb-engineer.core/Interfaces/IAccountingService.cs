@@ -31,6 +31,12 @@ public interface IAccountingService
     // Inventory quantity sync
     Task UpdateInventoryQuantityAsync(string externalItemId, decimal quantityOnHand, CancellationToken ct);
 
+    // Payroll visibility
+    Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct);
+    Task<byte[]?> GetPayStubPdfAsync(string payStubExternalId, CancellationToken ct);
+    Task<List<AccountingTaxDocument>> GetTaxDocumentsAsync(string employeeExternalId, int? taxYear, CancellationToken ct);
+    Task<byte[]?> GetTaxDocumentPdfAsync(string taxDocumentExternalId, CancellationToken ct);
+
     Task<bool> TestConnectionAsync(CancellationToken ct);
     Task<AccountingSyncStatus> GetSyncStatusAsync(CancellationToken ct);
 

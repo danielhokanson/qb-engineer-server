@@ -13,7 +13,10 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
 {
     public async Task<List<AdminUserResponseModel>> Handle(GetAdminUsersQuery request, CancellationToken cancellationToken)
     {
-        var users = await db.Users.OrderBy(u => u.FirstName).ToListAsync(cancellationToken);
+        var users = await db.Users
+            .Include(u => u.WorkLocation)
+            .OrderBy(u => u.FirstName)
+            .ToListAsync(cancellationToken);
 
         // Batch-load scan identifier types per user
         var scanTypes = await db.Set<QBEngineer.Core.Entities.UserScanIdentifier>()
@@ -27,6 +30,13 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
             })
             .ToDictionaryAsync(x => x.UserId, cancellationToken);
 
+        // Batch-load employee profiles for compliance status
+        var userIds = users.Select(u => u.Id).ToList();
+        var profiles = await db.EmployeeProfiles
+            .AsNoTracking()
+            .Where(p => userIds.Contains(p.UserId))
+            .ToDictionaryAsync(p => p.UserId, cancellationToken);
+
         var result = new List<AdminUserResponseModel>();
         foreach (var user in users)
         {
@@ -36,6 +46,33 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
                 && user.SetupTokenExpiresAt.HasValue
                 && user.SetupTokenExpiresAt.Value > DateTime.UtcNow;
             scanTypes.TryGetValue(user.Id, out var scan);
+            profiles.TryGetValue(user.Id, out var profile);
+
+            // Compute compliance items (mirrors GetProfileCompleteness logic)
+            var complianceItems = new (string Key, string Label, bool IsComplete, bool BlocksAssignment)[]
+            {
+                ("w4", "W-4 Federal Tax Withholding", profile?.W4CompletedAt is not null, true),
+                ("i9", "I-9 Employment Eligibility", profile?.I9CompletedAt is not null, true),
+                ("state_withholding", "State Tax Withholding", profile?.StateWithholdingCompletedAt is not null, true),
+                ("emergency_contact", "Emergency Contact",
+                    profile is not null &&
+                    !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
+                    !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone), true),
+                ("address", "Home Address",
+                    profile is not null &&
+                    !string.IsNullOrWhiteSpace(profile.Street1) &&
+                    !string.IsNullOrWhiteSpace(profile.City) &&
+                    !string.IsNullOrWhiteSpace(profile.State) &&
+                    !string.IsNullOrWhiteSpace(profile.ZipCode), false),
+                ("direct_deposit", "Direct Deposit", profile?.DirectDepositCompletedAt is not null, false),
+                ("workers_comp", "Workers' Comp", profile?.WorkersCompAcknowledgedAt is not null, false),
+                ("handbook", "Employee Handbook", profile?.HandbookAcknowledgedAt is not null, false),
+            };
+
+            var completedCount = complianceItems.Count(i => i.IsComplete);
+            var canBeAssigned = complianceItems.Where(i => i.BlocksAssignment).All(i => i.IsComplete);
+            var missingItems = complianceItems.Where(i => !i.IsComplete).Select(i => i.Label).ToArray();
+
             result.Add(new AdminUserResponseModel(
                 user.Id,
                 user.Email!,
@@ -49,7 +86,13 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
                 hasPassword,
                 hasPendingToken,
                 scan?.HasRfid ?? false,
-                scan?.HasBarcode ?? false));
+                scan?.HasBarcode ?? false,
+                canBeAssigned,
+                completedCount,
+                complianceItems.Length,
+                missingItems,
+                user.WorkLocationId,
+                user.WorkLocation?.Name));
         }
 
         return result;

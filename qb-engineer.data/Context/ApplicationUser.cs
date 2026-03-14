@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using QBEngineer.Core.Entities;
 
 namespace QBEngineer.Data.Context;
 
@@ -24,6 +25,10 @@ public class ApplicationUser : IdentityUser<int>
 
     // Team assignment
     public int? TeamId { get; set; }
+
+    // Work location (drives state withholding)
+    public int? WorkLocationId { get; set; }
+    public CompanyLocation? WorkLocation { get; set; }
 
     // Accounting integration (QB Employee ID for time activity sync)
     public string? AccountingEmployeeId { get; set; }
