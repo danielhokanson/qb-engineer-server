@@ -22,4 +22,5 @@ public class ComplianceFormTemplate : BaseAuditableEntity
 
     public FileAttachment? ManualOverrideFile { get; set; }
     public ICollection<ComplianceFormSubmission> Submissions { get; set; } = [];
+    public ICollection<FormDefinitionVersion> FormDefinitionVersions { get; set; } = [];
 }

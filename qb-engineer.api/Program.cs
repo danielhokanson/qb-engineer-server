@@ -20,6 +20,7 @@ using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 using QBEngineer.Data.Repositories;
 using QBEngineer.Integrations;
+using QBEngineer.Integrations.Builders;
 using System.Threading.RateLimiting;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -225,7 +226,7 @@ try
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
     builder.Services.Configure<QuickBooksOptions>(builder.Configuration.GetSection(QuickBooksOptions.SectionName));
     builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
-    builder.Services.Configure<EasyPostOptions>(builder.Configuration.GetSection(EasyPostOptions.SectionName));
+    builder.Services.Configure<UspsOptions>(builder.Configuration.GetSection(UspsOptions.SectionName));
     builder.Services.Configure<DocuSealOptions>(builder.Configuration.GetSection(DocuSealOptions.SectionName));
 
     // QuickBooks token service (always registered — handles OAuth token lifecycle)
@@ -245,9 +246,15 @@ try
         builder.Services.AddSingleton<IStorageService, MockStorageService>();
         builder.Services.AddSingleton<IAccountingService, MockAccountingService>();
         builder.Services.AddSingleton<IShippingService, MockShippingService>();
+        builder.Services.AddSingleton<IAddressValidationService, MockAddressValidationService>();
         builder.Services.AddSingleton<IAiService, MockAiService>();
         builder.Services.AddSingleton<IEmailService, MockEmailService>();
         builder.Services.AddSingleton<IDocumentSigningService, MockDocumentSigningService>();
+        builder.Services.AddSingleton<IPdfJsExtractorService, MockPdfJsExtractorService>();
+        builder.Services.AddSingleton<IFormDefinitionParser, FormDefinitionParser>();
+        builder.Services.AddSingleton<IFormDefinitionVerifier, FormDefinitionVerifier>();
+        builder.Services.AddSingleton<IFormRendererService, MockFormRendererService>();
+        builder.Services.AddSingleton<IImageComparisonService, MockImageComparisonService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -260,21 +267,36 @@ try
         // builder.Services.AddScoped<IAccountingService, XeroAccountingService>();
         // builder.Services.AddScoped<IAccountingService, FreshBooksAccountingService>();
         // builder.Services.AddScoped<IAccountingService, SageAccountingService>();
-        // Shipping: EasyPost when API key configured, otherwise mock
-        var easyPostKey = builder.Configuration.GetSection(EasyPostOptions.SectionName)["ApiKey"];
-        if (!string.IsNullOrEmpty(easyPostKey))
+        // Shipping: direct carrier integrations registered here when implemented
+        // (UPS, FedEx, USPS, DHL — each implements IShippingService directly)
+        builder.Services.AddSingleton<IShippingService, MockShippingService>();
+        // Address validation: USPS Addresses API v3 (OAuth 2.0) when credentials configured, otherwise mock
+        var uspsKey = builder.Configuration.GetSection(UspsOptions.SectionName)["ConsumerKey"];
+        if (!string.IsNullOrEmpty(uspsKey))
         {
-            builder.Services.AddSingleton<IShippingService, EasyPostShippingService>();
-            Log.Information("EasyPost shipping integration enabled");
+            builder.Services.AddHttpClient<IAddressValidationService, UspsAddressValidationService>();
+            Log.Information("USPS Addresses API v3 address validation enabled");
         }
         else
         {
-            builder.Services.AddSingleton<IShippingService, MockShippingService>();
-            Log.Information("EasyPost API key not configured — using mock shipping service");
+            builder.Services.AddSingleton<IAddressValidationService, MockAddressValidationService>();
+            Log.Information("USPS credentials not configured — using mock address validation");
         }
         builder.Services.AddHttpClient<IAiService, OllamaAiService>();
         builder.Services.AddHttpClient<IDocumentSigningService, DocuSealSigningService>();
+        builder.Services.AddSingleton<IPdfJsExtractorService, PdfJsExtractorService>();
+        builder.Services.AddSingleton<IFormDefinitionParser, FormDefinitionParser>();
+        builder.Services.AddScoped<IFormDefinitionVerifier, FormDefinitionVerifier>();
+        builder.Services.AddSingleton<IFormRendererService, PuppeteerFormRendererService>();
+        builder.Services.AddSingleton<IImageComparisonService, SkiaImageComparisonService>();
     }
+
+    // Form definition builders — hardcoded definitions for known government forms
+    // (registered outside mock/real block since builders work with extraction data, not external APIs)
+    builder.Services.AddSingleton<IFormDefinitionBuilder, W4FormDefinitionBuilder>();
+    builder.Services.AddSingleton<IFormDefinitionBuilder, I9FormDefinitionBuilder>();
+    builder.Services.AddSingleton<IStateFormDefinitionBuilder, IdahoW4FormDefinitionBuilder>();
+    builder.Services.AddSingleton<IFormDefinitionBuilderFactory, FormDefinitionBuilderFactory>();
 
     // Accounting provider factory — resolves active provider from system settings
     builder.Services.AddScoped<IAccountingProviderFactory, AccountingProviderFactory>();
@@ -341,18 +363,25 @@ try
         .AddCheck<MinioHealthCheck>("minio")
         .AddCheck<SignalRHealthCheck>("signalr");
 
-    // Rate limiting
+    // Rate limiting — exclude SignalR hubs (they retry on auth failure and can starve real API calls)
     builder.Services.AddRateLimiter(options =>
     {
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
-            RateLimitPartition.GetFixedWindowLimiter(
+        {
+            var path = ctx.Request.Path.Value ?? string.Empty;
+            if (path.StartsWith("/hubs/", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/health", StringComparison.OrdinalIgnoreCase))
+                return RateLimitPartition.GetNoLimiter("infra");
+
+            return RateLimitPartition.GetFixedWindowLimiter(
                 ctx.User?.Identity?.Name ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
                 _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 100,
+                    PermitLimit = 500,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
-                }));
+                });
+        });
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     });
 
@@ -388,6 +417,31 @@ try
 
             // Seed built-in AI assistants (idempotent)
             await QBEngineer.Api.Features.AiAssistants.SeedAiAssistants.EnsureSeededAsync(db);
+
+            // Auto-extract form definitions for templates that have IsAutoSync + SourceUrl but no FormDefinitionVersion yet
+            var templatesNeedingExtraction = await db.ComplianceFormTemplates
+                .Where(t => t.IsAutoSync && t.SourceUrl != null && !t.FormDefinitionVersions.Any())
+                .ToListAsync();
+
+            if (templatesNeedingExtraction.Count > 0)
+            {
+                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                foreach (var tmpl in templatesNeedingExtraction)
+                {
+                    try
+                    {
+                        Log.Information("Auto-extracting form definition for template {TemplateId} ({Name})",
+                            tmpl.Id, tmpl.Name);
+                        await mediator.Send(new QBEngineer.Api.Features.ComplianceForms.ExtractFormDefinitionCommand(tmpl.Id));
+                        Log.Information("Form definition extracted successfully for template {TemplateId}", tmpl.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Auto-extraction failed for template {TemplateId} ({Name}) — admin can extract manually",
+                            tmpl.Id, tmpl.Name);
+                    }
+                }
+            }
         }
     }
 

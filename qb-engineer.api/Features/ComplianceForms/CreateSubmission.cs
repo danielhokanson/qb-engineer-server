@@ -51,7 +51,7 @@ public class CreateSubmissionHandler(
             submission.Id, submission.TemplateId, template.Name,
             template.FormType, submission.Status, submission.SignedAt,
             submission.SignedPdfFileId, submission.DocuSealSubmitUrl,
-            submission.CreatedAt
+            submission.FormDataJson, submission.FormDefinitionVersionId, submission.CreatedAt
         );
     }
 }

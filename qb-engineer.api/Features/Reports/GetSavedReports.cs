@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -43,11 +44,17 @@ public class GetSavedReportsHandler(
         return allReports.Select(r => MapToResponse(r, userNames.GetValueOrDefault(r.UserId))).ToList();
     }
 
+    private static readonly JsonSerializerOptions FilterJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
     internal static SavedReportResponseModel MapToResponse(SavedReport report, string? userName = null)
     {
         var columns = JsonSerializer.Deserialize<string[]>(report.ColumnsJson) ?? [];
         var filters = !string.IsNullOrEmpty(report.FiltersJson)
-            ? JsonSerializer.Deserialize<ReportFilterModel[]>(report.FiltersJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? []
+            ? JsonSerializer.Deserialize<ReportFilterModel[]>(report.FiltersJson, FilterJsonOptions) ?? []
             : [];
 
         return new SavedReportResponseModel(

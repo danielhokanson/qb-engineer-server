@@ -24,7 +24,7 @@ public class GetMySubmissionsHandler(AppDbContext db)
         return submissions.Select(s => new ComplianceFormSubmissionResponseModel(
             s.Id, s.TemplateId, s.Template.Name, s.Template.FormType,
             s.Status, s.SignedAt, s.SignedPdfFileId, s.DocuSealSubmitUrl,
-            s.CreatedAt
+            s.FormDataJson, s.FormDefinitionVersionId, s.CreatedAt
         )).ToList();
     }
 }

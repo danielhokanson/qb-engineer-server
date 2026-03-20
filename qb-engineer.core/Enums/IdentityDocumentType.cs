@@ -2,10 +2,23 @@ namespace QBEngineer.Core.Enums;
 
 public enum IdentityDocumentType
 {
-    BirthCertificate,
-    DriversLicense,
-    SsnCard,
+    // Generic list identifiers (used when uploading without specifying exact document)
+    ListA,
+    ListB,
+    ListC,
+
+    // Specific types (legacy / future granularity)
     Passport,
     PermanentResidentCard,
-    Other
+    EmploymentAuthorizationDoc,
+    ForeignPassportI551,
+    DriversLicense,
+    StateIdCard,
+    SchoolId,
+    VoterRegistrationCard,
+    MilitaryId,
+    SsnCard,
+    BirthCertificate,
+    CitizenshipCertificate,
+    Other,
 }

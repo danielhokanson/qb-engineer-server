@@ -20,19 +20,11 @@ public class ValidateShippingAddressValidator : AbstractValidator<ValidateShippi
     }
 }
 
-public class ValidateShippingAddressHandler(IShippingService shippingService)
+public class ValidateShippingAddressHandler(IAddressValidationService addressValidationService)
     : IRequestHandler<ValidateShippingAddressCommand, AddressValidationResponseModel>
 {
     public async Task<AddressValidationResponseModel> Handle(ValidateShippingAddressCommand request, CancellationToken cancellationToken)
     {
-        var address = new ShippingAddress(
-            string.Empty, // Name not needed for validation
-            request.Request.Street,
-            request.Request.City,
-            request.Request.State,
-            request.Request.Zip,
-            request.Request.Country);
-
-        return await shippingService.ValidateAddressAsync(address, cancellationToken);
+        return await addressValidationService.ValidateAsync(request.Request, cancellationToken);
     }
 }

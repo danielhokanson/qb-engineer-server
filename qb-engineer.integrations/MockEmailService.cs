@@ -14,4 +14,10 @@ public class MockEmailService(ILogger<MockEmailService> logger) : IEmailService
             message.To, message.Subject, message.Attachments?.Count ?? 0);
         return Task.CompletedTask;
     }
+
+    public Task<bool> TestConnectionAsync(CancellationToken ct)
+    {
+        logger.LogInformation("[MOCK EMAIL] Connection test — always succeeds");
+        return Task.FromResult(true);
+    }
 }

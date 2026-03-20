@@ -18,5 +18,8 @@ public record ComplianceFormTemplateResponseModel(
     int? ManualOverrideFileId,
     bool BlocksJobAssignment,
     string ProfileCompletionKey,
+    int? CurrentFormDefinitionVersionId,
+    string? FormDefinitionJson,
+    string? FormDefinitionRevision,
     DateTime CreatedAt,
     DateTime UpdatedAt);

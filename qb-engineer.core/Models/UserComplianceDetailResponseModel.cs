@@ -5,4 +5,12 @@ public record UserComplianceDetailResponseModel(
     string UserName,
     string UserEmail,
     List<ComplianceFormSubmissionResponseModel> Submissions,
-    List<IdentityDocumentResponseModel> IdentityDocuments);
+    List<IdentityDocumentResponseModel> IdentityDocuments,
+    StateWithholdingInfoModel? StateWithholdingInfo);
+
+public record StateWithholdingInfoModel(
+    string StateCode,
+    string StateName,
+    string Category,
+    string? FormName,
+    string Source);

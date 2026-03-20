@@ -55,4 +55,25 @@ public class SmtpEmailService : IEmailService
 
         _logger.LogInformation("Email sent to {To}: {Subject}", message.To, message.Subject);
     }
+
+    public async Task<bool> TestConnectionAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var client = new SmtpClient();
+            await client.ConnectAsync(_options.Host, _options.Port, _options.UseSsl, ct);
+
+            if (!string.IsNullOrEmpty(_options.Username))
+                await client.AuthenticateAsync(_options.Username, _options.Password, ct);
+
+            await client.DisconnectAsync(true, ct);
+            _logger.LogInformation("[SMTP] Connection test succeeded");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[SMTP] Connection test failed");
+            return false;
+        }
+    }
 }

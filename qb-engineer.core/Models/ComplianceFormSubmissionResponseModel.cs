@@ -11,4 +11,6 @@ public record ComplianceFormSubmissionResponseModel(
     DateTime? SignedAt,
     int? SignedPdfFileId,
     string? DocuSealSubmitUrl,
+    string? FormDataJson,
+    int? FormDefinitionVersionId,
     DateTime CreatedAt);

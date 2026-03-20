@@ -57,4 +57,10 @@ public class MockStorageService : IStorageService
         _logger.LogInformation("[MockStorage] Bucket ensured: {Bucket}", bucketName);
         return Task.CompletedTask;
     }
+
+    public Task<bool> TestConnectionAsync(CancellationToken ct)
+    {
+        _logger.LogInformation("[MockStorage] Connection test — always succeeds");
+        return Task.FromResult(true);
+    }
 }

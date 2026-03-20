@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +18,7 @@ public class GetUserComplianceDetailHandler(AppDbContext db)
     {
         var user = await db.Users
             .AsNoTracking()
+            .Include(u => u.WorkLocation)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, ct)
             ?? throw new KeyNotFoundException($"User {request.UserId} not found.");
 
@@ -48,7 +51,7 @@ public class GetUserComplianceDetailHandler(AppDbContext db)
         var submissionModels = submissions.Select(s => new ComplianceFormSubmissionResponseModel(
             s.Id, s.TemplateId, s.Template.Name, s.Template.FormType,
             s.Status, s.SignedAt, s.SignedPdfFileId, s.DocuSealSubmitUrl,
-            s.CreatedAt
+            s.FormDataJson, s.FormDefinitionVersionId, s.CreatedAt
         )).ToList();
 
         var identityDocModels = identityDocs.Select(d => new IdentityDocumentResponseModel(
@@ -58,12 +61,72 @@ public class GetUserComplianceDetailHandler(AppDbContext db)
             d.ExpiresAt, d.Notes, d.CreatedAt
         )).ToList();
 
+        // Resolve per-employee state withholding info
+        var stateInfo = await ResolveStateWithholdingInfoAsync(user, ct);
+
         return new UserComplianceDetailResponseModel(
             user.Id,
             $"{user.LastName}, {user.FirstName}",
             user.Email ?? string.Empty,
             submissionModels,
-            identityDocModels
+            identityDocModels,
+            stateInfo
         );
+    }
+
+    private async Task<StateWithholdingInfoModel?> ResolveStateWithholdingInfoAsync(
+        ApplicationUser user, CancellationToken ct)
+    {
+        // 1. User's work location state
+        var stateCode = user.WorkLocation?.State;
+        var source = "Work Location";
+
+        // 2. Default company location
+        if (string.IsNullOrWhiteSpace(stateCode))
+        {
+            var defaultLocation = await db.CompanyLocations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.IsDefault && l.IsActive, ct);
+            stateCode = defaultLocation?.State;
+            source = "Default Location";
+        }
+
+        // 3. company_state system setting
+        if (string.IsNullOrWhiteSpace(stateCode))
+        {
+            var setting = await db.SystemSettings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Key == "company_state", ct);
+            stateCode = setting?.Value;
+            source = "Company Setting";
+        }
+
+        if (string.IsNullOrWhiteSpace(stateCode))
+            return null;
+
+        var stateRef = await db.ReferenceData
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.GroupCode == "state_withholding" && r.Code == stateCode, ct);
+
+        if (stateRef is null)
+            return null;
+
+        var category = "state_form";
+        string? formName = null;
+
+        if (!string.IsNullOrWhiteSpace(stateRef.Metadata))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(stateRef.Metadata);
+                if (doc.RootElement.TryGetProperty("category", out var cat))
+                    category = cat.GetString() ?? "state_form";
+                if (doc.RootElement.TryGetProperty("formName", out var form))
+                    formName = form.GetString();
+            }
+            catch (JsonException) { }
+        }
+
+        return new StateWithholdingInfoModel(stateCode, stateRef.Label, category, formName, source);
     }
 }

@@ -5,5 +5,5 @@ namespace QBEngineer.Core.Models;
 public record ReportFilterModel(
     string Field,
     ReportFilterOperator Operator,
-    string? Value,
-    string? Value2);
+    string? Value = null,
+    string? Value2 = null);

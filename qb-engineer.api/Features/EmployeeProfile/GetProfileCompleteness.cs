@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using MediatR;
 
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,10 @@ public class GetProfileCompletenessHandler(AppDbContext db) : IRequestHandler<Ge
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.UserId == request.UserId, ct);
 
+        // Resolve per-employee state withholding info
+        var stateInfo = await ResolveStateWithholdingInfoAsync(request.UserId, ct);
+        var isNoTaxState = stateInfo?.Category == "no_tax";
+
         var items = new List<ProfileCompletenessItem>
         {
             // Job-assignment blockers — must be complete before user can be assigned work
@@ -28,9 +34,12 @@ public class GetProfileCompletenessHandler(AppDbContext db) : IRequestHandler<Ge
                 profile?.I9CompletedAt is not null,
                 BlocksJobAssignment: true),
 
-            new("state_withholding", "State Tax Withholding",
-                profile?.StateWithholdingCompletedAt is not null,
-                BlocksJobAssignment: true),
+            new("stateWithholding",
+                stateInfo is not null
+                    ? $"State Tax Withholding ({stateInfo.StateName})"
+                    : "State Tax Withholding",
+                isNoTaxState || profile?.StateWithholdingCompletedAt is not null,
+                BlocksJobAssignment: !isNoTaxState),
 
             new("emergency_contact", "Emergency Contact",
                 profile is not null &&
@@ -47,11 +56,11 @@ public class GetProfileCompletenessHandler(AppDbContext db) : IRequestHandler<Ge
                 !string.IsNullOrWhiteSpace(profile.ZipCode),
                 BlocksJobAssignment: false),
 
-            new("direct_deposit", "Direct Deposit Authorization",
+            new("directDeposit", "Direct Deposit Authorization",
                 profile?.DirectDepositCompletedAt is not null,
                 BlocksJobAssignment: false),
 
-            new("workers_comp", "Workers' Comp Acknowledgment",
+            new("workersComp", "Workers' Comp Acknowledgment",
                 profile?.WorkersCompAcknowledgedAt is not null,
                 BlocksJobAssignment: false),
 
@@ -68,6 +77,68 @@ public class GetProfileCompletenessHandler(AppDbContext db) : IRequestHandler<Ge
             CanBeAssignedJobs: canBeAssigned,
             TotalItems: items.Count,
             CompletedItems: completedCount,
-            Items: items);
+            Items: items,
+            StateWithholdingInfo: stateInfo);
+    }
+
+    private async Task<StateWithholdingInfoModel?> ResolveStateWithholdingInfoAsync(int userId, CancellationToken ct)
+    {
+        // 1. Try user's assigned work location state
+        var user = await db.Users
+            .AsNoTracking()
+            .Include(u => u.WorkLocation)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+        string? stateCode = user?.WorkLocation?.State;
+        var source = "Work Location";
+
+        // 2. Fall back to default company location
+        if (string.IsNullOrWhiteSpace(stateCode))
+        {
+            var defaultLocation = await db.CompanyLocations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.IsDefault && l.IsActive, ct);
+            stateCode = defaultLocation?.State;
+            source = "Default Location";
+        }
+
+        // 3. Fall back to company_state system setting
+        if (string.IsNullOrWhiteSpace(stateCode))
+        {
+            var companySetting = await db.SystemSettings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Key == "company_state", ct);
+            stateCode = companySetting?.Value;
+            source = "Company Setting";
+        }
+
+        if (string.IsNullOrWhiteSpace(stateCode))
+            return null;
+
+        // Look up the state in reference data
+        var stateRef = await db.ReferenceData
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.GroupCode == "state_withholding" && r.Code == stateCode, ct);
+
+        if (stateRef is null)
+            return null;
+
+        var category = "state_form";
+        string? formName = null;
+
+        if (!string.IsNullOrWhiteSpace(stateRef.Metadata))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(stateRef.Metadata);
+                if (doc.RootElement.TryGetProperty("category", out var cat))
+                    category = cat.GetString() ?? "state_form";
+                if (doc.RootElement.TryGetProperty("formName", out var form))
+                    formName = form.GetString();
+            }
+            catch (JsonException) { /* ignore malformed metadata */ }
+        }
+
+        return new StateWithholdingInfoModel(stateCode, stateRef.Label, category, formName, source);
     }
 }

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Form Extractor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs" type="module"></script>
+</head>
+<body>
+<script type="module">
+  // Import pdf.js as ES module
+  const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.mjs';
+
+  /**
+   * Extract form structure from PDF bytes.
+   * Called from C# via PuppeteerSharp page.EvaluateFunctionAsync().
+   *
+   * @param {string} pdfBytesBase64 - PDF file content as base64 string
+   * @returns {object} PdfExtractionResult-compatible JSON
+   */
+  async function extractFormStructure(pdfBytesBase64) {
+    const pdfBytes = Uint8Array.from(atob(pdfBytesBase64), c => c.charCodeAt(0));
+    const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+    const pageCount = pdf.numPages;
+    const pages = [];
+
+    for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.0 });
+
+      // Extract text content with font metadata
+      const textContent = await page.getTextContent({ includeMarkedContent: false });
+      const textItems = [];
+      const styles = textContent.styles || {};
+
+      for (const item of textContent.items) {
+        if (!item.str || item.str.trim() === '') continue;
+
+        const fontName = item.fontName || '';
+        const style = styles[fontName] || {};
+
+        // Transform matrix: [scaleX, skewY, skewX, scaleY, translateX, translateY]
+        const tx = item.transform;
+        const fontSize = Math.abs(tx[3]) || Math.abs(tx[0]) || 12;
+        const x = tx[4];
+        // pdf.js uses bottom-left origin; convert to top-left for consistency
+        const y = viewport.height - tx[5];
+
+        const isBold = fontName.toLowerCase().includes('bold')
+          || (style.fontFamily || '').toLowerCase().includes('bold')
+          || item.fontWeight >= 700;
+
+        textItems.push({
+          text: item.str,
+          x: Math.round(x * 100) / 100,
+          y: Math.round(y * 100) / 100,
+          width: Math.round((item.width || 0) * 100) / 100,
+          height: Math.round(fontSize * 100) / 100,
+          fontName: fontName,
+          fontSize: Math.round(fontSize * 100) / 100,
+          isBold: isBold,
+          color: null
+        });
+      }
+
+      // Extract form field annotations
+      const annotationData = await page.getAnnotations();
+      const annotations = [];
+
+      for (const ann of annotationData) {
+        // Only process form fields (widget annotations)
+        if (ann.subtype !== 'Widget') continue;
+        if (!ann.id && !ann.fieldName) continue;
+
+        const rect = ann.rect || [0, 0, 0, 0];
+        const annX = rect[0];
+        const annY = viewport.height - rect[3]; // Convert to top-left origin
+        const annWidth = rect[2] - rect[0];
+        const annHeight = rect[3] - rect[1];
+
+        // Determine field type from annotation data
+        let fieldType = 'text';
+        if (ann.fieldType === 'Tx') fieldType = 'text';
+        else if (ann.fieldType === 'Btn') {
+          if (ann.radioButton) fieldType = 'radio';
+          else if (ann.checkBox) fieldType = 'checkbox';
+          else fieldType = 'button';
+        }
+        else if (ann.fieldType === 'Ch') {
+          fieldType = ann.combo ? 'select' : 'listbox';
+        }
+        else if (ann.fieldType === 'Sig') fieldType = 'signature';
+
+        // Extract options for select/radio fields
+        let options = null;
+        if (ann.options && ann.options.length > 0) {
+          options = ann.options.map(opt => ({
+            value: opt.exportValue || opt.displayValue || '',
+            label: opt.displayValue || opt.exportValue || ''
+          }));
+        }
+
+        // For radio buttons, extract the export value as an option
+        if (fieldType === 'radio' && ann.buttonValue) {
+          options = options || [];
+          if (!options.find(o => o.value === ann.buttonValue)) {
+            options.push({
+              value: ann.buttonValue,
+              label: ann.buttonValue
+            });
+          }
+        }
+
+        // Determine field flags
+        const flags = ann.fieldFlags || 0;
+        const required = !!(flags & 0x2); // Bit 2 = Required
+        const readOnly = !!(flags & 0x1); // Bit 1 = ReadOnly
+
+        annotations.push({
+          id: ann.fieldName || ann.id || `field_${annotations.length}`,
+          fieldType: fieldType,
+          x: Math.round(annX * 100) / 100,
+          y: Math.round(annY * 100) / 100,
+          width: Math.round(annWidth * 100) / 100,
+          height: Math.round(annHeight * 100) / 100,
+          fieldName: ann.alternativeText || ann.fieldName || null,
+          alternativeText: ann.alternativeText || null,
+          defaultValue: (() => { const v = ann.fieldValue || ann.defaultFieldValue || null; return Array.isArray(v) ? v.join(',') : (v != null ? String(v) : null); })(),
+          maxLength: ann.maxLen || null,
+          required: required,
+          readOnly: readOnly,
+          options: options,
+          radioGroupName: (fieldType === 'radio' && ann.fieldName) ? ann.fieldName : null
+        });
+      }
+
+      pages.push({
+        pageNumber: pageNum,
+        width: Math.round(viewport.width * 100) / 100,
+        height: Math.round(viewport.height * 100) / 100,
+        textItems: textItems,
+        annotations: annotations
+      });
+    }
+
+    return { pageCount, pages };
+  }
+
+  /**
+   * Render a PDF page to a PNG image (base64).
+   * Used for visual verification — comparing rendered form against source PDF.
+   *
+   * @param {string} pdfBytesBase64 - PDF file content as base64 string
+   * @param {number} pageNum - 1-based page number to render
+   * @param {number} [scale=2.0] - Render scale (2.0 = ~1224x1584 for letter-size)
+   * @returns {string} Base64-encoded PNG image data (no data URL prefix)
+   */
+  async function renderPdfPageToImage(pdfBytesBase64, pageNum, scale) {
+    const pdfBytes = Uint8Array.from(atob(pdfBytesBase64), c => c.charCodeAt(0));
+    const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+    const page = await pdf.getPage(pageNum || 1);
+    const viewport = page.getViewport({ scale: scale || 2.0 });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+
+    // White background (PDFs often have transparent backgrounds)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return canvas.toDataURL('image/png').replace('data:image/png;base64,', '');
+  }
+
+  // Expose to PuppeteerSharp
+  window.extractFormStructure = extractFormStructure;
+  window.renderPdfPageToImage = renderPdfPageToImage;
+  window.__pdfExtractorReady = true;
+</script>
+</body>
+</html>

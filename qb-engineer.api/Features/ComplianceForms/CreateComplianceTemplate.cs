@@ -30,17 +30,12 @@ public class CreateComplianceTemplateHandler(AppDbContext db)
             RequiresIdentityDocs = m.RequiresIdentityDocs,
             BlocksJobAssignment = m.BlocksJobAssignment,
             ProfileCompletionKey = m.ProfileCompletionKey,
+            FormDefinitionVersions = [],
         };
 
         db.ComplianceFormTemplates.Add(template);
         await db.SaveChangesAsync(ct);
 
-        return new ComplianceFormTemplateResponseModel(
-            template.Id, template.Name, template.FormType, template.Description,
-            template.Icon, template.SourceUrl, template.IsAutoSync, template.IsActive,
-            template.SortOrder, template.RequiresIdentityDocs, template.DocuSealTemplateId,
-            template.LastSyncedAt, template.ManualOverrideFileId, template.BlocksJobAssignment,
-            template.ProfileCompletionKey, template.CreatedAt, template.UpdatedAt
-        );
+        return ComplianceTemplateMapper.ToResponse(template);
     }
 }

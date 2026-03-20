@@ -43,6 +43,20 @@ public class MockAiService : IAiService
         return Task.FromResult(new float[384]);
     }
 
+    public Task<string> GenerateWithImageAsync(string prompt, byte[] imageBytes, string? systemPrompt, CancellationToken ct)
+    {
+        _logger.LogInformation("[MockAI] GenerateWithImage: prompt={PromptLen} chars, image={ImageSize} bytes",
+            prompt.Length, imageBytes.Length);
+        return Task.FromResult("""
+            {
+              "layoutMatch": true,
+              "issues": [],
+              "corrections": null,
+              "confidence": 0.95
+            }
+            """);
+    }
+
     public Task<bool> IsAvailableAsync(CancellationToken ct)
     {
         _logger.LogInformation("[MockAI] IsAvailable — returning true");

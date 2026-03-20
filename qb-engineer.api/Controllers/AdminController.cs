@@ -268,6 +268,29 @@ public class AdminController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    // ── Integrations ──
+
+    [HttpGet("integrations")]
+    public async Task<ActionResult<List<IntegrationStatusModel>>> GetIntegrations()
+    {
+        var result = await mediator.Send(new GetIntegrationSettingsQuery());
+        return Ok(result);
+    }
+
+    [HttpPut("integrations/{provider}")]
+    public async Task<ActionResult<IntegrationStatusModel>> UpdateIntegration(string provider, [FromBody] UpdateIntegrationSettingsRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateIntegrationSettingsCommand(provider, request.Settings));
+        return Ok(result);
+    }
+
+    [HttpPost("integrations/{provider}/test")]
+    public async Task<ActionResult<TestIntegrationResultModel>> TestIntegration(string provider)
+    {
+        var result = await mediator.Send(new TestIntegrationConnectionCommand(provider));
+        return Ok(result);
+    }
+
     // ── Company Profile ──
 
     [HttpGet("company-profile")]

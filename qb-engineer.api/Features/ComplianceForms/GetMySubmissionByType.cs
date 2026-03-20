@@ -31,7 +31,7 @@ public class GetMySubmissionByTypeHandler(AppDbContext db)
             submission.Id, submission.TemplateId, submission.Template.Name,
             submission.Template.FormType, submission.Status, submission.SignedAt,
             submission.SignedPdfFileId, submission.DocuSealSubmitUrl,
-            submission.CreatedAt
+            submission.FormDataJson, submission.FormDefinitionVersionId, submission.CreatedAt
         );
     }
 }

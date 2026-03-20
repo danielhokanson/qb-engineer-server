@@ -12,6 +12,7 @@ public class ComplianceFormSubmissionConfiguration : IEntityTypeConfiguration<Co
         builder.Ignore(e => e.IsDeleted);
 
         builder.Property(e => e.DocuSealSubmitUrl).HasMaxLength(1000);
+        builder.Property(e => e.FormDataJson).HasColumnType("jsonb");
 
         builder.HasIndex(e => new { e.UserId, e.TemplateId });
 
@@ -26,5 +27,12 @@ public class ComplianceFormSubmissionConfiguration : IEntityTypeConfiguration<Co
             .WithMany()
             .HasForeignKey(e => e.SignedPdfFileId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(e => e.FormDefinitionVersion)
+            .WithMany(v => v.Submissions)
+            .HasForeignKey(e => e.FormDefinitionVersionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(e => e.FormDefinitionVersionId);
     }
 }

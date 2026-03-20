@@ -10,4 +10,13 @@ public interface IAiService
     Task<List<AiSearchResult>> SmartSearchAsync(string naturalLanguageQuery, CancellationToken ct);
     Task<float[]> GetEmbeddingAsync(string text, CancellationToken ct);
     Task<bool> IsAvailableAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Generate text from a prompt with an accompanying image (multimodal).
+    /// Used for visual verification of extracted form definitions against source PDF screenshots.
+    /// Requires a vision-capable model (e.g., llava, llama3.2-vision).
+    /// </summary>
+    /// <returns>AI-generated text response</returns>
+    /// <exception cref="NotSupportedException">Thrown when no vision model is configured</exception>
+    Task<string> GenerateWithImageAsync(string prompt, byte[] imageBytes, string? systemPrompt, CancellationToken ct);
 }

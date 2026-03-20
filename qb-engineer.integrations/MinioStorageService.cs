@@ -64,4 +64,17 @@ public class MinioStorageService : IStorageService
             await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName), ct);
         }
     }
+
+    public async Task<bool> TestConnectionAsync(CancellationToken ct)
+    {
+        try
+        {
+            await _client.ListBucketsAsync(ct);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

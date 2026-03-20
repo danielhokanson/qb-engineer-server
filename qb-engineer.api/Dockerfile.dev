@@ -1,6 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0
 WORKDIR /app
 
+# Install Chromium for PuppeteerSharp pdf.js extraction
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    fonts-liberation \
+    libnss3 \
+    && rm -rf /var/lib/apt/lists/*
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 # Pre-restore packages for layer caching (source is volume-mounted at runtime)
 COPY qb-engineer.api/qb-engineer.api.csproj qb-engineer.api/
 COPY qb-engineer.core/qb-engineer.core.csproj qb-engineer.core/

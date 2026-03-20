@@ -62,6 +62,83 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpPut("{id:int}/form-definition")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ComplianceFormTemplateResponseModel>> UpdateFormDefinition(
+        int id, [FromBody] UpdateFormDefinitionRequestModel model, CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new UpdateFormDefinitionCommand(id, model.FormDefinitionJson, model.Revision), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/extract-definition")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ExtractFormDefinitionResult>> ExtractDefinition(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ExtractFormDefinitionCommand(id), ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Diagnostic: dump raw pdf.js extraction data for a compliance template's PDF.
+    /// </summary>
+    [HttpPost("{id:int}/extract-raw")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ExtractRaw(
+        int id,
+        [FromServices] QBEngineer.Core.Interfaces.IPdfJsExtractorService pdfJsExtractor,
+        [FromServices] QBEngineer.Core.Interfaces.IStorageService storageService,
+        [FromServices] IHttpClientFactory httpClientFactory,
+        CancellationToken ct)
+    {
+        byte[]? pdfBytes = null;
+
+        var db = HttpContext.RequestServices.GetRequiredService<QBEngineer.Data.Context.AppDbContext>();
+        var dbTemplate = await db.ComplianceFormTemplates.FindAsync([id], ct)
+            ?? throw new KeyNotFoundException($"Template {id} not found");
+
+        if (dbTemplate.ManualOverrideFileId.HasValue)
+        {
+            var file = await db.FileAttachments.FindAsync([dbTemplate.ManualOverrideFileId.Value], ct);
+            if (file is not null)
+            {
+                using var stream = await storageService.DownloadAsync(file.BucketName, file.ObjectKey, ct);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms, ct);
+                pdfBytes = ms.ToArray();
+            }
+        }
+
+        if (pdfBytes is null && !string.IsNullOrEmpty(dbTemplate.SourceUrl))
+        {
+            using var httpClient = httpClientFactory.CreateClient();
+            pdfBytes = await httpClient.GetByteArrayAsync(dbTemplate.SourceUrl, ct);
+        }
+
+        if (pdfBytes is null)
+            return BadRequest("No PDF source available");
+
+        var rawResult = await pdfJsExtractor.ExtractRawAsync(pdfBytes, ct);
+        return Ok(rawResult);
+    }
+
+    [HttpPost("{id:int}/compare-visual")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<VisualComparisonResult>> CompareVisual(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CompareFormRenderingCommand(id), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("versions/{versionId:int}/comparison")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<VisualComparisonResult>> GetComparisonResult(int versionId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetComparisonResultQuery(versionId), ct);
+        return Ok(result);
+    }
+
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
@@ -86,6 +163,13 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
         return Ok(count);
     }
 
+    [HttpGet("my-state-definition")]
+    public async Task<ActionResult<StateFormDefinitionResult>> GetMyStateFormDefinition(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetMyStateFormDefinitionQuery(GetUserId()), ct);
+        return Ok(result);
+    }
+
     [HttpGet("submissions/me")]
     public async Task<ActionResult<List<ComplianceFormSubmissionResponseModel>>> GetMySubmissions(CancellationToken ct)
     {
@@ -98,6 +182,22 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
         ComplianceFormType formType, CancellationToken ct)
     {
         var result = await mediator.Send(new GetMySubmissionByTypeQuery(GetUserId(), formType), ct);
+        return Ok(result);
+    }
+
+    [HttpPut("{id:int}/form-data")]
+    public async Task<ActionResult<ComplianceFormSubmissionResponseModel>> SaveFormData(
+        int id, [FromBody] SaveFormDataRequestModel model, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SaveFormDataCommand(GetUserId(), id, model.FormDataJson, model.FormDefinitionVersionId), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/submit-form")]
+    public async Task<ActionResult<ComplianceFormSubmissionResponseModel>> SubmitFormData(
+        int id, [FromBody] SaveFormDataRequestModel model, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SubmitFormDataCommand(GetUserId(), id, model.FormDataJson, model.FormDefinitionVersionId), ct);
         return Ok(result);
     }
 

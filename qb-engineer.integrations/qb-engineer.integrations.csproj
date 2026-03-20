@@ -5,11 +5,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="EasyPost-Official" Version="7.7.0" />
-    <PackageReference Include="MailKit" Version="4.15.1" />
+<PackageReference Include="MailKit" Version="4.15.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
     <PackageReference Include="Minio" Version="7.0.0" />
+<PackageReference Include="PuppeteerSharp" Version="24.39.0" />
+    <PackageReference Include="SkiaSharp" Version="3.116.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
   </ItemGroup>
 
   <PropertyGroup>

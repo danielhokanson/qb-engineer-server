@@ -14,22 +14,19 @@ public class GetAllComplianceTemplatesHandler(AppDbContext db)
     public async Task<List<ComplianceFormTemplateResponseModel>> Handle(
         GetAllComplianceTemplatesQuery request, CancellationToken ct)
     {
-        var query = db.ComplianceFormTemplates.AsNoTracking();
+        var query = db.ComplianceFormTemplates
+            .AsNoTracking()
+            .Include(t => t.FormDefinitionVersions);
 
-        if (!request.IncludeInactive)
-            query = query.Where(t => t.IsActive);
+        var filtered = request.IncludeInactive
+            ? query
+            : query.Where(t => t.IsActive);
 
-        var templates = await query
+        var templates = await filtered
             .OrderBy(t => t.SortOrder)
             .ThenBy(t => t.Name)
             .ToListAsync(ct);
 
-        return templates.Select(t => new ComplianceFormTemplateResponseModel(
-            t.Id, t.Name, t.FormType, t.Description, t.Icon, t.SourceUrl,
-            t.IsAutoSync, t.IsActive, t.SortOrder, t.RequiresIdentityDocs,
-            t.DocuSealTemplateId, t.LastSyncedAt, t.ManualOverrideFileId,
-            t.BlocksJobAssignment, t.ProfileCompletionKey,
-            t.CreatedAt, t.UpdatedAt
-        )).ToList();
+        return templates.Select(ComplianceTemplateMapper.ToResponse).ToList();
     }
 }

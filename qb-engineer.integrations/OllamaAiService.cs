@@ -32,7 +32,9 @@ public class OllamaAiService : IAiService
         _logger = logger;
 
         _httpClient.BaseAddress = new Uri(_options.BaseUrl);
-        _httpClient.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+        // Use the longer of the two timeouts (vision calls can take much longer)
+        _httpClient.Timeout = TimeSpan.FromSeconds(
+            Math.Max(_options.TimeoutSeconds, _options.VisionTimeoutSeconds));
     }
 
     public Task<string> GenerateTextAsync(string prompt, CancellationToken ct)
@@ -111,6 +113,41 @@ public class OllamaAiService : IAiService
         return result?.Embedding ?? [];
     }
 
+    public async Task<string> GenerateWithImageAsync(string prompt, byte[] imageBytes, string? systemPrompt, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(_options.VisionModel))
+            throw new NotSupportedException("No vision model configured in Ollama options (VisionModel is empty)");
+
+        _logger.LogInformation("Ollama GenerateWithImage ({Model}): prompt={PromptLen} chars, image={ImageSize} bytes",
+            _options.VisionModel, prompt.Length, imageBytes.Length);
+
+        var imageBase64 = Convert.ToBase64String(imageBytes);
+
+        var request = new OllamaVisionRequest
+        {
+            Model = _options.VisionModel,
+            Prompt = prompt,
+            Stream = false,
+            System = systemPrompt,
+            Images = [imageBase64],
+        };
+
+        // Vision inference is slow — use a longer timeout than the default HttpClient.Timeout
+        using var visionCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        visionCts.CancelAfter(TimeSpan.FromSeconds(_options.VisionTimeoutSeconds));
+
+        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/generate")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        var response = await _httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, visionCts.Token);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(JsonOptions, visionCts.Token);
+        return result?.Response ?? string.Empty;
+    }
+
     public async Task<bool> IsAvailableAsync(CancellationToken ct)
     {
         try
@@ -134,6 +171,15 @@ public class OllamaAiService : IAiService
         public bool Stream { get; set; }
         public string? System { get; set; }
         public OllamaGenerateOptions? Options { get; set; }
+    }
+
+    private sealed class OllamaVisionRequest
+    {
+        public string Model { get; set; } = string.Empty;
+        public string Prompt { get; set; } = string.Empty;
+        public bool Stream { get; set; }
+        public string? System { get; set; }
+        public List<string> Images { get; set; } = [];
     }
 
     private sealed class OllamaGenerateOptions

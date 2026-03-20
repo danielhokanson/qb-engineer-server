@@ -9,18 +9,21 @@ public class ReportRepository(AppDbContext db) : IReportRepository
 {
     public async Task<List<JobsByStageReportItem>> GetJobsByStageAsync(int? trackTypeId, CancellationToken ct)
     {
-        var query = db.Jobs
-            .Include(j => j.CurrentStage)
-            .Where(j => !j.IsArchived);
+        var jobQuery = db.Jobs.Where(j => !j.IsArchived);
 
         if (trackTypeId.HasValue)
-            query = query.Where(j => j.TrackTypeId == trackTypeId.Value);
+            jobQuery = jobQuery.Where(j => j.TrackTypeId == trackTypeId.Value);
 
-        return await query
-            .GroupBy(j => new { j.CurrentStage.Name, j.CurrentStage.Color, j.CurrentStage.SortOrder })
+        var rows = await jobQuery
+            .Join(db.JobStages, j => j.CurrentStageId, s => s.Id,
+                (j, s) => new { s.Name, s.Color, s.SortOrder })
+            .ToListAsync(ct);
+
+        return rows
+            .GroupBy(x => new { x.Name, x.Color, x.SortOrder })
             .Select(g => new JobsByStageReportItem(g.Key.Name, g.Key.Color, g.Count()))
             .OrderBy(r => r.StageName)
-            .ToListAsync(ct);
+            .ToList();
     }
 
     public async Task<List<OverdueJobReportItem>> GetOverdueJobsAsync(CancellationToken ct)
@@ -53,15 +56,19 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var startDate = DateOnly.FromDateTime(start.UtcDateTime.Date);
         var endDate = DateOnly.FromDateTime(end.UtcDateTime.Date);
 
-        return await db.TimeEntries
+        var entries = await db.TimeEntries
             .Where(t => t.Date >= startDate && t.Date <= endDate)
-            .GroupBy(t => new { t.UserId })
+            .Select(t => new { t.UserId, t.DurationMinutes })
+            .ToListAsync(ct);
+
+        return entries
+            .GroupBy(t => t.UserId)
             .Select(g => new TimeByUserReportItem(
-                g.Key.UserId,
+                g.Key,
                 "", // populated in handler with user lookup
                 Math.Round((decimal)g.Sum(t => t.DurationMinutes) / 60, 1)))
             .OrderByDescending(r => r.TotalHours)
-            .ToListAsync(ct);
+            .ToList();
     }
 
     public async Task<List<ExpenseSummaryReportItem>> GetExpenseSummaryAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
@@ -69,40 +76,56 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var startUtc = start.UtcDateTime;
         var endUtc = end.UtcDateTime;
 
-        return await db.Expenses
+        var expenses = await db.Expenses
             .Where(e => e.ExpenseDate >= startUtc && e.ExpenseDate <= endUtc)
+            .Select(e => new { e.Category, e.Amount })
+            .ToListAsync(ct);
+
+        return expenses
             .GroupBy(e => e.Category)
             .Select(g => new ExpenseSummaryReportItem(
                 g.Key,
                 g.Sum(e => e.Amount),
                 g.Count()))
             .OrderByDescending(r => r.TotalAmount)
-            .ToListAsync(ct);
+            .ToList();
     }
 
     public async Task<List<LeadPipelineReportItem>> GetLeadPipelineAsync(CancellationToken ct)
     {
-        return await db.Leads
-            .GroupBy(l => l.Status)
-            .Select(g => new LeadPipelineReportItem(g.Key.ToString(), g.Count()))
+        var leads = await db.Leads
+            .Select(l => l.Status)
             .ToListAsync(ct);
+
+        return leads
+            .GroupBy(s => s)
+            .Select(g => new LeadPipelineReportItem(g.Key.ToString(), g.Count()))
+            .ToList();
     }
 
     public async Task<List<JobCompletionTrendItem>> GetJobCompletionTrendAsync(int months, CancellationToken ct)
     {
         var cutoff = DateTime.UtcNow.AddMonths(-months);
 
-        var created = await db.Jobs
+        var createdDates = await db.Jobs
             .Where(j => j.CreatedAt >= cutoff)
-            .GroupBy(j => new { j.CreatedAt.Year, j.CreatedAt.Month })
-            .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
+            .Select(j => j.CreatedAt)
             .ToListAsync(ct);
 
-        var completed = await db.Jobs
-            .Where(j => j.CompletedDate.HasValue && j.CompletedDate.Value >= cutoff)
-            .GroupBy(j => new { j.CompletedDate!.Value.Year, j.CompletedDate!.Value.Month })
+        var created = createdDates
+            .GroupBy(d => new { d.Year, d.Month })
             .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
+            .ToList();
+
+        var completedDates = await db.Jobs
+            .Where(j => j.CompletedDate.HasValue && j.CompletedDate.Value >= cutoff)
+            .Select(j => j.CompletedDate!.Value)
             .ToListAsync(ct);
+
+        var completed = completedDates
+            .GroupBy(d => new { d.Year, d.Month })
+            .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
+            .ToList();
 
         var result = new List<JobCompletionTrendItem>();
         for (var i = months - 1; i >= 0; i--)
@@ -185,16 +208,20 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var weekStart = DateOnly.FromDateTime(startOfWeek);
         var weekEnd = DateOnly.FromDateTime(today);
 
-        var assignedJobs = await db.Jobs
+        var rawJobs = await db.Jobs
             .Where(j => !j.IsArchived && j.AssigneeId.HasValue)
-            .GroupBy(j => j.AssigneeId!.Value)
+            .Select(j => new { UserId = j.AssigneeId!.Value, j.CompletedDate, j.DueDate })
+            .ToListAsync(ct);
+
+        var assignedJobs = rawJobs
+            .GroupBy(j => j.UserId)
             .Select(g => new
             {
                 UserId = g.Key,
                 ActiveJobs = g.Count(j => j.CompletedDate == null),
                 OverdueJobs = g.Count(j => j.CompletedDate == null && j.DueDate.HasValue && j.DueDate.Value < today),
             })
-            .ToListAsync(ct);
+            .ToList();
 
         var userIds = assignedJobs.Select(j => j.UserId).ToList();
 
@@ -203,11 +230,14 @@ public class ReportRepository(AppDbContext db) : IReportRepository
             .Select(u => new { u.Id, Name = (u.FirstName + " " + u.LastName).Trim(), u.Initials, u.AvatarColor })
             .ToDictionaryAsync(u => u.Id, ct);
 
-        var weeklyHours = await db.TimeEntries
+        var weeklyEntries = await db.TimeEntries
             .Where(t => userIds.Contains(t.UserId) && t.Date >= weekStart && t.Date <= weekEnd)
+            .Select(t => new { t.UserId, t.DurationMinutes })
+            .ToListAsync(ct);
+
+        var weeklyHours = weeklyEntries
             .GroupBy(t => t.UserId)
-            .Select(g => new { UserId = g.Key, Minutes = g.Sum(t => t.DurationMinutes) })
-            .ToDictionaryAsync(g => g.UserId, g => g.Minutes, ct);
+            .ToDictionary(g => g.Key, g => g.Sum(t => t.DurationMinutes));
 
         return assignedJobs
             .Where(j => users.ContainsKey(j.UserId))
@@ -225,18 +255,23 @@ public class ReportRepository(AppDbContext db) : IReportRepository
 
     public async Task<List<CustomerActivityReportItem>> GetCustomerActivityAsync(CancellationToken ct)
     {
-        return await db.Jobs
+        var rows = await db.Jobs
             .Where(j => j.CustomerId.HasValue)
-            .GroupBy(j => new { j.CustomerId, j.Customer!.Name })
+            .Join(db.Customers, j => j.CustomerId, c => c.Id,
+                (j, c) => new { j.CustomerId, CustomerName = c.Name, j.IsArchived, j.CompletedDate, j.CreatedAt })
+            .ToListAsync(ct);
+
+        return rows
+            .GroupBy(x => new { x.CustomerId, x.CustomerName })
             .Select(g => new CustomerActivityReportItem(
                 g.Key.CustomerId!.Value,
-                g.Key.Name,
+                g.Key.CustomerName,
                 g.Count(j => !j.IsArchived && j.CompletedDate == null),
                 g.Count(j => j.CompletedDate != null),
                 g.Count(),
                 g.Max(j => j.CreatedAt)))
             .OrderByDescending(r => r.TotalJobs)
-            .ToListAsync(ct);
+            .ToList();
     }
 
     public async Task<List<MyWorkHistoryReportItem>> GetMyWorkHistoryAsync(int userId, CancellationToken ct)
@@ -377,14 +412,18 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         result.Add(new SimplePnlReportItem("Sales Tax Collected", "Revenue", totalTax));
 
         // Expenses by category
-        var expenses = await db.Expenses
+        var rawExpenses = await db.Expenses
             .Where(e => e.ExpenseDate >= startUtc && e.ExpenseDate <= endUtc
                 && e.Status == QBEngineer.Core.Enums.ExpenseStatus.Approved)
-            .GroupBy(e => e.Category)
-            .Select(g => new { Category = g.Key, Total = g.Sum(e => e.Amount) })
+            .Select(e => new { e.Category, e.Amount })
             .ToListAsync(ct);
 
-        foreach (var expense in expenses.OrderByDescending(e => e.Total))
+        var pnlExpenses = rawExpenses
+            .GroupBy(e => e.Category)
+            .Select(g => new { Category = g.Key, Total = g.Sum(e => e.Amount) })
+            .ToList();
+
+        foreach (var expense in pnlExpenses.OrderByDescending(e => e.Total))
         {
             result.Add(new SimplePnlReportItem(expense.Category, "Expense", expense.Total));
         }
@@ -398,13 +437,17 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var startUtc = start.UtcDateTime;
         var endUtc = end.UtcDateTime;
 
-        return await db.Expenses
+        var rawExpenseHistory = await db.Expenses
             .Where(e => e.UserId == userId && e.ExpenseDate >= startUtc && e.ExpenseDate <= endUtc)
             .OrderByDescending(e => e.ExpenseDate)
+            .Select(e => new { e.Id, e.Category, e.Description, e.Amount, e.Status, e.ExpenseDate })
+            .ToListAsync(ct);
+
+        return rawExpenseHistory
             .Select(e => new MyExpenseHistoryReportItem(
                 e.Id, e.Category, e.Description, e.Amount,
                 e.Status.ToString(), e.ExpenseDate, null))
-            .ToListAsync(ct);
+            .ToList();
     }
 
     public async Task<List<QuoteToCloseReportItem>> GetQuoteToCloseAsync(
@@ -413,14 +456,18 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var startUtc = start.UtcDateTime;
         var endUtc = end.UtcDateTime;
 
-        return await db.Quotes
+        var quotes = await db.Quotes
+            .Include(q => q.Lines)
             .Where(q => q.CreatedAt >= startUtc && q.CreatedAt <= endUtc)
+            .ToListAsync(ct);
+
+        return quotes
             .GroupBy(q => q.Status)
             .Select(g => new QuoteToCloseReportItem(
                 g.Key.ToString(),
                 g.Count(),
                 g.Sum(q => q.Lines.Sum(l => l.LineTotal))))
-            .ToListAsync(ct);
+            .ToList();
     }
 
     public async Task<List<ShippingSummaryReportItem>> GetShippingSummaryAsync(
@@ -521,26 +568,32 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var endDate = DateOnly.FromDateTime(endUtc.Date);
 
         // Hours per user from time entries
-        var hoursByUser = await db.TimeEntries
+        var rawTimeEntries = await db.TimeEntries
             .Where(t => t.Date >= startDate && t.Date <= endDate)
+            .Select(t => new { t.UserId, t.DurationMinutes })
+            .ToListAsync(ct);
+
+        var hoursByUser = rawTimeEntries
             .GroupBy(t => t.UserId)
-            .Select(g => new { UserId = g.Key, TotalMinutes = g.Sum(t => t.DurationMinutes) })
-            .ToDictionaryAsync(g => g.UserId, g => g.TotalMinutes, ct);
+            .ToDictionary(g => g.Key, g => g.Sum(t => t.DurationMinutes));
 
         // Jobs completed by assignee in date range
-        var completedByUser = await db.Jobs
+        var rawCompletedJobs = await db.Jobs
             .Where(j => j.AssigneeId.HasValue
                 && j.CompletedDate.HasValue
                 && j.CompletedDate.Value >= startUtc
                 && j.CompletedDate.Value <= endUtc)
-            .GroupBy(j => j.AssigneeId!.Value)
-            .Select(g => new
+            .Select(j => new { UserId = j.AssigneeId!.Value, j.CompletedDate, j.DueDate })
+            .ToListAsync(ct);
+
+        var completedByUser = rawCompletedJobs
+            .GroupBy(j => j.UserId)
+            .ToDictionary(g => g.Key, g => new
             {
                 UserId = g.Key,
                 JobsCompleted = g.Count(),
                 OnTime = g.Count(j => !j.DueDate.HasValue || j.CompletedDate!.Value.Date <= j.DueDate.Value.Date),
-            })
-            .ToDictionaryAsync(g => g.UserId, ct);
+            });
 
         var allUserIds = hoursByUser.Keys.Union(completedByUser.Keys).ToList();
         var users = await db.Users
@@ -571,11 +624,14 @@ public class ReportRepository(AppDbContext db) : IReportRepository
             .Select(p => new { p.Id, p.PartNumber, p.Description, p.MinStockThreshold, p.ReorderPoint })
             .ToListAsync(ct);
 
-        var stockByPart = await db.BinContents
+        var rawBinContents = await db.BinContents
             .Where(b => b.EntityType == "part" && b.Status == QBEngineer.Core.Enums.BinContentStatus.Stored)
+            .Select(b => new { b.EntityId, b.Quantity })
+            .ToListAsync(ct);
+
+        var stockByPart = rawBinContents
             .GroupBy(b => b.EntityId)
-            .Select(g => new { PartId = g.Key, Stock = g.Sum(b => b.Quantity) })
-            .ToDictionaryAsync(g => g.PartId, g => g.Stock, ct);
+            .ToDictionary(g => g.Key, g => g.Sum(b => b.Quantity));
 
         return parts
             .Select(p =>
@@ -638,10 +694,14 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var startUtc = start.UtcDateTime;
         var endUtc = end.UtcDateTime;
 
-        var runs = await db.ProductionRuns
-            .Include(r => r.Part)
+        var rawRuns = await db.ProductionRuns
             .Where(r => r.CompletedAt.HasValue && r.CompletedAt.Value >= startUtc && r.CompletedAt.Value <= endUtc)
-            .GroupBy(r => new { r.PartId, r.Part.PartNumber })
+            .Join(db.Parts, r => r.PartId, p => p.Id,
+                (r, p) => new { r.PartId, p.PartNumber, r.CompletedQuantity, r.ScrapQuantity })
+            .ToListAsync(ct);
+
+        var runs = rawRuns
+            .GroupBy(r => new { r.PartId, r.PartNumber })
             .Select(g => new
             {
                 g.Key.PartId,
@@ -649,7 +709,7 @@ public class ReportRepository(AppDbContext db) : IReportRepository
                 TotalProduced = g.Sum(r => r.CompletedQuantity),
                 TotalScrapped = g.Sum(r => r.ScrapQuantity),
             })
-            .ToListAsync(ct);
+            .ToList();
 
         return runs
             .Select(r =>

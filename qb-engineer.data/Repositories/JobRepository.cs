@@ -170,11 +170,13 @@ public class JobRepository(AppDbContext db) : IJobRepository
     public async Task<string> GenerateNextJobNumberAsync(CancellationToken ct)
     {
         var maxJobNumber = await db.Jobs
+            .Where(j => j.JobNumber.StartsWith("J-"))
             .Select(j => j.JobNumber)
-            .OrderByDescending(jn => jn)
+            .OrderByDescending(jn => jn.Length)
+            .ThenByDescending(jn => jn)
             .FirstOrDefaultAsync(ct);
 
-        if (maxJobNumber is not null && maxJobNumber.StartsWith("J-")
+        if (maxJobNumber is not null
             && int.TryParse(maxJobNumber[2..], out var currentNumber))
         {
             return $"J-{currentNumber + 1}";

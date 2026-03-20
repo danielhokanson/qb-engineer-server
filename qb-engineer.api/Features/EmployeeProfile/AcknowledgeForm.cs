@@ -10,14 +10,23 @@ public record AcknowledgeFormCommand(int UserId, string FormType) : IRequest;
 
 public class AcknowledgeFormHandler(AppDbContext db) : IRequestHandler<AcknowledgeFormCommand>
 {
-    private static readonly HashSet<string> ValidFormTypes =
-    [
-        "w4", "state_withholding", "i9", "direct_deposit", "workers_comp", "handbook"
-    ];
+    // Normalize camelCase keys (from seed data) to snake_case (handler convention)
+    private static readonly Dictionary<string, string> KeyAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["w4"] = "w4",
+        ["i9"] = "i9",
+        ["handbook"] = "handbook",
+        ["state_withholding"] = "state_withholding",
+        ["stateWithholding"] = "state_withholding",
+        ["direct_deposit"] = "direct_deposit",
+        ["directDeposit"] = "direct_deposit",
+        ["workers_comp"] = "workers_comp",
+        ["workersComp"] = "workers_comp",
+    };
 
     public async Task Handle(AcknowledgeFormCommand request, CancellationToken ct)
     {
-        if (!ValidFormTypes.Contains(request.FormType))
+        if (!KeyAliases.TryGetValue(request.FormType, out var normalizedKey))
             throw new ArgumentException($"Invalid form type: {request.FormType}");
 
         var profile = await db.EmployeeProfiles
@@ -31,7 +40,7 @@ public class AcknowledgeFormHandler(AppDbContext db) : IRequestHandler<Acknowled
 
         var now = DateTime.UtcNow;
 
-        switch (request.FormType)
+        switch (normalizedKey)
         {
             case "w4":
                 profile.W4CompletedAt = now;

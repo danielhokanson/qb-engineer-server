@@ -5,7 +5,8 @@ public record ProfileCompletenessResponseModel(
     bool CanBeAssignedJobs,
     int TotalItems,
     int CompletedItems,
-    List<ProfileCompletenessItem> Items);
+    List<ProfileCompletenessItem> Items,
+    StateWithholdingInfoModel? StateWithholdingInfo);
 
 public record ProfileCompletenessItem(
     string Key,

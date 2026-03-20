@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +39,20 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
             .Where(p => userIds.Contains(p.UserId))
             .ToDictionaryAsync(p => p.UserId, cancellationToken);
 
+        // Pre-load default location and company_state for fallback resolution
+        var defaultLocation = await db.CompanyLocations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.IsDefault && l.IsActive, cancellationToken);
+        var companyStateSetting = await db.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == "company_state", cancellationToken);
+
+        // Pre-load all state withholding reference data for batch lookup
+        var stateRefs = await db.ReferenceData
+            .AsNoTracking()
+            .Where(r => r.GroupCode == "state_withholding")
+            .ToDictionaryAsync(r => r.Code, cancellationToken);
+
         var result = new List<AdminUserResponseModel>();
         foreach (var user in users)
         {
@@ -48,12 +64,36 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
             scanTypes.TryGetValue(user.Id, out var scan);
             profiles.TryGetValue(user.Id, out var profile);
 
+            // Resolve per-employee state: work location → default location → company_state
+            var stateCode = user.WorkLocation?.State
+                ?? defaultLocation?.State
+                ?? companyStateSetting?.Value;
+
+            var isNoTaxState = false;
+            string stateLabel = "State Tax Withholding";
+            if (!string.IsNullOrWhiteSpace(stateCode) && stateRefs.TryGetValue(stateCode, out var stateRef))
+            {
+                stateLabel = $"State Tax Withholding ({stateRef.Label})";
+                if (!string.IsNullOrWhiteSpace(stateRef.Metadata))
+                {
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(stateRef.Metadata);
+                        if (doc.RootElement.TryGetProperty("category", out var cat) && cat.GetString() == "no_tax")
+                            isNoTaxState = true;
+                    }
+                    catch (JsonException) { }
+                }
+            }
+
             // Compute compliance items (mirrors GetProfileCompleteness logic)
             var complianceItems = new (string Key, string Label, bool IsComplete, bool BlocksAssignment)[]
             {
                 ("w4", "W-4 Federal Tax Withholding", profile?.W4CompletedAt is not null, true),
                 ("i9", "I-9 Employment Eligibility", profile?.I9CompletedAt is not null, true),
-                ("state_withholding", "State Tax Withholding", profile?.StateWithholdingCompletedAt is not null, true),
+                ("state_withholding", stateLabel,
+                    isNoTaxState || profile?.StateWithholdingCompletedAt is not null,
+                    !isNoTaxState),
                 ("emergency_contact", "Emergency Contact",
                     profile is not null &&
                     !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&

@@ -79,16 +79,21 @@ public class GetShopFloorOverviewHandler(AppDbContext db)
             .CountAsync(j => j.CompletedDate.HasValue && j.CompletedDate.Value.Date == today, cancellationToken);
 
         // Clocked-in workers: last clock event per user is ClockIn
-        var lastClockEvents = await db.ClockEvents
+        // Use subquery approach to avoid unsupported GroupBy + First() projection
+        var todayEvents = await db.ClockEvents
             .Where(e => e.Timestamp.Date == today)
+            .OrderByDescending(e => e.Timestamp)
+            .ToListAsync(cancellationToken);
+
+        var lastClockEvents = todayEvents
             .GroupBy(e => e.UserId)
             .Select(g => new
             {
                 UserId = g.Key,
-                LastEvent = g.OrderByDescending(e => e.Timestamp).First(),
+                LastEvent = g.First(),
             })
             .Where(x => x.LastEvent.EventType == ClockEventType.ClockIn)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var clockedInUserIds = lastClockEvents.Select(x => x.UserId).ToList();
 

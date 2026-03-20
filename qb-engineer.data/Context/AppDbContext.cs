@@ -146,6 +146,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<ComplianceFormTemplate> ComplianceFormTemplates => Set<ComplianceFormTemplate>();
     public DbSet<ComplianceFormSubmission> ComplianceFormSubmissions => Set<ComplianceFormSubmission>();
     public DbSet<IdentityDocument> IdentityDocuments => Set<IdentityDocument>();
+    public DbSet<FormDefinitionVersion> FormDefinitionVersions => Set<FormDefinitionVersion>();
 
     // Payroll
     public DbSet<PayStub> PayStubs => Set<PayStub>();

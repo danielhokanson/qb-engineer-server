@@ -13,8 +13,28 @@ COPY . .
 RUN dotnet publish qb-engineer.api/qb-engineer.api.csproj -c Release -o /app/publish \
     /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Debian-based runtime (Chromium requires glibc, not available on Alpine)
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+
+# Install Chromium for PuppeteerSharp pdf.js extraction
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    fonts-liberation \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 WORKDIR /app
 COPY --from=build /app/publish .
 
