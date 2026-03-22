@@ -76,6 +76,8 @@ public class AiHelpChatHandler(
         return answer.Trim();
     }
 
+    internal static string GetSystemContextPublic(string role) => GetSystemContext(role);
+
     private static string GetSystemContext(string role)
     {
         var roleContext = role switch

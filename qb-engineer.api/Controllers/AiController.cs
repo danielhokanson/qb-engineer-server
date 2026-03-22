@@ -62,6 +62,28 @@ public class AiController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("help/stream")]
+    public async Task HelpChatStream([FromBody] AiHelpChatBody body, CancellationToken ct)
+    {
+        var command = new AiHelpChatStreamCommand(body.Question, body.History, GetHighestPrivilegeRole());
+        var tokenStream = await mediator.Send(command, ct);
+
+        Response.Headers["Content-Type"] = "text/event-stream";
+        Response.Headers["Cache-Control"] = "no-cache";
+        Response.Headers["X-Accel-Buffering"] = "no";
+
+        await foreach (var token in tokenStream.WithCancellation(ct))
+        {
+            // Escape newlines in token so each SSE message stays on one data: line
+            var escaped = token.Replace("\n", "\\n").Replace("\r", "\\r");
+            await Response.WriteAsync($"data: {escaped}\n\n", ct);
+            await Response.Body.FlushAsync(ct);
+        }
+
+        await Response.WriteAsync("data: [DONE]\n\n", ct);
+        await Response.Body.FlushAsync(ct);
+    }
+
     [HttpPost("search")]
     public async Task<IActionResult> RagSearch([FromBody] RagSearchCommand command, CancellationToken ct)
     {

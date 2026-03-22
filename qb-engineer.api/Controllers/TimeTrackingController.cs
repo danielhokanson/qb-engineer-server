@@ -90,4 +90,12 @@ public class TimeTrackingController(IMediator mediator) : ControllerBase
         await mediator.Send(command);
         return NoContent();
     }
+
+    [HttpPost("lock-period")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<LockPayPeriodResult>> LockPayPeriod([FromBody] LockPayPeriodCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
 }

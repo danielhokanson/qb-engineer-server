@@ -57,6 +57,23 @@ public class MockAiService : IAiService
             """);
     }
 
+    public async IAsyncEnumerable<string> GenerateTextStreamAsync(string prompt, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+    {
+        _logger.LogInformation("[MockAI] GenerateTextStream: streaming canned response");
+        var words = new[]
+        {
+            "This", " is", " a", " mock", " streaming", " response", " from", " the",
+            " AI", " assistant.", " It", " simulates", " token-by-token", " generation",
+            " so", " the", " UI", " can", " render", " partial", " results", " in", " real", " time.",
+        };
+        foreach (var word in words)
+        {
+            if (ct.IsCancellationRequested) yield break;
+            await Task.Delay(30, ct);
+            yield return word;
+        }
+    }
+
     public Task<bool> IsAvailableAsync(CancellationToken ct)
     {
         _logger.LogInformation("[MockAI] IsAvailable — returning true");

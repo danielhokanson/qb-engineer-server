@@ -10,4 +10,7 @@ public record BinStockResponseModel(
     decimal ReservedQuantity,
     decimal AvailableQuantity,
     BinContentStatus Status,
-    string? LotNumber);
+    string? LotNumber,
+    int? LotId,
+    DateTime? LotExpirationDate,
+    string? SupplierLotNumber);

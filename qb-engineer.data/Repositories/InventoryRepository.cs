@@ -153,6 +153,21 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
             .ToListAsync(ct);
         var locById = allLocations.ToDictionary(l => l.Id);
 
+        // Load lot records for any bin content that has a lot number
+        var lotNumbers = contents
+            .Where(c => c.LotNumber != null)
+            .Select(c => c.LotNumber!)
+            .Distinct()
+            .ToList();
+
+        var lots = lotNumbers.Any()
+            ? await db.LotRecords
+                .Where(l => lotNumbers.Contains(l.LotNumber) && l.DeletedAt == null)
+                .ToListAsync(ct)
+            : [];
+
+        var lotByNumberAndPart = lots.ToDictionary(l => (l.LotNumber, l.PartId));
+
         var contentsByPart = contents.ToLookup(c => c.EntityId);
 
         return partsWithStock
@@ -166,12 +181,16 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
                 return new InventoryPartSummaryResponseModel(
                     p.Id, p.PartNumber, p.Description, p.Material,
                     onHand, reserved, onHand - reserved,
-                    bins.Select(b => new BinStockResponseModel(
-                        b.LocationId, b.Location.Name,
-                        BuildPath(b.Location, locById),
-                        b.Quantity, b.ReservedQuantity, b.Quantity - b.ReservedQuantity,
-                        b.Status, b.LotNumber
-                    )).ToList());
+                    bins.Select(b =>
+                    {
+                        var lot = b.LotNumber != null && lotByNumberAndPart.TryGetValue((b.LotNumber, p.Id), out var l) ? l : null;
+                        return new BinStockResponseModel(
+                            b.LocationId, b.Location.Name,
+                            BuildPath(b.Location, locById),
+                            b.Quantity, b.ReservedQuantity, b.Quantity - b.ReservedQuantity,
+                            b.Status, b.LotNumber,
+                            lot?.Id, lot?.ExpirationDate, lot?.SupplierLotNumber);
+                    }).ToList());
             }).ToList();
     }
 

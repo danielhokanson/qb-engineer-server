@@ -19,4 +19,10 @@ public interface IAiService
     /// <returns>AI-generated text response</returns>
     /// <exception cref="NotSupportedException">Thrown when no vision model is configured</exception>
     Task<string> GenerateWithImageAsync(string prompt, byte[] imageBytes, string? systemPrompt, CancellationToken ct);
+
+    /// <summary>
+    /// Stream generated text token by token via Server-Sent Events.
+    /// Each yielded string is a partial token from the model.
+    /// </summary>
+    IAsyncEnumerable<string> GenerateTextStreamAsync(string prompt, CancellationToken ct);
 }

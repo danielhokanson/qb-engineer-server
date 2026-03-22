@@ -51,6 +51,13 @@ public class AssetsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:int}/maintenance/logs")]
+    public async Task<ActionResult<List<MaintenanceLogListItemResponseModel>>> GetAssetMaintenanceLogs(int id)
+    {
+        var result = await mediator.Send(new GetAssetMaintenanceLogsQuery(id));
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}/maintenance")]
     public async Task<ActionResult<List<MaintenanceScheduleResponseModel>>> GetAssetMaintenanceSchedules(int id)
     {

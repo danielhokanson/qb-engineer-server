@@ -148,6 +148,54 @@ public class OllamaAiService : IAiService
         return result?.Response ?? string.Empty;
     }
 
+    public async IAsyncEnumerable<string> GenerateTextStreamAsync(string prompt, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+    {
+        _logger.LogInformation("Ollama GenerateTextStream ({Model}): {Prompt}",
+            _options.Model, prompt.Length > 80 ? prompt[..80] + "..." : prompt);
+
+        var request = new OllamaGenerateRequest
+        {
+            Model = _options.Model,
+            Prompt = prompt,
+            Stream = true,
+        };
+
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/api/generate")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, ct);
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        using var reader = new System.IO.StreamReader(stream);
+
+        while (!reader.EndOfStream && !ct.IsCancellationRequested)
+        {
+            var line = await reader.ReadLineAsync(ct);
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            OllamaGenerateResponse? chunk = null;
+            try
+            {
+                chunk = JsonSerializer.Deserialize<OllamaGenerateResponse>(line, JsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse Ollama stream line: {Line}", line);
+                continue;
+            }
+
+            if (chunk is null) continue;
+
+            if (!string.IsNullOrEmpty(chunk.Response))
+                yield return chunk.Response;
+
+            if (chunk.Done) break;
+        }
+    }
+
     public async Task<bool> IsAvailableAsync(CancellationToken ct)
     {
         try
