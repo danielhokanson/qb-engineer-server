@@ -15,6 +15,27 @@ public class DocumentIndexJob(
 {
     private static readonly string[] SupportedEntityTypes = ["Job", "Part", "Customer", "Asset"];
 
+    public async Task IndexDocumentationAsync()
+    {
+        var available = await aiService.IsAvailableAsync(CancellationToken.None);
+        if (!available)
+        {
+            logger.LogInformation("AI service unavailable — skipping documentation indexing");
+            return;
+        }
+
+        try
+        {
+            var chunksIndexed = await mediator.Send(new IndexDocumentationCommand(), CancellationToken.None);
+            if (chunksIndexed > 0)
+                logger.LogInformation("Documentation indexing complete: {ChunkCount} chunks", chunksIndexed);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Documentation indexing failed");
+        }
+    }
+
     public async Task IndexRecentlyUpdatedAsync()
     {
         var available = await aiService.IsAvailableAsync(CancellationToken.None);

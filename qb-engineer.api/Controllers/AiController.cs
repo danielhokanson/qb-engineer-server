@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +15,17 @@ namespace QBEngineer.Api.Controllers;
 [Authorize]
 public class AiController(IMediator mediator) : ControllerBase
 {
+    private static readonly string[] RolePriority = ["Admin", "Manager", "OfficeManager", "PM", "Engineer", "ProductionWorker"];
+
+    private string GetHighestPrivilegeRole()
+    {
+        var userRoles = User.Claims
+            .Where(c => c.Type is ClaimTypes.Role or "role")
+            .Select(c => c.Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return RolePriority.FirstOrDefault(userRoles.Contains) ?? "General";
+    }
     [HttpGet("status")]
     public async Task<IActionResult> GetStatus(CancellationToken ct)
     {
@@ -42,8 +55,9 @@ public class AiController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("help")]
-    public async Task<IActionResult> HelpChat([FromBody] AiHelpChatCommand command, CancellationToken ct)
+    public async Task<IActionResult> HelpChat([FromBody] AiHelpChatBody body, CancellationToken ct)
     {
+        var command = new AiHelpChatCommand(body.Question, body.History, GetHighestPrivilegeRole());
         var result = await mediator.Send(command, ct);
         return Ok(result);
     }
@@ -77,4 +91,5 @@ public class AiController(IMediator mediator) : ControllerBase
     }
 }
 
+public record AiHelpChatBody(string Question, List<AiHelpMessage>? History = null);
 public record AssistantChatBody(string Question, List<AiHelpMessage>? History = null);

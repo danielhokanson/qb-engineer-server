@@ -10,4 +10,5 @@ public class OllamaOptions
     public string VisionModel { get; set; } = "llava:7b";
     public int TimeoutSeconds { get; set; } = 120;
     public int VisionTimeoutSeconds { get; set; } = 600;
+    public string DocsPath { get; set; } = "/app/docs";
 }

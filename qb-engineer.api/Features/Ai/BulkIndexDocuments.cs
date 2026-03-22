@@ -21,7 +21,7 @@ public class BulkIndexDocumentsHandler(
     IMediator mediator,
     ILogger<BulkIndexDocumentsHandler> logger) : IRequestHandler<BulkIndexDocumentsCommand, int>
 {
-    private static readonly string[] SupportedEntityTypes = ["Job", "Part", "FileAttachment", "Customer", "Asset"];
+    private static readonly string[] SupportedEntityTypes = ["Job", "Part", "FileAttachment", "Customer", "Asset", "Documentation"];
 
     public async Task<int> Handle(BulkIndexDocumentsCommand request, CancellationToken ct)
     {
@@ -33,6 +33,22 @@ public class BulkIndexDocumentsHandler(
 
         foreach (var entityType in entityTypes)
         {
+            // Documentation uses its own handler (reads from filesystem, not DB)
+            if (entityType == "Documentation")
+            {
+                try
+                {
+                    var chunkCount = await mediator.Send(new IndexDocumentationCommand(), ct);
+                    totalIndexed += chunkCount;
+                    logger.LogInformation("Bulk indexed documentation: {ChunkCount} chunks", chunkCount);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to bulk index documentation");
+                }
+                continue;
+            }
+
             var entityIds = await GetEntityIdsAsync(entityType, ct);
             logger.LogInformation("Bulk indexing {Count} {EntityType} entities", entityIds.Count, entityType);
 
