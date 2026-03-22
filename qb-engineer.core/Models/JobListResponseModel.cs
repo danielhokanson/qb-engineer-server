@@ -18,4 +18,5 @@ public record JobListResponseModel(
     int ChildJobCount,
     string? ExternalRef,
     string? AccountingDocumentType,
-    List<string> ActiveHolds);
+    List<string> ActiveHolds,
+    string? CoverPhotoUrl = null);

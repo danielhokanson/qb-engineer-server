@@ -39,6 +39,7 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 .ThenInclude(sol => sol!.SalesOrder)
                     .ThenInclude(so => so.Invoices)
             .Include(j => j.ChildJobs)
+            .Include(j => j.CoverPhotoFile)
             .OrderBy(j => j.CurrentStage.SortOrder)
             .ThenBy(j => j.BoardPosition)
             .ToListAsync(ct);
@@ -102,7 +103,8 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 j.ChildJobs.Count(c => c.DeletedAt == null),
                 j.ExternalRef,
                 null,
-                activeHolds);
+                activeHolds,
+                j.CoverPhotoFileId.HasValue ? $"/api/v1/files/{j.CoverPhotoFileId}" : null);
         }).ToList();
     }
 
@@ -115,6 +117,7 @@ public class JobRepository(AppDbContext db) : IJobRepository
             .Include(j => j.Part)
             .Include(j => j.ParentJob)
             .Include(j => j.ChildJobs)
+            .Include(j => j.CoverPhotoFile)
             .FirstOrDefaultAsync(j => j.Id == id, ct);
 
         if (job is null) return null;
@@ -159,7 +162,8 @@ public class JobRepository(AppDbContext db) : IJobRepository
             job.ParentJob?.JobNumber,
             job.ChildJobs.Count(c => c.DeletedAt == null),
             job.CreatedAt,
-            job.UpdatedAt);
+            job.UpdatedAt,
+            job.CoverPhotoFileId.HasValue ? $"/api/v1/files/{job.CoverPhotoFileId}" : null);
     }
 
     public async Task<Job?> FindAsync(int id, CancellationToken ct)

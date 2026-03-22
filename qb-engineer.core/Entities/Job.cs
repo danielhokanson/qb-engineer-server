@@ -42,6 +42,10 @@ public class Job : BaseAuditableEntity
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 
+    // Cover photo
+    public int? CoverPhotoFileId { get; set; }
+    public FileAttachment? CoverPhotoFile { get; set; }
+
     // Navigation
     public Part? Part { get; set; }
     public Job? ParentJob { get; set; }

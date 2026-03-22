@@ -36,4 +36,5 @@ public record JobDetailResponseModel(
     string? ParentJobNumber,
     int ChildJobCount,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string? CoverPhotoUrl = null);

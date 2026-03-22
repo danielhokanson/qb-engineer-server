@@ -2686,6 +2686,10 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("board_position");
 
+                    b.Property<int?>("CoverPhotoFileId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cover_photo_file_id");
+
                     b.Property<DateTime?>("CompletedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_date");
@@ -2816,6 +2820,9 @@ namespace QBEngineer.Data.Migrations
 
                     b.HasIndex("AssigneeId")
                         .HasDatabaseName("ix_jobs_assignee_id");
+
+                    b.HasIndex("CoverPhotoFileId")
+                        .HasDatabaseName("ix_jobs_cover_photo_file_id");
 
                     b.HasIndex("CurrentStageId")
                         .HasDatabaseName("ix_jobs_current_stage_id");
@@ -7426,6 +7433,12 @@ namespace QBEngineer.Data.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_jobs_customers_customer_id");
 
+                    b.HasOne("QBEngineer.Core.Entities.FileAttachment", "CoverPhotoFile")
+                        .WithMany()
+                        .HasForeignKey("CoverPhotoFileId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_jobs_file_attachments_cover_photo_file_id");
+
                     b.HasOne("QBEngineer.Core.Entities.Job", "ParentJob")
                         .WithMany("ChildJobs")
                         .HasForeignKey("ParentJobId")
@@ -7450,6 +7463,8 @@ namespace QBEngineer.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_jobs__track_types_track_type_id");
+
+                    b.Navigation("CoverPhotoFile");
 
                     b.Navigation("CurrentStage");
 

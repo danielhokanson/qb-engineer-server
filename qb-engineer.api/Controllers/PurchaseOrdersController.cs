@@ -79,6 +79,15 @@ public class PurchaseOrdersController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("calendar")]
+    public async Task<ActionResult<List<PoCalendarResponseModel>>> GetForCalendar(
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to)
+    {
+        var result = await mediator.Send(new GetPurchaseOrdersForCalendarQuery(from, to));
+        return Ok(result);
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeletePurchaseOrder(int id)
     {

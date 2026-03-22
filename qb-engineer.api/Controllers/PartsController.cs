@@ -122,6 +122,13 @@ public class PartsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("thumbnails")]
+    public async Task<ActionResult<List<PartThumbnailResponseModel>>> GetThumbnails([FromQuery] List<int> partIds)
+    {
+        var result = await mediator.Send(new GetPartThumbnailsQuery(partIds));
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}/activity")]
     public async Task<ActionResult<List<ActivityResponseModel>>> GetPartActivity(int id)
     {

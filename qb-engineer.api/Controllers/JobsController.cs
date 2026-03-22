@@ -247,6 +247,14 @@ public class JobsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // Cover photo
+    [HttpPatch("{id:int}/cover-photo")]
+    public async Task<IActionResult> SetCoverPhoto(int id, [FromBody] SetCoverPhotoRequest request)
+    {
+        await mediator.Send(new SetJobCoverPhotoCommand(id, request.FileAttachmentId));
+        return NoContent();
+    }
+
     // Disposition
     [HttpPost("{id:int}/dispose")]
     public async Task<ActionResult<JobDetailResponseModel>> DisposeJob(int id, DisposeJobRequestModel request)
