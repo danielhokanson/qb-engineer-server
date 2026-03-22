@@ -568,6 +568,14 @@ try
         "document-index",
         job => job.IndexRecentlyUpdatedAsync(),
         "*/30 * * * *"); // Every 30 minutes
+    RecurringJob.AddOrUpdate<DocumentIndexJob>(
+        "documentation-index",
+        job => job.IndexDocumentationAsync(),
+        Cron.Daily(3)); // Daily at 3 AM — docs change rarely; startup job handles initial index
+
+    // Index documentation once on startup (AI may not be ready immediately — Hangfire retries)
+    BackgroundJob.Enqueue<DocumentIndexJob>(job => job.IndexDocumentationAsync());
+
     RecurringJob.AddOrUpdate<ComplianceFormSyncJob>(
         "compliance-form-sync",
         job => job.SyncFederalFormsAsync(),

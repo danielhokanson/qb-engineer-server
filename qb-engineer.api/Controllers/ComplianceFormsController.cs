@@ -235,6 +235,14 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
         return Ok();
     }
 
+    [HttpGet("submissions/{submissionId:int}/pdf")]
+    public async Task<IActionResult> DownloadSubmissionPdf(int submissionId, CancellationToken ct)
+    {
+        var isPrivileged = User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("OfficeManager");
+        var result = await mediator.Send(new DownloadSubmissionPdfQuery(submissionId, GetUserId(), isPrivileged), ct);
+        return File(result.Bytes, "application/pdf", result.FileName);
+    }
+
     [HttpGet("admin/users/{userId:int}")]
     [Authorize(Roles = "Admin,Manager,OfficeManager")]
     public async Task<ActionResult<UserComplianceDetailResponseModel>> GetUserComplianceDetail(
