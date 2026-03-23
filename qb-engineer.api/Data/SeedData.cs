@@ -1281,6 +1281,57 @@ public static class SeedData
             Log.Information("Seeded training paths and {Count} path-module associations", onboardingModules.Length + engineerModules.Length);
         }
 
+        // Back-fill enrollments for any existing users not yet enrolled in auto-assigned paths
+        var autoPaths = await db.TrainingPaths
+            .Where(p => p.IsAutoAssigned && p.IsActive && p.DeletedAt == null)
+            .ToListAsync();
+
+        var existingEnrollments = await db.TrainingPathEnrollments
+            .Select(e => new { e.UserId, e.PathId })
+            .ToListAsync();
+
+        var users = await db.Users
+            .Select(u => new { u.Id })
+            .ToListAsync();
+
+        var userRoles = await db.UserRoles
+            .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, RoleName = r.Name ?? "" })
+            .ToListAsync();
+
+        var rolesByUser = userRoles.GroupBy(r => r.UserId).ToDictionary(g => g.Key, g => g.Select(r => r.RoleName).ToArray());
+
+        var newEnrollments = 0;
+        foreach (var path in autoPaths)
+        {
+            var allowedRoles = string.IsNullOrEmpty(path.AllowedRoles)
+                ? null
+                : System.Text.Json.JsonSerializer.Deserialize<string[]>(path.AllowedRoles);
+
+            foreach (var user in users)
+            {
+                if (existingEnrollments.Any(e => e.UserId == user.Id && e.PathId == path.Id))
+                    continue;
+
+                var userRoleNames = rolesByUser.TryGetValue(user.Id, out var roles) ? roles : [];
+                if (allowedRoles != null && !userRoleNames.Any(r => allowedRoles.Contains(r)))
+                    continue;
+
+                db.TrainingPathEnrollments.Add(new TrainingPathEnrollment
+                {
+                    UserId = user.Id,
+                    PathId = path.Id,
+                    IsAutoAssigned = true,
+                });
+                newEnrollments++;
+            }
+        }
+
+        if (newEnrollments > 0)
+        {
+            await db.SaveChangesAsync();
+            Log.Information("Back-filled {Count} training enrollments for existing users", newEnrollments);
+        }
+
         Log.Information("Seeded {Count} training modules", 18);
     }
 
