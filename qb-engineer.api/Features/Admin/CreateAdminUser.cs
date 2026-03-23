@@ -1,8 +1,11 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -44,7 +47,10 @@ public class CreateAdminUserValidator : AbstractValidator<CreateAdminUserCommand
     }
 }
 
-public class CreateAdminUserHandler(UserManager<ApplicationUser> userManager, IBarcodeService barcodeService)
+public class CreateAdminUserHandler(
+    UserManager<ApplicationUser> userManager,
+    IBarcodeService barcodeService,
+    AppDbContext db)
     : IRequestHandler<CreateAdminUserCommand, CreateAdminUserResponseModel>
 {
     public async Task<CreateAdminUserResponseModel> Handle(CreateAdminUserCommand request, CancellationToken cancellationToken)
@@ -85,6 +91,31 @@ public class CreateAdminUserHandler(UserManager<ApplicationUser> userManager, IB
         user.UpdatedAt = DateTime.UtcNow;
 
         await userManager.UpdateAsync(user);
+
+        // Auto-enroll new user in matching training paths
+        var autoPaths = await db.TrainingPaths
+            .Where(p => p.IsAutoAssigned && p.IsActive && p.DeletedAt == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var path in autoPaths)
+        {
+            var allowedRoles = string.IsNullOrEmpty(path.AllowedRoles)
+                ? null
+                : JsonSerializer.Deserialize<string[]>(path.AllowedRoles);
+
+            if (allowedRoles == null || allowedRoles.Contains(request.Role))
+            {
+                db.TrainingPathEnrollments.Add(new TrainingPathEnrollment
+                {
+                    UserId = user.Id,
+                    PathId = path.Id,
+                    IsAutoAssigned = true,
+                });
+            }
+        }
+
+        if (autoPaths.Count > 0)
+            await db.SaveChangesAsync(cancellationToken);
 
         return new CreateAdminUserResponseModel(
             user.Id,

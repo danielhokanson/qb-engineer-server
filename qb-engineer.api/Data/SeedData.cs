@@ -931,6 +931,357 @@ public static class SeedData
             await db.SaveChangesAsync();
             Log.Information("Seeded company profile settings");
         }
+
+        // ── Training Modules & Paths ──────────────────────────────────────
+        await SeedTrainingAsync(db);
+    }
+
+    private static async Task SeedTrainingAsync(AppDbContext db)
+    {
+        if (await db.TrainingModules.AnyAsync()) return;
+
+        // ── Training Modules ──────────────────────────────────────────────
+
+        // Path 1: New Employee Onboarding
+        var welcome = new TrainingModule
+        {
+            Title = "Welcome to QB Engineer",
+            Slug = "welcome-to-qb-engineer",
+            Summary = "Get oriented with QB Engineer — what it does, how it's organized, and what you'll use every day.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 3,
+            IsPublished = true,
+            IsOnboardingRequired = true,
+            SortOrder = 1,
+            AppRoutes = """["/dashboard"]""",
+            Tags = """["onboarding","welcome"]""",
+            ContentJson = """{"body":"## Welcome to QB Engineer\n\nQB Engineer is a manufacturing operations platform built for small engineering shops. It connects every part of your workflow — from quoting a job to shipping it — in one unified system. You'll use it every day for tracking work, logging time, submitting expenses, and staying compliant.\n\n### What It Does\n\nAt its core, QB Engineer manages jobs on a kanban board. Every job moves through stages from Quote Requested all the way to Payment Received, matching how work actually flows through a machine shop. Along the way it integrates with QuickBooks Online to keep your financials in sync automatically.\n\nBeyond jobs, QB Engineer handles parts catalogs (including BOMs), inventory, purchase orders, sales orders, shipments, and quality inspections. Everything is connected — a job links to a part, which links to its BOM, which links to the vendor POs.\n\n### How It's Organized\n\nThe left sidebar is your primary navigation. Icons expand to labeled sections when you hover. The main areas you'll use:\n\n- **Dashboard** — your daily summary: open jobs, tasks, timers, cycle progress\n- **Board** — the kanban board for all active jobs\n- **Time Tracking** — start/stop timers and review your logged hours\n- **Account** — your profile, compliance forms, pay stubs, and security settings\n\n### What to Do Next\n\nStart by completing the remaining modules in this onboarding path. They'll walk you through setting up your profile, completing required compliance forms, logging time, and submitting expenses. The whole path takes about 25 minutes.\n\nAfter onboarding, your manager will assign additional training paths based on your role.","sections":[]}"""
+        };
+
+        var navigating = new TrainingModule
+        {
+            Title = "Navigating the App",
+            Slug = "navigating-the-app",
+            Summary = "A guided tour of the sidebar, header, notifications, and main navigation areas.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Walkthrough,
+            EstimatedMinutes = 5,
+            IsPublished = true,
+            IsOnboardingRequired = true,
+            SortOrder = 2,
+            AppRoutes = """["/dashboard"]""",
+            Tags = """["onboarding","navigation"]""",
+            ContentJson = """{"appRoute":"/dashboard","startButtonLabel":"Take the Tour","steps":[{"element":"[data-tour='sidebar']","popover":{"title":"Sidebar Navigation","description":"The sidebar holds all your navigation links. Icons on the left expand to labeled menus when you hover over them. Click any icon to navigate to that section.","side":"right"}},{"element":"[data-tour='header']","popover":{"title":"App Header","description":"The header stays visible on every page. Use the search icon to do a global search across jobs, parts, customers, and more.","side":"bottom"}},{"element":"[data-tour='notifications-bell']","popover":{"title":"Notifications","description":"The bell icon shows your unread notification count. Click it to open the notification panel — you'll see job updates, assignments, and system alerts here.","side":"bottom"}},{"element":"[data-tour='user-menu']","popover":{"title":"User Menu","description":"Your avatar in the top-right opens the user menu. From here you can switch themes, access your account settings, or log out.","side":"bottom"}},{"element":"[data-tour='dashboard-widgets']","popover":{"title":"Dashboard Widgets","description":"Your dashboard shows open jobs, today's tasks, active timers, and cycle progress. It updates in real time as work moves through the board.","side":"top"}}]}"""
+        };
+
+        var profileSetup = new TrainingModule
+        {
+            Title = "Setting Up Your Profile",
+            Slug = "setting-up-your-profile",
+            Summary = "How to complete your contact info, emergency contact, and account security settings.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 4,
+            IsPublished = true,
+            IsOnboardingRequired = true,
+            SortOrder = 3,
+            AppRoutes = """["/account","/account/profile"]""",
+            Tags = """["onboarding","account"]""",
+            ContentJson = """{"body":"## Setting Up Your Profile\n\nYour employee profile is how the system knows who you are, where to reach you, and how to pay you. Completing it accurately is important — your work location drives which state withholding forms you'll need to fill out.\n\n### Profile Section\n\nNavigate to **Account → Profile**. Fill in your first and last name, then confirm your work location. If you work at a location other than the company's default, update this now — it affects your state tax withholding.\n\n### Contact Information\n\nGo to **Account → Contact**. Enter your personal phone number and home address. This is kept confidential and is only used for HR and payroll purposes.\n\n### Emergency Contact\n\nUnder **Account → Emergency**, add the name, phone number, and relationship of someone to contact in an emergency. This is required as part of your onboarding.\n\n### Security Settings\n\nVisit **Account → Security** to review your login settings. If your employer uses badge/PIN kiosk login, you'll use the 4–6 digit PIN you were assigned. You can change this PIN here at any time.\n\n### Why It Matters\n\nYour profile drives your compliance form requirements. An incomplete work location means the system can't determine which state withholding form to show you. An incomplete address or emergency contact will show a yellow warning on your profile completeness tracker.","sections":[]}"""
+        };
+
+        var compliance = new TrainingModule
+        {
+            Title = "Completing Your Compliance Forms",
+            Slug = "completing-compliance-forms",
+            Summary = "Walk through required onboarding forms: W-4, state withholding, I-9, direct deposit, and handbook acknowledgment.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 6,
+            IsPublished = true,
+            IsOnboardingRequired = true,
+            SortOrder = 4,
+            AppRoutes = """["/account/tax-forms"]""",
+            Tags = """["onboarding","compliance","w4","i9"]""",
+            ContentJson = """{"body":"## Completing Your Compliance Forms\n\nCompliance forms are legal documents required for employment. You must complete them before you can be assigned to jobs. Navigate to **Account → Tax Forms** to see all required forms.\n\n### Required Forms\n\n**Federal W-4** — The Employee's Withholding Certificate. This tells your employer how much federal income tax to withhold from each paycheck. You'll fill this out directly in the app. The form is pre-populated with your name and address from your profile.\n\n**State Withholding** — Depending on your work location, you may need to fill out a state-specific withholding form. The app automatically shows the correct form for your state. Some states (like Texas and Florida) have no income tax and no form is required.\n\n**I-9 Employment Eligibility** — Federal law requires you to verify your right to work in the United States. You'll complete Part 1 of the I-9 in the app. Your manager will complete Part 2 after reviewing your identity documents in person.\n\n**Direct Deposit Authorization** — Authorize electronic deposit of your paycheck. You'll need your bank's routing number and your account number.\n\n**Workers' Comp Acknowledgment** — A simple acknowledgment that you've been informed of your workers' compensation coverage. One click to complete.\n\n**Employee Handbook** — Acknowledge that you've received and read the employee handbook.\n\n### What Happens After Submission\n\nEach form shows a status badge: Not Started, In Progress, Submitted, or Approved. Once your manager reviews and approves a form, it's locked and a PDF copy is available for your records. The Profile Completeness widget on your dashboard tracks your overall completion percentage.","sections":[]}"""
+        };
+
+        var timeTracking = new TrainingModule
+        {
+            Title = "Logging Your Time",
+            Slug = "logging-your-time",
+            Summary = "How to start and stop timers, log manual time entries, and review your hours.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 5,
+            IsPublished = true,
+            IsOnboardingRequired = true,
+            SortOrder = 5,
+            AppRoutes = """["/time-tracking"]""",
+            Tags = """["onboarding","time-tracking"]""",
+            ContentJson = """{"body":"## Logging Your Time\n\nAccurate time tracking is essential — it drives payroll, job costing, and billing. QB Engineer makes it easy with live timers that you can start and stop directly from a job card or from the Time Tracking page.\n\n### Starting a Timer\n\nThere are two ways to start a timer:\n\n1. **From the Kanban Board** — Find your job card and click the play button (▶) on the card. A timer starts immediately and shows as active on the Dashboard.\n2. **From Time Tracking** — Navigate to **Time Tracking** and click **Start Timer**. Select the job from the dropdown and click Start.\n\nYou can only have one active timer at a time. Starting a new timer automatically stops the previous one.\n\n### Stopping a Timer\n\nClick the stop button (■) on the active timer card in the Dashboard, or navigate to **Time Tracking** and click Stop on the running entry.\n\n### Manual Time Entry\n\nIf you forgot to start a timer or worked offline, you can add time manually. In **Time Tracking**, click **Add Entry**, select the date, job, duration, and optionally add notes. Manual entries are flagged differently from timer-based entries.\n\n### Reviewing Your Hours\n\nThe Time Tracking page shows all your entries for the current week by default. Use the date range picker to see any time range. Your total hours are shown at the top. If your entries look wrong, contact your manager — entries can be corrected up until payroll is processed.","sections":[]}"""
+        };
+
+        var expenses = new TrainingModule
+        {
+            Title = "Submitting Expenses",
+            Slug = "submitting-expenses",
+            Summary = "A step-by-step walkthrough of creating an expense report and uploading a receipt.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Walkthrough,
+            EstimatedMinutes = 4,
+            IsPublished = true,
+            IsOnboardingRequired = true,
+            SortOrder = 6,
+            AppRoutes = """["/expenses"]""",
+            Tags = """["onboarding","expenses"]""",
+            ContentJson = """{"appRoute":"/expenses","startButtonLabel":"Walk Me Through It","steps":[{"element":"[data-tour='expenses-list']","popover":{"title":"Your Expense List","description":"This page shows all your submitted expenses. Each row shows the date, description, amount, and current approval status.","side":"bottom"}},{"element":"[data-tour='new-expense-btn']","popover":{"title":"New Expense Button","description":"Click 'New Expense' to open the expense form. You can also submit expenses on behalf of others if you have a Manager role.","side":"bottom"}},{"element":"[data-tour='expense-form-fields']","popover":{"title":"Expense Details","description":"Fill in the date, category, amount, and a brief description. Link the expense to a job if it's a project cost — this helps with job costing and QB sync.","side":"right"}},{"element":"[data-tour='receipt-upload']","popover":{"title":"Upload Your Receipt","description":"Drag and drop your receipt image or PDF here, or click to browse. Supported formats: JPG, PNG, PDF. Maximum 10MB.","side":"top"}},{"element":"[data-tour='submit-expense-btn']","popover":{"title":"Submit for Approval","description":"Click Submit to send your expense to your manager for approval. You'll get a notification when it's approved or if questions arise.","side":"top"}}]}"""
+        };
+
+        var onboardingQuiz = new TrainingModule
+        {
+            Title = "Onboarding Knowledge Check",
+            Slug = "onboarding-quiz",
+            Summary = "A short quiz to confirm you're ready to work in QB Engineer.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Quiz,
+            EstimatedMinutes = 5,
+            IsPublished = true,
+            IsOnboardingRequired = true,
+            SortOrder = 7,
+            AppRoutes = """["/training"]""",
+            Tags = """["onboarding","quiz"]""",
+            ContentJson = """{"passingScore":80,"questions":[{"id":"q1","text":"Where do you go to start a work timer for a specific job?","options":[{"id":"a","text":"The Reports page"},{"id":"b","text":"The job card on the Kanban Board or the Time Tracking page","isCorrect":true},{"id":"c","text":"The Admin panel"},{"id":"d","text":"The Backlog"}]},{"id":"q2","text":"You forgot to start your timer this morning. How do you record those hours?","options":[{"id":"a","text":"Ask your manager to add them"},{"id":"b","text":"You can't — timers only"},{"id":"c","text":"Add a manual time entry in the Time Tracking page","isCorrect":true},{"id":"d","text":"Edit the job description to include the hours"}]},{"id":"q3","text":"Which section shows all your required compliance forms (W-4, I-9, etc.)?","options":[{"id":"a","text":"Account → Tax Forms","isCorrect":true},{"id":"b","text":"Admin → Compliance"},{"id":"c","text":"Dashboard → Widgets"},{"id":"d","text":"Reports → Employee"}]},{"id":"q4","text":"You need to submit a $45 fuel expense for a job site visit. What should you do?","options":[{"id":"a","text":"Email your manager the receipt"},{"id":"b","text":"Go to Expenses, click New Expense, fill in the details, upload your receipt, and submit","isCorrect":true},{"id":"c","text":"Add a note to the job card"},{"id":"d","text":"Log it as a time entry"}]},{"id":"q5","text":"Where do you update your emergency contact information?","options":[{"id":"a","text":"Account → Emergency","isCorrect":true},{"id":"b","text":"Admin → Users"},{"id":"c","text":"Dashboard → Profile"},{"id":"d","text":"Settings → Notifications"}]}]}"""
+        };
+
+        // Path 2: Production Engineer Training
+        var kanbanBasics = new TrainingModule
+        {
+            Title = "Understanding the Kanban Board",
+            Slug = "kanban-board-basics",
+            Summary = "A guided tour of the production board, columns, cards, WIP limits, and filters.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Walkthrough,
+            EstimatedMinutes = 7,
+            IsPublished = true,
+            IsOnboardingRequired = false,
+            SortOrder = 1,
+            AppRoutes = """["/kanban","/board"]""",
+            Tags = """["kanban","jobs","engineering"]""",
+            ContentJson = """{"appRoute":"/kanban","startButtonLabel":"Tour the Board","steps":[{"element":"[data-tour='board-columns']","popover":{"title":"Board Columns","description":"Each column is a production stage. Jobs flow left to right as work progresses. The column header shows the stage name, the count of jobs, and the WIP limit if one is set.","side":"bottom"}},{"element":"[data-tour='board-filters']","popover":{"title":"Board Filters","description":"Use the filter bar to narrow the board by assignee, priority, customer, or date range. Filters are reflected in the URL so you can share or bookmark specific views.","side":"bottom"}},{"element":"[data-tour='job-card']","popover":{"title":"Job Cards","description":"Each card shows the job number, title, assignee avatar, priority indicator, and due date. A red due date means the job is overdue. A timer icon means someone is actively working on it.","side":"right"}},{"element":"[data-tour='wip-limit']","popover":{"title":"WIP Limits","description":"Column headers turn red when the job count exceeds the configured WIP limit. This is a visual signal to finish work before pulling more in.","side":"bottom"}},{"element":"[data-tour='track-type-switcher']","popover":{"title":"Track Type Switcher","description":"The board supports multiple track types: Production, R&D/Tooling, Maintenance, and custom types. Use the switcher to move between them.","side":"bottom"}}]}"""
+        };
+
+        var jobManagement = new TrainingModule
+        {
+            Title = "Creating and Managing Jobs",
+            Slug = "creating-managing-jobs",
+            Summary = "How to create jobs, move them through stages, assign them, and use bulk actions.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 8,
+            IsPublished = true,
+            SortOrder = 2,
+            AppRoutes = """["/kanban","/board","/backlog"]""",
+            Tags = """["kanban","jobs","engineering"]""",
+            ContentJson = """{"body":"## Creating and Managing Jobs\n\nJobs are the core unit of work in QB Engineer. Each job represents a discrete piece of work — a machining order, a tooling build, a maintenance task — and moves through stages from Quote to Payment.\n\n### Creating a Job\n\nClick **New Job** from the Kanban Board or Backlog. Fill in the job number (auto-generated if left blank), title, track type, starting stage, customer, assignee, due date, and priority. A job can also be linked to a part from your Parts Catalog.\n\n### Moving Jobs Between Stages\n\nDrag a job card from one column to the next. Some stage transitions are irreversible — once a job has an Invoice or Payment attached, it cannot move backward. The system will warn you before allowing a backward move on non-irreversible stages.\n\n### Assigning Jobs\n\nClick the assignee avatar on a job card and select a team member. Multiple people can work on a job, but only one is the primary assignee.\n\n### Bulk Actions\n\nCtrl+Click to select multiple job cards. A bulk action bar appears at the bottom of the board with options to Move, Assign, Set Priority, or Archive all selected jobs at once. This is useful for moving a batch of materials-received jobs into production.\n\n### Archiving vs. Deleting\n\nJobs are never deleted — they're archived. An archived job is removed from the board but remains in the system for reporting, billing, and traceability. Access archived jobs from the Backlog with the Archived filter enabled.\n\n### Priority System\n\nJobs can be marked Low, Normal, High, or Critical. High and Critical jobs get visual emphasis on the board — red/orange labels and sorting priority. Set priority from the job card menu or bulk action bar.","sections":[]}"""
+        };
+
+        var jobDetail = new TrainingModule
+        {
+            Title = "Job Detail: Notes, Files, and Subtasks",
+            Slug = "job-detail-panel",
+            Summary = "How to use the job detail panel to add notes, attach files, and create subtasks.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 5,
+            IsPublished = true,
+            SortOrder = 3,
+            AppRoutes = """["/kanban","/board"]""",
+            Tags = """["kanban","jobs"]""",
+            ContentJson = """{"body":"## Job Detail Panel\n\nClick any job card to open the detail panel on the right side of the screen. This panel gives you full visibility into the job without leaving the board.\n\n### Notes and Activity Log\n\nThe activity feed shows a chronological history of everything that has happened to the job: stage moves, field changes, file uploads, and comments. To add a note, type in the comment box at the bottom and press Enter. You can @mention a team member to send them a notification.\n\n### Attaching Files\n\nDrag and drop files directly onto the job detail panel, or click the attachment area to browse. Supported file types: PDF, images (JPG, PNG, TIFF), CAD files (STEP, IGES, DXF), and any other document type. Files are stored securely in MinIO object storage and accessible from the job detail at any time.\n\n### Subtasks\n\nSubtasks are smaller to-dos within a job. Click **Add Subtask** to create one. Each subtask can be assigned to a specific team member. Subtasks show on the job card as a progress indicator (e.g., 2/5 complete).\n\n### Linking Jobs\n\nA job can be linked to related jobs — for example, a tooling build linked to the production job it supports. Use the Links section in the detail panel to create Parent/Child or Blocked-By relationships.\n\n### Key Dates\n\nThe detail panel shows Start Date, Due Date, and Completed Date. Overdue jobs display their due date in red. The system records the completion date automatically when a job reaches a terminal stage like Payment Received.","sections":[]}"""
+        };
+
+        var partsCatalog = new TrainingModule
+        {
+            Title = "Parts Catalog Basics",
+            Slug = "parts-catalog-basics",
+            Summary = "How to navigate the parts catalog, read part records, and understand BOMs and process steps.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 6,
+            IsPublished = true,
+            SortOrder = 4,
+            AppRoutes = """["/parts"]""",
+            Tags = """["parts","bom","engineering"]""",
+            ContentJson = """{"body":"## Parts Catalog Basics\n\nThe Parts Catalog is the master reference for everything you manufacture or purchase. Each part record contains specifications, bill of materials (BOM), process steps, inventory levels, and revision history.\n\n### Navigating the Catalog\n\nGo to **Parts** in the sidebar. Use the search box to find parts by number, description, or material. Filter by status (Draft, Prototype, Active, Obsolete) or part type (Machined, Assembly, Purchased, Raw Material).\n\n### Part Record Overview\n\nA part record shows:\n- **Part Number and Revision** — e.g., PN-1042 Rev C\n- **Description and Material** — what it is and what it's made from\n- **Status** — Draft through Obsolete\n- **Estimated hours and cost** — used for job costing and quoting\n- **Linked Jobs** — jobs currently being run against this part\n\n### Bill of Materials (BOM)\n\nThe BOM tab shows all child components needed to make this part. Each BOM line has a quantity, source type (Make/Buy/Stock), and links to vendor or sub-part records. BOM changes are tracked with revisions — you can see what the BOM looked like at any revision.\n\n### Process Steps\n\nThe Process Steps tab shows the manufacturing routing — the ordered list of operations needed to produce the part (e.g., Saw → CNC Mill → Deburr → Anodize → Inspect). Each step has an estimated time. This drives job planning and scheduling.\n\n### Inventory Connection\n\nThe Inventory tab on each part shows current stock across all bin locations. When a job is created for a part, the system can suggest reserving stock from inventory if available.","sections":[]}"""
+        };
+
+        var partsQuickRef = new TrainingModule
+        {
+            Title = "Parts Quick Reference",
+            Slug = "parts-quick-reference",
+            Summary = "Quick reference card for part statuses, BOM source types, and common part catalog actions.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.QuickRef,
+            EstimatedMinutes = 2,
+            IsPublished = true,
+            SortOrder = 5,
+            AppRoutes = """["/parts"]""",
+            Tags = """["parts","reference"]""",
+            ContentJson = """{"title":"Parts Catalog Quick Reference","groups":[{"heading":"Part Statuses","items":[{"label":"Draft","value":"Part is being designed — not yet released to production"},{"label":"Prototype","value":"First article or sample stage — limited runs only"},{"label":"Active","value":"Released for regular production use"},{"label":"Obsolete","value":"No longer in production — preserved for reference and traceability"}]},{"heading":"BOM Source Types","items":[{"label":"Make","value":"Manufactured in-house — will generate a sub-job"},{"label":"Buy","value":"Purchased from vendor — will generate a PO line"},{"label":"Stock","value":"Pulled from internal inventory — will create a reservation"}]},{"heading":"Common Actions","items":[{"label":"New Part","value":"Parts page → New Part button (top-right)"},{"label":"New Revision","value":"Part detail → Revisions tab → New Revision"},{"label":"Add BOM Line","value":"Part detail → BOM tab → Add Component"},{"label":"Check Inventory","value":"Part detail → Inventory tab"},{"label":"Link to Job","value":"Job detail → Links section → Link Part"}]}]}"""
+        };
+
+        var backlogPlanning = new TrainingModule
+        {
+            Title = "Backlog and Planning",
+            Slug = "backlog-and-planning",
+            Summary = "How to use the backlog to manage unscheduled work and the planning cycle to commit jobs to sprints.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 6,
+            IsPublished = true,
+            SortOrder = 6,
+            AppRoutes = """["/backlog","/planning"]""",
+            Tags = """["backlog","planning","engineering"]""",
+            ContentJson = """{"body":"## Backlog and Planning\n\nThe Backlog holds all jobs that exist in the system but aren't currently active on the board. The Planning section lets you group jobs into two-week cycles — what gets committed to this cycle and what stays in the backlog.\n\n### The Backlog\n\nNavigate to **Backlog** to see all open jobs that aren't on the board, plus all archived and completed jobs. Filter by status, priority, customer, assignee, or track type. The backlog is where PMs and managers do triage: deciding what gets worked on next.\n\nFrom the backlog you can:\n- Create new jobs without placing them on the board immediately\n- Edit job details without moving them to the board\n- Move jobs to the board (drag to the Board section or use the Move action)\n- Archive jobs that are no longer relevant\n\n### Planning Cycles\n\nNavigate to **Planning** to see the current and upcoming cycles. A planning cycle is typically two weeks. The planning view has a split panel: the backlog on the left, the current cycle on the right.\n\nDrag jobs from the backlog into the cycle to commit them. Committed jobs appear on the board. At the end of a cycle, incomplete jobs roll over to the next cycle or return to the backlog.\n\n### Daily Prompts\n\nEach evening, the system may prompt you with 'What are your top 3 priorities for tomorrow?' These are lightweight reminders to plan your next day. They show on the Dashboard.","sections":[]}"""
+        };
+
+        var dashboard = new TrainingModule
+        {
+            Title = "Reading the Dashboard",
+            Slug = "reading-the-dashboard",
+            Summary = "What each dashboard widget shows and how to use it to stay on top of your work.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 4,
+            IsPublished = true,
+            SortOrder = 7,
+            AppRoutes = """["/dashboard"]""",
+            Tags = """["dashboard","engineering"]""",
+            ContentJson = """{"body":"## Reading the Dashboard\n\nThe Dashboard is your daily home base in QB Engineer. It aggregates the most important information from across the system into a single view.\n\n### Today's Tasks Widget\n\nShows all jobs assigned to you that are currently active on the board, sorted by due date. Jobs due today or overdue are highlighted. Click any task to open the job detail panel.\n\n### Active Timers\n\nIf you have a timer running, it shows prominently at the top with an elapsed time counter. Click Stop to stop the timer, or click the job name to open the detail panel.\n\n### Open Orders Widget\n\nShows a summary of all open jobs by stage: how many are in Quote, Production, QC, Shipped, and so on. This gives you a quick snapshot of shop load.\n\n### Cycle Progress Widget\n\nShows the current planning cycle's completion percentage. Completed jobs vs. total committed jobs. If you're mid-cycle and behind, this widget turns yellow.\n\n### Getting Started Banner\n\nNew users see a Getting Started banner that tracks onboarding progress. It disappears once you've completed your profile, compliance forms, and this training path.\n\n### Customizing Your Dashboard\n\nYou can rearrange dashboard widgets by dragging them. Your layout is saved to your user preferences and restored every time you log in, even from a different browser or device.","sections":[]}"""
+        };
+
+        var engineerQuiz = new TrainingModule
+        {
+            Title = "Production Engineer Assessment",
+            Slug = "production-engineer-quiz",
+            Summary = "An assessment covering kanban, job management, and parts catalog knowledge.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Quiz,
+            EstimatedMinutes = 8,
+            IsPublished = true,
+            SortOrder = 8,
+            AppRoutes = """["/training"]""",
+            Tags = """["engineering","quiz","assessment"]""",
+            ContentJson = """{"passingScore":75,"questions":[{"id":"q1","text":"A job card shows a red due date. What does this indicate?","options":[{"id":"a","text":"The job is completed"},{"id":"b","text":"The job is overdue — the due date has passed","isCorrect":true},{"id":"c","text":"The job has a critical priority"},{"id":"d","text":"The job is blocked"}]},{"id":"q2","text":"What does the WIP limit on a kanban column control?","options":[{"id":"a","text":"The maximum file size for job attachments"},{"id":"b","text":"How many users can be assigned to jobs in that column"},{"id":"c","text":"The recommended maximum number of jobs in that stage at one time","isCorrect":true},{"id":"d","text":"The number of subtasks per job"}]},{"id":"q3","text":"You need to move 8 jobs from Materials Received to In Production at once. What's the fastest way?","options":[{"id":"a","text":"Drag each card one by one"},{"id":"b","text":"Ctrl+Click to select all 8, then use the bulk Move action","isCorrect":true},{"id":"c","text":"Archive them and recreate them in the new stage"},{"id":"d","text":"Ask your manager to do it"}]},{"id":"q4","text":"A part has BOM source type 'Buy'. What does that mean?","options":[{"id":"a","text":"The part is manufactured in-house"},{"id":"b","text":"The part is pulled from internal inventory"},{"id":"c","text":"The part is purchased from a vendor and will generate a PO line","isCorrect":true},{"id":"d","text":"The part is being evaluated for purchase"}]},{"id":"q5","text":"A part is marked 'Obsolete'. What does this mean?","options":[{"id":"a","text":"The part was deleted from the system"},{"id":"b","text":"The part is no longer in production but is preserved for reference and traceability","isCorrect":true},{"id":"c","text":"The part has been transferred to another company"},{"id":"d","text":"The part needs to be redesigned"}]},{"id":"q6","text":"Where would you find the manufacturing routing (operation sequence) for a part?","options":[{"id":"a","text":"Part detail → BOM tab"},{"id":"b","text":"Part detail → Process Steps tab","isCorrect":true},{"id":"c","text":"Part detail → Inventory tab"},{"id":"d","text":"Job detail → Subtasks"}]},{"id":"q7","text":"You want to plan which jobs your team will work on for the next two weeks. Which feature do you use?","options":[{"id":"a","text":"Backlog filters"},{"id":"b","text":"Kanban swimlanes"},{"id":"c","text":"Planning Cycles — drag jobs from the backlog into the cycle","isCorrect":true},{"id":"d","text":"Reports → Scheduling"}]},{"id":"q8","text":"After completing a planning cycle, what happens to jobs that weren't finished?","options":[{"id":"a","text":"They are automatically archived"},{"id":"b","text":"They are deleted"},{"id":"c","text":"They roll over to the next cycle or return to the backlog","isCorrect":true},{"id":"d","text":"They are reassigned to a manager"}]}]}"""
+        };
+
+        // Standalone modules
+        var reportsModule = new TrainingModule
+        {
+            Title = "Reports and Analytics",
+            Slug = "reports-and-analytics",
+            Summary = "How to use the report builder, run pre-built reports, and save custom report templates.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 5,
+            IsPublished = true,
+            SortOrder = 1,
+            AppRoutes = """["/reports"]""",
+            Tags = """["reports","analytics"]""",
+            ContentJson = """{"body":"## Reports and Analytics\n\nThe Reports module gives you access to 27 pre-built report templates covering jobs, time, expenses, parts, inventory, financials, and more. You can also build fully custom reports using the drag-and-drop report builder.\n\n### Pre-Built Reports\n\nNavigate to **Reports** to see all available reports grouped by category. Click any report name to run it immediately with default filters. Common reports include:\n\n- **Job Summary** — all jobs with status, stage, customer, assignee, and elapsed time\n- **Time by Job** — total hours per job for a date range\n- **Expense Report** — all expenses by employee or category\n- **Parts Inventory** — current stock levels across all locations\n- **AR Aging** — outstanding invoice balances by age bucket\n\n### Custom Report Builder\n\nClick **New Report** to open the builder. Select a data source (Jobs, Parts, Time Entries, Expenses, etc.) and choose which fields to include as columns. Add filters, sorting, and grouping. Run the report to preview results.\n\n### Saving Reports\n\nOnce you've configured a report you want to reuse, click **Save**. Give it a name and optionally set a description. Saved reports appear in your list and can be shared with your team.\n\n### Exporting\n\nAny report can be exported to CSV or printed directly from the browser. PDF export is available for formatted reports like expense summaries and job summaries.","sections":[]}"""
+        };
+
+        var purchaseOrdersModule = new TrainingModule
+        {
+            Title = "Purchase Orders and Receiving",
+            Slug = "purchase-orders-and-receiving",
+            Summary = "How to create purchase orders, track vendor deliveries, and receive items into inventory.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 6,
+            IsPublished = true,
+            SortOrder = 2,
+            AppRoutes = """["/purchase-orders"]""",
+            Tags = """["purchasing","inventory"]""",
+            ContentJson = """{"body":"## Purchase Orders and Receiving\n\nPurchase Orders (POs) track what you've ordered from vendors, what's been received, and what's still outstanding. QB Engineer creates POs manually or automatically when a job's BOM has 'Buy' components.\n\n### Creating a Purchase Order\n\nNavigate to **Purchase Orders** and click **New PO**. Select the vendor, add line items (part number, description, quantity, unit price), set the expected delivery date, and submit. POs sync to QuickBooks as vendor bills when received.\n\n### PO Statuses\n\n- **Draft** — being built, not yet sent to vendor\n- **Sent** — transmitted to vendor, awaiting delivery\n- **Partially Received** — some items have arrived\n- **Received** — all items have been received\n- **Cancelled** — order was cancelled\n\n### Receiving Items\n\nWhen a delivery arrives, open the PO and click **Receive**. The receiving dialog shows each line with an expected quantity. Enter the actual quantity received (which may be partial). The system records the receipt, updates inventory, and marks the PO line as received or partially received.\n\n### Linking POs to Jobs\n\nWhen you create a PO from a job's BOM, the PO lines are linked to the job. The job's materials stage automatically updates when all linked POs are fully received. This drives the Materials Ordered → Materials Received stage transition on the kanban board.","sections":[]}"""
+        };
+
+        var adminUsersModule = new TrainingModule
+        {
+            Title = "Admin: Managing Users and Roles",
+            Slug = "admin-users-and-roles",
+            Summary = "For admins and managers: how to create users, assign roles, configure kiosk access, and manage teams.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+            EstimatedMinutes = 7,
+            IsPublished = true,
+            SortOrder = 3,
+            AppRoutes = """["/admin"]""",
+            Tags = """["admin"]""",
+            ContentJson = """{"body":"## Admin: Managing Users and Roles\n\nUser management in QB Engineer is handled through the Admin panel. Only users with the Admin or Manager role can access this area.\n\n### Creating a New User\n\nNavigate to **Admin → Users** and click **New User**. Fill in the user's name, email address, and role. Do NOT set a password — the system generates a secure setup token and emails it to the new user. The employee follows the link to set their own password and complete their account.\n\n### Roles\n\nQB Engineer uses additive roles:\n\n- **Engineer** — kanban board, assigned work, time tracking, expenses, files\n- **Production Worker** — simplified task list, start/stop timer, move cards, notes\n- **PM** — backlog, planning, leads, reporting (read-only board)\n- **Manager** — everything PM + assign work, approve expenses, set priorities\n- **Office Manager** — customer/vendor, invoice queue, employee documents\n- **Admin** — everything + user management, roles, system settings, track types\n\n### Kiosk Auth (Badge + PIN)\n\nFor shop floor workers who don't use a computer, enable Tier 2 kiosk authentication. In the user's profile, assign an employee barcode (printed on their badge). The worker scans their badge at a kiosk terminal and enters a 4–6 digit PIN to clock in, start timers, and move jobs.\n\n### Teams\n\nOrganize users into teams under **Admin → Teams**. Teams are used for filtered board views (swimlanes by team), workload reporting, and shift scheduling.\n\n### Deactivating Users\n\nWhen an employee leaves, deactivate their account from Admin → Users. Deactivated users cannot log in but all their historical data (jobs, time entries, expenses) is preserved.","sections":[]}"""
+        };
+
+        db.TrainingModules.AddRange(
+            welcome, navigating, profileSetup, compliance, timeTracking, expenses, onboardingQuiz,
+            kanbanBasics, jobManagement, jobDetail, partsCatalog, partsQuickRef, backlogPlanning, dashboard, engineerQuiz,
+            reportsModule, purchaseOrdersModule, adminUsersModule
+        );
+        await db.SaveChangesAsync();
+
+        // ── Training Paths ────────────────────────────────────────────────
+        if (!await db.TrainingPaths.AnyAsync())
+        {
+            var onboardingPath = new TrainingPath
+            {
+                Title = "New Employee Onboarding",
+                Slug = "new-employee-onboarding",
+                Description = "Everything a new employee needs to get started: profile setup, compliance forms, time tracking, and expenses.",
+                Icon = "waving_hand",
+                IsAutoAssigned = true,
+                IsActive = true,
+                SortOrder = 1,
+            };
+
+            var engineerPath = new TrainingPath
+            {
+                Title = "Production Engineer Training",
+                Slug = "production-engineer-training",
+                Description = "Core training for production engineers: kanban board, job management, parts catalog, backlog, and planning.",
+                Icon = "engineering",
+                IsAutoAssigned = true,
+                IsActive = true,
+                SortOrder = 2,
+                AllowedRoles = """["Admin","Manager","Engineer"]""",
+            };
+
+            db.TrainingPaths.AddRange(onboardingPath, engineerPath);
+            await db.SaveChangesAsync();
+
+            // ── Path-Module Associations ──────────────────────────────────
+            var onboardingModules = new[]
+            {
+                (welcome.Id, 1), (navigating.Id, 2), (profileSetup.Id, 3),
+                (compliance.Id, 4), (timeTracking.Id, 5), (expenses.Id, 6), (onboardingQuiz.Id, 7)
+            };
+
+            foreach (var (moduleId, position) in onboardingModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = onboardingPath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+
+            var engineerModules = new[]
+            {
+                (kanbanBasics.Id, 1), (jobManagement.Id, 2), (jobDetail.Id, 3),
+                (partsCatalog.Id, 4), (partsQuickRef.Id, 5), (backlogPlanning.Id, 6),
+                (dashboard.Id, 7), (engineerQuiz.Id, 8)
+            };
+
+            foreach (var (moduleId, position) in engineerModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = engineerPath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+
+            await db.SaveChangesAsync();
+            Log.Information("Seeded training paths and {Count} path-module associations", onboardingModules.Length + engineerModules.Length);
+        }
+
+        Log.Information("Seeded {Count} training modules", 18);
     }
 
     private static async Task<ApplicationUser> EnsureUserAsync(

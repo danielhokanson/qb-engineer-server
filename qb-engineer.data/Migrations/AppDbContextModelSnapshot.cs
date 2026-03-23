@@ -8504,6 +8504,472 @@ namespace QBEngineer.Data.Migrations
                 {
                     b.Navigation("PurchaseOrders");
                 });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingModule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AppRoutes")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("app_routes");
+
+                    b.Property<string>("ContentJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("content_json");
+
+                    b.Property<int>("ContentType")
+                        .HasColumnType("integer")
+                        .HasColumnName("content_type");
+
+                    b.Property<string>("CoverImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cover_image_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int>("EstimatedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_minutes");
+
+                    b.Property<bool>("IsOnboardingRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_onboarding_required");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_published");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("slug");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("summary");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("tags");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_training_modules");
+
+                    b.HasIndex("CreatedByUserId")
+                        .HasDatabaseName("ix_training_modules_created_by_user_id");
+
+                    b.HasIndex("IsOnboardingRequired")
+                        .HasDatabaseName("ix_training_modules_is_onboarding_required");
+
+                    b.HasIndex("IsPublished")
+                        .HasDatabaseName("ix_training_modules_is_published");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ix_training_modules_slug");
+
+                    b.ToTable("training_modules");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingPath", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AllowedRoles")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("allowed_roles");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("icon");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsAutoAssigned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_auto_assigned");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("slug");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_training_paths");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ix_training_paths_slug");
+
+                    b.ToTable("training_paths");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingPathModule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer")
+                        .HasColumnName("module_id");
+
+                    b.Property<int>("PathId")
+                        .HasColumnType("integer")
+                        .HasColumnName("path_id");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_training_path_modules");
+
+                    b.HasIndex("ModuleId")
+                        .HasDatabaseName("ix_training_path_modules_module_id");
+
+                    b.HasIndex("PathId", "Position")
+                        .HasDatabaseName("ix_training_path_modules_path_id_position");
+
+                    b.ToTable("training_path_modules");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingPathEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("assigned_by_user_id");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsAutoAssigned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_auto_assigned");
+
+                    b.Property<int>("PathId")
+                        .HasColumnType("integer")
+                        .HasColumnName("path_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_training_path_enrollments");
+
+                    b.HasIndex("AssignedByUserId")
+                        .HasDatabaseName("ix_training_path_enrollments_assigned_by_user_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_training_path_enrollments_user_id");
+
+                    b.HasIndex("UserId", "PathId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_training_path_enrollments_user_id_path_id");
+
+                    b.ToTable("training_path_enrollments");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer")
+                        .HasColumnName("module_id");
+
+                    b.Property<string>("QuizAnswersJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("quiz_answers_json");
+
+                    b.Property<int?>("QuizAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("quiz_attempts");
+
+                    b.Property<int?>("QuizScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("quiz_score");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TimeSpentSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("time_spent_seconds");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<int?>("WalkthroughStepReached")
+                        .HasColumnType("integer")
+                        .HasColumnName("walkthrough_step_reached");
+
+                    b.HasKey("Id")
+                        .HasName("pk_training_progress");
+
+                    b.HasIndex("ModuleId")
+                        .HasDatabaseName("ix_training_progress_module_id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_training_progress_status");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_training_progress_user_id");
+
+                    b.HasIndex("UserId", "ModuleId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_training_progress_user_id_module_id");
+
+                    b.ToTable("training_progress");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingModule", b =>
+                {
+                    b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_training_modules_asp_net_users_created_by_user_id");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingPathModule", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.TrainingModule", "Module")
+                        .WithMany("PathModules")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_training_path_modules_training_modules_module_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.TrainingPath", "Path")
+                        .WithMany("PathModules")
+                        .HasForeignKey("PathId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_training_path_modules_training_paths_path_id");
+
+                    b.Navigation("Module");
+
+                    b.Navigation("Path");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingPathEnrollment", b =>
+                {
+                    b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_training_path_enrollments_asp_net_users_assigned_by_user_id");
+
+                    b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_training_path_enrollments_asp_net_users_user_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.TrainingPath", "Path")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("PathId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_training_path_enrollments_training_paths_path_id");
+
+                    b.Navigation("Path");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingProgress", b =>
+                {
+                    b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_training_progress_asp_net_users_user_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.TrainingModule", "Module")
+                        .WithMany("ProgressRecords")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_training_progress_training_modules_module_id");
+
+                    b.Navigation("Module");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingModule", b =>
+                {
+                    b.Navigation("PathModules");
+
+                    b.Navigation("ProgressRecords");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.TrainingPath", b =>
+                {
+                    b.Navigation("Enrollments");
+
+                    b.Navigation("PathModules");
+                });
+
 #pragma warning restore 612, 618
         }
     }

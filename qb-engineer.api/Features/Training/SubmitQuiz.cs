@@ -1,0 +1,157 @@
+using System.Text.Json;
+
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+
+using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
+using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+
+namespace QBEngineer.Api.Features.Training;
+
+public record SubmitQuizCommand(int UserId, int ModuleId, List<QuizAnswerModel> Answers)
+    : IRequest<QuizSubmissionResponseModel>;
+
+public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizCommand, QuizSubmissionResponseModel>
+{
+    public async Task<QuizSubmissionResponseModel> Handle(SubmitQuizCommand request, CancellationToken ct)
+    {
+        var module = await db.TrainingModules.AsNoTracking().FirstOrDefaultAsync(m => m.Id == request.ModuleId, ct)
+            ?? throw new KeyNotFoundException($"Training module {request.ModuleId} not found.");
+
+        if (module.ContentType != TrainingContentType.Quiz)
+            throw new InvalidOperationException("Module is not a quiz.");
+
+        var content = ParseQuizContent(module.ContentJson);
+        var answerMap = request.Answers.ToDictionary(a => a.QuestionId, a => a.OptionId);
+
+        var correctCount = 0;
+        var scoredQuestions = new List<QuizScoredQuestionModel>();
+
+        foreach (var question in content.Questions)
+        {
+            var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
+            if (correctOption is null) continue;
+
+            answerMap.TryGetValue(question.Id, out var givenOptionId);
+            var isCorrect = givenOptionId == correctOption.Id;
+            if (isCorrect) correctCount++;
+
+            scoredQuestions.Add(new QuizScoredQuestionModel(
+                question.Id,
+                isCorrect,
+                correctOption.Id,
+                question.Explanation
+            ));
+        }
+
+        var totalQuestions = content.Questions.Count(q => q.Options.Any(o => o.IsCorrect));
+        var score = totalQuestions > 0 ? (int)Math.Round((double)correctCount / totalQuestions * 100) : 0;
+        var passed = score >= content.PassingScore;
+
+        // Upsert progress
+        var progress = await db.TrainingProgress
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId && p.ModuleId == request.ModuleId, ct);
+
+        var answersJson = JsonSerializer.Serialize(request.Answers);
+
+        if (progress is null)
+        {
+            progress = new TrainingProgress
+            {
+                UserId = request.UserId,
+                ModuleId = request.ModuleId,
+                Status = passed ? TrainingProgressStatus.Completed : TrainingProgressStatus.InProgress,
+                StartedAt = DateTime.UtcNow,
+                CompletedAt = passed ? DateTime.UtcNow : null,
+                QuizScore = score,
+                QuizAttempts = 1,
+                QuizAnswersJson = answersJson,
+            };
+            db.TrainingProgress.Add(progress);
+        }
+        else
+        {
+            progress.QuizScore = score;
+            progress.QuizAttempts = (progress.QuizAttempts ?? 0) + 1;
+            progress.QuizAnswersJson = answersJson;
+
+            if (passed && progress.Status != TrainingProgressStatus.Completed)
+            {
+                progress.Status = TrainingProgressStatus.Completed;
+                progress.CompletedAt ??= DateTime.UtcNow;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        // If passed, check enrollment completion
+        if (passed)
+            await CheckAndCompleteEnrollmentsAsync(request.UserId, ct);
+
+        return new QuizSubmissionResponseModel(score, passed, scoredQuestions.ToArray());
+    }
+
+    private async Task CheckAndCompleteEnrollmentsAsync(int userId, CancellationToken ct)
+    {
+        var enrollments = await db.TrainingPathEnrollments
+            .Include(e => e.Path)
+                .ThenInclude(p => p.PathModules)
+            .Where(e => e.UserId == userId && e.CompletedAt == null)
+            .ToListAsync(ct);
+
+        if (enrollments.Count == 0) return;
+
+        var allRequiredModuleIds = enrollments
+            .SelectMany(e => e.Path.PathModules.Where(pm => pm.IsRequired).Select(pm => pm.ModuleId))
+            .Distinct()
+            .ToList();
+
+        var completedModuleIds = await db.TrainingProgress
+            .Where(p => p.UserId == userId
+                        && allRequiredModuleIds.Contains(p.ModuleId)
+                        && p.Status == TrainingProgressStatus.Completed)
+            .Select(p => p.ModuleId)
+            .ToListAsync(ct);
+
+        var completedSet = new HashSet<int>(completedModuleIds);
+        var now = DateTime.UtcNow;
+        var anyChanged = false;
+
+        foreach (var enrollment in enrollments)
+        {
+            var requiredIds = enrollment.Path.PathModules
+                .Where(pm => pm.IsRequired)
+                .Select(pm => pm.ModuleId)
+                .ToList();
+
+            if (requiredIds.Count > 0 && requiredIds.All(id => completedSet.Contains(id)))
+            {
+                enrollment.CompletedAt = now;
+                anyChanged = true;
+            }
+        }
+
+        if (anyChanged)
+            await db.SaveChangesAsync(ct);
+    }
+
+    private static QuizContent ParseQuizContent(string contentJson)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<QuizContent>(contentJson,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? new QuizContent([], 70);
+        }
+        catch
+        {
+            return new QuizContent([], 70);
+        }
+    }
+
+    private record QuizContent(List<QuizQuestion> Questions, int PassingScore);
+    private record QuizQuestion(string Id, string Text, List<QuizOption> Options, string? Explanation);
+    private record QuizOption(string Id, string Text, bool IsCorrect);
+}

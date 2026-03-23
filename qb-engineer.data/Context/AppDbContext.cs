@@ -153,6 +153,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<PayStubDeduction> PayStubDeductions => Set<PayStubDeduction>();
     public DbSet<TaxDocument> TaxDocuments => Set<TaxDocument>();
 
+    // Training
+    public DbSet<TrainingModule> TrainingModules => Set<TrainingModule>();
+    public DbSet<TrainingPath> TrainingPaths => Set<TrainingPath>();
+    public DbSet<TrainingPathModule> TrainingPathModules => Set<TrainingPathModule>();
+    public DbSet<TrainingPathEnrollment> TrainingPathEnrollments => Set<TrainingPathEnrollment>();
+    public DbSet<TrainingProgress> TrainingProgress => Set<TrainingProgress>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

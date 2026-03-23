@@ -1,0 +1,175 @@
+using System.Security.Claims;
+
+using MediatR;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+using QBEngineer.Api.Features.Training;
+using QBEngineer.Core.Models;
+
+namespace QBEngineer.Api.Controllers;
+
+[ApiController]
+[Route("api/v1/training")]
+[Authorize]
+public class TrainingController(IMediator mediator) : ControllerBase
+{
+    private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private bool IsAdmin() => User.IsInRole("Admin");
+
+    // Modules
+
+    [HttpGet("modules")]
+    public async Task<ActionResult<TrainingPaginatedResult<TrainingModuleListItemResponseModel>>> GetModules(
+        [FromQuery] string? search = null,
+        [FromQuery] string? contentType = null,
+        [FromQuery] string? tag = null,
+        [FromQuery] bool includeUnpublished = false,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(
+            new GetTrainingModulesQuery(GetUserId(), IsAdmin(), search, contentType, tag, includeUnpublished, page, pageSize), ct);
+        return Ok(result);
+    }
+
+    // Must be declared BEFORE {id:int} to avoid routing conflict
+    [HttpGet("modules/by-route")]
+    public async Task<ActionResult<List<TrainingModuleListItemResponseModel>>> GetModulesByRoute(
+        [FromQuery] string route,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetModulesByRouteQuery(route, GetUserId()), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("modules/{id:int}")]
+    public async Task<ActionResult<TrainingModuleDetailResponseModel>> GetModule(int id, CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetTrainingModuleQuery(id, GetUserId(), IsAdmin()), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("modules")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<TrainingModuleDetailResponseModel>> CreateModule(
+        [FromBody] CreateTrainingModuleRequestModel model,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new CreateTrainingModuleCommand(
+            model.Title, model.Slug, model.Summary, model.ContentType, model.ContentJson,
+            model.CoverImageUrl, model.EstimatedMinutes, model.Tags, model.AppRoutes,
+            model.IsPublished, model.IsOnboardingRequired, model.SortOrder, GetUserId()), ct);
+        return CreatedAtAction(nameof(GetModule), new { id = result.Id }, result);
+    }
+
+    [HttpPut("modules/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<TrainingModuleDetailResponseModel>> UpdateModule(
+        int id,
+        [FromBody] UpdateTrainingModuleRequestModel model,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new UpdateTrainingModuleCommand(
+            id, model.Title, model.Slug, model.Summary, model.ContentType, model.ContentJson,
+            model.CoverImageUrl, model.EstimatedMinutes, model.Tags, model.AppRoutes,
+            model.IsPublished, model.IsOnboardingRequired, model.SortOrder), ct);
+        return Ok(result);
+    }
+
+    [HttpDelete("modules/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteModule(int id, CancellationToken ct = default)
+    {
+        await mediator.Send(new DeleteTrainingModuleCommand(id), ct);
+        return NoContent();
+    }
+
+    // Paths
+
+    [HttpGet("paths")]
+    public async Task<ActionResult<List<TrainingPathResponseModel>>> GetPaths(CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetTrainingPathsQuery(GetUserId(), IsAdmin()), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("paths/{id:int}")]
+    public async Task<ActionResult<TrainingPathResponseModel>> GetPath(int id, CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetTrainingPathQuery(id, GetUserId(), IsAdmin()), ct);
+        return Ok(result);
+    }
+
+    // Enrollments
+
+    [HttpPost("enrollments")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EnrollUser([FromBody] EnrollUserRequestModel model, CancellationToken ct = default)
+    {
+        await mediator.Send(new EnrollUserCommand(model.UserId, model.PathId, GetUserId()), ct);
+        return NoContent();
+    }
+
+    // My endpoints
+
+    [HttpGet("my-enrollments")]
+    public async Task<ActionResult<List<TrainingEnrollmentResponseModel>>> GetMyEnrollments(CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetMyEnrollmentsQuery(GetUserId()), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("my-progress")]
+    public async Task<ActionResult<List<TrainingProgressResponseModel>>> GetMyProgress(CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetMyProgressQuery(GetUserId()), ct);
+        return Ok(result);
+    }
+
+    // Progress tracking
+
+    [HttpPost("progress/{moduleId:int}/start")]
+    public async Task<IActionResult> StartModule(int moduleId, CancellationToken ct = default)
+    {
+        await mediator.Send(new RecordModuleStartCommand(GetUserId(), moduleId), ct);
+        return NoContent();
+    }
+
+    [HttpPost("progress/{moduleId:int}/heartbeat")]
+    public async Task<IActionResult> Heartbeat(int moduleId, [FromBody] HeartbeatRequestModel model, CancellationToken ct = default)
+    {
+        await mediator.Send(new RecordProgressHeartbeatCommand(GetUserId(), moduleId, model.Seconds), ct);
+        return NoContent();
+    }
+
+    [HttpPost("progress/{moduleId:int}/complete")]
+    public async Task<IActionResult> CompleteModule(int moduleId, CancellationToken ct = default)
+    {
+        await mediator.Send(new CompleteModuleCommand(GetUserId(), moduleId), ct);
+        return NoContent();
+    }
+
+    [HttpPost("progress/{moduleId:int}/submit-quiz")]
+    public async Task<ActionResult<QuizSubmissionResponseModel>> SubmitQuiz(
+        int moduleId,
+        [FromBody] SubmitQuizRequestModel model,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new SubmitQuizCommand(GetUserId(), moduleId, model.Answers), ct);
+        return Ok(result);
+    }
+
+    // Admin
+
+    [HttpGet("admin/progress-summary")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<List<TrainingAdminProgressSummaryResponseModel>>> GetAdminProgressSummary(
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetAdminProgressSummaryQuery(), ct);
+        return Ok(result);
+    }
+}
