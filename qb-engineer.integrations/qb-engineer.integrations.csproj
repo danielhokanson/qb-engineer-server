@@ -9,7 +9,8 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
     <PackageReference Include="Minio" Version="7.0.0" />
-<PackageReference Include="PuppeteerSharp" Version="24.39.0" />
+<PackageReference Include="Microsoft.Playwright" Version="1.50.0" />
+    <PackageReference Include="PuppeteerSharp" Version="24.39.0" />
     <PackageReference Include="SkiaSharp" Version="3.116.1" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
   </ItemGroup>
@@ -19,6 +20,8 @@
     <RootNamespace>QBEngineer.Integrations</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Skip auto-download of Playwright browsers — we provide ExecutablePath at runtime -->
+    <PlaywrightSkipInstall>true</PlaywrightSkipInstall>
   </PropertyGroup>
 
 </Project>

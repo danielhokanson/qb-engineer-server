@@ -18,6 +18,11 @@ public class TrainingModule : BaseAuditableEntity
     public int SortOrder { get; set; }
     public int? CreatedByUserId { get; set; }
 
+    // AI-generated video
+    public VideoGenerationStatus VideoGenerationStatus { get; set; } = VideoGenerationStatus.None;
+    public string? VideoGenerationError { get; set; }
+    public string? VideoMinioKey { get; set; }
+
     public ICollection<TrainingPathModule> PathModules { get; set; } = [];
     public ICollection<TrainingProgress> ProgressRecords { get; set; } = [];
 }

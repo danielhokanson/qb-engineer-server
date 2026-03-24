@@ -8590,6 +8590,18 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<int>("VideoGenerationStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("video_generation_status");
+
+                    b.Property<string>("VideoGenerationError")
+                        .HasColumnType("text")
+                        .HasColumnName("video_generation_error");
+
+                    b.Property<string>("VideoMinioKey")
+                        .HasColumnType("text")
+                        .HasColumnName("video_minio_key");
+
                     b.HasKey("Id")
                         .HasName("pk_training_modules");
 

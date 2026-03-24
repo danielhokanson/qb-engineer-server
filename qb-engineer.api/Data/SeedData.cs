@@ -934,6 +934,7 @@ public static class SeedData
 
         // ── Training Modules & Paths ──────────────────────────────────────
         await SeedTrainingAsync(db);
+        await SeedAdditionalTrainingPathsAsync(db);
     }
 
     private static async Task SeedTrainingAsync(AppDbContext db)
@@ -1205,10 +1206,97 @@ public static class SeedData
             ContentJson = """{"body":"## Admin: Managing Users and Roles\n\nUser management in QB Engineer is handled through the Admin panel. Only users with the Admin or Manager role can access this area.\n\n### Creating a New User\n\nNavigate to **Admin → Users** and click **New User**. Fill in the user's name, email address, and role. Do NOT set a password — the system generates a secure setup token and emails it to the new user. The employee follows the link to set their own password and complete their account.\n\n### Roles\n\nQB Engineer uses additive roles:\n\n- **Engineer** — kanban board, assigned work, time tracking, expenses, files\n- **Production Worker** — simplified task list, start/stop timer, move cards, notes\n- **PM** — backlog, planning, leads, reporting (read-only board)\n- **Manager** — everything PM + assign work, approve expenses, set priorities\n- **Office Manager** — customer/vendor, invoice queue, employee documents\n- **Admin** — everything + user management, roles, system settings, track types\n\n### Kiosk Auth (Badge + PIN)\n\nFor shop floor workers who don't use a computer, enable Tier 2 kiosk authentication. In the user's profile, assign an employee barcode (printed on their badge). The worker scans their badge at a kiosk terminal and enters a 4–6 digit PIN to clock in, start timers, and move jobs.\n\n### Teams\n\nOrganize users into teams under **Admin → Teams**. Teams are used for filtered board views (swimlanes by team), workload reporting, and shift scheduling.\n\n### Deactivating Users\n\nWhen an employee leaves, deactivate their account from Admin → Users. Deactivated users cannot log in but all their historical data (jobs, time entries, expenses) is preserved.","sections":[]}"""
         };
 
+        // ── Video Modules ──────────────────────────────────────────────────
+        // Manuscripts: docs/training-videos/0N-*.md — source of truth for regeneration
+        var videoKanbanOverview = new TrainingModule
+        {
+            Title = "Kanban Board: Video Overview",
+            Slug = "video-kanban-board-overview",
+            Summary = "A comprehensive video walkthrough of the kanban board — spatial orientation, stages, cards, filters, swimlanes, bulk actions, and creating jobs.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Video,
+            EstimatedMinutes = 12,
+            IsPublished = true,
+            SortOrder = 10,
+            AppRoutes = """["/board"]""",
+            Tags = """["kanban","jobs","video","overview"]""",
+            ContentJson = """{"embedUrl":"https://www.youtube.com/embed/YE7VzlLtp-4","appRoute":"/board","chaptersJson":[{"timeSeconds":0,"label":"Board Overview"},{"timeSeconds":45,"label":"Stages and Flow"},{"timeSeconds":110,"label":"Reading Job Cards"},{"timeSeconds":175,"label":"Job Detail Panel"},{"timeSeconds":255,"label":"Moving Jobs"},{"timeSeconds":340,"label":"Lock Indicators"},{"timeSeconds":415,"label":"Filters"},{"timeSeconds":490,"label":"Swimlane View"},{"timeSeconds":560,"label":"Bulk Actions"},{"timeSeconds":635,"label":"Creating a Job"}],"transcript":"Welcome to the QB Engineer kanban board. Take a moment to orient yourself spatially — you are looking at a grid of vertical columns stretching from left to right. Each column is a production stage, and every active job in your shop lives here, moving from left to right as work progresses. Reading the column headers from left to right, you see the full lifecycle of a job: Quote Requested, Quoted, Order Confirmed, Materials Ordered, Materials Received, In Production, QC Review, Shipped, Invoiced, and Payment Received. Colors serve a purpose — every job card inherits the color of its current stage, making it easy to spot where work is concentrated at a glance. Each card shows the job number, customer name, priority indicator, and due date. Overdue dates turn red. A pulsing timer means someone is actively clocking time. A paperclip means files are attached. Click any card to open its detail panel — it slides in from the right without leaving the board. Inside you find the customer contact, linked part, associated documents, a subtask checklist, file attachments, and a complete activity log. Moving jobs is simple: drag a card to a new column, or use the status dropdown in the detail panel. Both methods update everyone's board in real time. Watch out for lock indicators on the final columns — Invoiced and Payment Received cannot be reversed because financial documents already exist. The filter toolbar narrows the board when it gets crowded. Filter by assignee, priority, customer, or date range. Combine filters to focus precisely. Switch to swimlane mode to see workload grouped by team or individual — essential for managers spotting imbalance. Multi-select lets you Ctrl-click multiple cards and apply one action to all at once. Finally, creating a job takes seconds: click New Job, fill in customer and title, and the card appears immediately.","steps":[{"popover":{"title":"Board Overview","description":"Welcome to the QB Engineer kanban board. Before clicking anything, take a moment to orient yourself spatially. You are looking at a grid of vertical columns. Each column is a production stage. Reading from left to right, these stages trace the life of a job — from the first customer conversation, through fabrication, all the way to the moment payment arrives. Work flows left to right. Every active job in your shop lives on this board."}},{"element":"app-board-column:first-child","popover":{"title":"Stages and Flow","description":"Look at the column headers. Each has a name and a color. Colors serve a purpose — every job card inherits the color of its current stage, so you can spot where work is concentrated at a glance. The default stages, left to right, are: Quote Requested, Quoted, Order Confirmed, Materials Ordered, Materials Received, In Production, QC Review, Shipped, Invoiced, and Payment Received. Your shop may have renamed some of these — that is configurable. What you cannot change is the direction: work always flows left to right."}},{"element":"app-job-card","popover":{"title":"Reading Job Cards","description":"Each rectangle is a job card. At the top is the job number — your unique identifier. Below that is the customer name. On the right edge is the priority indicator: Urgent in red, High in orange, Normal in blue, Low in grey. Near the bottom is the due date — red if overdue. A pulsing timer icon means someone has a timer running on this job right now. A paperclip means files are attached. These visual cues let you read the board's status in seconds without opening a single card."}},{"element":"app-job-card","popover":{"title":"Job Detail Panel","description":"Click any card to open its detail panel. Notice it slides in from the right — you have not navigated away. The board stays visible behind it. Inside the panel you will find: the full customer contact, the linked part number, associated documents like quotes and sales orders, a subtask checklist, a file attachments section, and a complete activity log at the bottom showing every change ever made — who moved it, who changed priority, who added a note and exactly when. Close it with the X button or press Escape."}},{"element":"app-board-column:nth-child(3)","popover":{"title":"Moving Jobs","description":"Two ways to move a job. Method one: drag and drop — click, hold, drag horizontally to the target column, release. The card snaps into place. Method two: open the detail panel and use the stage dropdown near the top — select a new stage and the job moves instantly. Both methods update everyone's board in real time. If WIP limits are configured on a column, exceeding the limit turns the column header red as a warning. You can still complete the move."}},{"element":"app-board-column:last-child app-kanban-column-header","popover":{"title":"Lock Indicators","description":"Look at the final columns — Invoiced and Payment Received. Notice the small lock icon on their headers. These are irreversible stages. Once a job enters an irreversible stage it cannot be dragged backward. Why? Because financial documents already exist — an invoice was sent, or a payment was recorded. Moving backward would create a mismatch between your board and your accounting records. If a correction is needed, archive the job, handle the correction in QuickBooks, and create a replacement job if work must continue."}},{"element":"app-kanban app-toolbar","popover":{"title":"Filters","description":"The filter toolbar across the top of the board focuses the view when it gets crowded. Filter by assignee to see only jobs assigned to a specific person. Filter by priority to surface urgent items. Filter by customer to see all open work for a given account. Filter by date range to focus on what is due this week. All filters are additive — combine assignee plus priority to see that person's urgent jobs only. A badge shows how many filters are active. Click Reset All to clear everything."}},{"element":"app-kanban app-toolbar","popover":{"title":"Swimlane View","description":"Switch between card mode and swimlane mode using the view toggle in the toolbar. In swimlane mode the board adds horizontal rows — one per team or one per assignee. Each row shows that person's cards across all stages. This is the manager view for spotting workload imbalance. If one engineer's row is packed while another is sparse, you can see it immediately and reassign. Swimlane rows collapse individually. All filters work the same way in swimlane mode."}},{"element":"app-job-card","popover":{"title":"Bulk Actions","description":"To act on many jobs at once, hold Ctrl on Windows or Command on Mac and click each card you want. Selected cards show a checkmark. A bulk action bar appears at the top showing a count of selected cards. From there you can: move all selected to a new stage, reassign them all to a different engineer, change their priority level, or archive the entire group. Multi-select works across columns. Deselect by clicking empty board space or pressing Escape."}},{"element":"app-kanban .action-btn--primary","popover":{"title":"Creating a Job","description":"Click the New Job button in the upper right of the toolbar. A dialog opens. Required fields are customer and job title. Optional but recommended: part number, assigned engineer, due date, priority, and initial stage. Most shops start at Quote Requested. When you click Save the card appears immediately on the board. Start minimal and add detail as the job evolves. Many shops create a job the moment a customer calls and fill in the part number as the conversation matures."}}]}"""
+        };
+
+        var videoTimeTracking = new TrainingModule
+        {
+            Title = "Time Tracking: Video Guide",
+            Slug = "video-time-tracking-guide",
+            Summary = "How to start timers, switch between jobs, log manual entries, understand clock-in vs timers, and export time data — complete coverage for all roles.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Video,
+            EstimatedMinutes = 11,
+            IsPublished = true,
+            SortOrder = 11,
+            AppRoutes = """["/time-tracking"]""",
+            Tags = """["time","timer","video","payroll"]""",
+            ContentJson = """{"embedUrl":"https://www.youtube.com/embed/YE7VzlLtp-4","appRoute":"/time-tracking","chaptersJson":[{"timeSeconds":0,"label":"Dashboard Overview"},{"timeSeconds":55,"label":"Starting a Timer"},{"timeSeconds":125,"label":"Timer from a Job Card"},{"timeSeconds":200,"label":"Manual Entry"},{"timeSeconds":270,"label":"Editing Entries"},{"timeSeconds":335,"label":"Weekly Summary"},{"timeSeconds":400,"label":"Clock-In vs Timer"},{"timeSeconds":470,"label":"Missed Clock-Out"},{"timeSeconds":540,"label":"Manager View"},{"timeSeconds":610,"label":"Exporting Time"}],"transcript":"The Time Tracking page has a toolbar at the top with date navigation and a New Entry button. Below it, entries are grouped by day — today at the top. At the very bottom is a weekly summary bar. Every hour you work should appear as a row here. The fastest way to start tracking time is from your main dashboard — in the Today's Tasks widget, each job has a play button. One click starts a timer linked to that job. Only one timer runs at a time — starting a new one auto-stops the previous one and saves the elapsed time. You never lose a minute. You can also start a timer from any job card on the kanban board — open the card and click the timer icon in the detail panel. If you forget to log time, use New Entry: fill in the job, date, start time, and end time. Duration calculates automatically. Click any entry to edit it or delete it. Entries submitted to payroll are locked — contact your manager for corrections. The weekly summary at the bottom shows green for days you met your hours, yellow for slightly under, red for missing entries. Check this before you leave every day. Remember the distinction: clocking in proves you were at work, job timers prove what you worked on. Both are required. Managers see a Team Time view to review all entries, approve them for payroll, and export formatted timesheets.","steps":[{"element":"app-time-tracking","popover":{"title":"Dashboard Overview","description":"You are on the Time Tracking page. Orient yourself before acting. At the top is a toolbar with date navigation and a New Entry button. Below it, entries are grouped by day — today at the top. At the very bottom is your weekly summary bar. Every hour you work should appear as a row here. If it does not, job costs will be wrong and your timesheet will be incomplete."}},{"element":"app-time-tracking app-toolbar","popover":{"title":"Starting a Timer","description":"The fastest way to start tracking time is from your main dashboard, not this page. In the Today's Tasks widget, each job has a play button. Click it and a timer starts immediately, linked to that job. The timer appears in the application header bar so you always know whether one is running. Only one timer runs at a time — starting a new one automatically stops the current one and saves the elapsed time as a completed entry. You never lose time by switching jobs."}},{"element":"app-time-tracking .action-btn--primary","popover":{"title":"Timer from a Job Card","description":"You can also start a timer directly from the kanban board. Open any job card and look in the detail panel for the timer icon near the top. Click it. The icon animates and the header count starts. This is useful when you are already reviewing jobs on the board. The entry appears on this page in real time. When you start a different timer or stop this one manually, the duration saves automatically."}},{"element":"app-time-tracking .action-btn--primary","popover":{"title":"Manual Entry","description":"Forgot to start a timer? Use New Entry to log time after the fact. Fill in the job, date, start time, and end time. The duration calculates automatically from your start and end times — no mental math. The entry appears in the correct day section. Entries cannot be back-dated more than 14 days without manager approval. If you worked across midnight, enter the real end time and the system handles the date rollover."}},{"element":"app-time-tracking app-data-table","popover":{"title":"Editing Entries","description":"Click any row to open the edit dialog. Change the job, date, or start and end times. Duration recalculates on save. To delete, open the entry and click Delete — a confirmation will appear. Entries submitted to payroll show a locked indicator and cannot be self-edited. If you need to correct a locked entry, contact your manager who has override access. Managers see an approval status field on every entry."}},{"element":"app-time-tracking app-data-table","popover":{"title":"Weekly Summary","description":"Scroll to the bottom of the list to see your weekly summary bar. Green days mean you met your expected hours. Yellow means slightly under. Red means significantly under or no entries that day. Check this bar before you leave each day. If today is red, either log the missing time now or notify your manager. The bar also shows your total weekly hours — important for hourly employees confirming they have met their required hours."}},{"element":"app-time-tracking app-toolbar","popover":{"title":"Clock-In vs Timer","description":"Two distinct concepts: clocking in records your daily attendance — when you arrive and leave, one record per day. Job timers record how long you spent on specific tasks — many per day. Clocking in proves you were at work, job timers prove what you worked on. Both are required. Clock in when you arrive. Start job timers as you move from task to task. Clock out when you leave. Job timers stop automatically when you clock out."}},{"element":"app-time-tracking app-toolbar","popover":{"title":"Missed Clock-Out","description":"If you forget to clock out, the system detects an open clock-in when you log in next morning and prompts you to confirm your actual departure time. Enter your best estimate and add a note if unsure. Your manager will see flagged entries — shown with a yellow warning badge. If no action is taken within 24 hours, the entry may be auto-closed at a configurable default time with a flag for manager review."}},{"element":"app-time-tracking app-data-table","popover":{"title":"Manager View","description":"Managers and Admins see a Team Time toggle at the top of the page. Switching to Team Time shows all entries for all employees. Filter by person to drill into one employee's week. The summary bar updates to show team-wide totals — useful for payroll processing. From this view you can approve entries, flag them for correction, or leave comments visible only to the employee. Approved entries become locked and contribute to the payroll run."}},{"element":"app-time-tracking app-toolbar","popover":{"title":"Exporting Time","description":"Click the Export button — a download arrow icon — to export time data. Choose CSV for spreadsheet analysis or PDF for a formatted timesheet. Adjust the date range from the current week to any custom range. The CSV includes job number, customer, description, date, start time, end time, and decimal hours — ready for Excel or payroll software. The PDF formats as a professional timesheet with daily totals and a weekly grand total. Managers can export for any employee or the entire team."}}]}"""
+        };
+
+        var videoExpenses = new TrainingModule
+        {
+            Title = "Submitting Expenses: Video Guide",
+            Slug = "video-submitting-expenses",
+            Summary = "Complete expense workflow — submitting, attaching receipts, linking to jobs, tracking approval, fixing rejections, and the manager approval queue.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Video,
+            EstimatedMinutes = 11,
+            IsPublished = true,
+            SortOrder = 12,
+            AppRoutes = """["/expenses"]""",
+            Tags = """["expenses","receipts","video","reimbursement"]""",
+            ContentJson = """{"embedUrl":"https://www.youtube.com/embed/YE7VzlLtp-4","appRoute":"/expenses","chaptersJson":[{"timeSeconds":0,"label":"Expense Dashboard"},{"timeSeconds":55,"label":"New Expense"},{"timeSeconds":130,"label":"Attaching a Receipt"},{"timeSeconds":205,"label":"Linking to a Job"},{"timeSeconds":270,"label":"Submitting"},{"timeSeconds":340,"label":"Tracking Status"},{"timeSeconds":410,"label":"Fixing Rejections"},{"timeSeconds":480,"label":"Expense History"},{"timeSeconds":545,"label":"Manager: Approval Queue"},{"timeSeconds":615,"label":"Best Practices"}],"transcript":"The Expenses page is divided into a filter sidebar on the left and your expense list on the right. Each expense row shows date, amount, category, and — most importantly — status: Draft, Submitted, Pending Review, Approved, or Rejected. To create a new expense, click New Expense. Fill in the date of purchase, the exact amount, the category, and a specific description — not just supplies but carbide end mills for job 2047. Specificity prevents rejection. Attach your receipt using the upload zone — drag a file, browse, or take a photo with your device camera. If the expense is for a specific job, use the Job field to link it. The cost rolls into that job's actual cost total, giving managers real cost-versus-estimate data. When the form is complete, click Submit for Approval — not just Save. Saved drafts are invisible to your manager. Once submitted, the status becomes Pending Review. Status colors tell you where things stand: yellow means pending, green means approved, red means rejected. Rejections always include a manager note. To fix a rejection, retract the expense, make the corrections, and resubmit. Managers see an Approval Queue tab with all pending submissions. Three habits that prevent rejected expenses: submit the same day, always attach a receipt, and write a specific description.","steps":[{"element":"app-expenses","popover":{"title":"Expense Dashboard","description":"You are on the Expenses page. Orient yourself first. On the left is a filter sidebar. On the right is the expense list — each row is one expense with date, amount, description, category, and status. Status is the most important column: Draft, Submitted, Pending Review, Approved, or Rejected. The New Expense button is in the upper right. Managers also see an Approval Queue section."}},{"element":"app-expenses .action-btn--primary","popover":{"title":"New Expense","description":"Click New Expense to open the submission form. Fill in: Date — when the expense occurred, not today unless they match. Amount — exact dollar amount on your receipt. Category — required dropdown covering Travel, Meals, Supplies, Tools, Fuel, and more. Description — be specific, say carbide end mills for job 2047, not just tools. Merchant — optional but helps approval. Specific descriptions prevent the most common cause of rejection."}},{"element":"app-file-upload-zone","popover":{"title":"Attaching a Receipt","description":"Every expense needs a receipt. Look for the dashed-border upload zone in the expense form. Three ways to attach: drag a file from your computer and drop it, click to browse and select a JPG, PNG, or PDF, or click the camera icon to take a photo directly with your device camera. Multiple receipts for one expense can all be uploaded. If a receipt is lost, note it in the description field."}},{"element":"app-expenses .action-btn--primary","popover":{"title":"Linking to a Job","description":"If this expense is for a specific job — materials, tooling, shipping — link it using the Job field in the form. Start typing the job number or customer name and matching jobs appear in a typeahead list. Select the correct job. The cost will roll into that job's actual cost total, visible from the kanban board. If the expense is general overhead, leave the job field empty. For expenses split across multiple jobs, create separate entries with partial amounts."}},{"element":"app-expenses .action-btn--primary","popover":{"title":"Submitting","description":"When the form is complete, click Submit for Approval. The button says Submit for Approval, not just Save. Saving as a draft keeps it invisible to your manager. Once submitted, the status becomes Pending Review and it appears in your manager's queue. You will receive a notification when the status changes. You cannot edit a submitted expense directly — retract it first, then edit, then resubmit."}},{"element":"app-expenses app-data-table","popover":{"title":"Tracking Status","description":"After submitting, your expense shows Pending Review in yellow. When approved it turns green. When rejected it turns red. Rejections include a manager note explaining what needs to be fixed — you receive a notification in the header bell icon. Click a rejected expense, read the note, retract it, fix the issue, and resubmit. The manager receives a notification that you have corrected and resubmitted."}},{"element":"app-expenses app-data-table","popover":{"title":"Fixing Rejections","description":"Rejected expenses need your attention. Read the manager's rejection note carefully — common reasons are missing receipt, amount mismatch, wrong category, or vague description. Click Retract to pull the expense back to Draft status. Edit the issue, re-attach a clearer receipt if needed, and click Submit for Approval again. If you believe the rejection was an error, leave a comment and the manager can reverse the decision without requiring a full resubmission."}},{"element":"app-expenses app-data-table","popover":{"title":"Expense History","description":"All expenses live on this page permanently. Use the date filter in the left sidebar to look back at previous months or years. The category filter groups all your travel or supply expenses together. Export your history as a CSV or PDF using the export button in the toolbar — useful at tax time or for reimbursement reports. The total line at the bottom of the filtered results shows the sum of currently visible expenses."}},{"element":"app-expenses app-data-table","popover":{"title":"Manager: Approval Queue","description":"Managers see an Approval Queue tab with all pending submissions from direct reports. Each row shows employee name, date, amount, category, and a description preview. Click any row to open the full expense — you can see the attached receipt and any job linkage. Approve with the green button. Reject with the red button — a note explaining why is required before rejection goes through. The employee sees your note immediately in their notification feed."}},{"element":"app-expenses","popover":{"title":"Best Practices","description":"Three habits that eliminate rejected expenses: submit the same day you incur the expense — receipts get lost and memories fade. Always attach a receipt — take the photo immediately after purchase before you are back at your desk. Write a specific description — instead of supplies, say angle grinder wheels, three boxes, for job 2051 production run. Five seconds of specificity prevents five minutes of back-and-forth. Employees who follow these three habits get approved on the first try, every time."}}]}"""
+        };
+
+        var videoPartsAndBOM = new TrainingModule
+        {
+            Title = "Parts Catalog and BOM: Video Overview",
+            Slug = "video-parts-catalog-and-bom",
+            Summary = "Complete parts coverage — status lifecycle, Make/Buy/Stock types, BOM assembly, lead times, process steps, job linkage, inventory connection, and search.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Video,
+            EstimatedMinutes = 12,
+            IsPublished = true,
+            SortOrder = 13,
+            AppRoutes = """["/parts"]""",
+            Tags = """["parts","bom","video","engineering"]""",
+            ContentJson = """{"embedUrl":"https://www.youtube.com/embed/YE7VzlLtp-4","appRoute":"/parts","chaptersJson":[{"timeSeconds":0,"label":"Catalog Overview"},{"timeSeconds":55,"label":"Part Status"},{"timeSeconds":125,"label":"Creating a Part"},{"timeSeconds":200,"label":"Make, Buy, Stock"},{"timeSeconds":275,"label":"BOM Assembly"},{"timeSeconds":360,"label":"Quantities and Lead Times"},{"timeSeconds":435,"label":"Process Steps"},{"timeSeconds":510,"label":"Parts and Jobs"},{"timeSeconds":585,"label":"Inventory Connection"},{"timeSeconds":655,"label":"Search and Filter"}],"transcript":"The Parts Catalog is every component, material, and finished good your shop interacts with — all in one place. If something is not here, it does not officially exist. Every part has a status: Draft, Prototype, Active, or Obsolete. Status controls where the part can be used. Draft parts cannot be added to BOMs or quotes. Active parts are fully available. Obsolete parts exist for historical reference only. The Type field on every part is one of three values: Make — you fabricate it, Buy — you purchase it from a vendor, Stock — it comes from your own inventory. This distinction drives purchasing suggestions, production scheduling, and inventory alerts. Getting it right is not optional. To create a part, click New Part. Fill in part number, description, type, and unit of measure. After saving, open the part to add a BOM and process steps. The Bill of Materials tab is the recipe for a Make part. Add each component, set the quantity per unit, choose the type, and set a lead time in days. Multi-level BOMs are supported. The Process Plan tab documents manufacturing operations — saw, mill, drill, inspect — with setup time and cycle time per unit. These feed directly into the shop floor display and into capacity planning. Parts link to jobs through the job detail panel on the kanban board. Stock parts connect to the Inventory module. Buy parts connect to Purchase Orders. Use search, status filter, and type filter to navigate large catalogs. Export to CSV for vendor quotes or cost analysis.","steps":[{"element":"app-parts","popover":{"title":"Catalog Overview","description":"You are on the Parts Catalog. The main area is a data table — each row is one part with its number, description, type, status, and unit of measure. Above the table is a toolbar with search, filters, and a New Part button. The catalog contains everything your shop makes, buys, or stocks. If something is not here, it does not officially exist in your shop's vocabulary. Sort any column by clicking its header."}},{"element":"app-parts app-data-table","popover":{"title":"Part Status","description":"Every part has a status controlling where it can be used. Draft means in definition — cannot be added to a BOM or quote yet. Prototype means design is active but not formally released. Active is the normal working status — can be quoted, ordered, and produced. Obsolete means no longer used — kept for historical reference only. Moving from Draft to Active represents an engineering release — a decision the design is stable enough to manufacture."}},{"element":"app-parts .action-btn--primary","popover":{"title":"Creating a Part","description":"Click New Part to open the creation dialog. Required fields: Part Number using your shop's naming convention, often including a product family prefix and revision letter. Description in plain English. Type — critical, covered next. Unit of Measure — each, inches, feet, pounds. After saving, open the part to add a BOM, process steps, and file attachments from its detail view."}},{"element":"app-parts .action-btn--primary","popover":{"title":"Make, Buy, Stock","description":"The Type field is one of three values and choosing correctly matters. Make means your shop fabricates this part — it appears on production jobs. Buy means you purchase it from a vendor — QB Engineer can generate a purchase order when a job needs it. Stock means it comes from your own inventory — the system checks quantity on hand and alerts when running low. The distinction drives purchasing, scheduling, and inventory alerts. Getting this wrong causes missed deliveries."}},{"element":"app-parts app-page-header","popover":{"title":"BOM Assembly","description":"Open any Make part and switch to the BOM tab. The Bill of Materials is the recipe for this part — every component needed to build one unit. Click Add BOM Item, search for the child part, set quantity per parent unit, set the type, and set a lead time in days if applicable. Lead times roll up to give a total lead time estimate for the parent part. Multi-level BOMs are supported — a BOM line item can have its own BOM creating a full component tree."}},{"element":"app-parts app-data-table","popover":{"title":"Quantities and Lead Times","description":"Each BOM line has a quantity and a lead time. Quantity per unit is how many of this component make one of the parent part. Lead time in days is the typical procurement time for Buy parts, fabrication time for Make parts, or zero for Stock items you keep on hand. These numbers feed directly into the planning tool — when scheduling a production run, QB Engineer uses BOM lead times to suggest the latest possible purchase order dates for procured components."}},{"element":"app-parts app-page-header","popover":{"title":"Process Steps","description":"Switch to the Process Plan tab on a Make part. This documents manufacturing operations: operation name, description, work center or machine, setup time in minutes, and cycle time per unit in minutes. Process steps display on the shop floor kiosk so workers know exactly what to do and in what order. Accurate cycle times feed into job scheduling and capacity planning. Standard operations like Deburr or Final Inspection can be templated and reused across many parts."}},{"element":"app-parts app-toolbar app-input","popover":{"title":"Parts and Jobs","description":"When you create a job, link it to a part number. This tells the system what you are making, which process steps to display on the shop floor, and which BOM items to suggest for purchasing. You can also link a part to an existing job from the kanban board job detail panel. Once linked, the job's actual cost compares against the part's standard cost and BOM shortages are flagged for the purchasing team."}},{"element":"app-parts app-data-table","popover":{"title":"Inventory Connection","description":"Stock-type parts connect directly to the Inventory module. The part's Inventory tab shows quantity on hand, bin location, and a movement history. When inventory falls below the configured reorder point, a yellow warning icon appears in the catalog. Buy-type parts connect through Purchase Orders — when a job calls for a Buy part, the system can suggest or auto-generate a purchase order. The parts catalog is the hub connecting engineering data to operational data."}},{"element":"app-parts app-toolbar app-input","popover":{"title":"Search and Filter","description":"The search bar performs full-text search across part numbers and descriptions — fast and responsive. Use the Status filter to show only Active parts when quoting. Use the Type filter to show only Buy parts when reviewing purchasing needs. Column header filters allow numeric and date-range filtering within individual columns. Export the filtered results to CSV using the export button — useful for sharing parts lists with vendors or importing into cost analysis spreadsheets."}}]}"""
+        };
+
+        var videoReports = new TrainingModule
+        {
+            Title = "Reports and Analytics: Video Guide",
+            Slug = "video-reports-and-analytics",
+            Summary = "Complete report builder coverage — templates, data sources, column selection, all filter types, grouping, sorting, charts, saving, and CSV/PDF export.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Video,
+            EstimatedMinutes = 12,
+            IsPublished = true,
+            SortOrder = 14,
+            AppRoutes = """["/reports"]""",
+            Tags = """["reports","analytics","video","data"]""",
+            ContentJson = """{"embedUrl":"https://www.youtube.com/embed/YE7VzlLtp-4","appRoute":"/reports","chaptersJson":[{"timeSeconds":0,"label":"Reports Overview"},{"timeSeconds":55,"label":"Running a Template"},{"timeSeconds":130,"label":"Data Sources"},{"timeSeconds":205,"label":"Selecting Columns"},{"timeSeconds":280,"label":"Filters"},{"timeSeconds":360,"label":"Grouping Data"},{"timeSeconds":435,"label":"Sorting"},{"timeSeconds":505,"label":"Charts"},{"timeSeconds":580,"label":"Saving Reports"},{"timeSeconds":655,"label":"Exporting"}],"transcript":"The Reports page has two panels: a saved reports sidebar on the left, and the main report area on the right. Click any template in the sidebar and it runs immediately — 27 pre-built templates are included, covering jobs, time, expenses, inventory, finance, and more. Run Open Jobs by Priority and you will see every active job sorted by urgency in seconds. To build your own report, click New Report. First choose a data source — the entity you want one row per. Jobs, Time Entries, Expenses, Parts, Purchase Orders, Inventory, Shipments, and more. Choose the source carefully; it cannot be changed after adding columns. In the field selector, add the columns you need. Click a field to add it, drag to reorder. Add filters to narrow results: text contains or equals, number greater than or less than, date presets like this week or last 30 days, enum checkboxes for status or priority. Group your results to create summaries — group time entries by employee with duration summed to see total hours per person. Sort results by clicking column headers, multi-column sort by holding Shift. Switch to the Chart tab to visualize grouped results as bar, line, or pie charts. Save your report with a descriptive name and category. Export as CSV for spreadsheet analysis or PDF for professional sharing.","steps":[{"element":"app-reports","popover":{"title":"Reports Overview","description":"You are on the Reports page. Two panels: the saved reports sidebar on the left lists every named report — click any to run it instantly. The main panel on the right shows results when running or the builder interface when creating. The New Report button in the upper right opens the builder. This layout lets you switch between saved reports without losing your place in the builder."}},{"element":"app-reports","popover":{"title":"Running a Template","description":"The fastest way to get value is from the 27 pre-built templates. Click any template — results appear in seconds. Click Open Jobs by Priority to see every active job sorted by urgency: number, customer, stage, assignee, due date, and priority. This one report replaces a manual daily scan. Templates include date range chips at the top — click to change the range and the report reruns instantly without rebuilding."}},{"element":"app-reports .action-btn--primary","popover":{"title":"Data Sources","description":"Click New Report. The first step is choosing a data source — the entity your report will be based on. Available sources include Jobs, Time Entries, Expenses, Parts, Purchase Orders, Sales Orders, Inventory, Shipments, Invoices, Payments, Customers, Vendors, Quotes, Assets, Leads, and more — over 28 sources. The source determines which fields are available and which filters apply. The source cannot be changed after adding columns. Rule: choose the source you want one row per."}},{"element":"app-reports","popover":{"title":"Selecting Columns","description":"After choosing a source you reach the field selector. Available fields appear on the left. Added columns appear on the right. Click any field to add it. Drag columns in the right panel to reorder — this order is the output order. Calculated fields — like Margin Percentage derived from revenue minus cost — are marked with a formula icon. Add only the columns you need. More columns do not make a better report; they make a harder-to-read report."}},{"element":"app-reports","popover":{"title":"Filters","description":"Filters narrow your results. In the Filters tab, each column can have an optional filter. String filters: Contains, Does Not Contain, Equals, Is Empty. Number filters: Greater Than, Less Than, Between, Equals. Date filters: Before, After, Between, and presets — Today, This Week, This Month, This Quarter, Last 30 Days. Enum filters — like stage or priority — show checkboxes. Multiple filters combine with AND logic. A filter for Assigned To Equals Current User creates a personal version of any report."}},{"element":"app-reports","popover":{"title":"Grouping Data","description":"Grouping transforms a flat list into a summary. In the Grouping tab, choose a field to group by — for example, group Time Entries by Employee. The report collapses individual rows into group headers with aggregated values. For number columns choose the aggregation: Sum, Count, Average, Min, or Max. Group jobs by Stage with a Count to see your WIP distribution. Group time entries by Employee with duration Summed to see total hours per person."}},{"element":"app-reports","popover":{"title":"Sorting","description":"Click any column header in the results table to sort — once for ascending, again for descending, a third time to remove. Hold Shift and click a second header to add a secondary sort. Multi-sort is useful for jobs sorted first by priority, then by due date — all Urgent jobs together, with the soonest due first within each priority tier. Configure sorting in the report builder Sort tab to save it as part of the report definition for teammates."}},{"element":"app-reports","popover":{"title":"Charts","description":"Switch to the Chart tab after running a report. Choose a chart type: Bar, Line, Pie, Doughnut, or Radar. Map your X and Y axes to columns. Bar charts compare categories — jobs per stage. Line charts show trends — hours per week over a quarter. Pie charts show proportions — expense breakdown by category. Charts update in real time when you change filters. Pin a chart to the dashboard as a widget directly from the report view."}},{"element":"app-reports","popover":{"title":"Saving Reports","description":"Click Save Report when satisfied. Provide a name, category, and optional description. The name should describe what the report shows — Overdue Jobs by Engineer or Weekly Expenses by Category. Once saved it appears in the sidebar immediately and is available to all users. Update a saved report by modifying it and saving again. Reports can be scheduled to email results automatically — configure from report settings after saving."}},{"element":"app-reports","popover":{"title":"Exporting","description":"Export current results with the Export button. Choose CSV for spreadsheet analysis or PDF for formatted presentation. CSV includes all columns including calculated fields, UTF-8 encoded, standard comma separators — compatible with Excel, Google Sheets, and every major data tool. PDF renders with your company name and logo in the header, report title, generation timestamp, and the full result table paginated across pages. Use CSV for analysis, PDF for sharing with clients or executives."}}]}"""
+        };
+
+        var videoShopFloor = new TrainingModule
+        {
+            Title = "Shop Floor Kiosk: Video Guide",
+            Slug = "video-shop-floor-kiosk",
+            Summary = "Complete kiosk guide for production workers — badge and PIN, clocking in/out, job timers, switching jobs, moving stages, adding notes/photos, and troubleshooting.",
+            ContentType = QBEngineer.Core.Enums.TrainingContentType.Video,
+            EstimatedMinutes = 12,
+            IsPublished = true,
+            SortOrder = 15,
+            AppRoutes = """["/shop-floor"]""",
+            Tags = """["shop-floor","kiosk","video","clock-in"]""",
+            ContentJson = """{"embedUrl":"https://www.youtube.com/embed/YE7VzlLtp-4","appRoute":"/shop-floor","chaptersJson":[{"timeSeconds":0,"label":"What Is the Kiosk?"},{"timeSeconds":55,"label":"Badge and PIN"},{"timeSeconds":130,"label":"Clocking In"},{"timeSeconds":205,"label":"Starting a Timer"},{"timeSeconds":280,"label":"Switching Jobs"},{"timeSeconds":355,"label":"Moving a Job"},{"timeSeconds":430,"label":"Notes and Photos"},{"timeSeconds":505,"label":"Clocking Out"},{"timeSeconds":580,"label":"Overview Display"},{"timeSeconds":655,"label":"Troubleshooting"}],"transcript":"The shop floor kiosk is a touchscreen terminal for production workers who do not use a computer during their shift. It is purpose-built for gloved hands and fast interactions. Every button is large. Every action is immediate. To use the kiosk, you need your employee badge — a card with a barcode or NFC chip — and your PIN, a four to six digit numeric code you set yourself. Hold your badge near the reader, enter your PIN, and the kiosk authenticates you in seconds. Tap Clock In to start your shift. The time is recorded immediately. Tap Start Job Timer and search for or scan the job you are working on. The timer starts and tracks your time against that specific job. If you move to a different job, tap Start Job Timer again — starting a new timer automatically stops and saves the previous one. You never lose time by switching. When a job is complete and ready for the next operation, tap Move Job, find it, and tap Move Forward. The kanban board updates in real time. Need to document something? Tap Add Note to type an observation or tap Add Photo to capture a quality image. Both attach directly to the job and appear in the activity log. At end of shift, scan your badge, review the shift summary, and tap Clock Out. Any running timer stops automatically. In display mode, the kiosk shows the whole shop production status without authentication. Badge not recognized: ask your admin to register it. PIN rejected: ask for a reset. Job not found by scan: type the number manually.","steps":[{"element":"app-shop-floor-display","popover":{"title":"What Is the Kiosk?","description":"The shop floor kiosk is a touchscreen terminal for production workers who do not use a computer during their shift. What you see now is the kiosk display. At the top is the current date and time in large, readable text — always visible without searching for a clock. Below is the current kiosk state: idle waiting for a badge scan, or active showing quick action buttons. The entire interface is designed for gloved hands. Every button is large. Every action is immediate."}},{"element":"app-kiosk-search-bar","popover":{"title":"Badge and PIN","description":"To use the kiosk you need two things: your employee badge and your PIN. Your badge is a card or fob with a barcode or NFC chip programmed with your employee ID — given to you during setup. Your PIN is a four to six digit numeric code that you set yourself in account settings. If you have never set a PIN or forgot it, your admin can reset it in seconds from the Admin panel. The PIN is separate from your password — short and numeric so you can enter it quickly with gloves on."}},{"element":"app-quick-action-panel","popover":{"title":"Clocking In","description":"Walk to the kiosk and hold your badge near the reader — scan the barcode or tap the NFC chip. The screen responds immediately and prompts for your PIN. Tap the digits on the screen keypad. Use backspace for mistakes. When correct, your name appears and the quick action buttons display. Tap the large green Clock In button. The system records your exact clock-in time and displays a confirmation. Your attendance record for the day begins at this moment."}},{"element":"app-quick-action-panel","popover":{"title":"Starting a Timer","description":"After clocking in, tap Start Job Timer. A search field appears. Type the job number and tap the result, or scan the barcode label attached to the physical job — the job populates automatically with no typing needed. Tap Confirm to start the timer. The kiosk shows the timer running next to the job number. If you move to a different job, tap Start Job Timer again — starting a new timer stops and saves the previous one automatically. You never lose time by switching jobs."}},{"element":"app-quick-action-panel","popover":{"title":"Switching Jobs","description":"Production workers often move between jobs throughout the day. Switching is simple: while a timer is running, tap Start Job Timer again. You do not need to stop the current one first. Scan or search for the new job and tap Confirm. The new timer starts and the previous entry saves automatically. To stop without starting another, tap Stop Timer — the elapsed time saves and no timer runs until you start again. Your manager sees every entry with its exact start and stop times."}},{"element":"app-quick-action-panel","popover":{"title":"Moving a Job","description":"When you complete an operation and the job is ready for the next stage, tap Move Job. Search or scan the job. The current stage and the next stage both display on screen. Tap Move Forward. A confirmation dialog shows the stage change — for example, from In Production to QC Review. Tap Confirm to complete it. The kanban board on every device in the shop updates in real time. Do not advance a job that failed QC — add a note instead and notify your engineer."}},{"element":"app-quick-action-panel","popover":{"title":"Notes and Photos","description":"Tap Add Note to attach text to a job — quality observations, material substitutions, damage reports, questions for the engineer. A large keyboard appears for typing. The note appears immediately in the job activity log on the kanban board. Tap Add Photo to use the kiosk camera — frame your subject and tap the shutter button. The photo uploads directly to the job's file attachments. Both notes and photos are visible to engineers and managers in real time."}},{"element":"app-quick-action-panel","popover":{"title":"Clocking Out","description":"At the end of your shift, scan your badge and enter your PIN. The kiosk shows your shift summary: total hours worked and which jobs you logged time against. Review the summary to confirm it looks correct. Tap Clock Out. Your exact departure time is recorded. Any running job timer stops automatically at this moment and saves the elapsed time. The kiosk returns to its idle state for the next person. If you forgot to clock out yesterday, the kiosk prompts you to enter yesterday's departure time before proceeding."}},{"element":"app-shop-floor-display","popover":{"title":"Overview Display","description":"Some kiosk screens are configured in display-only mode — a production scoreboard visible to everyone without authentication. It shows active jobs with their current stage, assigned worker, time in stage, and any hold or overdue flags. Jobs near their due date show yellow or red indicators. Jobs with active timers show a pulsing activity icon. The display refreshes automatically every few seconds. No interaction is needed. This creates shared situational awareness — every worker in the shop can glance and know the current production state."}},{"element":"app-shop-floor-display","popover":{"title":"Troubleshooting","description":"Common issues: Badge not recognized — it may not be registered; ask your admin to add it, takes under a minute. PIN rejected — it may have been reset; ask your admin and set a new one in account settings. Job not found by scan — barcode may be damaged; type the job number manually instead. Timer did not save after a power loss — the system queues pending saves and retries when connection restores; check with your manager. Screen frozen — touch the center firmly and wait five seconds; a browser refresh resolves most freezes without losing data."}}]}"""
+        };
+
         db.TrainingModules.AddRange(
             welcome, navigating, profileSetup, compliance, timeTracking, expenses, onboardingQuiz,
             kanbanBasics, jobManagement, jobDetail, partsCatalog, partsQuickRef, backlogPlanning, dashboard, engineerQuiz,
-            reportsModule, purchaseOrdersModule, adminUsersModule
+            reportsModule, purchaseOrdersModule, adminUsersModule,
+            videoKanbanOverview, videoTimeTracking, videoExpenses, videoPartsAndBOM, videoReports, videoShopFloor
         );
         await db.SaveChangesAsync();
 
@@ -1333,6 +1421,680 @@ public static class SeedData
         }
 
         Log.Information("Seeded {Count} training modules", 18);
+    }
+
+    private static async Task SeedAdditionalTrainingPathsAsync(AppDbContext db)
+    {
+        // Look up existing modules by slug for cross-path reuse
+        var existingSlugs = await db.TrainingModules
+            .AsNoTracking()
+            .Select(m => new { m.Id, m.Slug })
+            .ToListAsync();
+        var bySlug = existingSlugs.ToDictionary(m => m.Slug, m => m.Id);
+
+        // Helper: get or create a module (idempotent by slug)
+        async Task<int> GetOrCreateModule(TrainingModule m)
+        {
+            if (bySlug.TryGetValue(m.Slug, out var existingId)) return existingId;
+            db.TrainingModules.Add(m);
+            await db.SaveChangesAsync();
+            bySlug[m.Slug] = m.Id;
+            return m.Id;
+        }
+
+        // ── Path 3: Shop Floor Worker ──────────────────────────────────────
+        if (!await db.TrainingPaths.Where(p => p.Title == "Shop Floor Worker").AnyAsync())
+        {
+            var sfClockIn = new TrainingModule
+            {
+                Title = "Shop Floor Clock-In Walkthrough",
+                Slug = "shop-floor-clock-in",
+                Summary = "A step-by-step tour of the kiosk display, clocking in with your badge and PIN, and starting a job timer.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Walkthrough,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 1,
+                AppRoutes = """["/shop-floor"]""",
+                Tags = """["shop-floor","kiosk","time-tracking"]""",
+                ContentJson = """{"appRoute":"/shop-floor","startButtonLabel":"Show Me the Kiosk","steps":[{"element":"[data-tour='kiosk-display']","popover":{"title":"Shop Floor Kiosk","description":"The kiosk display is your primary work interface on the shop floor. It shows the jobs queued for this workstation and lets you clock in, start timers, and move jobs — all without a full computer login.","side":"bottom"}},{"element":"[data-tour='kiosk-scan-input']","popover":{"title":"Scan Your Badge","description":"Hold your badge up to the scanner or barcode reader. If your badge isn't set up yet, ask your admin to assign a barcode to your profile under Admin → Users.","side":"bottom"}},{"element":"[data-tour='kiosk-pin-pad']","popover":{"title":"Enter Your PIN","description":"After scanning your badge, enter your 4–6 digit PIN on the number pad. This PIN is different from your password — it's set by your admin or you can change it under Account → Security.","side":"bottom"}},{"element":"[data-tour='quick-actions']","popover":{"title":"Quick Actions","description":"Once you're authenticated, the quick action panel appears. Large buttons let you Clock In, Clock Out, Start a job timer, Stop your current timer, or move a job to the next stage — all with a single tap.","side":"top"}},{"element":"[data-tour='active-jobs']","popover":{"title":"Your Active Jobs","description":"Your currently assigned jobs are shown below the quick actions. Tap any job to see its details, add a note, or start a timer directly from this screen.","side":"top"}}]}"""
+            };
+
+            var sfKiosk = new TrainingModule
+            {
+                Title = "Kiosk Authentication and Badge Setup",
+                Slug = "kiosk-authentication",
+                Summary = "How kiosk authentication works, what to do if your badge is not recognized, and how to reset your PIN.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 3,
+                IsPublished = true,
+                SortOrder = 2,
+                AppRoutes = """["/shop-floor","/account/security"]""",
+                Tags = """["shop-floor","kiosk","auth"]""",
+                ContentJson = """{"body":"## Kiosk Authentication\n\nThe shop floor kiosk uses a two-factor badge+PIN system so workers can authenticate quickly without a keyboard.\n\n### How It Works\n\n1. **Scan your badge** — Hold your RFID card, NFC tag, or barcode badge up to the reader.\n2. **Enter your PIN** — Type your 4–6 digit PIN on the touchscreen keypad.\n3. **You're in** — The quick action panel appears. You stay logged in until you clock out or the session timeout.\n\n### If Your Badge Is Not Recognized\n\nIf you see 'Badge not found', your badge identifier hasn't been linked to your account yet. Ask your admin to open Admin → Users → your profile and add your badge under Scan Identifiers.\n\n### Changing Your PIN\n\nYour PIN is separate from your login password. To change it, log into the web app normally and go to Account → Security. Look for the PIN section. Enter your current PIN and set a new one. PINs must be 4–6 digits.\n\n### Forgot Your PIN\n\nIf you've forgotten your PIN, you cannot reset it yourself — it requires your admin to generate a new temporary PIN from your user profile. Contact your supervisor or admin.\n\n### Multiple Kiosks\n\nYour badge and PIN work on any kiosk terminal in the system. You don't need separate credentials per station.","sections":[]}"""
+            };
+
+            var sfScanning = new TrainingModule
+            {
+                Title = "Scanning Jobs and Moving Cards from the Floor",
+                Slug = "shop-floor-scanning",
+                Summary = "How to scan a job barcode to pull it up on the kiosk, start a timer, and advance it to the next stage.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 4,
+                IsPublished = true,
+                SortOrder = 3,
+                AppRoutes = """["/shop-floor"]""",
+                Tags = """["shop-floor","scanning","jobs"]""",
+                ContentJson = """{"body":"## Scanning Jobs from the Shop Floor\n\nEvery job in QB Engineer has a QR code and barcode on its printed work order. Use the kiosk scanner to pull up a job instantly without searching.\n\n### Scanning a Work Order\n\n1. Authenticate on the kiosk with your badge and PIN.\n2. Point the scanner at the job's barcode (on the printed work order or label on the part traveler).\n3. The job appears on screen with its current stage, assignee, and subtasks.\n4. Tap **Start Timer** to begin tracking your time, or **Move to Next Stage** to advance the job.\n\n### Starting a Timer via Scan\n\nWhen you scan a job and tap Start Timer, the timer starts immediately and is logged against that job under your user account. You can only have one active timer at a time — scanning a second job and starting a timer will prompt you to stop the first one.\n\n### Moving a Job Forward\n\nIf you've completed your work on a job (e.g., finished machining), scan the job and tap **Advance Stage**. The job moves to the next stage on the kanban board. Some stage moves require confirmation if they're irreversible (Invoice, Payment).\n\n### Adding a Note via Scan\n\nScan the job and tap **Add Note**. A simple text input appears. Type your note and tap Submit. The note is added to the job's activity log and any @mentioned users receive a notification.\n\n### What If the Scanner Doesn't Work\n\nIf the barcode doesn't scan, type the job number manually in the search bar on the kiosk display. Job numbers always follow the format shown at the top of the work order.","sections":[]}"""
+            };
+
+            var sfQuickRef = new TrainingModule
+            {
+                Title = "Shop Floor Quick Reference",
+                Slug = "shop-floor-quick-reference",
+                Summary = "Quick reference for kiosk actions, barcode scanning, job statuses, and common troubleshooting.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.QuickRef,
+                EstimatedMinutes = 2,
+                IsPublished = true,
+                SortOrder = 4,
+                AppRoutes = """["/shop-floor"]""",
+                Tags = """["shop-floor","reference"]""",
+                ContentJson = """{"title":"Shop Floor Quick Reference","groups":[{"heading":"Kiosk Actions","items":[{"label":"Clock In","value":"Scan badge → enter PIN → tap Clock In"},{"label":"Start Timer","value":"Scan badge → scan job barcode → tap Start Timer"},{"label":"Stop Timer","value":"Tap active timer → Stop, or scan new job to auto-switch"},{"label":"Move Job Forward","value":"Scan job → Advance Stage (requires authentication)"},{"label":"Add Note","value":"Scan job → Add Note → type message → Submit"}]},{"heading":"Badge Troubleshooting","items":[{"label":"Badge not found","value":"Ask admin to add your badge under Admin → Users → Scan Identifiers"},{"label":"Wrong PIN","value":"3 wrong attempts locks session — wait 5 min or ask admin"},{"label":"Forgot PIN","value":"Ask admin to reset from your user profile"},{"label":"PIN change","value":"Web login → Account → Security → PIN section"}]},{"heading":"Job Status Indicators","items":[{"label":"Green border","value":"Job is on schedule — due date in the future"},{"label":"Yellow border","value":"Job is due today"},{"label":"Red border","value":"Job is overdue — escalate to supervisor"},{"label":"Timer icon","value":"Active time entry running against this job"}]}]}"""
+            };
+
+            int sfClockInId = await GetOrCreateModule(sfClockIn);
+            int sfKioskId = await GetOrCreateModule(sfKiosk);
+            int sfScanningId = await GetOrCreateModule(sfScanning);
+            int sfQuickRefId = await GetOrCreateModule(sfQuickRef);
+            bySlug.TryGetValue("logging-your-time", out var logTimeId);
+            bySlug.TryGetValue("submitting-expenses", out var expensesId);
+
+            var shopFloorPath = new TrainingPath
+            {
+                Title = "Shop Floor Worker",
+                Slug = "shop-floor-worker",
+                Description = "Everything a shop floor worker needs to clock in, scan jobs, track time, and submit expenses from the kiosk.",
+                Icon = "factory",
+                IsAutoAssigned = false,
+                IsActive = true,
+                SortOrder = 3,
+                AllowedRoles = """["Admin","Manager","Engineer","ProductionWorker"]""",
+            };
+            db.TrainingPaths.Add(shopFloorPath);
+            await db.SaveChangesAsync();
+
+            var sfModules = new List<(int ModuleId, int Position)>
+            {
+                (sfClockInId, 1), (sfKioskId, 2), (sfScanningId, 3), (sfQuickRefId, 4),
+            };
+            if (logTimeId > 0) sfModules.Add((logTimeId, 5));
+            if (expensesId > 0) sfModules.Add((expensesId, 6));
+
+            foreach (var (moduleId, position) in sfModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = shopFloorPath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+            await db.SaveChangesAsync();
+            Log.Information("Seeded Shop Floor Worker training path");
+        }
+
+        // ── Path 4: Production Manager ─────────────────────────────────────
+        if (!await db.TrainingPaths.Where(p => p.Title == "Production Manager").AnyAsync())
+        {
+            var approvingExpenses = new TrainingModule
+            {
+                Title = "Approving Expenses and Reviewing Submissions",
+                Slug = "approving-expenses",
+                Summary = "How managers review employee expense submissions, approve or reject them, and handle reimbursement workflows.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 1,
+                AppRoutes = """["/expenses"]""",
+                Tags = """["expenses","manager","approval"]""",
+                ContentJson = """{"body":"## Approving Expenses as a Manager\n\nManagers can see all expense submissions from their team and are responsible for reviewing and approving or rejecting them.\n\n### Approval Queue\n\nNavigate to **Expenses → Approval Queue**. This view shows all submissions pending your review, sorted by submission date. You can filter by employee, date range, or category.\n\n### Reviewing a Submission\n\nClick any expense row to expand its details. You'll see:\n- The employee's description and category\n- The amount and date\n- A thumbnail of the receipt (click to enlarge)\n- The linked job (if applicable)\n\n### Approving\n\nIf everything looks correct, click **Approve**. The expense is marked Approved and will be included in the next payroll or reimbursement run depending on your company's process.\n\n### Rejecting with Feedback\n\nIf you need to reject a submission (wrong category, missing receipt, over policy limit), click **Reject** and enter a brief reason. The employee receives a notification with your reason and can resubmit with corrections.\n\n### Expense Policies\n\nExpenses over your company's policy limit may be flagged automatically. You'll see a warning indicator. These still need your manual review — the system flags them but doesn't auto-reject.\n\n### Reporting\n\nUse Reports → Expense Report to see all approved expenses by employee, job, date range, or category. This is the primary input for expense reimbursement and job costing.","sections":[]}"""
+            };
+
+            var capacityMonitor = new TrainingModule
+            {
+                Title = "Capacity and Workload Monitoring",
+                Slug = "capacity-workload-monitoring",
+                Summary = "How to use reports and the kanban board to monitor team workload, identify bottlenecks, and rebalance work.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 6,
+                IsPublished = true,
+                SortOrder = 2,
+                AppRoutes = """["/reports","/kanban"]""",
+                Tags = """["manager","capacity","planning"]""",
+                ContentJson = """{"body":"## Capacity and Workload Monitoring\n\nAs a manager, you're responsible for making sure your team's workload is sustainable and that no single person is overloaded.\n\n### Board-Level Visibility\n\nThe Kanban Board's Team Swimlane view (toggle from the board filters) organizes cards by assignee. You can immediately see who has too much in their queue and who has capacity to take more.\n\nWIP limits per column are your first guardrail — when a column turns red, it's a signal to stop pulling work into that stage and finish what's there.\n\n### Workload Report\n\nNavigate to **Reports** and open the **Workload by Assignee** report. This shows each team member's active job count, total estimated hours, and remaining hours for the current planning cycle. Use this to identify imbalances before they become problems.\n\n### Time Distribution Report\n\nThe **Time by Employee** report shows actual hours logged per person over any date range. Compare this against planned hours from the planning cycle to spot who's running hot or cold.\n\n### Reassigning Jobs\n\nFrom the kanban board, Ctrl+Click to select one or more cards and use the bulk Assign action to reassign them. You can also open a job's detail panel and change the assignee directly.\n\n### Planning Cycle Adjustments\n\nIf a mid-cycle review shows the team is overloaded, open Planning and move uncommitted work back to the backlog. Protect the team's ability to finish what they started.","sections":[]}"""
+            };
+
+            var managerQuiz = new TrainingModule
+            {
+                Title = "Production Manager Assessment",
+                Slug = "production-manager-quiz",
+                Summary = "An assessment covering manager tools: expense approval, capacity monitoring, planning cycles, and reporting.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Quiz,
+                EstimatedMinutes = 7,
+                IsPublished = true,
+                SortOrder = 3,
+                AppRoutes = """["/training"]""",
+                Tags = """["manager","quiz","assessment"]""",
+                ContentJson = """{"passingScore":75,"questionsPerQuiz":8,"shuffleOptions":true,"showExplanationsAfterSubmit":true,"questions":[{"id":"pm1","text":"An employee submitted an expense with a missing receipt. What is the correct action?","options":[{"id":"a","text":"Approve it anyway — receipts are optional for small amounts"},{"id":"b","text":"Reject it with a reason so the employee can resubmit with the receipt attached","isCorrect":true},{"id":"c","text":"Delete the submission and ask them to resubmit from scratch"},{"id":"d","text":"Hold it in the queue until payday and decide then"}],"explanation":"Reject with a clear reason so the employee knows what's missing. They'll receive a notification with your feedback and can correct and resubmit. Don't hold submissions indefinitely."},{"id":"pm2","text":"The kanban board column 'In Production' has a red header. What should you do as a manager?","options":[{"id":"a","text":"Archive some jobs in that column to bring the count down"},{"id":"b","text":"Stop pulling new jobs into that stage and focus the team on completing the current ones","isCorrect":true},{"id":"c","text":"Remove the WIP limit to allow more work in that stage"},{"id":"d","text":"Reassign all jobs in that column to different team members"}],"explanation":"A red column header means the WIP limit has been exceeded. The right response is to stop adding work and focus on clearing the current load first. WIP limits protect quality and throughput."},{"id":"pm3","text":"You want to see which employees are working on what during the current planning cycle. Where do you look?","options":[{"id":"a","text":"Dashboard → Open Orders widget — it shows all active jobs"},{"id":"b","text":"Kanban Board → Team Swimlane view — shows cards grouped by assignee","isCorrect":true},{"id":"c","text":"Reports → Time Tracking → export the week"},{"id":"d","text":"Admin → Teams → member activity"}],"explanation":"The Team Swimlane view on the Kanban Board reorganizes cards by assignee, giving you an immediate visual of who is working on what and whether anyone is overloaded."},{"id":"pm4","text":"A team member is logging significantly fewer hours than expected. What is the best first step?","options":[{"id":"a","text":"Run the Time by Employee report to see their actual logged hours and compare to planned","isCorrect":true},{"id":"b","text":"Assume they are not working and issue a warning"},{"id":"c","text":"Delete their timer entries for the week and have them re-enter"},{"id":"d","text":"Move their jobs to someone else and wait"}],"explanation":"Start with data. Run the Time by Employee report to see what they've actually logged. There could be legitimate reasons (they forgot to start timers) or it could signal an issue that needs a conversation."},{"id":"pm5","text":"Mid-cycle, the team is clearly overloaded — too much committed work for the time remaining. What should you do?","options":[{"id":"a","text":"Leave it and expect overtime to absorb the difference"},{"id":"b","text":"Archive jobs in the current cycle to reduce the count"},{"id":"c","text":"Move lower-priority committed jobs back to the backlog to protect the team's ability to finish priority work","isCorrect":true},{"id":"d","text":"Extend the cycle length to accommodate all work"}],"explanation":"Moving work back to the backlog is the right answer. Committing to more than you can finish damages morale and quality. Protect the cycle by cutting scope, not extending time or expecting heroics."},{"id":"pm6","text":"Which report shows you each team member's active job count and estimated hours for the current cycle?","options":[{"id":"a","text":"Job Summary Report — filter by current cycle"},{"id":"b","text":"Workload by Assignee Report","isCorrect":true},{"id":"c","text":"Time by Employee Report — shows logged vs. planned"},{"id":"d","text":"AR Aging Report — includes job hours in the aging buckets"}],"explanation":"The Workload by Assignee report is purpose-built for capacity visibility. It shows active job counts, estimated hours, and remaining hours per person for the current planning cycle."},{"id":"pm7","text":"You need to move 5 jobs from one assignee to another because someone called in sick. What is the fastest way?","options":[{"id":"a","text":"Open each job individually and change the assignee one by one"},{"id":"b","text":"Ctrl+Click all 5 cards on the board and use the bulk Assign action","isCorrect":true},{"id":"c","text":"Archive all 5 jobs and reassign them from the backlog"},{"id":"d","text":"Update the team's schedule in Admin → Teams"}],"explanation":"Ctrl+Click selects multiple cards. With all 5 selected, the bulk Assign action lets you change the assignee for all of them in a single operation — no need to open each card individually."},{"id":"pm8","text":"A planning cycle is ending and several committed jobs are not complete. What happens to them?","options":[{"id":"a","text":"They are automatically archived as missed"},{"id":"b","text":"They are deleted and need to be re-entered next cycle"},{"id":"c","text":"They roll over to the next cycle or you can return them to the backlog","isCorrect":true},{"id":"d","text":"They automatically move to the first stage of the next cycle's board"}],"explanation":"Incomplete committed jobs don't disappear. You choose what to do with them: roll them over to the next cycle automatically, or move them back to the backlog if priorities have changed."},{"id":"pm9","text":"You want to understand job costing for the last month — how many hours were spent per job and by whom. Which report do you use?","options":[{"id":"a","text":"Expense Report — includes time as a cost line"},{"id":"b","text":"Time by Job report filtered to last 30 days","isCorrect":true},{"id":"c","text":"Job Summary report — it includes hour totals automatically"},{"id":"d","text":"AR Aging report — it calculates cost vs. billable"}],"explanation":"The Time by Job report shows hours logged per job, with breakdowns by employee. Filter to your date range for a clean job costing view. This is the primary input for understanding where your team's time is going."},{"id":"pm10","text":"An employee's expense submission has been sitting in the approval queue for 2 weeks. What should you check?","options":[{"id":"a","text":"Nothing — employees can wait indefinitely in the queue"},{"id":"b","text":"Whether it was accidentally rejected and the employee wasn't notified"},{"id":"c","text":"Check if another manager already approved it or if it needs your action","isCorrect":true},{"id":"d","text":"Automatically approve all expenses over 14 days old"}],"explanation":"Check the Approval Queue to see the submission's current status. It may need your action, may have been approved by another manager, or may have been rejected and the employee doesn't know. Old pending items deserve attention."},{"id":"pm11","text":"What does the WIP limit on a kanban column represent?","options":[{"id":"a","text":"The maximum number of files that can be attached to jobs in that column"},{"id":"b","text":"The recommended maximum number of jobs that should be in that stage simultaneously","isCorrect":true},{"id":"c","text":"The number of employees allowed to work on jobs in that stage"},{"id":"d","text":"The maximum budget allocated to jobs at that stage"}],"explanation":"WIP limits set a cap on how many jobs should be in a stage at once. They prevent overloading any single stage and encourage flow — finish work in progress before pulling more in."},{"id":"pm12","text":"You want to review all expenses charged to a specific job. How do you do this?","options":[{"id":"a","text":"Open the job detail panel → Expenses tab","isCorrect":true},{"id":"b","text":"Expenses page → filter by job number"},{"id":"c","text":"Reports → Job Summary → click the job row to see expenses"},{"id":"d","text":"Admin → Audit Log → filter by job"}],"explanation":"The job detail panel has an Expenses tab showing all expense submissions linked to that job. This gives you quick access to all job-related costs without leaving the job context."}]}"""
+            };
+
+            int approveExpId = await GetOrCreateModule(approvingExpenses);
+            int capacityId = await GetOrCreateModule(capacityMonitor);
+            int managerQuizId = await GetOrCreateModule(managerQuiz);
+            bySlug.TryGetValue("kanban-board-basics", out var kanbanId);
+            bySlug.TryGetValue("backlog-and-planning", out var backlogId);
+            bySlug.TryGetValue("reports-and-analytics", out var reportsId);
+
+            var managerPath = new TrainingPath
+            {
+                Title = "Production Manager",
+                Slug = "production-manager",
+                Description = "Training for production managers: team oversight, expense approval, capacity monitoring, reporting, and planning.",
+                Icon = "manage_accounts",
+                IsAutoAssigned = false,
+                IsActive = true,
+                SortOrder = 4,
+                AllowedRoles = """["Admin","Manager"]""",
+            };
+            db.TrainingPaths.Add(managerPath);
+            await db.SaveChangesAsync();
+
+            var pmModules = new List<(int ModuleId, int Position)>
+            {
+                (approveExpId, 1), (capacityId, 2),
+            };
+            if (kanbanId > 0) pmModules.Add((kanbanId, 3));
+            if (backlogId > 0) pmModules.Add((backlogId, 4));
+            if (reportsId > 0) pmModules.Add((reportsId, 5));
+            pmModules.Add((managerQuizId, 6));
+
+            foreach (var (moduleId, position) in pmModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = managerPath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+            await db.SaveChangesAsync();
+            Log.Information("Seeded Production Manager training path");
+        }
+
+        // ── Path 5: Office & Finance ───────────────────────────────────────
+        if (!await db.TrainingPaths.Where(p => p.Title == "Office and Finance").AnyAsync())
+        {
+            var customersModule = new TrainingModule
+            {
+                Title = "Customers and Contacts",
+                Slug = "customers-and-contacts",
+                Summary = "How to manage the customer list, add contacts, and track customer addresses for order fulfillment.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 1,
+                AppRoutes = """["/customers"]""",
+                Tags = """["customers","contacts","office"]""",
+                ContentJson = """{"body":"## Customers and Contacts\n\nThe Customers module is your CRM. It tracks who you do business with, their contact information, billing and shipping addresses, and their order history.\n\n### Customer List\n\nNavigate to **Customers** in the sidebar. The table shows all active customers with their primary contact, phone, and recent order activity. Use the search box to find a customer by name, city, or email.\n\n### Adding a Customer\n\nClick **New Customer** and fill in the company name, billing address, payment terms, and credit limit. At least one contact is required — add the primary contact's name, title, email, and phone.\n\n### Multiple Addresses\n\nCustomers can have multiple shipping addresses (e.g., different warehouse locations). Open a customer record and go to the **Addresses** tab to add, edit, or set a default shipping address. When creating a shipment, you'll select from these addresses.\n\n### Contacts\n\nThe **Contacts** tab shows all people at that company. Each contact can have a direct phone number, email, and role (e.g., AP Contact, Engineering, Purchasing). Having accurate contacts helps route questions to the right person.\n\n### Customer Orders and History\n\nThe **Orders** tab shows all sales orders and quotes for that customer. Click any order to open it directly. This is the fastest way to look up 'what's the status of Joe's order from last month.'\n\n### Notes and Activities\n\nUse the activity log on each customer record to log calls, emails, and follow-up notes. Keep the record current so the whole team has context.","sections":[]}"""
+            };
+
+            var quotesModule = new TrainingModule
+            {
+                Title = "Quotes and Estimates",
+                Slug = "quotes-and-estimates",
+                Summary = "How to create price quotes, add line items, apply discount and tax, and convert a quote to a sales order.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 6,
+                IsPublished = true,
+                SortOrder = 2,
+                AppRoutes = """["/quotes"]""",
+                Tags = """["quotes","sales","office"]""",
+                ContentJson = """{"body":"## Quotes and Estimates\n\nA quote is a formal price proposal sent to a customer before an order is placed. In QB Engineer, quotes link directly to jobs — when a customer accepts, the quote converts to a Sales Order and a job is created on the kanban board.\n\n### Creating a Quote\n\nNavigate to **Quotes** and click **New Quote**. Select the customer, set the expiration date, and add line items. Each line item can reference a part from your Parts Catalog (which pulls in the standard price) or be entered manually.\n\n### Pricing and Discounts\n\nFor each line item, set the unit price, quantity, and optionally a per-line discount percentage. A running total at the bottom of the quote updates as you add items.\n\n### Tax and Shipping\n\nAdd applicable sales tax and shipping charges as separate line items or use the Tax and Shipping fields at the bottom of the quote. Tax rates can be set per-customer from their record.\n\n### Sending to the Customer\n\nClick **Send** to generate a PDF quote. The PDF is automatically emailed to the customer's primary billing contact (or any contact you specify) and a copy is stored in the quote's Files section.\n\n### Quote Statuses\n\n- **Draft** — being built, not sent\n- **Sent** — delivered to customer, awaiting response\n- **Accepted** — customer approved\n- **Rejected** — customer declined\n- **Expired** — past the expiration date\n\n### Converting to a Sales Order\n\nWhen a customer accepts, click **Convert to Sales Order**. A Sales Order is created with the same line items, and if the job doesn't exist yet, you'll be prompted to create one on the kanban board.","sections":[]}"""
+            };
+
+            var invoicingModule = new TrainingModule
+            {
+                Title = "Invoicing and Billing",
+                Slug = "invoicing-and-billing",
+                Summary = "How to create invoices from shipped jobs or sales orders, send them to customers, and manage invoice statuses.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 6,
+                IsPublished = true,
+                SortOrder = 3,
+                AppRoutes = """["/invoices"]""",
+                Tags = """["invoices","billing","office"]""",
+                ContentJson = """{"body":"## Invoicing and Billing\n\nInvoices are generated after work is shipped or services are delivered. In QB Engineer (standalone mode), you manage the full invoice lifecycle locally. If QuickBooks is connected, invoices sync there automatically.\n\n### Creating an Invoice\n\nNavigate to **Invoices** and click **New Invoice**. The most common flow is to start from a shipped Sales Order — click **Create Invoice from SO** and select the order. Line items are pre-populated from the SO.\n\nAlternatively, create a blank invoice and add line items manually.\n\n### Invoice Statuses\n\n- **Draft** — being prepared\n- **Sent** — emailed or mailed to customer\n- **Partial** — customer has made a partial payment\n- **Paid** — fully paid\n- **Void** — cancelled (preserved for audit trail)\n\n### Sending the Invoice\n\nClick **Send** to email the invoice as a PDF to the customer's billing contact. A copy is attached to the invoice record. You can also print and mail it.\n\n### Applying Payments\n\nWhen a customer pays, go to **Payments** and create a new payment. Select the customer and the invoices to apply it to. QB Engineer tracks the remaining balance and updates invoice status automatically.\n\n### Late Invoices\n\nThe **AR Aging** report in Reports shows all outstanding invoices bucketed by age (0–30, 31–60, 61–90, 90+ days). This is the key tool for collections follow-up.","sections":[]}"""
+            };
+
+            var paymentsModule = new TrainingModule
+            {
+                Title = "Payments and Accounts Receivable",
+                Slug = "payments-and-ar",
+                Summary = "How to record customer payments, apply them to invoices, and use AR aging to track outstanding balances.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 4,
+                AppRoutes = """["/payments"]""",
+                Tags = """["payments","ar","office"]""",
+                ContentJson = """{"body":"## Payments and Accounts Receivable\n\n### Recording a Payment\n\nNavigate to **Payments** and click **New Payment**. Select the customer, enter the amount received, payment date, and method (Check, ACH, Credit Card, Wire). Then select which invoices this payment applies to.\n\n### Partial Payments\n\nIf the payment doesn't cover the full invoice, apply it as a partial. The invoice status updates to 'Partial' and the remaining balance is tracked. The next payment can be applied to the same invoice.\n\n### Overpayments\n\nIf a customer overpays, the excess amount becomes a credit on their account. You can apply it to future invoices.\n\n### AR Aging Report\n\nNavigate to **Reports** and run **AR Aging**. This shows all open balances grouped by how old they are:\n- 0–30 days: Current — just sent, normal\n- 31–60 days: Follow up if no response\n- 61–90 days: Escalate — this needs attention\n- 90+ days: Consider collections or write-off\n\nSort by customer or by age bucket to prioritize your collection calls.\n\n### Payment Terms\n\nPayment terms are set per customer (Net 15, Net 30, Net 45, etc.). They appear on every invoice and drive the AR aging calculation. Update a customer's terms from their record → Billing section.","sections":[]}"""
+            };
+
+            var vendorsModule = new TrainingModule
+            {
+                Title = "Vendors and Vendor Management",
+                Slug = "vendors-management",
+                Summary = "How to manage vendors, track contact information, and link vendors to purchase orders and parts.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 4,
+                IsPublished = true,
+                SortOrder = 5,
+                AppRoutes = """["/vendors"]""",
+                Tags = """["vendors","purchasing","office"]""",
+                ContentJson = """{"body":"## Vendors and Vendor Management\n\nVendors are the companies you purchase materials, services, and tooling from. The Vendors module keeps their contact info, payment terms, and order history in one place.\n\n### Vendor List\n\nNavigate to **Vendors**. The table shows all active vendors with their primary contact and recent PO activity. Search by name or filter by category.\n\n### Adding a Vendor\n\nClick **New Vendor** and fill in the company name, address, payment terms, and primary contact. If this vendor handles materials for specific parts, you can link them from the Parts Catalog BOM.\n\n### Vendor Contacts\n\nAdd multiple contacts under the **Contacts** tab — Account Manager, Sales Rep, AP Contact, etc. Keep emails and direct phone numbers current so you can reach the right person when a delivery is late or there's a quality issue.\n\n### Purchase History\n\nThe **Purchase Orders** tab on each vendor record shows all POs you've ever sent to that vendor. Click any PO to view its status and received quantities. This is useful for verifying pricing history before creating a new order.\n\n### Vendor Performance Notes\n\nUse the activity log on the vendor record to note delivery issues, quality concerns, or price changes. This institutional knowledge is shared across your team.","sections":[]}"""
+            };
+
+            var officeQuickRef = new TrainingModule
+            {
+                Title = "Office and Finance Quick Reference",
+                Slug = "office-finance-quick-reference",
+                Summary = "Quick reference for order-to-cash workflow, invoice statuses, payment terms, and common office actions.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.QuickRef,
+                EstimatedMinutes = 2,
+                IsPublished = true,
+                SortOrder = 6,
+                AppRoutes = """["/invoices","/payments","/quotes","/sales-orders"]""",
+                Tags = """["office","reference","billing"]""",
+                ContentJson = """{"title":"Office and Finance Quick Reference","groups":[{"heading":"Order-to-Cash Workflow","items":[{"label":"Step 1","value":"Quote → customer accepts → Convert to Sales Order"},{"label":"Step 2","value":"Sales Order → production begins → job moves through kanban stages"},{"label":"Step 3","value":"Job shipped → Create Invoice from Sales Order"},{"label":"Step 4","value":"Invoice sent → customer pays → Record Payment → apply to invoice"}]},{"heading":"Invoice Statuses","items":[{"label":"Draft","value":"Being prepared — not sent to customer yet"},{"label":"Sent","value":"Emailed or delivered — awaiting payment"},{"label":"Partial","value":"Customer has paid some but not all"},{"label":"Paid","value":"Fully paid — balance is zero"},{"label":"Void","value":"Cancelled — preserved for audit"}]},{"heading":"Payment Terms","items":[{"label":"Net 15","value":"Payment due 15 days from invoice date"},{"label":"Net 30","value":"Payment due 30 days from invoice date"},{"label":"Net 45 / Net 60","value":"Extended terms for large customers"},{"label":"Due on Receipt","value":"Payment expected immediately upon delivery"}]},{"heading":"AR Aging Buckets","items":[{"label":"0–30 days","value":"Current — normal, no action needed"},{"label":"31–60 days","value":"Follow up with a courtesy reminder"},{"label":"61–90 days","value":"Escalate — call the customer directly"},{"label":"90+ days","value":"Consider collections or payment plan"}]}]}"""
+            };
+
+            int custId = await GetOrCreateModule(customersModule);
+            int quotesId = await GetOrCreateModule(quotesModule);
+            int invoiceId = await GetOrCreateModule(invoicingModule);
+            int paymentsId = await GetOrCreateModule(paymentsModule);
+            int vendorsId = await GetOrCreateModule(vendorsModule);
+            int officeQRId = await GetOrCreateModule(officeQuickRef);
+            bySlug.TryGetValue("purchase-orders-and-receiving", out var poId);
+
+            var officePath = new TrainingPath
+            {
+                Title = "Office and Finance",
+                Slug = "office-and-finance",
+                Description = "Training for office and finance staff: quotes, sales orders, invoicing, payments, AR, and vendor management.",
+                Icon = "account_balance",
+                IsAutoAssigned = false,
+                IsActive = true,
+                SortOrder = 5,
+                AllowedRoles = """["Admin","Manager","OfficeManager"]""",
+            };
+            db.TrainingPaths.Add(officePath);
+            await db.SaveChangesAsync();
+
+            var officeModules = new List<(int ModuleId, int Position)>
+            {
+                (custId, 1), (quotesId, 2), (invoiceId, 3), (paymentsId, 4), (vendorsId, 5), (officeQRId, 6),
+            };
+            if (poId > 0) officeModules.Add((poId, 7));
+
+            foreach (var (moduleId, position) in officeModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = officePath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+            await db.SaveChangesAsync();
+            Log.Information("Seeded Office and Finance training path");
+        }
+
+        // ── Path 6: Parts, Inventory & Quality ────────────────────────────
+        if (!await db.TrainingPaths.Where(p => p.Title == "Parts, Inventory and Quality").AnyAsync())
+        {
+            var inventoryModule = new TrainingModule
+            {
+                Title = "Inventory Management",
+                Slug = "inventory-management",
+                Summary = "How to view stock levels, manage bin locations, process receipts, and track material movements.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 6,
+                IsPublished = true,
+                SortOrder = 1,
+                AppRoutes = """["/inventory"]""",
+                Tags = """["inventory","parts","stock"]""",
+                ContentJson = """{"body":"## Inventory Management\n\nThe Inventory module tracks your physical stock — where it is, how much you have, and where it's been. Every receipt, issue, and transfer creates a permanent movement record.\n\n### Stock Overview\n\nNavigate to **Inventory**. The Stock tab shows all stocked parts with current quantities across all bin locations. Filter by location, part type, or search by part number. Parts with zero stock or below minimum level are highlighted.\n\n### Bin Locations\n\nInventory is organized into storage locations (e.g., Warehouse A, Shelf B3, Rack C) and bins within those locations. A single part can be in multiple bins. The location path is shown for each bin (e.g., Warehouse A → Shelf B3 → Bin 12).\n\n### Receiving Stock\n\nWhen a PO delivery arrives, go to **Purchase Orders**, find the PO, and click **Receive**. Enter the actual quantity received per line and assign a bin location. Stock levels update immediately and the movement is logged.\n\n### Issuing Stock\n\nWhen stock is consumed by production (pulled for a job), record it as an issue from the inventory movement screen. Select the part, quantity, source bin, and the job it's being consumed by. This creates a consumption record.\n\n### Adjustments\n\nFor cycle counts or corrections, use **Inventory → Adjust**. Enter the part, bin, and new quantity. Provide a reason (Cycle Count, Write-Off, Correction). All adjustments are logged with who made them and why.\n\n### Minimum Stock Levels\n\nSet minimum stock levels per part to trigger low-stock alerts. When quantity drops below the minimum, the part appears highlighted in red in the inventory list and shows on the Dashboard's low-stock widget.","sections":[]}"""
+            };
+
+            var binTransfers = new TrainingModule
+            {
+                Title = "Bin Locations and Stock Transfers",
+                Slug = "bin-locations-stock-transfers",
+                Summary = "A guided walkthrough of navigating bin locations, moving stock between bins, and performing a cycle count.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Walkthrough,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 2,
+                AppRoutes = """["/inventory"]""",
+                Tags = """["inventory","bins","transfers"]""",
+                ContentJson = """{"appRoute":"/inventory","startButtonLabel":"Tour Inventory","steps":[{"element":"[data-tour='inventory-tabs']","popover":{"title":"Inventory Tabs","description":"Inventory has three tabs: Stock (current quantities per part), Locations (bin location tree), and Movements (full audit log of all receipts, issues, transfers, and adjustments).","side":"bottom"}},{"element":"[data-tour='stock-table']","popover":{"title":"Stock Table","description":"Each row is a part+bin combination. The quantity shown is the current on-hand count. Parts with quantities below the minimum level are highlighted.","side":"bottom"}},{"element":"[data-tour='transfer-btn']","popover":{"title":"Transfer Stock Between Bins","description":"Click Transfer on any stock row to move some or all of that quantity to a different bin. Both the source and destination movement records are created automatically.","side":"left"}},{"element":"[data-tour='adjust-btn']","popover":{"title":"Adjust for Cycle Count","description":"Use Adjust to correct quantities from a physical count. Select the bin, enter the counted quantity, and provide a reason. The adjustment delta is recorded.","side":"left"}},{"element":"[data-tour='movements-tab']","popover":{"title":"Movement History","description":"The Movements tab shows every stock transaction — receipts, issues, transfers, and adjustments — with the date, user, and quantity. This is your complete audit trail.","side":"bottom"}}]}"""
+            };
+
+            var qualityModule = new TrainingModule
+            {
+                Title = "Quality Inspections and QC Templates",
+                Slug = "quality-inspections-qc",
+                Summary = "How to create quality inspection templates, run inspections against jobs or lots, and review QC results.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 6,
+                IsPublished = true,
+                SortOrder = 3,
+                AppRoutes = """["/quality"]""",
+                Tags = """["quality","qc","inspections"]""",
+                ContentJson = """{"body":"## Quality Inspections and QC Templates\n\n### QC Templates\n\nNavigate to **Quality → Templates**. Templates define what gets checked during an inspection — visual checks, dimensional measurements, functional tests, and pass/fail criteria. Each template is reusable across multiple jobs or lots.\n\nTo create a template, click **New Template**. Add check items with their type (Pass/Fail, Measurement, Count), required values or tolerances, and whether each item is critical (a critical fail blocks the job from advancing).\n\n### Running an Inspection\n\nWhen a job reaches the QC/Review stage on the kanban board, an inspection can be triggered automatically (if configured) or manually. Navigate to **Quality → Inspections** and click **New Inspection**. Select the job, the template to use, and the inspector.\n\nWork through the checklist: enter measurements, mark pass/fail for each item, and add notes or photos for any failures.\n\n### Inspection Results\n\nAfter completing all items, submit the inspection. The system calculates an overall pass/fail based on your template rules. A passed inspection can advance the job. A failed inspection triggers a hold — the job can't move forward until the failure is addressed and a re-inspection passes.\n\n### Production Lots\n\nFor repetitive production (same part number, multiple units in a run), create a Lot from the Quality module. Inspections against a lot track pass/fail rates across the whole run, giving you yield data.\n\n### Reports\n\nThe QC Rejection Report in Reports shows failure rates by part, template check, or date range. Use this to identify chronic quality issues and drive process improvements.","sections":[]}"""
+            };
+
+            var inventoryQR = new TrainingModule
+            {
+                Title = "Inventory Quick Reference",
+                Slug = "inventory-quick-reference",
+                Summary = "Quick reference for inventory actions, stock movement types, and bin location concepts.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.QuickRef,
+                EstimatedMinutes = 2,
+                IsPublished = true,
+                SortOrder = 4,
+                AppRoutes = """["/inventory"]""",
+                Tags = """["inventory","reference"]""",
+                ContentJson = """{"title":"Inventory Quick Reference","groups":[{"heading":"Movement Types","items":[{"label":"Receipt","value":"Stock received from a vendor PO — increases quantity"},{"label":"Issue","value":"Stock consumed by a job — decreases quantity"},{"label":"Transfer","value":"Stock moved from one bin to another — no net change"},{"label":"Adjustment","value":"Manual correction (cycle count, write-off) — changes quantity with logged reason"}]},{"heading":"Common Actions","items":[{"label":"View current stock","value":"Inventory → Stock tab"},{"label":"Receive from PO","value":"Purchase Orders → open PO → Receive"},{"label":"Transfer between bins","value":"Inventory → Stock → Transfer button on any row"},{"label":"Cycle count adjustment","value":"Inventory → Stock → Adjust button"},{"label":"View movement history","value":"Inventory → Movements tab"}]},{"heading":"Stock Status Indicators","items":[{"label":"Green","value":"Stock above minimum level — healthy"},{"label":"Yellow","value":"Stock at or near minimum level — reorder soon"},{"label":"Red","value":"Stock below minimum or zero — action required"},{"label":"Reserved","value":"Quantity reserved for a job — do not use for other orders"}]}]}"""
+            };
+
+            var partsInventoryQuiz = new TrainingModule
+            {
+                Title = "Parts and Inventory Assessment",
+                Slug = "parts-inventory-quiz",
+                Summary = "An assessment covering parts catalog, BOM management, inventory movements, and quality inspections.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Quiz,
+                EstimatedMinutes = 7,
+                IsPublished = true,
+                SortOrder = 5,
+                AppRoutes = """["/training"]""",
+                Tags = """["parts","inventory","quality","quiz"]""",
+                ContentJson = """{"passingScore":75,"questionsPerQuiz":8,"shuffleOptions":true,"showExplanationsAfterSubmit":true,"questions":[{"id":"pi1","text":"You received 50 units of a raw material from a vendor. Where do you record this in QB Engineer?","options":[{"id":"a","text":"Inventory → Stock → Adjust (enter new total quantity)"},{"id":"b","text":"Purchase Orders → open the PO → Receive (enter actual qty received)","isCorrect":true},{"id":"c","text":"Parts Catalog → part record → Inventory tab → Add Stock"},{"id":"d","text":"Create a new inventory movement manually in the Movements tab"}],"explanation":"Always receive stock through the Purchase Order. This links the receipt to the vendor, creates the movement record, and closes the PO line — all in one step. Using Adjust would work but bypasses the PO linkage."},{"id":"pi2","text":"A QC inspection finds a critical defect on a job. What happens next?","options":[{"id":"a","text":"The job is automatically archived as failed"},{"id":"b","text":"The job is placed on hold and cannot advance until the failure is addressed and a re-inspection passes","isCorrect":true},{"id":"c","text":"The job moves to the next stage with a defect flag attached"},{"id":"d","text":"An email is sent to the customer explaining the delay"}],"explanation":"Critical failures create a hold on the job — it cannot move to the next stage until the issue is corrected and a follow-up inspection passes. This is a quality gate built into the workflow."},{"id":"pi3","text":"A part has BOM source type 'Make'. You just created a job for the parent part. What else should happen?","options":[{"id":"a","text":"Nothing — 'Make' is just a label, no automatic actions"},{"id":"b","text":"A child sub-job is created for the Make component linked to the parent job","isCorrect":true},{"id":"c","text":"A purchase order is automatically created for the component"},{"id":"d","text":"The component is reserved from inventory immediately"}],"explanation":"'Make' source means manufacturing in-house. When a job is created for the parent part, the system creates a linked child sub-job for any Make component. Both jobs then appear on the board."},{"id":"pi4","text":"You want to move 20 units of aluminum bar from Shelf A to Shelf B. How do you record this?","options":[{"id":"a","text":"Create two Adjust transactions — decrease Shelf A, increase Shelf B"},{"id":"b","text":"Inventory → Stock → Transfer on the Shelf A row, entering 20 units and selecting Shelf B as destination","isCorrect":true},{"id":"c","text":"Delete the Shelf A stock record and add a new record for Shelf B"},{"id":"d","text":"You cannot move stock — location is set when received and is permanent"}],"explanation":"The Transfer action on a stock row moves quantities between bins in a single transaction. It creates both the outbound and inbound movement records automatically, keeping the audit trail clean."},{"id":"pi5","text":"What does a 'Reserved' quantity indicator on a stock row mean?","options":[{"id":"a","text":"The stock has been quarantined due to a quality hold"},{"id":"b","text":"The stock is set aside for a specific job and should not be used for other orders","isCorrect":true},{"id":"c","text":"The vendor reserved this quantity in their warehouse for a future PO"},{"id":"d","text":"The stock record is locked by another user and cannot be edited"}],"explanation":"Reserved quantities are allocated to a specific job or order. They're still physically in the bin, but the system treats them as committed. Unreserved (available) quantity is what you can use for new orders."},{"id":"pi6","text":"You need to understand how many units of PN-1042 you used last quarter. Where do you find this?","options":[{"id":"a","text":"Parts Catalog → PN-1042 → Inventory tab → movement history","isCorrect":true},{"id":"b","text":"Inventory → Stock → click the part row to see history"},{"id":"c","text":"Reports → Parts Usage → filter by part number"},{"id":"d","text":"Both A and B are correct — either path works"}],"explanation":"The Part detail Inventory tab shows all movements (receipts, issues, transfers, adjustments) for that specific part. The Inventory Movements tab also works but you'd need to filter it by part number."},{"id":"pi7","text":"A job is at the QC/Review stage. The quality inspection passes. What typically happens next?","options":[{"id":"a","text":"The job is automatically archived as complete"},{"id":"b","text":"The inspector must manually re-open the kanban board and drag the job to Shipped"},{"id":"c","text":"The passed inspection removes the QC hold and the job can advance to the next stage (Shipped)","isCorrect":true},{"id":"d","text":"A customer notification is sent automatically and the job is invoiced"}],"explanation":"A passed inspection clears the QC gate. The job is now eligible to move to the next stage (Shipped). The stage move is still manual — someone needs to drag or move the card — but the quality block is removed."},{"id":"pi8","text":"You want to know the current stock quantity of a specific part across ALL bin locations. What is the best way?","options":[{"id":"a","text":"Check each bin location individually and add up the numbers"},{"id":"b","text":"Parts Catalog → part detail → Inventory tab — shows total and per-bin breakdown","isCorrect":true},{"id":"c","text":"Inventory → Stock tab — the part appears once per bin, add manually"},{"id":"d","text":"Reports → Stock Summary — only that report shows totals"}],"explanation":"The part detail Inventory tab shows the total on-hand quantity at the top, then a breakdown by bin location below. This is the fastest single view for total stock across all locations."},{"id":"pi9","text":"A new design revision has been approved for part PN-1042. How should this be handled in QB Engineer?","options":[{"id":"a","text":"Edit the existing part record to reflect the new design"},{"id":"b","text":"Archive PN-1042 and create PN-1042A as a new part"},{"id":"c","text":"Create a new revision (e.g., Rev D) in the part's Revisions tab","isCorrect":true},{"id":"d","text":"Duplicate the part with a new part number"}],"explanation":"Always use the Revisions system. Creating a new revision preserves the full history of the previous revision — BOM, process steps, inspection records — while recording what changed and when the change was approved."},{"id":"pi10","text":"You're doing a cycle count and find 18 units in a bin, but the system shows 22. How do you correct this?","options":[{"id":"a","text":"Transfer 4 units out of the bin to balance the count"},{"id":"b","text":"Delete the stock record and recreate it with 18 units"},{"id":"c","text":"Inventory → Stock → Adjust → enter 18 as the new quantity with reason 'Cycle Count'","isCorrect":true},{"id":"d","text":"Only managers can make adjustments — submit a request to your supervisor"}],"explanation":"The Adjust action is designed exactly for cycle count discrepancies. Enter the actual counted quantity, select 'Cycle Count' as the reason, and the system records the adjustment delta (+/-4 in this case) in the movement history."}]}"""
+            };
+
+            int invId = await GetOrCreateModule(inventoryModule);
+            int binId = await GetOrCreateModule(binTransfers);
+            int qualId = await GetOrCreateModule(qualityModule);
+            int invQRId = await GetOrCreateModule(inventoryQR);
+            int piqId = await GetOrCreateModule(partsInventoryQuiz);
+            bySlug.TryGetValue("parts-catalog-basics", out var partsCatalogId);
+            bySlug.TryGetValue("parts-quick-reference", out var partsQRId);
+            bySlug.TryGetValue("purchase-orders-and-receiving", out var poId2);
+
+            var piqPath = new TrainingPath
+            {
+                Title = "Parts, Inventory and Quality",
+                Slug = "parts-inventory-quality",
+                Description = "Deep training on the parts catalog, BOM management, inventory movements, bin transfers, and quality inspections.",
+                Icon = "inventory_2",
+                IsAutoAssigned = false,
+                IsActive = true,
+                SortOrder = 6,
+                AllowedRoles = """["Admin","Manager","Engineer"]""",
+            };
+            db.TrainingPaths.Add(piqPath);
+            await db.SaveChangesAsync();
+
+            var piqModules = new List<(int ModuleId, int Position)>
+            {
+                (invId, 1), (binId, 2), (qualId, 3), (invQRId, 4),
+            };
+            if (partsCatalogId > 0) piqModules.Add((partsCatalogId, 5));
+            if (partsQRId > 0) piqModules.Add((partsQRId, 6));
+            if (poId2 > 0) piqModules.Add((poId2, 7));
+            piqModules.Add((piqId, 8));
+
+            foreach (var (moduleId, position) in piqModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = piqPath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+            await db.SaveChangesAsync();
+            Log.Information("Seeded Parts, Inventory and Quality training path");
+        }
+
+        // ── Path 7: Admin Setup & Configuration ───────────────────────────
+        if (!await db.TrainingPaths.Where(p => p.Title == "Admin Setup and Configuration").AnyAsync())
+        {
+            var systemSettingsModule = new TrainingModule
+            {
+                Title = "System Settings and Branding",
+                Slug = "system-settings-branding",
+                Summary = "How to configure application settings, company profile, brand colors, logo, and company locations.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 1,
+                AppRoutes = """["/admin/settings"]""",
+                Tags = """["admin","settings","branding"]""",
+                ContentJson = """{"body":"## System Settings and Branding\n\n### Company Profile\n\nNavigate to **Admin → Settings → Company Profile**. Enter your company's legal name, phone number, email, EIN, and website. This information appears on invoices, packing slips, and other customer-facing documents.\n\n### Company Locations\n\nUnder **Admin → Settings → Locations**, add all your physical locations (main office, warehouse, remote sites). Each location has a name, address, and state. Mark one as the Default — this is the default work location for employees who haven't specified one, and it drives state withholding form requirements.\n\n### Brand Colors and Logo\n\nIn **Admin → Settings**, scroll to the Brand section. Enter hex color codes for your primary and accent brand colors. These update the entire app's color theme in real time — all users see the change immediately.\n\nTo upload your company logo, click the Logo section and drag your image file (PNG or SVG recommended). The logo appears in the header bar and on printed documents.\n\n### Application Settings\n\nThe Settings panel also has configuration for:\n- **Application name** — shown in the browser tab and header\n- **Planning cycle duration** — default length for new planning cycles\n- **Auto-archive days** — how long after completion before jobs auto-archive\n- **Max upload size** — maximum file attachment size\n- **Email notifications** — enable/disable system emails","sections":[]}"""
+            };
+
+            var complianceAdminModule = new TrainingModule
+            {
+                Title = "Compliance Templates Administration",
+                Slug = "compliance-templates-admin",
+                Summary = "How to manage compliance form templates: uploading PDFs, configuring fields, and monitoring employee completion.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 6,
+                IsPublished = true,
+                SortOrder = 2,
+                AppRoutes = """["/admin/compliance"]""",
+                Tags = """["admin","compliance","hr"]""",
+                ContentJson = """{"body":"## Compliance Templates Administration\n\n### What Are Compliance Templates?\n\nCompliance templates are the master definitions of each form employees must complete (W-4, I-9, state withholding, employee handbook, etc.). Admins manage the templates; employees fill them out from their Account page.\n\n### Creating a Template\n\nNavigate to **Admin → Compliance** and click **New Template**. Give it a title (e.g., 'Federal W-4 2024'), a form type (Tax Withholding, Identity Verification, Acknowledgment), and an effective date. Then configure which form fields employees will fill out.\n\n### Uploading a PDF Form\n\nFor government forms like the W-4, upload the official PDF. The system uses AI-powered PDF extraction to automatically identify form fields and generate a renderable form definition. Review the extracted fields and adjust any that weren't parsed correctly.\n\n### Field Configuration\n\nEach form field has a type (text, number, dropdown, signature, checkbox), validation rules, and optional help text. Some fields (name, SSN, address) are auto-populated from the employee's profile.\n\n### Monitoring Completion\n\nNavigate to **Admin → Compliance → User Status** to see completion status per employee. The table shows which forms each employee has completed, which are pending, and which are overdue. Click any employee row to see their individual form submissions.\n\n### Approval Workflow\n\nWhen an employee submits a form, it appears in the approval queue. Review the submission, and either Approve (locks the form) or Request Changes (sends it back with your notes). Approved forms generate a PDF record stored in the employee's documents.","sections":[]}"""
+            };
+
+            var integrationModule = new TrainingModule
+            {
+                Title = "Integration Configuration",
+                Slug = "integration-configuration",
+                Summary = "How to connect QuickBooks Online, configure SMTP email, set up MinIO storage, and manage integration settings.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 7,
+                IsPublished = true,
+                SortOrder = 3,
+                AppRoutes = """["/admin/integrations"]""",
+                Tags = """["admin","integrations","quickbooks"]""",
+                ContentJson = """{"body":"## Integration Configuration\n\nNavigate to **Admin → Integrations** to configure external service connections.\n\n### QuickBooks Online\n\nQB Engineer syncs with QuickBooks Online for accounting. To connect:\n1. Click **Connect QuickBooks** — you'll be redirected to the Intuit OAuth consent screen.\n2. Sign in to your QBO account and authorize QB Engineer.\n3. You're returned to the app with the connection active.\n\nOnce connected, the following sync automatically:\n- Customers (bidirectional)\n- Items/Products (from QB)\n- Invoices (QB Engineer → QB)\n- Payments (QB Engineer → QB)\n- Vendor Bills from POs (QB Engineer → QB)\n- Time Activities (QB Engineer → QB for payroll)\n\nNote: When QuickBooks is connected, some features (invoicing, payments, AR aging) are read-only in QB Engineer — manage them in QBO directly.\n\n### SMTP Email\n\nFor system emails (setup tokens, notifications, invoice delivery), configure your SMTP server under **Integrations → Email**. Enter the SMTP host, port, username, and password. Use the **Test Connection** button to send a test email before saving.\n\n### Storage (MinIO)\n\nFile attachments are stored in MinIO (S3-compatible). In a Docker Compose deployment, this is already configured. If you're using an external storage provider (AWS S3, Cloudflare R2), enter the endpoint, access key, and secret key here.\n\n### Mock Mode\n\nDuring development or testing, enable **Mock Integrations** to bypass all external APIs. All services return simulated responses. This is controlled by the `MOCK_INTEGRATIONS` environment variable in docker-compose.yml.","sections":[]}"""
+            };
+
+            var refDataModule = new TrainingModule
+            {
+                Title = "Reference Data and Terminology",
+                Slug = "reference-data-terminology",
+                Summary = "How to manage lookup values (expense categories, lead sources, priorities) and customize application labels.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 4,
+                IsPublished = true,
+                SortOrder = 4,
+                AppRoutes = """["/admin/reference-data","/admin/terminology"]""",
+                Tags = """["admin","reference-data","terminology"]""",
+                ContentJson = """{"body":"## Reference Data and Terminology\n\n### Reference Data\n\nNavigate to **Admin → Reference Data** to manage all lookup values used throughout the application. Reference data groups include:\n\n- **Expense Categories** — the dropdown in the expense form\n- **Lead Sources** — where leads came from (Trade Show, Referral, Website, etc.)\n- **Asset Types** — categories for the asset register\n- **Job Priorities** — the priority options on job cards\n\nEach group is expandable. Click a group to see its current values. You can add new values, edit labels, and reorder entries. The `code` field is immutable once set — it's used internally. Only the `label` can be changed.\n\n### Adding New Values\n\nClick **Add Item** within a group. Enter the label (what users see) and the code (internal identifier, lowercase-snake-case). Click Save. The new option immediately appears in the relevant dropdowns.\n\n### Terminology\n\nNavigate to **Admin → Terminology** to customize application labels. If your company calls jobs 'Work Orders' instead of 'Jobs', enter 'Work Orders' next to the `entity_job` key. Click **Save Terminology**.\n\nTerminology changes apply across the entire app — all users see the updated labels immediately. The change is cached in each browser for fast rendering.\n\n### Resetting Labels\n\nDelete the custom text for any terminology key to revert to the system default. The default is derived from the key name (e.g., `entity_job` → 'Job').","sections":[]}"""
+            };
+
+            var auditLogModule = new TrainingModule
+            {
+                Title = "Audit Log and System Monitoring",
+                Slug = "audit-log-monitoring",
+                Summary = "Quick reference for using the audit log to investigate changes, track user actions, and support compliance.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.QuickRef,
+                EstimatedMinutes = 3,
+                IsPublished = true,
+                SortOrder = 5,
+                AppRoutes = """["/admin/audit-log"]""",
+                Tags = """["admin","audit","monitoring"]""",
+                ContentJson = """{"title":"Audit Log and System Monitoring","groups":[{"heading":"What the Audit Log Records","items":[{"label":"Entity changes","value":"Every create, update, and delete across all entities with before/after field values"},{"label":"Auth events","value":"Logins, failed attempts, token generation, password changes"},{"label":"Admin actions","value":"Role changes, user creation/deactivation, setting changes"},{"label":"Integration events","value":"QB sync operations, file uploads, email sends"}]},{"heading":"Filtering the Log","items":[{"label":"By entity type","value":"Filter to just Jobs, Users, Invoices, etc."},{"label":"By user","value":"See everything a specific user changed"},{"label":"By date range","value":"Narrow to an incident's timeframe"},{"label":"By action","value":"Create / Update / Delete filter"}]},{"heading":"Common Use Cases","items":[{"label":"Who changed a job?","value":"Filter by entity=Job, entity ID, action=Update"},{"label":"Who logged in when?","value":"Filter by action=Login, filter by user"},{"label":"What changed in a setting?","value":"Filter by entity=SystemSetting"},{"label":"Who approved a compliance form?","value":"Filter by entity=ComplianceFormSubmission, action=Update"}]},{"heading":"Retention","items":[{"label":"Default retention","value":"90 days (configurable in system settings)"},{"label":"Compliance export","value":"Export to CSV for external audit systems"},{"label":"Immutability","value":"Audit records cannot be edited or deleted by any user"}]}]}"""
+            };
+
+            var trainingAdminModule = new TrainingModule
+            {
+                Title = "Training Module Administration",
+                Slug = "training-module-admin",
+                Summary = "How to create training modules, manage learning paths, generate AI walkthroughs, and monitor employee progress.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 6,
+                AppRoutes = """["/admin/training"]""",
+                Tags = """["admin","training","lms"]""",
+                ContentJson = """{"body":"## Training Module Administration\n\nNavigate to **Admin → Training** to manage the entire learning management system.\n\n### Content Tab\n\nThe Content tab lists all training modules. Each module has a type (Article, Video, Walkthrough, QuickRef, Quiz), published status, and estimated time. Use the search box to find modules.\n\n### Creating a Module\n\nClick **New Module** to open the editor. Fill in the title, summary, content type, and estimated time. Set the content:\n- **Article/QuickRef** — write the content in the JSON content editor or use the rich text interface\n- **Walkthrough** — define the driver.js tour steps, or use **AI Generate** to automatically create steps from the live page\n- **Quiz** — add questions with 4 options each, mark the correct answer, and optionally add explanations\n\n### Publishing\n\nModules are Draft until you toggle **Published**. Only published modules are visible to employees.\n\n### AI Walkthrough Generation\n\nFor Walkthrough modules, click the sparkle (✨) icon to trigger AI generation. The system opens the target page in a headless browser, analyzes the DOM, and sends it to the local AI model to generate relevant tour steps. Review the suggested steps and edit as needed before saving.\n\n### Paths Tab\n\nLearning Paths group modules into ordered sequences. Create a path, add modules to it in order, and mark required vs. optional. Set allowed roles and whether the path is auto-assigned to new users.\n\n### Progress Tab\n\nThe Progress tab shows completion percentages for all users. Click the detail icon (↗) on any user row to open their per-module breakdown in a side panel.","sections":[]}"""
+            };
+
+            int sysSettId = await GetOrCreateModule(systemSettingsModule);
+            int compAdminId = await GetOrCreateModule(complianceAdminModule);
+            int integId = await GetOrCreateModule(integrationModule);
+            int refDataId = await GetOrCreateModule(refDataModule);
+            int auditId = await GetOrCreateModule(auditLogModule);
+            int trainingAdminId = await GetOrCreateModule(trainingAdminModule);
+            bySlug.TryGetValue("admin-users-and-roles", out var adminUsersId);
+
+            var adminPath = new TrainingPath
+            {
+                Title = "Admin Setup and Configuration",
+                Slug = "admin-setup-configuration",
+                Description = "Complete admin onboarding: users, roles, settings, branding, integrations, compliance templates, and training administration.",
+                Icon = "admin_panel_settings",
+                IsAutoAssigned = false,
+                IsActive = true,
+                SortOrder = 7,
+                AllowedRoles = """["Admin"]""",
+            };
+            db.TrainingPaths.Add(adminPath);
+            await db.SaveChangesAsync();
+
+            var adminModules = new List<(int ModuleId, int Position)>
+            {
+                (sysSettId, 1), (compAdminId, 2), (integId, 3), (refDataId, 4), (auditId, 5), (trainingAdminId, 6),
+            };
+            if (adminUsersId > 0) adminModules.Add((adminUsersId, 7));
+
+            foreach (var (moduleId, position) in adminModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = adminPath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+            await db.SaveChangesAsync();
+            Log.Information("Seeded Admin Setup and Configuration training path");
+        }
+
+        // ── Path 8: Sales and Customer Management ─────────────────────────
+        if (!await db.TrainingPaths.Where(p => p.Title == "Sales and Customer Management").AnyAsync())
+        {
+            var leadsModule = new TrainingModule
+            {
+                Title = "Leads and Sales Pipeline",
+                Slug = "leads-pipeline",
+                Summary = "How to capture leads, track them through the sales pipeline, and convert them to customers and quotes.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 1,
+                AppRoutes = """["/leads"]""",
+                Tags = """["sales","leads","crm"]""",
+                ContentJson = """{"body":"## Leads and Sales Pipeline\n\nLeads represent potential customers or new business opportunities that haven't yet converted to a formal order. Track them through QB Engineer's Leads module from first contact to closed deal.\n\n### Lead List\n\nNavigate to **Leads**. The table shows all open leads with their source, status, assigned salesperson, and value estimate. Leads are sorted by status (New → Contacted → Qualified → Proposal → Closed).\n\n### Adding a Lead\n\nClick **New Lead**. Enter:\n- **Company name and contact** — who this opportunity is with\n- **Source** — how the lead was generated (Trade Show, Referral, Cold Call, Website, etc.)\n- **Estimated value** — your rough estimate of deal size\n- **Assignee** — who owns this lead\n- **Notes** — any context from the initial conversation\n\n### Lead Statuses\n\n- **New** — just entered, no contact made\n- **Contacted** — first contact made, awaiting response\n- **Qualified** — confirmed there's a real need and budget\n- **Proposal Sent** — a quote has been sent\n- **Won** — converted to customer/order\n- **Lost** — didn't win the business\n\n### Converting to a Customer\n\nWhen a lead converts to real business, click **Convert to Customer**. This creates a Customer record pre-populated with the lead's contact information. You can then create a Quote directly from the converted lead.\n\n### Activity Log\n\nLog every touchpoint in the lead's activity feed: calls, emails, meetings, demos. Keep the record current so you (and your team) always know the last interaction and next step.","sections":[]}"""
+            };
+
+            var shipmentsModule = new TrainingModule
+            {
+                Title = "Shipments and Carrier Tracking",
+                Slug = "shipments-tracking",
+                Summary = "How to create shipments, enter tracking numbers, ship from multiple carriers, and view delivery status.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.Article,
+                EstimatedMinutes = 5,
+                IsPublished = true,
+                SortOrder = 2,
+                AppRoutes = """["/shipments"]""",
+                Tags = """["shipments","shipping","tracking"]""",
+                ContentJson = """{"body":"## Shipments and Carrier Tracking\n\nShipments track physical delivery of goods to customers. A shipment can fulfill one or more Sales Order lines, and is required before an invoice can be created for shipped goods.\n\n### Creating a Shipment\n\nNavigate to **Shipments** and click **New Shipment**. Select:\n- The customer and shipping address (from their saved addresses)\n- The Sales Order lines being shipped (partial fulfillment is supported)\n- The carrier (UPS, FedEx, USPS, DHL, or manual entry)\n- Package dimensions and weight (for carrier rate shopping if integration is configured)\n\n### Getting Shipping Rates\n\nIf a carrier API is configured, click **Get Rates** to fetch live rates from multiple carriers. Select a rate and the label is generated automatically. The tracking number is attached to the shipment record.\n\n### Manual Tracking Numbers\n\nIf you're using a carrier not integrated with the system, select Manual and enter the tracking number. You can still set the carrier name and expected delivery date.\n\n### Shipment Status\n\nShipment statuses follow the delivery lifecycle:\n- **Draft** — being prepared\n- **Packed** — packed and ready to ship\n- **Shipped** — handed off to carrier\n- **In Transit** — out for delivery\n- **Delivered** — confirmed received\n\n### Tracking Updates\n\nThe tracking timeline on each shipment shows the carrier's status events as they update. QB Engineer polls the carrier API to refresh tracking status.","sections":[]}"""
+            };
+
+            var salesQuickRef = new TrainingModule
+            {
+                Title = "Sales Quick Reference",
+                Slug = "sales-quick-reference",
+                Summary = "Quick reference for the quote-to-cash workflow, lead statuses, shipment statuses, and common sales actions.",
+                ContentType = QBEngineer.Core.Enums.TrainingContentType.QuickRef,
+                EstimatedMinutes = 2,
+                IsPublished = true,
+                SortOrder = 3,
+                AppRoutes = """["/leads","/quotes","/sales-orders","/shipments"]""",
+                Tags = """["sales","reference","shipping"]""",
+                ContentJson = """{"title":"Sales Quick Reference","groups":[{"heading":"Lead Pipeline Stages","items":[{"label":"New","value":"First entry — no contact made yet"},{"label":"Contacted","value":"Initial outreach made — awaiting response"},{"label":"Qualified","value":"Confirmed need and budget — moving to proposal"},{"label":"Proposal Sent","value":"Quote delivered to prospect"},{"label":"Won","value":"Deal closed — convert to Customer and Quote"},{"label":"Lost","value":"Didn't win — log reason for pipeline analysis"}]},{"heading":"Quote-to-Cash Flow","items":[{"label":"Step 1","value":"Leads → Create Quote"},{"label":"Step 2","value":"Quote Accepted → Convert to Sales Order"},{"label":"Step 3","value":"Sales Order → Production (kanban job created)"},{"label":"Step 4","value":"Job Shipped → Create Shipment → Create Invoice"},{"label":"Step 5","value":"Invoice Sent → Payment Received"}]},{"heading":"Shipment Statuses","items":[{"label":"Draft","value":"Being prepared — items not yet packed"},{"label":"Packed","value":"Ready to hand off to carrier"},{"label":"Shipped","value":"With carrier — tracking number assigned"},{"label":"In Transit","value":"Out for delivery"},{"label":"Delivered","value":"Confirmed received by customer"}]},{"heading":"Common Actions","items":[{"label":"New lead","value":"Leads → New Lead"},{"label":"Convert lead","value":"Lead detail → Convert to Customer"},{"label":"New quote","value":"Quotes → New Quote (or from lead detail)"},{"label":"Ship an order","value":"Shipments → New Shipment → select SO lines"},{"label":"Invoice after ship","value":"Invoices → New Invoice → Create from SO"}]}]}"""
+            };
+
+            int leadsId = await GetOrCreateModule(leadsModule);
+            int shipmentsId = await GetOrCreateModule(shipmentsModule);
+            int salesQRId = await GetOrCreateModule(salesQuickRef);
+            bySlug.TryGetValue("customers-and-contacts", out var custId2);
+            bySlug.TryGetValue("quotes-and-estimates", out var quotesId2);
+            bySlug.TryGetValue("sales-orders-overview", out var soId);
+
+            var salesPath = new TrainingPath
+            {
+                Title = "Sales and Customer Management",
+                Slug = "sales-customer-management",
+                Description = "Training for sales staff: leads pipeline, quoting, sales orders, shipments, and customer relationship management.",
+                Icon = "storefront",
+                IsAutoAssigned = false,
+                IsActive = true,
+                SortOrder = 8,
+                AllowedRoles = """["Admin","Manager","OfficeManager"]""",
+            };
+            db.TrainingPaths.Add(salesPath);
+            await db.SaveChangesAsync();
+
+            var salesModules = new List<(int ModuleId, int Position)>
+            {
+                (leadsId, 1), (shipmentsId, 2), (salesQRId, 3),
+            };
+            if (custId2 > 0) salesModules.Add((custId2, 4));
+            if (quotesId2 > 0) salesModules.Add((quotesId2, 5));
+
+            foreach (var (moduleId, position) in salesModules)
+            {
+                db.TrainingPathModules.Add(new TrainingPathModule
+                {
+                    PathId = salesPath.Id,
+                    ModuleId = moduleId,
+                    Position = position,
+                    IsRequired = true,
+                });
+            }
+            await db.SaveChangesAsync();
+            Log.Information("Seeded Sales and Customer Management training path");
+        }
     }
 
     private static async Task<ApplicationUser> EnsureUserAsync(

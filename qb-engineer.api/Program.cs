@@ -228,6 +228,8 @@ try
     builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
     builder.Services.Configure<UspsOptions>(builder.Configuration.GetSection(UspsOptions.SectionName));
     builder.Services.Configure<DocuSealOptions>(builder.Configuration.GetSection(DocuSealOptions.SectionName));
+    builder.Services.Configure<TtsOptions>(builder.Configuration.GetSection("Tts"));
+    builder.Services.Configure<CoquiOptions>(builder.Configuration.GetSection(CoquiOptions.SectionName));
 
     // QuickBooks token service (always registered — handles OAuth token lifecycle)
     builder.Services.AddScoped<IQuickBooksTokenService, QuickBooksTokenService>();
@@ -256,6 +258,9 @@ try
         builder.Services.AddSingleton<IFormRendererService, MockFormRendererService>();
         builder.Services.AddSingleton<IImageComparisonService, MockImageComparisonService>();
         builder.Services.AddSingleton<IWalkthroughGeneratorService, MockWalkthroughGeneratorService>();
+        builder.Services.AddSingleton<ITtsService, MockTtsService>();
+        builder.Services.AddSingleton<ITrainingVideoGeneratorService, MockTrainingVideoGeneratorService>();
+        Log.Information("Training video: mock generator (MockIntegrations=true)");
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -291,6 +296,28 @@ try
         builder.Services.AddSingleton<IFormRendererService, PuppeteerFormRendererService>();
         builder.Services.AddSingleton<IImageComparisonService, SkiaImageComparisonService>();
         builder.Services.AddSingleton<IWalkthroughGeneratorService, PuppeteerWalkthroughGeneratorService>();
+        // TTS priority: OpenAI (cloud) → Coqui (self-hosted) → Mock
+        var ttsKey    = builder.Configuration.GetSection("Tts")["ApiKey"];
+        var coquiUrl  = builder.Configuration.GetSection(CoquiOptions.SectionName)["BaseUrl"];
+        if (!string.IsNullOrEmpty(ttsKey))
+        {
+            builder.Services.AddHttpClient("openai-tts");
+            builder.Services.AddSingleton<ITtsService, OpenAiTtsService>();
+            Log.Information("TTS: OpenAI enabled");
+        }
+        else if (!string.IsNullOrEmpty(coquiUrl))
+        {
+            builder.Services.AddHttpClient("coqui-tts");
+            builder.Services.AddSingleton<ITtsService, CoquiTtsService>();
+            Log.Information("TTS: Coqui self-hosted at {Url}", coquiUrl);
+        }
+        else
+        {
+            builder.Services.AddSingleton<ITtsService, MockTtsService>();
+            Log.Information("TTS: no provider configured — using mock (set Tts:ApiKey or Coqui:BaseUrl)");
+        }
+        // Training video: Playwright live screen recording + synchronized TTS narration
+        builder.Services.AddSingleton<ITrainingVideoGeneratorService, PlaywrightTrainingVideoGeneratorService>();
     }
 
     // Form definition builders — hardcoded definitions for known government forms
@@ -341,7 +368,20 @@ try
         .UsePostgreSqlStorage(options =>
             options.UseNpgsqlConnection(
                 builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty)));
-    builder.Services.AddHangfireServer();
+    builder.Services.AddHangfireServer(options =>
+    {
+        // Default server handles "default" queue only — NOT "video"
+        // Keeping video separate prevents concurrent Chromium+recording sessions from OOM-ing the container
+        options.Queues = ["default"];
+        options.WorkerCount = Math.Max(Environment.ProcessorCount, 4);
+    });
+    builder.Services.AddHangfireServer(options =>
+    {
+        // Single-worker video server — exactly one Playwright recording session at a time
+        options.ServerName = "video-worker";
+        options.Queues = ["video"];
+        options.WorkerCount = 1;
+    });
     builder.Services.AddScoped<RecurringOrderJob>();
     builder.Services.AddScoped<OverdueInvoiceJob>();
     builder.Services.AddScoped<ScheduledTaskJob>();

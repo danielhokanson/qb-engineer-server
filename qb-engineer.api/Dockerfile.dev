@@ -1,11 +1,25 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0
 WORKDIR /app
 
-# Install Chromium for PuppeteerSharp pdf.js extraction
+# Install Chromium (PuppeteerSharp + Playwright fallback), ffmpeg, pwsh
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
     libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
@@ -15,6 +29,17 @@ COPY qb-engineer.core/qb-engineer.core.csproj qb-engineer.core/
 COPY qb-engineer.data/qb-engineer.data.csproj qb-engineer.data/
 COPY qb-engineer.integrations/qb-engineer.integrations.csproj qb-engineer.integrations/
 RUN dotnet restore qb-engineer.api/qb-engineer.api.csproj
+
+# Install Playwright browsers (Chromium + ffmpeg) — persisted in layer
+# Builds the project first so playwright.ps1 + Microsoft.Playwright.dll exist
+COPY qb-engineer.api/ qb-engineer.api/
+COPY qb-engineer.core/ qb-engineer.core/
+COPY qb-engineer.data/ qb-engineer.data/
+COPY qb-engineer.integrations/ qb-engineer.integrations/
+COPY qb-engineer.tests/ qb-engineer.tests/
+RUN dotnet build qb-engineer.api/qb-engineer.api.csproj -c Debug --no-restore \
+    && pwsh qb-engineer.api/bin/Debug/net9.0/playwright.ps1 install chromium \
+    && pwsh qb-engineer.api/bin/Debug/net9.0/playwright.ps1 install ffmpeg
 
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
