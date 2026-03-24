@@ -8831,6 +8831,10 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("quiz_answers_json");
 
+                    b.Property<string>("QuizSessionJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("quiz_session_json");
+
                     b.Property<int?>("QuizAttempts")
                         .HasColumnType("integer")
                         .HasColumnName("quiz_attempts");

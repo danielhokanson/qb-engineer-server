@@ -23,13 +23,23 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
         if (module.ContentType != TrainingContentType.Quiz)
             throw new InvalidOperationException("Module is not a quiz.");
 
+        var progress = await db.TrainingProgress
+            .FirstOrDefaultAsync(p => p.UserId == request.UserId && p.ModuleId == request.ModuleId, ct);
+
         var content = ParseQuizContent(module.ContentJson);
+
+        // If the quiz has randomized sessions, score only the questions that were presented
+        var sessionIds = DeserializeSessionIds(progress?.QuizSessionJson);
+        var questionsToScore = sessionIds.Count > 0
+            ? content.Questions.Where(q => sessionIds.Contains(q.Id)).ToList()
+            : content.Questions;
+
         var answerMap = request.Answers.ToDictionary(a => a.QuestionId, a => a.OptionId);
 
         var correctCount = 0;
         var scoredQuestions = new List<QuizScoredQuestionModel>();
 
-        foreach (var question in content.Questions)
+        foreach (var question in questionsToScore)
         {
             var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
             if (correctOption is null) continue;
@@ -46,13 +56,9 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
             ));
         }
 
-        var totalQuestions = content.Questions.Count(q => q.Options.Any(o => o.IsCorrect));
+        var totalQuestions = questionsToScore.Count(q => q.Options.Any(o => o.IsCorrect));
         var score = totalQuestions > 0 ? (int)Math.Round((double)correctCount / totalQuestions * 100) : 0;
         var passed = score >= content.PassingScore;
-
-        // Upsert progress
-        var progress = await db.TrainingProgress
-            .FirstOrDefaultAsync(p => p.UserId == request.UserId && p.ModuleId == request.ModuleId, ct);
 
         var answersJson = JsonSerializer.Serialize(request.Answers);
 
@@ -68,6 +74,8 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
                 QuizScore = score,
                 QuizAttempts = 1,
                 QuizAnswersJson = answersJson,
+                // Clear session on failure so next load generates a fresh random set
+                QuizSessionJson = passed ? progress?.QuizSessionJson : null,
             };
             db.TrainingProgress.Add(progress);
         }
@@ -81,12 +89,17 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
             {
                 progress.Status = TrainingProgressStatus.Completed;
                 progress.CompletedAt ??= DateTime.UtcNow;
+                // Preserve session on pass (used for post-pass review if needed)
+            }
+            else if (!passed)
+            {
+                // Clear session — next GET will generate a new random question set
+                progress.QuizSessionJson = null;
             }
         }
 
         await db.SaveChangesAsync(ct);
 
-        // If passed, check enrollment completion
         if (passed)
             await CheckAndCompleteEnrollmentsAsync(request.UserId, ct);
 
@@ -135,6 +148,13 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
 
         if (anyChanged)
             await db.SaveChangesAsync(ct);
+    }
+
+    private static List<string> DeserializeSessionIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+        try { return JsonSerializer.Deserialize<List<string>>(json) ?? []; }
+        catch { return []; }
     }
 
     private static QuizContent ParseQuizContent(string contentJson)
