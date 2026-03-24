@@ -255,6 +255,7 @@ try
         builder.Services.AddSingleton<IFormDefinitionVerifier, FormDefinitionVerifier>();
         builder.Services.AddSingleton<IFormRendererService, MockFormRendererService>();
         builder.Services.AddSingleton<IImageComparisonService, MockImageComparisonService>();
+        builder.Services.AddSingleton<IWalkthroughGeneratorService, MockWalkthroughGeneratorService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -289,6 +290,7 @@ try
         builder.Services.AddScoped<IFormDefinitionVerifier, FormDefinitionVerifier>();
         builder.Services.AddSingleton<IFormRendererService, PuppeteerFormRendererService>();
         builder.Services.AddSingleton<IImageComparisonService, SkiaImageComparisonService>();
+        builder.Services.AddSingleton<IWalkthroughGeneratorService, PuppeteerWalkthroughGeneratorService>();
     }
 
     // Form definition builders — hardcoded definitions for known government forms

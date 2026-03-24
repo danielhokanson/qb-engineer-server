@@ -87,6 +87,29 @@ public class TrainingController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Navigates to the module's target page in a headless browser (authenticated as the
+    /// calling admin), extracts the live DOM, sends it to Ollama, and saves generated
+    /// driver.js tour steps back to the module's ContentJson.
+    /// </summary>
+    [HttpPost("modules/{id:int}/generate-walkthrough")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<GenerateWalkthroughResponseModel>> GenerateWalkthrough(
+        int id,
+        CancellationToken ct = default)
+    {
+        var authHeader = Request.Headers.Authorization.ToString();
+        var jwtToken = authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+            ? authHeader["Bearer ".Length..].Trim()
+            : string.Empty;
+
+        if (string.IsNullOrEmpty(jwtToken))
+            return Unauthorized("A Bearer token is required for walkthrough generation.");
+
+        var result = await mediator.Send(new GenerateWalkthroughStepsCommand(id, jwtToken), ct);
+        return Ok(result);
+    }
+
     // Paths
 
     [HttpGet("paths")]
