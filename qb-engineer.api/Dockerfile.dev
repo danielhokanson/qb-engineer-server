@@ -42,7 +42,7 @@ RUN dotnet build qb-engineer.api/qb-engineer.api.csproj -c Debug --no-restore \
     && pwsh qb-engineer.api/bin/Debug/net9.0/playwright.ps1 install ffmpeg
 
 EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:8080;http://+:5000
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 ENV DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
 
