@@ -326,6 +326,7 @@ try
         {
             policy.WithOrigins(
                     "http://localhost:4200",
+                    "http://localhost:4201",
                     "http://localhost:80",
                     "http://qb-engineer-ui",
                     "http://qb-engineer-ui:80")
