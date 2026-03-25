@@ -206,36 +206,4 @@ public class TrainingController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    // Video generation
-
-    /// <summary>
-    /// Triggers AI video generation for a Walkthrough module.
-    /// Uses Puppeteer to screenshot each step (element highlighted), TTS for narration,
-    /// and ffmpeg to produce an MP4 uploaded to MinIO.
-    /// </summary>
-    [HttpPost("modules/{id:int}/generate-video")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GenerateVideo(int id, CancellationToken ct = default)
-    {
-        var authHeader = Request.Headers.Authorization.ToString();
-        var jwtToken = authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-            ? authHeader["Bearer ".Length..].Trim()
-            : string.Empty;
-
-        if (string.IsNullOrEmpty(jwtToken))
-            return Unauthorized("A Bearer token is required for video generation.");
-
-        await mediator.Send(new GenerateTrainingVideoCommand(id, jwtToken), ct);
-        return Accepted();
-    }
-
-    [HttpGet("modules/{id:int}/video-status")]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<VideoStatusResponseModel>> GetVideoStatus(
-        int id,
-        CancellationToken ct = default)
-    {
-        var result = await mediator.Send(new GetVideoGenerationStatusQuery(id), ct);
-        return Ok(result);
-    }
 }

@@ -2,9 +2,8 @@ namespace QBEngineer.Core.Enums;
 
 public enum TrainingContentType
 {
-    Article,
-    Video,
-    Walkthrough,
-    QuickRef,
-    Quiz
+    Article = 0,
+    Walkthrough = 2,
+    QuickRef = 3,
+    Quiz = 4
 }
