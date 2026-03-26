@@ -24,7 +24,11 @@ public record UploadFileChunkCommand(
 public class UploadFileChunkCommandValidator : AbstractValidator<UploadFileChunkCommand>
 {
     private static readonly HashSet<string> ValidEntityTypes =
-        ["jobs", "expenses", "assets", "parts", "leads", "employees"];
+    [
+        "jobs", "expenses", "assets", "parts", "leads", "employees",
+        "identity-docs", "employee-docs", "compliance-templates",
+        "pay-stubs", "tax-documents",
+    ];
 
     public UploadFileChunkCommandValidator()
     {
@@ -190,7 +194,8 @@ public class UploadFileChunkHandler(
         return entityType switch
         {
             "expenses" => opts.ReceiptsBucket,
-            "employees" => opts.EmployeeDocsBucket,
+            "employees" or "identity-docs" or "employee-docs"
+                or "compliance-templates" or "pay-stubs" or "tax-documents" => opts.EmployeeDocsBucket,
             _ => opts.JobFilesBucket,
         };
     }

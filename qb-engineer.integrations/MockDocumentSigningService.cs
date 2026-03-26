@@ -39,6 +39,27 @@ public class MockDocumentSigningService : IDocumentSigningService
         return Task.FromResult(new DocumentSigningSubmission(submissionId, submitUrl));
     }
 
+    public Task<DocumentSigningMultiSubmission> CreateSubmissionFromPdfAsync(
+        string templateName,
+        byte[] pdfBytes,
+        IReadOnlyList<SequentialSubmitter> submitters,
+        CancellationToken ct)
+    {
+        var templateId = Interlocked.Increment(ref _nextTemplateId);
+        var byOrder = new Dictionary<int, SubmitterResult>();
+        foreach (var submitter in submitters.OrderBy(s => s.Order))
+        {
+            var submitterId = Interlocked.Increment(ref _nextSubmissionId);
+            byOrder[submitter.Order] = new SubmitterResult(submitterId, $"http://localhost:3000/s/{submitterId}");
+        }
+
+        _logger.LogInformation(
+            "[MockDocuSeal] CreateSubmissionFromPdf: '{Name}' ({Size} bytes), {Count} submitters → template {TemplateId}",
+            templateName, pdfBytes.Length, submitters.Count, templateId);
+
+        return Task.FromResult(new DocumentSigningMultiSubmission(templateId, byOrder));
+    }
+
     public Task<byte[]> GetSignedPdfAsync(int submissionId, CancellationToken ct)
     {
         _logger.LogInformation("[MockDocuSeal] GetSignedPdf: submission {Id}", submissionId);

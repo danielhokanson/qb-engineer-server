@@ -1,3 +1,5 @@
+using QBEngineer.Core.Enums;
+
 namespace QBEngineer.Core.Models;
 
 public record AdminUserResponseModel(
@@ -19,4 +21,5 @@ public record AdminUserResponseModel(
     int ComplianceTotalItems,
     string[] MissingComplianceItems,
     int? WorkLocationId,
-    string? WorkLocationName);
+    string? WorkLocationName,
+    I9ComplianceStatus? I9Status);

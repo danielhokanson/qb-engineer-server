@@ -25,7 +25,10 @@ public class CreateShipmentValidator : AbstractValidator<CreateShipmentCommand>
         RuleFor(x => x.Lines).NotEmpty().WithMessage("At least one line item is required");
         RuleForEach(x => x.Lines).ChildRules(line =>
         {
-            line.RuleFor(l => l.SalesOrderLineId).GreaterThan(0);
+            line.RuleFor(l => l).Must(l =>
+                    (l.SalesOrderLineId.HasValue && l.SalesOrderLineId > 0) ||
+                    (l.PartId.HasValue && l.PartId > 0))
+                .WithMessage("Each line must reference either a Sales Order Line or a Part");
             line.RuleFor(l => l.Quantity).GreaterThan(0);
         });
     }
@@ -58,25 +61,39 @@ public class CreateShipmentHandler(IShipmentRepository shipmentRepo, ISalesOrder
 
         foreach (var line in request.Lines)
         {
-            var orderLine = order.Lines.FirstOrDefault(l => l.Id == line.SalesOrderLineId)
-                ?? throw new KeyNotFoundException($"Sales order line {line.SalesOrderLineId} not found");
-
-            if (line.Quantity > orderLine.RemainingQuantity)
-                throw new InvalidOperationException(
-                    $"Cannot ship {line.Quantity} of line {orderLine.LineNumber} — only {orderLine.RemainingQuantity} remaining");
-
-            orderLine.ShippedQuantity += line.Quantity;
-
-            shipment.Lines.Add(new ShipmentLine
+            if (line.SalesOrderLineId.HasValue)
             {
-                SalesOrderLineId = line.SalesOrderLineId,
-                Quantity = line.Quantity,
-                Notes = line.Notes,
-            });
+                // SO-line based: validate remaining quantity and update fulfillment
+                var orderLine = order.Lines.FirstOrDefault(l => l.Id == line.SalesOrderLineId)
+                    ?? throw new KeyNotFoundException($"Sales order line {line.SalesOrderLineId} not found");
+
+                if (line.Quantity > orderLine.RemainingQuantity)
+                    throw new InvalidOperationException(
+                        $"Cannot ship {line.Quantity} of line {orderLine.LineNumber} — only {orderLine.RemainingQuantity} remaining");
+
+                orderLine.ShippedQuantity += line.Quantity;
+
+                shipment.Lines.Add(new ShipmentLine
+                {
+                    SalesOrderLineId = line.SalesOrderLineId,
+                    Quantity = line.Quantity,
+                    Notes = line.Notes,
+                });
+            }
+            else
+            {
+                // Part-based: create line without SO line fulfillment tracking
+                shipment.Lines.Add(new ShipmentLine
+                {
+                    PartId = line.PartId,
+                    Quantity = line.Quantity,
+                    Notes = line.Notes,
+                });
+            }
         }
 
-        // Update order status based on fulfillment
-        if (order.Lines.All(l => l.IsFullyShipped))
+        // Update order status based on fulfillment (only applies when SO lines are linked)
+        if (order.Lines.Any() && order.Lines.All(l => l.IsFullyShipped))
             order.Status = SalesOrderStatus.Shipped;
         else if (order.Lines.Any(l => l.ShippedQuantity > 0))
             order.Status = SalesOrderStatus.PartiallyShipped;

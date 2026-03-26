@@ -13,4 +13,12 @@ public record ComplianceFormSubmissionResponseModel(
     string? DocuSealSubmitUrl,
     string? FormDataJson,
     int? FormDefinitionVersionId,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    int? FilledPdfFileId,
+    DateTime? I9Section1SignedAt,
+    DateTime? I9Section2SignedAt,
+    int? I9EmployerUserId,
+    string? I9DocumentListType,
+    string? I9DocumentDataJson,
+    DateTime? I9Section2OverdueAt,
+    DateTime? I9ReverificationDueAt);

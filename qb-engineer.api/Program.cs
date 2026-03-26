@@ -256,6 +256,7 @@ try
         builder.Services.AddSingleton<IFormRendererService, MockFormRendererService>();
         builder.Services.AddSingleton<IImageComparisonService, MockImageComparisonService>();
         builder.Services.AddSingleton<IWalkthroughGeneratorService, MockWalkthroughGeneratorService>();
+        builder.Services.AddSingleton<IPdfFormFillService, MockPdfFormFillService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -291,6 +292,7 @@ try
         builder.Services.AddSingleton<IFormRendererService, PuppeteerFormRendererService>();
         builder.Services.AddSingleton<IImageComparisonService, SkiaImageComparisonService>();
         builder.Services.AddSingleton<IWalkthroughGeneratorService, PuppeteerWalkthroughGeneratorService>();
+        builder.Services.AddSingleton<IPdfFormFillService, PdfSharpFormFillService>();
     }
 
     // Form definition builders — hardcoded definitions for known government forms
@@ -589,6 +591,14 @@ try
         "compliance-form-sync",
         job => job.SyncFederalFormsAsync(),
         Cron.Weekly(DayOfWeek.Sunday, 4)); // Sunday 4 AM UTC
+    RecurringJob.AddOrUpdate<CheckI9OverdueJob>(
+        "check-i9-section2-overdue",
+        job => job.CheckOverdueSection2Async(),
+        Cron.Daily(9)); // 9 AM UTC daily
+    RecurringJob.AddOrUpdate<CheckI9ReverificationJob>(
+        "check-i9-reverification",
+        job => job.CheckReverificationDueAsync(),
+        Cron.Weekly(DayOfWeek.Monday, 9)); // Monday 9 AM UTC weekly
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

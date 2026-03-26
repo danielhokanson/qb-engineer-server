@@ -13,7 +13,12 @@ namespace QBEngineer.Api.Features.ComplianceForms;
 public record HandleDocuSealWebhookCommand(
     int SubmissionId,
     string Status,
-    DateTime? CompletedAt) : IRequest;
+    DateTime? CompletedAt,
+    /// <summary>
+    /// true = individual submitter completed (I-9 Section 1 by employee).
+    /// false = all submitters completed (form.completed — final signed PDF ready).
+    /// </summary>
+    bool IsSubmitterEvent = false) : IRequest;
 
 public class HandleDocuSealWebhookHandler(
     AppDbContext db,
@@ -31,6 +36,18 @@ public class HandleDocuSealWebhookHandler(
             ?? throw new KeyNotFoundException(
                 $"Submission with DocuSeal ID {request.SubmissionId} not found.");
 
+        // ── I-9 Section 1 submitter event (employee signed, employer has not yet) ──────
+        if (request.IsSubmitterEvent
+            && submission.Template.FormType == QBEngineer.Core.Enums.ComplianceFormType.I9
+            && submission.I9Section1SignedAt is null)
+        {
+            submission.I9Section1SignedAt = request.CompletedAt ?? DateTime.UtcNow;
+            submission.Status = ComplianceSubmissionStatus.Opened;
+            // Section 2 overdue deadline was set when submission was created — preserve it
+            await db.SaveChangesAsync(ct);
+            return;
+        }
+
         if (request.Status != "completed")
         {
             submission.Status = request.Status switch
@@ -42,6 +59,12 @@ public class HandleDocuSealWebhookHandler(
             };
             await db.SaveChangesAsync(ct);
             return;
+        }
+
+        // ── I-9 Section 2: all submitters signed — capture Section 2 timestamp ──────────
+        if (submission.Template.FormType == QBEngineer.Core.Enums.ComplianceFormType.I9)
+        {
+            submission.I9Section2SignedAt = request.CompletedAt ?? DateTime.UtcNow;
         }
 
         // Download signed PDF from DocuSeal

@@ -13,6 +13,7 @@
     <PackageReference Include="PuppeteerSharp" Version="24.39.0" />
     <PackageReference Include="SkiaSharp" Version="3.116.1" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
+    <PackageReference Include="PDFsharp" Version="6.2.4" />
   </ItemGroup>
 
   <PropertyGroup>

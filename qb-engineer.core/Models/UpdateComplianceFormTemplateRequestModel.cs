@@ -14,4 +14,5 @@ public record UpdateComplianceFormTemplateRequestModel(
     bool RequiresIdentityDocs,
     bool BlocksJobAssignment,
     string ProfileCompletionKey,
-    int? DocuSealTemplateId);
+    int? DocuSealTemplateId,
+    string? AcroFieldMapJson);

@@ -26,6 +26,7 @@ public static class ComplianceTemplateMapper
             currentVersion?.Id,
             currentVersion?.FormDefinitionJson,
             currentVersion?.Revision,
-            t.CreatedAt, t.UpdatedAt);
+            t.CreatedAt, t.UpdatedAt,
+            t.AcroFieldMapJson, t.FilledPdfTemplateId);
     }
 }

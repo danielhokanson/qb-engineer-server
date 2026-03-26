@@ -11,6 +11,7 @@ public record CreateShipmentRequestModel(
     List<CreateShipmentLineModel> Lines);
 
 public record CreateShipmentLineModel(
-    int SalesOrderLineId,
+    int? SalesOrderLineId,
     int Quantity,
-    string? Notes);
+    string? Notes,
+    int? PartId = null);

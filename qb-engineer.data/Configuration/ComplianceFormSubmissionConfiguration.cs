@@ -34,5 +34,17 @@ public class ComplianceFormSubmissionConfiguration : IEntityTypeConfiguration<Co
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(e => e.FormDefinitionVersionId);
+
+        builder.HasOne(e => e.FilledPdfFile)
+            .WithMany()
+            .HasForeignKey(e => e.FilledPdfFileId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Property(e => e.I9DocumentListType).HasMaxLength(3);
+        builder.Property(e => e.I9DocumentDataJson).HasColumnType("jsonb");
+
+        builder.HasIndex(e => e.I9EmployerUserId);
+        builder.HasIndex(e => e.I9Section2OverdueAt);
+        builder.HasIndex(e => e.I9ReverificationDueAt);
     }
 }

@@ -17,12 +17,18 @@ public class ComplianceFormTemplateConfiguration : IEntityTypeConfiguration<Comp
         builder.Property(e => e.SourceUrl).HasMaxLength(500);
         builder.Property(e => e.Sha256Hash).HasMaxLength(64);
         builder.Property(e => e.ProfileCompletionKey).HasMaxLength(50);
+        builder.Property(e => e.AcroFieldMapJson).HasColumnType("jsonb");
 
         builder.HasIndex(e => e.FormType);
 
         builder.HasOne(e => e.ManualOverrideFile)
             .WithMany()
             .HasForeignKey(e => e.ManualOverrideFileId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(e => e.FilledPdfTemplate)
+            .WithMany()
+            .HasForeignKey(e => e.FilledPdfTemplateId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

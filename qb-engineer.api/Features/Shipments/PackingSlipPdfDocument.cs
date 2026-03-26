@@ -122,11 +122,12 @@ public class PackingSlipPdfDocument : IDocument
                 {
                     var line = lines[i];
                     var bg = i % 2 == 0 ? Colors.White : Colors.Grey.Lighten4;
-                    var soLine = line.SalesOrderLine;
+                    var description = line.SalesOrderLine?.Description ?? line.Part?.Description ?? "—";
+                    var partNumber = line.SalesOrderLine?.Part?.PartNumber ?? line.Part?.PartNumber ?? "—";
 
                     table.Cell().Background(bg).Padding(5).Text((i + 1).ToString());
-                    table.Cell().Background(bg).Padding(5).Text(soLine.Description);
-                    table.Cell().Background(bg).Padding(5).Text(soLine.Part?.PartNumber ?? "—");
+                    table.Cell().Background(bg).Padding(5).Text(description);
+                    table.Cell().Background(bg).Padding(5).Text(partNumber);
                     table.Cell().Background(bg).Padding(5).AlignRight().Text(line.Quantity.ToString());
                 }
             });

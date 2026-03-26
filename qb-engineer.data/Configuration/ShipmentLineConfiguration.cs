@@ -12,5 +12,18 @@ public class ShipmentLineConfiguration : IEntityTypeConfiguration<ShipmentLine>
 
         builder.HasIndex(e => e.ShipmentId);
         builder.HasIndex(e => e.SalesOrderLineId);
+        builder.HasIndex(e => e.PartId);
+
+        builder.HasOne(e => e.SalesOrderLine)
+            .WithMany(s => s.ShipmentLines)
+            .HasForeignKey(e => e.SalesOrderLineId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
+        builder.HasOne(e => e.Part)
+            .WithMany()
+            .HasForeignKey(e => e.PartId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
     }
 }

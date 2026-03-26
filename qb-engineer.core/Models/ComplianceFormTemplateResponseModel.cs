@@ -22,4 +22,6 @@ public record ComplianceFormTemplateResponseModel(
     string? FormDefinitionJson,
     string? FormDefinitionRevision,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string? AcroFieldMapJson,
+    int? FilledPdfTemplateId);

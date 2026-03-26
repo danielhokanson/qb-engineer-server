@@ -56,7 +56,12 @@ public class SaveFormDataHandler(AppDbContext db)
             template.FormType, submission.Status, submission.SignedAt,
             submission.SignedPdfFileId, submission.DocuSealSubmitUrl,
             submission.FormDataJson, submission.FormDefinitionVersionId,
-            submission.CreatedAt
+            submission.CreatedAt,
+            submission.FilledPdfFileId,
+            submission.I9Section1SignedAt, submission.I9Section2SignedAt,
+            submission.I9EmployerUserId, submission.I9DocumentListType,
+            submission.I9DocumentDataJson, submission.I9Section2OverdueAt,
+            submission.I9ReverificationDueAt
         );
     }
 }

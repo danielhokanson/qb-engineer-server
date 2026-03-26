@@ -94,6 +94,56 @@ public class DocuSealSigningService : IDocumentSigningService
         return new DocumentSigningSubmission(submission.Id, submission.EmbedSrc);
     }
 
+    public async Task<DocumentSigningMultiSubmission> CreateSubmissionFromPdfAsync(
+        string templateName,
+        byte[] pdfBytes,
+        IReadOnlyList<SequentialSubmitter> submitters,
+        CancellationToken ct)
+    {
+        _logger.LogInformation(
+            "DocuSeal CreateSubmissionFromPdf: '{Name}' ({Size} bytes), {Count} submitters",
+            templateName, pdfBytes.Length, submitters.Count);
+
+        // Step 1: Upload the filled PDF as a one-time template
+        var templateId = await CreateTemplateFromPdfAsync(templateName, pdfBytes, ct);
+
+        // Step 2: Create submission with all submitters in sequential order
+        var submitterDtos = submitters
+            .OrderBy(s => s.Order)
+            .Select(s => new DocuSealSubmitter
+            {
+                Email = s.Email,
+                Name = s.Name,
+                Role = s.Role,
+            })
+            .ToList();
+
+        var request = new DocuSealSubmissionRequest
+        {
+            TemplateId = templateId,
+            SendEmail = false,
+            Submitters = submitterDtos,
+        };
+
+        var response = await _httpClient.PostAsJsonAsync("/api/submissions", request, JsonOptions, ct);
+        response.EnsureSuccessStatusCode();
+
+        var results = await response.Content.ReadFromJsonAsync<List<DocuSealSubmissionResponse>>(JsonOptions, ct)
+            ?? throw new InvalidOperationException("DocuSeal returned no submission results");
+
+        // DocuSeal returns submitters in order — zip with original submitters to build the result map
+        var orderedSubmitters = submitters.OrderBy(s => s.Order).ToList();
+        var byOrder = new Dictionary<int, SubmitterResult>();
+
+        for (var i = 0; i < Math.Min(results.Count, orderedSubmitters.Count); i++)
+        {
+            var order = orderedSubmitters[i].Order;
+            byOrder[order] = new SubmitterResult(results[i].Id, results[i].EmbedSrc);
+        }
+
+        return new DocumentSigningMultiSubmission(templateId, byOrder);
+    }
+
     public async Task<byte[]> GetSignedPdfAsync(int submissionId, CancellationToken ct)
     {
         _logger.LogInformation("DocuSeal GetSignedPdf: submission {Id}", submissionId);

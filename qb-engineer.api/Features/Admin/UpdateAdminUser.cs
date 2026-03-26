@@ -118,6 +118,7 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, Ap
             complianceItems.Length,
             missingItems,
             user.WorkLocationId,
-            user.WorkLocation?.Name);
+            user.WorkLocation?.Name,
+            null); // I9Status — computed in Batch F (I9StatusComputer)
     }
 }

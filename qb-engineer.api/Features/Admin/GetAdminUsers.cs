@@ -3,6 +3,9 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
+using QBEngineer.Api.Features.ComplianceForms;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -38,6 +41,14 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
             .AsNoTracking()
             .Where(p => userIds.Contains(p.UserId))
             .ToDictionaryAsync(p => p.UserId, cancellationToken);
+
+        // Batch-load I-9 submissions for status computation
+        var i9Submissions = await db.ComplianceFormSubmissions
+            .AsNoTracking()
+            .Include(s => s.Template)
+            .Where(s => userIds.Contains(s.UserId)
+                        && s.Template.FormType == ComplianceFormType.I9)
+            .ToDictionaryAsync(s => s.UserId, cancellationToken);
 
         // Pre-load default location and company_state for fallback resolution
         var defaultLocation = await db.CompanyLocations
@@ -113,6 +124,9 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
             var canBeAssigned = complianceItems.Where(i => i.BlocksAssignment).All(i => i.IsComplete);
             var missingItems = complianceItems.Where(i => !i.IsComplete).Select(i => i.Label).ToArray();
 
+            i9Submissions.TryGetValue(user.Id, out var i9Submission);
+            var i9Status = I9StatusComputer.Compute(i9Submission);
+
             result.Add(new AdminUserResponseModel(
                 user.Id,
                 user.Email!,
@@ -132,7 +146,8 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
                 complianceItems.Length,
                 missingItems,
                 user.WorkLocationId,
-                user.WorkLocation?.Name));
+                user.WorkLocation?.Name,
+                i9Status));
         }
 
         return result;

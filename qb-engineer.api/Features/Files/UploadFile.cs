@@ -14,7 +14,12 @@ public record UploadFileCommand(string EntityType, int EntityId, IFormFile File)
 
 public class UploadFileCommandValidator : AbstractValidator<UploadFileCommand>
 {
-    private static readonly HashSet<string> ValidEntityTypes = ["jobs", "expenses", "assets", "parts", "leads", "employees"];
+    private static readonly HashSet<string> ValidEntityTypes =
+    [
+        "jobs", "expenses", "assets", "parts", "leads", "employees",
+        "identity-docs", "employee-docs", "compliance-templates",
+        "pay-stubs", "tax-documents",
+    ];
 
     public UploadFileCommandValidator()
     {
@@ -71,7 +76,8 @@ public class UploadFileHandler(
         return entityType switch
         {
             "expenses" => opts.ReceiptsBucket,
-            "employees" => opts.EmployeeDocsBucket,
+            "employees" or "identity-docs" or "employee-docs"
+                or "compliance-templates" or "pay-stubs" or "tax-documents" => opts.EmployeeDocsBucket,
             _ => opts.JobFilesBucket,
         };
     }

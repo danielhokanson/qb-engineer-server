@@ -33,6 +33,7 @@ public class UpdateComplianceTemplateHandler(AppDbContext db)
         template.BlocksJobAssignment = m.BlocksJobAssignment;
         template.ProfileCompletionKey = m.ProfileCompletionKey;
         template.DocuSealTemplateId = m.DocuSealTemplateId;
+        template.AcroFieldMapJson = m.AcroFieldMapJson;
 
         await db.SaveChangesAsync(ct);
     }

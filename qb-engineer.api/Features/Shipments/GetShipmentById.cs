@@ -33,7 +33,8 @@ public class GetShipmentByIdHandler(IShipmentRepository repo)
             shipment.Lines.Select(l => new ShipmentLineResponseModel(
                 l.Id,
                 l.SalesOrderLineId,
-                l.SalesOrderLine.Description,
+                l.PartId,
+                l.SalesOrderLine?.Description ?? l.Part?.Description ?? string.Empty,
                 l.Quantity,
                 l.Notes)).ToList(),
             shipment.CreatedAt,

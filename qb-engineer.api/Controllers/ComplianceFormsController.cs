@@ -62,6 +62,15 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{id:int}/blank-pdf-template")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ComplianceFormTemplateResponseModel>> SetBlankPdfTemplate(
+        int id, [FromBody] UploadTemplateDocumentRequestModel model, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SetBlankPdfTemplateCommand(id, model.FileAttachmentId), ct);
+        return Ok(result);
+    }
+
     [HttpPut("{id:int}/form-definition")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ComplianceFormTemplateResponseModel>> UpdateFormDefinition(
@@ -197,7 +206,11 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ComplianceFormSubmissionResponseModel>> SubmitFormData(
         int id, [FromBody] SaveFormDataRequestModel model, CancellationToken ct)
     {
-        var result = await mediator.Send(new SubmitFormDataCommand(GetUserId(), id, model.FormDataJson, model.FormDefinitionVersionId), ct);
+        var userId = GetUserId();
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var name = User.FindFirstValue(ClaimTypes.Name) ?? email;
+        var result = await mediator.Send(
+            new SubmitFormDataCommand(userId, id, model.FormDataJson, model.FormDefinitionVersionId, email, name), ct);
         return Ok(result);
     }
 
@@ -221,17 +234,24 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
         var payload = JsonDocument.Parse(body);
 
         var eventType = payload.RootElement.GetProperty("event_type").GetString();
-        if (eventType != "form.completed")
+        var isSubmitterEvent = eventType == "submitter.completed";
+        if (eventType != "form.completed" && !isSubmitterEvent)
             return Ok();
 
         var data = payload.RootElement.GetProperty("data");
-        var submissionId = data.GetProperty("id").GetInt32();
-        var status = data.GetProperty("status").GetString() ?? "completed";
+        // submitter.completed: data is the submitter object; submission id is nested under data.submission_id
+        // form.completed: data is the submission object; id is data.id
+        var submissionId = isSubmitterEvent
+            ? data.GetProperty("submission_id").GetInt32()
+            : data.GetProperty("id").GetInt32();
+        var status = data.TryGetProperty("status", out var statusProp)
+            ? statusProp.GetString() ?? "completed"
+            : "completed";
         DateTime? completedAt = data.TryGetProperty("completed_at", out var completedProp)
             ? completedProp.GetDateTime()
             : DateTime.UtcNow;
 
-        await mediator.Send(new HandleDocuSealWebhookCommand(submissionId, status, completedAt), ct);
+        await mediator.Send(new HandleDocuSealWebhookCommand(submissionId, status, completedAt, isSubmitterEvent), ct);
         return Ok();
     }
 
@@ -258,5 +278,25 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
     {
         await mediator.Send(new SendComplianceReminderCommand(userId, GetUserId()), ct);
         return NoContent();
+    }
+
+    [HttpGet("admin/i9-pending")]
+    [Authorize(Roles = "Admin,Manager,OfficeManager")]
+    public async Task<ActionResult<List<I9PendingItemResponseModel>>> GetI9Pending(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetI9PendingQuery(), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("submissions/{submissionId:int}/complete-i9-section2")]
+    [Authorize(Roles = "Admin,Manager,OfficeManager")]
+    public async Task<ActionResult<ComplianceFormSubmissionResponseModel>> CompleteI9Section2(
+        int submissionId, [FromBody] CompleteI9Section2RequestModel model, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CompleteI9Section2Command(
+            submissionId, GetUserId(),
+            model.DocumentListType, model.DocumentDataJson,
+            model.StartDate, model.ReverificationDueAt), ct);
+        return Ok(result);
     }
 }

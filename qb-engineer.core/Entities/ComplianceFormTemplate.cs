@@ -20,7 +20,20 @@ public class ComplianceFormTemplate : BaseAuditableEntity
     public bool BlocksJobAssignment { get; set; }
     public string ProfileCompletionKey { get; set; } = string.Empty;
 
+    /// <summary>
+    /// JSON mapping from dynamic form field IDs to AcroForm field names in the government PDF.
+    /// When set, the backend fills the official PDF with collected form data before DocuSeal signing.
+    /// </summary>
+    public string? AcroFieldMapJson { get; set; }
+
+    /// <summary>
+    /// ID of the blank government PDF stored in MinIO (the template to fill).
+    /// Used together with AcroFieldMapJson to produce a pre-filled PDF for signing.
+    /// </summary>
+    public int? FilledPdfTemplateId { get; set; }
+
     public FileAttachment? ManualOverrideFile { get; set; }
+    public FileAttachment? FilledPdfTemplate { get; set; }
     public ICollection<ComplianceFormSubmission> Submissions { get; set; } = [];
     public ICollection<FormDefinitionVersion> FormDefinitionVersions { get; set; } = [];
 }

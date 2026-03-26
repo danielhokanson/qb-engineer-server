@@ -16,7 +16,9 @@ public record SubmitFormDataCommand(
     int UserId,
     int TemplateId,
     string FormDataJson,
-    int? FormDefinitionVersionId = null) : IRequest<ComplianceFormSubmissionResponseModel>;
+    int? FormDefinitionVersionId = null,
+    string? UserEmail = null,
+    string? UserName = null) : IRequest<ComplianceFormSubmissionResponseModel>;
 
 public class SubmitFormDataHandler(AppDbContext db, IMediator mediator)
     : IRequestHandler<SubmitFormDataCommand, ComplianceFormSubmissionResponseModel>
@@ -28,6 +30,37 @@ public class SubmitFormDataHandler(AppDbContext db, IMediator mediator)
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == request.TemplateId, ct)
             ?? throw new KeyNotFoundException($"Compliance template {request.TemplateId} not found.");
+
+        // Route through PDF fill + DocuSeal signing when AcroFieldMapJson is configured
+        if (!string.IsNullOrWhiteSpace(template.AcroFieldMapJson)
+            && template.FilledPdfTemplateId.HasValue
+            && !string.IsNullOrWhiteSpace(request.UserEmail))
+        {
+            await mediator.Send(new FillAndSubmitFormForSigningCommand(
+                request.UserId,
+                request.TemplateId,
+                request.FormDataJson,
+                request.UserEmail,
+                request.UserName ?? request.UserEmail), ct);
+
+            // Re-load updated submission for response
+            var updated = await db.ComplianceFormSubmissions
+                .Include(s => s.Template)
+                .FirstOrDefaultAsync(s => s.UserId == request.UserId && s.TemplateId == request.TemplateId, ct)!;
+
+            return new ComplianceFormSubmissionResponseModel(
+                updated!.Id, updated.TemplateId, template.Name,
+                template.FormType, updated.Status, updated.SignedAt,
+                updated.SignedPdfFileId, updated.DocuSealSubmitUrl,
+                updated.FormDataJson, updated.FormDefinitionVersionId,
+                updated.CreatedAt,
+                updated.FilledPdfFileId,
+                updated.I9Section1SignedAt, updated.I9Section2SignedAt,
+                updated.I9EmployerUserId, updated.I9DocumentListType,
+                updated.I9DocumentDataJson, updated.I9Section2OverdueAt,
+                updated.I9ReverificationDueAt
+            );
+        }
 
         // Validate required fields against form definition
         var versionId = request.FormDefinitionVersionId;
@@ -97,7 +130,12 @@ public class SubmitFormDataHandler(AppDbContext db, IMediator mediator)
             template.FormType, submission.Status, submission.SignedAt,
             submission.SignedPdfFileId, submission.DocuSealSubmitUrl,
             submission.FormDataJson, submission.FormDefinitionVersionId,
-            submission.CreatedAt
+            submission.CreatedAt,
+            submission.FilledPdfFileId,
+            submission.I9Section1SignedAt, submission.I9Section2SignedAt,
+            submission.I9EmployerUserId, submission.I9DocumentListType,
+            submission.I9DocumentDataJson, submission.I9Section2OverdueAt,
+            submission.I9ReverificationDueAt
         );
     }
 
