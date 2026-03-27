@@ -232,6 +232,7 @@ try
     builder.Services.Configure<UpsOptions>(builder.Configuration.GetSection(UpsOptions.SectionName));
     builder.Services.Configure<FedExOptions>(builder.Configuration.GetSection(FedExOptions.SectionName));
     builder.Services.Configure<DhlOptions>(builder.Configuration.GetSection(DhlOptions.SectionName));
+    builder.Services.Configure<StampsOptions>(builder.Configuration.GetSection(StampsOptions.SectionName));
     // Accounting provider options
     builder.Services.Configure<XeroOptions>(builder.Configuration.GetSection(XeroOptions.SectionName));
     builder.Services.Configure<FreshBooksOptions>(builder.Configuration.GetSection(FreshBooksOptions.SectionName));
@@ -251,6 +252,9 @@ try
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
     });
+
+    var storageProvider = builder.Configuration.GetValue<string>("Storage:Provider") ?? "minio";
+    builder.Services.Configure<LocalStorageOptions>(builder.Configuration.GetSection(LocalStorageOptions.SectionName));
 
     if (useMocks)
     {
@@ -272,7 +276,17 @@ try
     }
     else
     {
-        builder.Services.AddSingleton<IStorageService, MinioStorageService>();
+        if (storageProvider == "local")
+        {
+            builder.Services.AddSingleton<IStorageService, LocalFileStorageService>();
+            Log.Information("Storage provider: local filesystem ({RootPath})",
+                builder.Configuration.GetValue<string>("LocalStorage:RootPath") ?? "/app/storage");
+        }
+        else
+        {
+            builder.Services.AddSingleton<IStorageService, MinioStorageService>();
+            Log.Information("Storage provider: MinIO");
+        }
         builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
         // Accounting providers — all implementations registered; factory resolves active one from system settings
         builder.Services.AddScoped<IAccountingService, LocalAccountingService>();
@@ -503,7 +517,7 @@ try
         }
     }
 
-    // MinIO bucket initialization (skip when using mock storage)
+    // Storage bucket/directory initialization (skip when using mock storage)
     if (!useMocks)
     {
         using var scope = app.Services.CreateScope();
@@ -515,11 +529,12 @@ try
             await storageService.EnsureBucketExistsAsync(minioOpts.JobFilesBucket, CancellationToken.None);
             await storageService.EnsureBucketExistsAsync(minioOpts.ReceiptsBucket, CancellationToken.None);
             await storageService.EnsureBucketExistsAsync(minioOpts.EmployeeDocsBucket, CancellationToken.None);
-            Log.Information("MinIO buckets verified");
+            await storageService.EnsureBucketExistsAsync(minioOpts.PiiDocsBucket, CancellationToken.None);
+            Log.Information("Storage buckets/directories verified ({Provider})", storageProvider);
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "MinIO bucket initialization failed — file storage unavailable until MinIO is reachable");
+            Log.Warning(ex, "Storage initialization failed — file storage unavailable until provider is reachable");
         }
     }
 

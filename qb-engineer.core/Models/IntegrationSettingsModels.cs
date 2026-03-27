@@ -16,7 +16,15 @@ public record IntegrationStatusModel(
     string Icon,
     bool IsConfigured,
     List<IntegrationSettingField> Fields,
-    string Category = "service"
+    string Category = "service",
+    List<string>? SandboxSteps = null,
+    string? SandboxUrl = null,
+    string? LogoUrl = null
+);
+
+public record IntegrationSettingsResult(
+    bool ShowSandboxGuides,
+    List<IntegrationStatusModel> Integrations
 );
 
 public record UpdateIntegrationSettingsRequestModel(

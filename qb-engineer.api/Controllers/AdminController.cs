@@ -271,7 +271,7 @@ public class AdminController(IMediator mediator) : ControllerBase
     // ── Integrations ──
 
     [HttpGet("integrations")]
-    public async Task<ActionResult<List<IntegrationStatusModel>>> GetIntegrations()
+    public async Task<ActionResult<IntegrationSettingsResult>> GetIntegrations()
     {
         var result = await mediator.Send(new GetIntegrationSettingsQuery());
         return Ok(result);

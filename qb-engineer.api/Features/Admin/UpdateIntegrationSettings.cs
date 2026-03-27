@@ -1,5 +1,6 @@
 using MediatR;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 using QBEngineer.Core.Interfaces;
@@ -12,6 +13,7 @@ public record UpdateIntegrationSettingsCommand(
     Dictionary<string, string> Settings) : IRequest<IntegrationStatusModel>;
 
 public class UpdateIntegrationSettingsHandler(
+    IConfiguration configuration,
     IOptions<SmtpOptions> smtpOptions,
     IOptions<MinioOptions> minioOptions,
     IOptions<UspsOptions> uspsOptions,
@@ -20,12 +22,14 @@ public class UpdateIntegrationSettingsHandler(
     IOptions<UpsOptions> upsOptions,
     IOptions<FedExOptions> fedExOptions,
     IOptions<DhlOptions> dhlOptions,
+    IOptions<StampsOptions> stampsOptions,
     IOptions<XeroOptions> xeroOptions,
     IOptions<FreshBooksOptions> freshBooksOptions,
     IOptions<SageOptions> sageOptions,
     IOptions<NetSuiteOptions> netSuiteOptions,
     IOptions<WaveOptions> waveOptions,
     IOptions<ZohoOptions> zohoOptions,
+    IOptions<LocalStorageOptions> localStorageOptions,
     ISystemSettingRepository settingRepo) : IRequestHandler<UpdateIntegrationSettingsCommand, IntegrationStatusModel>
 {
     public async Task<IntegrationStatusModel> Handle(UpdateIntegrationSettingsCommand request, CancellationToken ct)
@@ -59,6 +63,9 @@ public class UpdateIntegrationSettingsHandler(
             case "ollama":
                 ApplyOllamaSettings(request.Settings);
                 break;
+            case "local-storage":
+                ApplyLocalStorageSettings(request.Settings);
+                break;
             default:
                 // Carrier and OAuth-based accounting providers (ups, fedex, dhl, xero, freshbooks,
                 // sage, netsuite, wave, zoho) are configured via appsettings / environment variables,
@@ -68,10 +75,10 @@ public class UpdateIntegrationSettingsHandler(
         }
 
         // Return updated status via GetIntegrationSettings (re-read from updated options)
-        var handler = new GetIntegrationSettingsHandler(smtpOptions, minioOptions, uspsOptions, docuSealOptions, ollamaOptions,
-            upsOptions, fedExOptions, dhlOptions, xeroOptions, freshBooksOptions, sageOptions, netSuiteOptions, waveOptions, zohoOptions);
-        var all = await handler.Handle(new GetIntegrationSettingsQuery(), ct);
-        return all.First(i => i.Provider == request.Provider);
+        var handler = new GetIntegrationSettingsHandler(configuration, smtpOptions, minioOptions, uspsOptions, docuSealOptions, ollamaOptions,
+            upsOptions, fedExOptions, dhlOptions, stampsOptions, xeroOptions, freshBooksOptions, sageOptions, netSuiteOptions, waveOptions, zohoOptions, localStorageOptions);
+        var result = await handler.Handle(new GetIntegrationSettingsQuery(), ct);
+        return result.Integrations.First(i => i.Provider == request.Provider);
     }
 
     private void ApplySmtpSettings(Dictionary<string, string> settings)
@@ -116,6 +123,13 @@ public class UpdateIntegrationSettingsHandler(
         if (settings.TryGetValue("BaseUrl", out var url)) opts.BaseUrl = url;
         if (settings.TryGetValue("Model", out var model)) opts.Model = model;
         if (settings.TryGetValue("TimeoutSeconds", out var timeout) && int.TryParse(timeout, out var t)) opts.TimeoutSeconds = t;
+    }
+
+    private void ApplyLocalStorageSettings(Dictionary<string, string> settings)
+    {
+        var opts = localStorageOptions.Value;
+        if (settings.TryGetValue("RootPath", out var root)) opts.RootPath = root;
+        if (settings.TryGetValue("PublicBaseUrl", out var url)) opts.PublicBaseUrl = url;
     }
 
     private static bool IsAllMasked(string value) => !string.IsNullOrEmpty(value) && value.All(c => c == '*');
