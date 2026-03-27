@@ -13,8 +13,8 @@ using QBEngineer.Data.Context;
 namespace QBEngineer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260326052036_AddPdfFillAndI9Fields")]
-    partial class AddPdfFillAndI9Fields
+    [Migration("20260327174915_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

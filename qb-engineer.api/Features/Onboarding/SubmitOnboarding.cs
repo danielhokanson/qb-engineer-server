@@ -3,9 +3,11 @@ using System.Text.Json;
 using MediatR;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -27,9 +29,14 @@ public record SubmitOnboardingCommand(
     string UserName,
     OnboardingSubmitRequestModel Model) : IRequest<OnboardingSubmitResultModel>;
 
-public class SubmitOnboardingHandler(AppDbContext db, IMediator mediator)
+public class SubmitOnboardingHandler(
+    AppDbContext db,
+    IMediator mediator,
+    IDocumentSigningService signingService,
+    IConfiguration configuration)
     : IRequestHandler<SubmitOnboardingCommand, OnboardingSubmitResultModel>
 {
+    private bool IsMock => configuration.GetValue<bool>("MockIntegrations");
     public async Task<OnboardingSubmitResultModel> Handle(
         SubmitOnboardingCommand request, CancellationToken ct)
     {
@@ -55,21 +62,72 @@ public class SubmitOnboardingHandler(AppDbContext db, IMediator mediator)
         var signingUrls = new List<OnboardingSigningUrlModel>();
         int? i9EmployerSubmitterId = null;
 
+        // Fallback signing is available when running in mock mode OR when DocuSeal is configured
+        // but the template hasn't been set up for AcroForm pre-fill yet.
+        var canFallbackSign = IsMock || await signingService.IsAvailableAsync(ct);
+
         // ── 3. Fill + submit each form to DocuSeal ───────────────────────────
         foreach (var template in templates.OrderBy(t => t.SortOrder))
         {
-            // Only process templates that have PDF fill configured
-            if (string.IsNullOrWhiteSpace(template.AcroFieldMapJson) || template.FilledPdfTemplateId is null)
-                continue;
+            ComplianceForms.FillAndSubmitResult result;
 
-            var result = await mediator.Send(
-                new ComplianceForms.FillAndSubmitFormForSigningCommand(
-                    request.UserId,
-                    template.Id,
-                    formDataJson,
-                    request.UserEmail,
-                    request.UserName),
-                ct);
+            if (string.IsNullOrWhiteSpace(template.AcroFieldMapJson) || template.FilledPdfTemplateId is null)
+            {
+                // Template not yet configured for PDF fill+sign.
+                // Use fallback path (mock or DocuSeal without pre-fill) if available,
+                // otherwise skip this template entirely.
+                if (!canFallbackSign) continue;
+
+                var isI9Template = template.FormType == ComplianceFormType.I9;
+                IReadOnlyList<SequentialSubmitter> submitters = isI9Template
+                    ? [
+                        new SequentialSubmitter(1, request.UserEmail, request.UserName, "Employee"),
+                        new SequentialSubmitter(2, "employer@placeholder.local", "Employer", "Employer"),
+                      ]
+                    : [new SequentialSubmitter(1, request.UserEmail, request.UserName, "Employee")];
+
+                var templateName = $"[MOCK] {template.Name} — {request.UserName} — {DateTime.UtcNow:yyyyMMdd}";
+                var multiSub = await signingService.CreateSubmissionFromPdfAsync(
+                    templateName, [], submitters, ct);
+
+                if (!multiSub.SubmittersByOrder.TryGetValue(1, out var s1)) continue;
+                var s2 = isI9Template && multiSub.SubmittersByOrder.TryGetValue(2, out var s2r) ? s2r : null;
+
+                // Upsert a lightweight submission record so the admin panel shows it
+                var mockSubmission = await db.ComplianceFormSubmissions
+                    .FirstOrDefaultAsync(s => s.UserId == request.UserId && s.TemplateId == template.Id, ct);
+                if (mockSubmission is null)
+                {
+                    mockSubmission = new ComplianceFormSubmission
+                    {
+                        TemplateId = template.Id,
+                        UserId = request.UserId,
+                        Status = ComplianceSubmissionStatus.Pending,
+                    };
+                    db.ComplianceFormSubmissions.Add(mockSubmission);
+                }
+                mockSubmission.DocuSealSubmissionId = s1.SubmitterId;
+                mockSubmission.DocuSealSubmitUrl = s1.EmbedUrl;
+                mockSubmission.Status = ComplianceSubmissionStatus.Pending;
+                await db.SaveChangesAsync(ct);
+
+                result = new ComplianceForms.FillAndSubmitResult(
+                    mockSubmission.Id,
+                    s1.EmbedUrl,
+                    isI9Template,
+                    s2?.SubmitterId);
+            }
+            else
+            {
+                result = await mediator.Send(
+                    new ComplianceForms.FillAndSubmitFormForSigningCommand(
+                        request.UserId,
+                        template.Id,
+                        formDataJson,
+                        request.UserEmail,
+                        request.UserName),
+                    ct);
+            }
 
             signingUrls.Add(new OnboardingSigningUrlModel(
                 template.FormType.ToString(),
@@ -200,8 +258,9 @@ public class SubmitOnboardingHandler(AppDbContext db, IMediator mediator)
     /// <summary>
     /// Builds the canonical flat JSON dictionary used for AcroForm field mapping.
     /// Keys here are the logical names that admins reference when configuring AcroFieldMapJson.
+    /// Shared with <see cref="PreviewOnboardingPdfHandler"/> and <see cref="SignOnboardingFormHandler"/>.
     /// </summary>
-    private static Dictionary<string, string> BuildFormDataDictionary(OnboardingSubmitRequestModel m)
+    internal static Dictionary<string, string> BuildFormDataDictionary(OnboardingSubmitRequestModel m)
     {
         var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -281,14 +340,14 @@ public class SubmitOnboardingHandler(AppDbContext db, IMediator mediator)
         return d;
     }
 
-    private static string BuildFullName(OnboardingSubmitRequestModel m)
+    internal static string BuildFullName(OnboardingSubmitRequestModel m)
     {
         if (!string.IsNullOrWhiteSpace(m.MiddleName))
             return $"{m.FirstName} {m.MiddleName} {m.LastName}";
         return $"{m.FirstName} {m.LastName}";
     }
 
-    private static string FormatSsn(string raw)
+    internal static string FormatSsn(string raw)
     {
         var digits = new string(raw.Where(char.IsDigit).ToArray());
         if (digits.Length == 9)

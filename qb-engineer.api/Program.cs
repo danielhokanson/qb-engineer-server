@@ -228,6 +228,17 @@ try
     builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
     builder.Services.Configure<UspsOptions>(builder.Configuration.GetSection(UspsOptions.SectionName));
     builder.Services.Configure<DocuSealOptions>(builder.Configuration.GetSection(DocuSealOptions.SectionName));
+    // Shipping carrier options
+    builder.Services.Configure<UpsOptions>(builder.Configuration.GetSection(UpsOptions.SectionName));
+    builder.Services.Configure<FedExOptions>(builder.Configuration.GetSection(FedExOptions.SectionName));
+    builder.Services.Configure<DhlOptions>(builder.Configuration.GetSection(DhlOptions.SectionName));
+    // Accounting provider options
+    builder.Services.Configure<XeroOptions>(builder.Configuration.GetSection(XeroOptions.SectionName));
+    builder.Services.Configure<FreshBooksOptions>(builder.Configuration.GetSection(FreshBooksOptions.SectionName));
+    builder.Services.Configure<SageOptions>(builder.Configuration.GetSection(SageOptions.SectionName));
+    builder.Services.Configure<NetSuiteOptions>(builder.Configuration.GetSection(NetSuiteOptions.SectionName));
+    builder.Services.Configure<WaveOptions>(builder.Configuration.GetSection(WaveOptions.SectionName));
+    builder.Services.Configure<ZohoOptions>(builder.Configuration.GetSection(ZohoOptions.SectionName));
 
     // QuickBooks token service (always registered — handles OAuth token lifecycle)
     builder.Services.AddScoped<IQuickBooksTokenService, QuickBooksTokenService>();
@@ -263,15 +274,21 @@ try
     {
         builder.Services.AddSingleton<IStorageService, MinioStorageService>();
         builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
-        // Accounting providers — register all available implementations
+        // Accounting providers — all implementations registered; factory resolves active one from system settings
+        builder.Services.AddScoped<IAccountingService, LocalAccountingService>();
         builder.Services.AddScoped<IAccountingService, QuickBooksAccountingService>();
-        // Additional providers register here when implemented:
-        // builder.Services.AddScoped<IAccountingService, XeroAccountingService>();
-        // builder.Services.AddScoped<IAccountingService, FreshBooksAccountingService>();
-        // builder.Services.AddScoped<IAccountingService, SageAccountingService>();
-        // Shipping: direct carrier integrations registered here when implemented
-        // (UPS, FedEx, USPS, DHL — each implements IShippingService directly)
-        builder.Services.AddSingleton<IShippingService, MockShippingService>();
+        builder.Services.AddScoped<IAccountingService, XeroAccountingService>();
+        builder.Services.AddScoped<IAccountingService, FreshBooksAccountingService>();
+        builder.Services.AddScoped<IAccountingService, SageAccountingService>();
+        builder.Services.AddScoped<IAccountingService, NetSuiteAccountingService>();
+        builder.Services.AddScoped<IAccountingService, WaveAccountingService>();
+        builder.Services.AddScoped<IAccountingService, ZohoAccountingService>();
+        // Shipping: all configured carriers registered; MultiCarrierShippingService aggregates them
+        builder.Services.AddSingleton<IShippingCarrierService, UpsShippingService>();
+        builder.Services.AddSingleton<IShippingCarrierService, FedExShippingService>();
+        builder.Services.AddSingleton<IShippingCarrierService, UspsShippingService>();
+        builder.Services.AddSingleton<IShippingCarrierService, DhlShippingService>();
+        builder.Services.AddSingleton<IShippingService, MultiCarrierShippingService>();
         // Address validation: USPS Addresses API v3 (OAuth 2.0) when credentials configured, otherwise mock
         var uspsKey = builder.Configuration.GetSection(UspsOptions.SectionName)["ConsumerKey"];
         if (!string.IsNullOrEmpty(uspsKey))
@@ -409,19 +426,49 @@ try
         }
         else
         {
-            var recreateDb = builder.Configuration.GetValue<bool>("RECREATE_DB");
+            var forceRecreate = builder.Configuration.GetValue<bool>("RECREATE_DB");
 
-            if (recreateDb)
+            if (forceRecreate)
             {
-                Log.Information("RECREATE_DB=true — dropping and recreating database...");
+                // Manual escape hatch — set RECREATE_DB=true to force a wipe (dev use only)
+                Log.Warning("RECREATE_DB=true — dropping and recreating database from migrations...");
                 await db.Database.EnsureDeletedAsync();
-                await db.Database.EnsureCreatedAsync();
-                Log.Information("Database recreated successfully");
             }
-            else
+            else if (await db.Database.CanConnectAsync())
             {
-                await db.Database.MigrateAsync();
+                // DB exists — check for legacy schema (EnsureCreated, no migrations history)
+                IEnumerable<string> applied;
+                try
+                {
+                    applied = await db.Database.GetAppliedMigrationsAsync();
+                }
+                catch
+                {
+                    // __EFMigrationsHistory table missing — definitely a pre-migration schema
+                    applied = [];
+                }
+
+                if (!applied.Any())
+                {
+                    // No migration history. Verify app tables actually exist (vs. brand-new empty DB).
+                    bool hasLegacySchema = false;
+                    try { hasLegacySchema = await db.Jobs.AnyAsync(); }
+                    catch { /* table doesn't exist — this is a fresh DB, not a legacy one */ }
+
+                    if (hasLegacySchema)
+                    {
+                        Log.Warning(
+                            "Legacy schema detected (database exists with tables but no migrations history). " +
+                            "Performing one-time forced recreation so the migration baseline is established. " +
+                            "This only happens once — all future schema changes will use incremental migrations.");
+                        await db.Database.EnsureDeletedAsync();
+                    }
+                }
             }
+
+            // Apply all pending migrations (creates DB from scratch if it doesn't exist)
+            await db.Database.MigrateAsync();
+            Log.Information("Database migrations applied successfully");
 
             // Seed essential data idempotently (roles, users, track types, reference data, etc.)
             await SeedData.SeedAsync(scope.ServiceProvider);

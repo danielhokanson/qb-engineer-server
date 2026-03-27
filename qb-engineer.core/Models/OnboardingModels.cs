@@ -79,6 +79,7 @@ public record OnboardingSubmitRequestModel(
     string RoutingNumber,
     string AccountNumber,
     string AccountType,
+    int? VoidedCheckFileAttachmentId,
 
     // ── Step 7: Acknowledgments ─────────────────────────────────────────
     bool AcknowledgeWorkersComp,
@@ -105,3 +106,38 @@ public record OnboardingStatusModel(
     bool HandbookComplete,
     bool AllComplete,
     bool CanBeAssigned);
+
+// ── Per-form review flow ──────────────────────────────────────────────────────
+
+/// <summary>Describes one form that the employee needs to review and sign.</summary>
+public record OnboardingFormToSignItem(
+    string FormType,
+    string FormName,
+    bool HasTemplate);
+
+/// <summary>Result of the save-only step (before any PDF fill / DocuSeal).</summary>
+public record SaveOnboardingResultModel(
+    IReadOnlyList<OnboardingFormToSignItem> FormsToSign);
+
+/// <summary>Request to preview a single filled PDF (no DocuSeal, no DB writes).</summary>
+public record PreviewOnboardingPdfRequestModel(
+    OnboardingSubmitRequestModel FormData,
+    string FormType);
+
+/// <summary>
+/// Preview result. When <see cref="HasTemplate"/> is false the form has not been
+/// configured for PDF pre-fill; the frontend should skip straight to signing.
+/// </summary>
+public record PreviewOnboardingPdfResultModel(
+    bool HasTemplate,
+    string? PdfBase64);
+
+/// <summary>Request to fill one PDF and create a DocuSeal submission for it.</summary>
+public record SignOnboardingFormRequestModel(
+    OnboardingSubmitRequestModel FormData,
+    string FormType);
+
+public record SignOnboardingFormResultModel(
+    string SigningUrl,
+    int SubmissionId,
+    bool IsMock);
