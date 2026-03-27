@@ -15,6 +15,8 @@ public class TestIntegrationConnectionHandler(
     IAddressValidationService addressValidationService,
     IDocumentSigningService documentSigningService,
     IAiService aiService,
+    IEnumerable<IShippingCarrierService> shippingCarriers,
+    IAccountingProviderFactory accountingFactory,
     ILogger<TestIntegrationConnectionHandler> logger) : IRequestHandler<TestIntegrationConnectionCommand, TestIntegrationResultModel>
 {
     public async Task<TestIntegrationResultModel> Handle(TestIntegrationConnectionCommand request, CancellationToken ct)
@@ -28,7 +30,9 @@ public class TestIntegrationConnectionHandler(
                 "usps" => await TestUsps(ct),
                 "docuseal" => await TestDocuSeal(ct),
                 "ollama" => await TestOllama(ct),
-                _ => throw new KeyNotFoundException($"Unknown integration provider: {request.Provider}")
+                "ups" or "fedex" or "dhl" => await TestShippingCarrier(request.Provider, ct),
+                "xero" or "freshbooks" or "sage" or "netsuite" or "wave" or "zoho" => await TestAccountingProvider(request.Provider, ct),
+                _ => (false, $"Unknown integration provider: {request.Provider}")
             };
 
             logger.LogInformation("[Integration Test] {Provider}: {Success} — {Message}", request.Provider, success, message);
@@ -69,5 +73,42 @@ public class TestIntegrationConnectionHandler(
     {
         var success = await aiService.IsAvailableAsync(ct);
         return (success, success ? "Ollama AI connection successful" : "Ollama connection failed — check Base URL and ensure the AI container is running");
+    }
+
+    private async Task<(bool, string)> TestShippingCarrier(string carrierId, CancellationToken ct)
+    {
+        var carrier = shippingCarriers.FirstOrDefault(c => c.CarrierId == carrierId);
+        if (carrier is null)
+            return (false, $"{carrierId} carrier is not registered");
+        if (!carrier.IsConfigured)
+            return (false, $"{carrier.CarrierName} credentials are not configured — enter Client ID/Secret in the configuration dialog");
+
+        var address = new ShippingAddress("Test", "123 Test St", "New York", "NY", "10001", "US");
+        var pkg = new ShippingPackage(1m, 10m, 6m, 4m);
+        var request = new ShipmentRequest(address, address, [pkg], null);
+
+        try
+        {
+            var rates = await carrier.GetRatesAsync(request, ct);
+            return rates.Any()
+                ? (true, $"{carrier.CarrierName} connection successful — {rates.Count} rate(s) returned")
+                : (false, $"{carrier.CarrierName} connected but returned no rates — verify account number and permissions");
+        }
+        catch (Exception ex)
+        {
+            return (false, $"{carrier.CarrierName} connection failed: {ex.Message}");
+        }
+    }
+
+    private async Task<(bool, string)> TestAccountingProvider(string providerId, CancellationToken ct)
+    {
+        var provider = accountingFactory.GetProvider(providerId);
+        if (provider is null)
+            return (false, $"{providerId} accounting provider is not registered");
+
+        var success = await provider.TestConnectionAsync(ct);
+        return (success, success
+            ? $"{provider.ProviderName} connection successful"
+            : $"{provider.ProviderName} connection failed — verify credentials and OAuth authorization");
     }
 }

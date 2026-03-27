@@ -48,20 +48,17 @@ public class AccountingProviderFactory : IAccountingProviderFactory
 
         var infos = new List<AccountingProviderInfo>
         {
+            // AccountingProviderInfo(Id, Name, Description, Icon, RequiresOAuth, IsConfigured)
+            // IsConfigured here means "is this provider currently active/selected"
+            new("local", "Local (Standalone)", "All data stored locally — no external accounting sync required", "storage", false, activeId == "local" || string.IsNullOrEmpty(activeId)),
             new("quickbooks", "QuickBooks Online", "Accounting, invoicing, and payment sync via Intuit QuickBooks", "account_balance", true, activeId == "quickbooks"),
-            new("xero", "Xero", "Cloud accounting with multi-currency and project tracking", "account_balance_wallet", true, false),
-            new("freshbooks", "FreshBooks", "Small business invoicing and expense tracking", "receipt_long", true, false),
-            new("sage", "Sage Business Cloud", "Enterprise accounting and financial management", "business", true, false),
+            new("xero", "Xero", "Cloud accounting with multi-currency and project tracking", "account_balance_wallet", true, activeId == "xero"),
+            new("freshbooks", "FreshBooks", "Small business invoicing and expense tracking", "receipt_long", true, activeId == "freshbooks"),
+            new("sage", "Sage Business Cloud", "Enterprise accounting and financial management", "business", true, activeId == "sage"),
+            new("netsuite", "NetSuite", "Enterprise ERP with accounting and inventory management", "corporate_fare", false, activeId == "netsuite"),
+            new("wave", "Wave", "Free small business accounting (personal access token)", "waves", false, activeId == "wave"),
+            new("zoho", "Zoho Books", "Zoho Books cloud accounting with inventory", "menu_book", true, activeId == "zoho"),
         };
-
-        // Mark providers that have registered implementations
-        foreach (var info in infos)
-        {
-            if (_providers.ContainsKey(info.Id) && info.Id == activeId)
-            {
-                // Already marked as configured above
-            }
-        }
 
         return infos;
     }

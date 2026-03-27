@@ -15,7 +15,8 @@ public record IntegrationStatusModel(
     string Description,
     string Icon,
     bool IsConfigured,
-    List<IntegrationSettingField> Fields
+    List<IntegrationSettingField> Fields,
+    string Category = "service"
 );
 
 public record UpdateIntegrationSettingsRequestModel(

@@ -36,6 +36,25 @@ public class DocuSealSigningService : IDocumentSigningService
         _httpClient.DefaultRequestHeaders.Add("X-Auth-Token", _options.ApiKey);
     }
 
+    /// <summary>
+    /// Rewrites a DocuSeal embed URL from the internal Docker network address to the
+    /// browser-accessible proxy URL configured in <see cref="DocuSealOptions.PublicBaseUrl"/>.
+    /// For example: http://qb-engineer-signing:3000/s/abc → http://localhost:4200/docuseal/s/abc
+    /// </summary>
+    private string RewriteEmbedUrl(string embedSrc)
+    {
+        if (string.IsNullOrEmpty(embedSrc) || string.IsNullOrEmpty(_options.PublicBaseUrl))
+            return embedSrc;
+
+        var baseUrl = _options.BaseUrl.TrimEnd('/');
+        var publicBaseUrl = _options.PublicBaseUrl.TrimEnd('/');
+
+        if (embedSrc.StartsWith(baseUrl, StringComparison.OrdinalIgnoreCase))
+            return publicBaseUrl + embedSrc[baseUrl.Length..];
+
+        return embedSrc;
+    }
+
     public async Task<bool> IsAvailableAsync(CancellationToken ct)
     {
         try
@@ -52,6 +71,11 @@ public class DocuSealSigningService : IDocumentSigningService
 
     public async Task<int> CreateTemplateFromPdfAsync(string name, byte[] pdfBytes, CancellationToken ct)
     {
+        // When no pre-filled PDF is available (fallback path), create a blank HTML template instead.
+        // DocuSeal rejects empty/zero-byte PDF uploads with 404.
+        if (pdfBytes.Length == 0)
+            return await CreateBlankTemplateAsync(name, ct);
+
         _logger.LogInformation("DocuSeal CreateTemplate: {Name} ({Size} bytes)", name, pdfBytes.Length);
 
         using var content = new MultipartFormDataContent();
@@ -63,6 +87,22 @@ public class DocuSealSigningService : IDocumentSigningService
 
         var result = await response.Content.ReadFromJsonAsync<DocuSealTemplateResponse>(JsonOptions, ct);
         return result?.Id ?? throw new InvalidOperationException("DocuSeal returned no template ID");
+    }
+
+    private async Task<int> CreateBlankTemplateAsync(string name, CancellationToken ct)
+    {
+        _logger.LogInformation("DocuSeal CreateTemplate (HTML blank): {Name}", name);
+
+        var html = $"<p style=\"font-family:sans-serif;padding:40px\">" +
+                   $"<strong>{System.Net.WebUtility.HtmlEncode(name)}</strong><br/><br/>" +
+                   $"By signing below, you acknowledge receipt and review of this form.</p>";
+
+        var request = new { name, html };
+        var response = await _httpClient.PostAsJsonAsync("/api/templates/html", request, JsonOptions, ct);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<DocuSealTemplateResponse>(JsonOptions, ct);
+        return result?.Id ?? throw new InvalidOperationException("DocuSeal returned no template ID from HTML template");
     }
 
     public async Task<DocumentSigningSubmission> CreateSubmissionAsync(int templateId, string signerEmail, string signerName, CancellationToken ct)
@@ -91,7 +131,7 @@ public class DocuSealSigningService : IDocumentSigningService
         var submission = results?.FirstOrDefault()
             ?? throw new InvalidOperationException("DocuSeal returned no submission");
 
-        return new DocumentSigningSubmission(submission.Id, submission.EmbedSrc);
+        return new DocumentSigningSubmission(submission.Id, RewriteEmbedUrl(submission.EmbedSrc));
     }
 
     public async Task<DocumentSigningMultiSubmission> CreateSubmissionFromPdfAsync(
@@ -138,7 +178,7 @@ public class DocuSealSigningService : IDocumentSigningService
         for (var i = 0; i < Math.Min(results.Count, orderedSubmitters.Count); i++)
         {
             var order = orderedSubmitters[i].Order;
-            byOrder[order] = new SubmitterResult(results[i].Id, results[i].EmbedSrc);
+            byOrder[order] = new SubmitterResult(results[i].Id, RewriteEmbedUrl(results[i].EmbedSrc));
         }
 
         return new DocumentSigningMultiSubmission(templateId, byOrder);

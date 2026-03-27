@@ -17,6 +17,15 @@ public class UpdateIntegrationSettingsHandler(
     IOptions<UspsOptions> uspsOptions,
     IOptions<DocuSealOptions> docuSealOptions,
     IOptions<OllamaOptions> ollamaOptions,
+    IOptions<UpsOptions> upsOptions,
+    IOptions<FedExOptions> fedExOptions,
+    IOptions<DhlOptions> dhlOptions,
+    IOptions<XeroOptions> xeroOptions,
+    IOptions<FreshBooksOptions> freshBooksOptions,
+    IOptions<SageOptions> sageOptions,
+    IOptions<NetSuiteOptions> netSuiteOptions,
+    IOptions<WaveOptions> waveOptions,
+    IOptions<ZohoOptions> zohoOptions,
     ISystemSettingRepository settingRepo) : IRequestHandler<UpdateIntegrationSettingsCommand, IntegrationStatusModel>
 {
     public async Task<IntegrationStatusModel> Handle(UpdateIntegrationSettingsCommand request, CancellationToken ct)
@@ -51,11 +60,16 @@ public class UpdateIntegrationSettingsHandler(
                 ApplyOllamaSettings(request.Settings);
                 break;
             default:
-                throw new KeyNotFoundException($"Unknown integration provider: {request.Provider}");
+                // Carrier and OAuth-based accounting providers (ups, fedex, dhl, xero, freshbooks,
+                // sage, netsuite, wave, zoho) are configured via appsettings / environment variables,
+                // not via in-memory mutation. Settings are persisted to system_settings above; a
+                // restart picks them up from IOptions. No in-memory update needed here.
+                break;
         }
 
         // Return updated status via GetIntegrationSettings (re-read from updated options)
-        var handler = new GetIntegrationSettingsHandler(smtpOptions, minioOptions, uspsOptions, docuSealOptions, ollamaOptions);
+        var handler = new GetIntegrationSettingsHandler(smtpOptions, minioOptions, uspsOptions, docuSealOptions, ollamaOptions,
+            upsOptions, fedExOptions, dhlOptions, xeroOptions, freshBooksOptions, sageOptions, netSuiteOptions, waveOptions, zohoOptions);
         var all = await handler.Handle(new GetIntegrationSettingsQuery(), ct);
         return all.First(i => i.Provider == request.Provider);
     }
