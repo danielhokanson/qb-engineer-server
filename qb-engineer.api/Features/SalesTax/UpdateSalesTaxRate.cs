@@ -36,13 +36,15 @@ public class UpdateSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Update
 
         rate.Name = request.Data.Name.Trim();
         rate.Code = request.Data.Code.Trim();
+        rate.StateCode = string.IsNullOrWhiteSpace(request.Data.StateCode) ? null : request.Data.StateCode.Trim().ToUpper();
         rate.Rate = request.Data.Rate;
+        rate.EffectiveFrom = request.Data.EffectiveFrom ?? rate.EffectiveFrom;
         rate.IsDefault = request.Data.IsDefault;
         rate.Description = request.Data.Description?.Trim();
 
         await db.SaveChangesAsync(cancellationToken);
 
         return new SalesTaxRateResponseModel(
-            rate.Id, rate.Name, rate.Code, rate.Rate, rate.IsDefault, rate.IsActive, rate.Description);
+            rate.Id, rate.Name, rate.Code, rate.StateCode, rate.Rate, rate.EffectiveFrom, rate.EffectiveTo, rate.IsDefault, rate.IsActive, rate.Description);
     }
 }

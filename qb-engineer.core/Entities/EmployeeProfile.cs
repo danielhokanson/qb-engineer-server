@@ -44,4 +44,8 @@ public class EmployeeProfile : BaseAuditableEntity
     public DateTime? DirectDepositCompletedAt { get; set; }
     public DateTime? WorkersCompAcknowledgedAt { get; set; }
     public DateTime? HandbookAcknowledgedAt { get; set; }
+
+    // Set when user self-certifies onboarding complete without going through the wizard
+    public DateTime? OnboardingBypassedAt { get; set; }
 }
+

@@ -19,6 +19,13 @@ public class GetOnboardingStatusHandler(AppDbContext db)
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.UserId == request.UserId, ct);
 
+        // Bypass flag treats all items as complete
+        if (profile?.OnboardingBypassedAt is not null)
+            return new OnboardingStatusModel(
+                W4Complete: true, I9Complete: true, StateWithholdingComplete: true,
+                DirectDepositComplete: true, WorkersCompComplete: true, HandbookComplete: true,
+                AllComplete: true, CanBeAssigned: true);
+
         var w4 = profile?.W4CompletedAt is not null;
         var i9 = profile?.I9CompletedAt is not null;
         var state = profile?.StateWithholdingCompletedAt is not null;

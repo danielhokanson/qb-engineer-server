@@ -71,6 +71,17 @@ public class OnboardingController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Self-service bypass: marks the current user as onboarded without completing the wizard.
+    /// Creates an EmployeeProfile if one doesn't exist and sets OnboardingBypassedAt.
+    /// </summary>
+    [HttpPost("bypass")]
+    public async Task<IActionResult> Bypass(CancellationToken ct)
+    {
+        await mediator.Send(new BypassOnboardingCommand(GetUserId()), ct);
+        return NoContent();
+    }
+
     // ── Per-form review flow ──────────────────────────────────────────────────
 
     /// <summary>

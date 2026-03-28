@@ -29,22 +29,34 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 (p.ExternalPartNumber != null && p.ExternalPartNumber.ToLower().Contains(term)));
         }
 
+        var now = DateTime.UtcNow;
+
         var parts = await query
             .Include(p => p.BOMEntries)
             .OrderBy(p => p.PartNumber)
+            .Select(p => new
+            {
+                Part = p,
+                BomCount = p.BOMEntries.Count,
+                CurrentPrice = db.PartPrices
+                    .Where(pp => pp.PartId == p.Id && pp.EffectiveTo == null && pp.EffectiveFrom <= now)
+                    .Select(pp => (decimal?)pp.UnitPrice)
+                    .FirstOrDefault(),
+            })
             .ToListAsync(ct);
 
-        return parts.Select(p => new PartListResponseModel(
-            p.Id,
-            p.PartNumber,
-            p.Description,
-            p.Revision,
-            p.Status,
-            p.PartType,
-            p.Material,
-            p.ExternalPartNumber,
-            p.BOMEntries.Count,
-            p.CreatedAt
+        return parts.Select(r => new PartListResponseModel(
+            r.Part.Id,
+            r.Part.PartNumber,
+            r.Part.Description,
+            r.Part.Revision,
+            r.Part.Status,
+            r.Part.PartType,
+            r.Part.Material,
+            r.Part.ExternalPartNumber,
+            r.BomCount,
+            r.Part.CreatedAt,
+            r.CurrentPrice
         )).ToList();
     }
 

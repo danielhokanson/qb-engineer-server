@@ -23,6 +23,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Part> Parts => Set<Part>();
+    public DbSet<PartPrice> PartPrices => Set<PartPrice>();
     public DbSet<BOMEntry> BOMEntries => Set<BOMEntry>();
     public DbSet<ReferenceData> ReferenceData => Set<ReferenceData>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();

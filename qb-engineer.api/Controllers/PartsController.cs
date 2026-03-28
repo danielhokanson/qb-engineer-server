@@ -135,4 +135,21 @@ public class PartsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetEntityActivityQuery("Part", id));
         return Ok(result);
     }
+
+    // ── Pricing ───────────────────────────────────────────────────────────────
+
+    [HttpGet("{id:int}/prices")]
+    public async Task<ActionResult<List<PartPriceResponseModel>>> GetPrices(int id)
+    {
+        var result = await mediator.Send(new GetPartPricesQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/prices")]
+    public async Task<ActionResult<PartPriceResponseModel>> AddPrice(
+        int id, [FromBody] AddPartPriceRequestModel model)
+    {
+        var result = await mediator.Send(new AddPartPriceCommand(id, model.UnitPrice, model.EffectiveFrom, model.Notes));
+        return CreatedAtAction(nameof(GetPrices), new { id }, result);
+    }
 }

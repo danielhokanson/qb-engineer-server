@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pgvector;
@@ -12,9 +13,11 @@ using QBEngineer.Data.Context;
 namespace QBEngineer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327193307_AddOnboardingBypass")]
+    partial class AddOnboardingBypass
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3778,49 +3781,6 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("parts");
                 });
 
-            modelBuilder.Entity("QBEngineer.Core.Entities.PartPrice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("EffectiveFrom")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("effective_from");
-
-                    b.Property<DateTime?>("EffectiveTo")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("effective_to");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("notes");
-
-                    b.Property<int>("PartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("part_id");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("unit_price");
-
-                    b.HasKey("Id")
-                        .HasName("pk_part_prices");
-
-                    b.HasIndex("PartId")
-                        .HasDatabaseName("ix_part_prices_part_id");
-
-                    b.HasIndex("PartId", "EffectiveTo")
-                        .HasDatabaseName("ix_part_prices_part_id_effective_to");
-
-                    b.ToTable("part_prices");
-                });
-
             modelBuilder.Entity("QBEngineer.Core.Entities.PartRevision", b =>
                 {
                     b.Property<int>("Id")
@@ -5669,14 +5629,6 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
-                    b.Property<DateTime>("EffectiveFrom")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("effective_from");
-
-                    b.Property<DateTime?>("EffectiveTo")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("effective_to");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -5696,11 +5648,6 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("numeric(8,6)")
                         .HasColumnName("rate");
 
-                    b.Property<string>("StateCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)")
-                        .HasColumnName("state_code");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -5711,12 +5658,6 @@ namespace QBEngineer.Data.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("ix_sales_tax_rates_code");
-
-                    b.HasIndex("StateCode")
-                        .HasDatabaseName("ix_sales_tax_rates_state_code");
-
-                    b.HasIndex("StateCode", "EffectiveTo")
-                        .HasDatabaseName("ix_sales_tax_rates_state_code_effective_to");
 
                     b.ToTable("sales_tax_rates");
                 });
@@ -8199,18 +8140,6 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("PreferredVendor");
 
                     b.Navigation("ToolingAsset");
-                });
-
-            modelBuilder.Entity("QBEngineer.Core.Entities.PartPrice", b =>
-                {
-                    b.HasOne("QBEngineer.Core.Entities.Part", "Part")
-                        .WithMany()
-                        .HasForeignKey("PartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_part_prices_parts_part_id");
-
-                    b.Navigation("Part");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.PartRevision", b =>

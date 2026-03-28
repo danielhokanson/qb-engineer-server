@@ -27,6 +27,18 @@ public class CreateSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Create
         if (exists)
             throw new InvalidOperationException($"Tax rate with code '{request.Data.Code}' already exists.");
 
+        var now = DateTime.UtcNow;
+        var effectiveFrom = request.Data.EffectiveFrom ?? now;
+        var stateCode = string.IsNullOrWhiteSpace(request.Data.StateCode) ? null : request.Data.StateCode.Trim().ToUpper();
+
+        // End-date any currently-active rate for the same state (or default if no state)
+        if (stateCode is not null)
+        {
+            await db.SalesTaxRates
+                .Where(r => r.StateCode == stateCode && r.EffectiveTo == null && r.EffectiveFrom <= effectiveFrom)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.EffectiveTo, effectiveFrom), cancellationToken);
+        }
+
         // If this is set as default, clear other defaults
         if (request.Data.IsDefault)
         {
@@ -39,7 +51,10 @@ public class CreateSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Create
         {
             Name = request.Data.Name.Trim(),
             Code = request.Data.Code.Trim(),
+            StateCode = stateCode,
             Rate = request.Data.Rate,
+            EffectiveFrom = effectiveFrom,
+            EffectiveTo = null,
             IsDefault = request.Data.IsDefault,
             Description = request.Data.Description?.Trim(),
         };
@@ -48,6 +63,6 @@ public class CreateSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Create
         await db.SaveChangesAsync(cancellationToken);
 
         return new SalesTaxRateResponseModel(
-            rate.Id, rate.Name, rate.Code, rate.Rate, rate.IsDefault, rate.IsActive, rate.Description);
+            rate.Id, rate.Name, rate.Code, rate.StateCode, rate.Rate, rate.EffectiveFrom, rate.EffectiveTo, rate.IsDefault, rate.IsActive, rate.Description);
     }
 }

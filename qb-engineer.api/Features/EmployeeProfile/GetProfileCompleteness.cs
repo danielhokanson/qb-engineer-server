@@ -19,6 +19,19 @@ public class GetProfileCompletenessHandler(AppDbContext db) : IRequestHandler<Ge
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.UserId == request.UserId, ct);
 
+        // Bypass flag — treat the whole profile as complete
+        if (profile?.OnboardingBypassedAt is not null)
+        {
+            var stateInfoBypass = await ResolveStateWithholdingInfoAsync(request.UserId, ct);
+            return new ProfileCompletenessResponseModel(
+                IsComplete: true,
+                CanBeAssignedJobs: true,
+                TotalItems: 8,
+                CompletedItems: 8,
+                Items: [],
+                StateWithholdingInfo: stateInfoBypass);
+        }
+
         // Resolve per-employee state withholding info
         var stateInfo = await ResolveStateWithholdingInfoAsync(request.UserId, ct);
         var isNoTaxState = stateInfo?.Category == "no_tax";

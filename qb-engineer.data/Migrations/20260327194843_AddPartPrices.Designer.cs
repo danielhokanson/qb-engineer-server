@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pgvector;
@@ -12,9 +13,11 @@ using QBEngineer.Data.Context;
 namespace QBEngineer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327194843_AddPartPrices")]
+    partial class AddPartPrices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -5669,14 +5672,6 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
-                    b.Property<DateTime>("EffectiveFrom")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("effective_from");
-
-                    b.Property<DateTime?>("EffectiveTo")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("effective_to");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -5696,11 +5691,6 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("numeric(8,6)")
                         .HasColumnName("rate");
 
-                    b.Property<string>("StateCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)")
-                        .HasColumnName("state_code");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -5711,12 +5701,6 @@ namespace QBEngineer.Data.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("ix_sales_tax_rates_code");
-
-                    b.HasIndex("StateCode")
-                        .HasDatabaseName("ix_sales_tax_rates_state_code");
-
-                    b.HasIndex("StateCode", "EffectiveTo")
-                        .HasDatabaseName("ix_sales_tax_rates_state_code_effective_to");
 
                     b.ToTable("sales_tax_rates");
                 });

@@ -18,6 +18,18 @@ public class SalesTaxController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Returns the currently-effective tax rate for a customer based on their
+    /// default billing address state. Falls back to the system default rate.
+    /// Returns null (204) if no rate is configured.
+    /// </summary>
+    [HttpGet("for-customer/{customerId:int}")]
+    public async Task<ActionResult<SalesTaxRateResponseModel>> GetForCustomer(int customerId)
+    {
+        var result = await mediator.Send(new GetTaxRateForCustomerQuery(customerId));
+        return result is null ? NoContent() : Ok(result);
+    }
+
     [HttpPost]
     [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<SalesTaxRateResponseModel>> Create([FromBody] CreateSalesTaxRateRequestModel request)
