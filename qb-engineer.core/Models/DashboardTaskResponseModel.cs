@@ -1,6 +1,7 @@
 namespace QBEngineer.Core.Models;
 
 public record DashboardTaskResponseModel(
+    int Id,
     string Time,
     string Title,
     string JobNumber,

@@ -38,6 +38,7 @@ public class GetDashboardHandler(IDashboardRepository repo, AppDbContext db) : I
             var time = GenerateDisplayTime(index);
 
             return new DashboardTaskResponseModel(
+                job.Id,
                 time,
                 job.Title,
                 job.JobNumber,
