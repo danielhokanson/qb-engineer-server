@@ -10,6 +10,7 @@ using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
+using QBEngineer.Tests.Helpers;
 
 namespace QBEngineer.Tests.Handlers.Jobs;
 
@@ -29,7 +30,7 @@ public class UpdateJobHandlerTests
         mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(mockClientProxy.Object);
         _boardHub.Setup(h => h.Clients).Returns(mockClients.Object);
 
-        _handler = new UpdateJobHandler(_jobRepo.Object, _mediator.Object, _boardHub.Object, Mock.Of<AppDbContext>());
+        _handler = new UpdateJobHandler(_jobRepo.Object, _mediator.Object, _boardHub.Object, TestDbContextFactory.Create());
     }
 
     private Job CreateExistingJob(int id = 1)

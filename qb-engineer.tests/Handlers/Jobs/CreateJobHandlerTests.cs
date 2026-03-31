@@ -10,6 +10,7 @@ using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
+using QBEngineer.Tests.Helpers;
 
 namespace QBEngineer.Tests.Handlers.Jobs;
 
@@ -20,6 +21,7 @@ public class CreateJobHandlerTests
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IHubContext<BoardHub>> _boardHub = new();
     private readonly CreateJobHandler _handler;
+    private readonly AppDbContext _db;
 
     private readonly Faker _faker = new();
 
@@ -31,7 +33,9 @@ public class CreateJobHandlerTests
         mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(mockClientProxy.Object);
         _boardHub.Setup(h => h.Clients).Returns(mockClients.Object);
 
-        _handler = new CreateJobHandler(_jobRepo.Object, _trackRepo.Object, _mediator.Object, _boardHub.Object, Mock.Of<IBarcodeService>(), Mock.Of<AppDbContext>());
+        _db = TestDbContextFactory.Create();
+
+        _handler = new CreateJobHandler(_jobRepo.Object, _trackRepo.Object, _mediator.Object, _boardHub.Object, Mock.Of<IBarcodeService>(), _db);
     }
 
     [Fact]
@@ -47,6 +51,18 @@ public class CreateJobHandlerTests
         var customerId = _faker.Random.Int(1, 50);
         var assigneeId = _faker.Random.Int(1, 20);
         var dueDate = DateTime.UtcNow.AddDays(14);
+
+        // Seed a compliant employee profile so AssigneeComplianceCheck passes
+        _db.EmployeeProfiles.Add(new EmployeeProfile
+        {
+            UserId = assigneeId,
+            W4CompletedAt = DateTime.UtcNow,
+            I9CompletedAt = DateTime.UtcNow,
+            StateWithholdingCompletedAt = DateTime.UtcNow,
+            EmergencyContactName = "Jane Doe",
+            EmergencyContactPhone = "(555) 123-4567",
+        });
+        await _db.SaveChangesAsync();
 
         var firstStage = new JobStage { Id = stageId, TrackTypeId = trackTypeId, Name = stageName };
 

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using QBEngineer.Data.Context;
+using QBEngineer.Tests.Helpers;
 
 using Serilog;
 
@@ -33,12 +34,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             foreach (var descriptor in efDescriptors)
                 services.Remove(descriptor);
 
-            // Add in-memory database with a unique name per factory instance
+            // Add in-memory database using TestAppDbContext (excludes pgvector DocumentEmbedding entity)
             var dbName = "TestDb_" + Guid.NewGuid();
-            services.AddDbContext<AppDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(dbName);
-            });
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(dbName)
+                .Options;
+            services.AddScoped<AppDbContext>(_ => new TestAppDbContext(dbOptions));
 
             // Replace Hangfire PostgreSQL storage with in-memory
             services.AddHangfire(config => config.UseMemoryStorage());
