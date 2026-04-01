@@ -18,7 +18,7 @@ public class CheckI9ReverificationJob(
 
     public async Task CheckReverificationDueAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var warningCutoff = now.Add(WarningWindow);
 
         // Documents overdue or expiring within 90 days

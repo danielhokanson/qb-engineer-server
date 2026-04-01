@@ -16,7 +16,7 @@ public class CheckI9OverdueJob(
 {
     public async Task CheckOverdueSection2Async()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         var overdue = await db.ComplianceFormSubmissions
             .Include(s => s.Template)

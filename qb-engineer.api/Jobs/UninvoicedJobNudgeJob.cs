@@ -17,7 +17,7 @@ public class UninvoicedJobNudgeJob(
 {
     public async Task NudgeUninvoicedJobsAsync()
     {
-        var cutoff = DateTime.UtcNow.AddDays(-3);
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-3);
 
         var uninvoicedCount = await db.Jobs
             .Where(j => j.CompletedDate != null && !j.IsArchived)

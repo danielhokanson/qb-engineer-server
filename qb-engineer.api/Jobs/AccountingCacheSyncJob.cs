@@ -28,7 +28,7 @@ public class AccountingCacheSyncJob(
 
         var customers = await accountingService.GetCustomersAsync(CancellationToken.None);
         var count = customers.Count;
-        var now = DateTime.UtcNow.ToString("O");
+        var now = DateTimeOffset.UtcNow.ToString("O");
 
         await systemSettings.UpsertAsync(
             "accounting_last_sync",

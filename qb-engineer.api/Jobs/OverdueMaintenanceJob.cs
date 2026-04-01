@@ -18,7 +18,7 @@ public class OverdueMaintenanceJob(
 {
     public async Task CheckOverdueMaintenanceAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         var overdueSchedules = await db.MaintenanceSchedules
             .Include(s => s.Asset)

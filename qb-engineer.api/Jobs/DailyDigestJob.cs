@@ -22,7 +22,7 @@ public class DailyDigestJob(
             .Select(u => new { u.Id, u.Email, u.FirstName })
             .ToListAsync();
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var yesterday = now.AddDays(-1);
 
         foreach (var user in users)
@@ -79,4 +79,4 @@ public class DailyDigestJob(
     }
 }
 
-public record DigestJobItem(string JobNumber, string Title, DateTime? DueDate);
+public record DigestJobItem(string JobNumber, string Title, DateTimeOffset? DueDate);

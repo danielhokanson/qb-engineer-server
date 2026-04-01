@@ -10,7 +10,7 @@ public static class BulkOperationExtensions
 {
     public static async Task BulkSoftDeleteAsync<T>(this DbContext context, IList<T> entities, string deletedBy) where T : BaseAuditableEntity
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         foreach (var entity in entities)
         {
             entity.DeletedAt = now;

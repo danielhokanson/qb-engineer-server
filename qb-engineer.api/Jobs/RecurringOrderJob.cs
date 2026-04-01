@@ -11,7 +11,7 @@ public class RecurringOrderJob(
 {
     public async Task GenerateDueOrdersAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var dueOrders = await db.RecurringOrders
             .Include(ro => ro.Lines)
             .Where(ro => ro.IsActive && ro.NextGenerationDate <= now)
@@ -27,7 +27,7 @@ public class RecurringOrderJob(
         {
             var salesOrder = new Core.Entities.SalesOrder
             {
-                OrderNumber = $"SO-AUTO-{DateTime.UtcNow:yyyyMMdd}-{recurring.Id}",
+                OrderNumber = $"SO-AUTO-{DateTimeOffset.UtcNow:yyyyMMdd}-{recurring.Id}",
                 CustomerId = recurring.CustomerId,
                 ShippingAddressId = recurring.ShippingAddressId,
                 Status = SalesOrderStatus.Draft,

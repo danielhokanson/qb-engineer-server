@@ -11,7 +11,7 @@ public class RecurringExpenseJob(
 {
     public async Task GenerateDueExpensesAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var dueExpenses = await db.RecurringExpenses
             .Where(r => r.IsActive && r.NextOccurrenceDate <= now)
             .Where(r => r.EndDate == null || r.EndDate > now)
@@ -49,7 +49,7 @@ public class RecurringExpenseJob(
         logger.LogInformation("Generated {Count} expenses from recurring templates", dueExpenses.Count);
     }
 
-    private static DateTime AdvanceDate(DateTime date, RecurrenceFrequency frequency) => frequency switch
+    private static DateTimeOffset AdvanceDate(DateTimeOffset date, RecurrenceFrequency frequency) => frequency switch
     {
         RecurrenceFrequency.Weekly => date.AddDays(7),
         RecurrenceFrequency.Biweekly => date.AddDays(14),

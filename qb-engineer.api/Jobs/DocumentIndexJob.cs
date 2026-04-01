@@ -45,7 +45,7 @@ public class DocumentIndexJob(
             return;
         }
 
-        var since = DateTime.UtcNow.AddMinutes(-35); // Overlap slightly to avoid gaps
+        var since = DateTimeOffset.UtcNow.AddMinutes(-35); // Overlap slightly to avoid gaps
         var totalIndexed = 0;
 
         foreach (var entityType in SupportedEntityTypes)
@@ -88,7 +88,7 @@ public class DocumentIndexJob(
         }
     }
 
-    private async Task<List<int>> GetRecentlyUpdatedIdsAsync(string entityType, DateTime since)
+    private async Task<List<int>> GetRecentlyUpdatedIdsAsync(string entityType, DateTimeOffset since)
     {
         return entityType switch
         {

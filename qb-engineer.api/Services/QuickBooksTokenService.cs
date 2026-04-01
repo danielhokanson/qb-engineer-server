@@ -50,11 +50,11 @@ public class QuickBooksTokenService(
         if (token is null) return null;
 
         // Access token still valid
-        if (token.AccessTokenExpiresAt > DateTime.UtcNow.Add(TokenRefreshBuffer))
+        if (token.AccessTokenExpiresAt > DateTimeOffset.UtcNow.Add(TokenRefreshBuffer))
             return token.AccessToken;
 
         // Refresh token expired — user must re-authorize
-        if (token.RefreshTokenExpiresAt < DateTime.UtcNow)
+        if (token.RefreshTokenExpiresAt < DateTimeOffset.UtcNow)
         {
             logger.LogWarning("QuickBooks refresh token expired — re-authorization required");
             return null;
@@ -83,7 +83,7 @@ public class QuickBooksTokenService(
     public async Task<bool> IsConnectedAsync(CancellationToken ct)
     {
         var token = await GetTokenAsync(ct);
-        return token is not null && token.RefreshTokenExpiresAt > DateTime.UtcNow;
+        return token is not null && token.RefreshTokenExpiresAt > DateTimeOffset.UtcNow;
     }
 
     private async Task<QuickBooksTokenData?> RefreshAccessTokenAsync(string refreshToken, string realmId, CancellationToken ct)
@@ -119,8 +119,8 @@ public class QuickBooksTokenService(
                 AccessToken: root.GetProperty("access_token").GetString()!,
                 RefreshToken: root.GetProperty("refresh_token").GetString()!,
                 RealmId: realmId,
-                AccessTokenExpiresAt: DateTime.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()),
-                RefreshTokenExpiresAt: DateTime.UtcNow.AddSeconds(root.GetProperty("x_refresh_token_expires_in").GetInt32()));
+                AccessTokenExpiresAt: DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()),
+                RefreshTokenExpiresAt: DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("x_refresh_token_expires_in").GetInt32()));
         }
         catch (Exception ex)
         {

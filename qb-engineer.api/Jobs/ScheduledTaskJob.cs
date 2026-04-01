@@ -9,7 +9,7 @@ public class ScheduledTaskJob(AppDbContext db, IMediator mediator, ILogger<Sched
 {
     public async Task RunDueTasksAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var dueTasks = await db.ScheduledTasks
             .Where(t => t.IsActive && t.DeletedAt == null && t.NextRunAt <= now)
             .ToListAsync();

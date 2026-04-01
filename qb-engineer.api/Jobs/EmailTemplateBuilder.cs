@@ -22,7 +22,7 @@ public static class EmailTemplateBuilder
         string customerName,
         string invoiceNumber,
         decimal total,
-        DateTime? dueDate)
+        DateTimeOffset? dueDate)
     {
         var body = $"""
             <p>Dear {Encode(customerName)},</p>

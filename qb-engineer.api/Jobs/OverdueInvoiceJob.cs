@@ -11,7 +11,7 @@ public class OverdueInvoiceJob(
 {
     public async Task MarkOverdueInvoicesAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var overdueInvoices = await db.Invoices
             .Where(i => i.Status == InvoiceStatus.Sent && i.DueDate < now)
             .ToListAsync();

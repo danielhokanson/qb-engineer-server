@@ -80,7 +80,7 @@ public static partial class JobMapper
             AssigneeColor: assigneeColor,
             PriorityName: job.Priority.ToString(),
             DueDate: job.DueDate,
-            IsOverdue: job.DueDate.HasValue && job.DueDate.Value < DateTime.UtcNow && job.CompletedDate == null,
+            IsOverdue: job.DueDate.HasValue && job.DueDate.Value < DateTimeOffset.UtcNow && job.CompletedDate == null,
             CustomerName: job.Customer?.Name,
             BillingStatus: billingStatus,
             Disposition: job.Disposition?.ToString(),

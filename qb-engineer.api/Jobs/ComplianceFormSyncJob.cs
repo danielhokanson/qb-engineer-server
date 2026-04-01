@@ -68,7 +68,7 @@ public class ComplianceFormSyncJob(
 
                 template.DocuSealTemplateId = docuSealTemplateId;
                 template.Sha256Hash = hash;
-                template.LastSyncedAt = DateTime.UtcNow;
+                template.LastSyncedAt = DateTimeOffset.UtcNow;
                 synced++;
 
                 logger.LogInformation("Synced template {Name} → DocuSeal template {Id}", template.Name, docuSealTemplateId);
