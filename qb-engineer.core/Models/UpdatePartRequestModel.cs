@@ -10,4 +10,10 @@ public record UpdatePartRequestModel(
     string? Material,
     string? MoldToolRef,
     string? ExternalPartNumber,
-    int? ToolingAssetId);
+    int? ToolingAssetId,
+    int? PreferredVendorId,
+    decimal? MinStockThreshold,
+    decimal? ReorderPoint,
+    decimal? ReorderQuantity,
+    int? LeadTimeDays,
+    int? SafetyStockDays);

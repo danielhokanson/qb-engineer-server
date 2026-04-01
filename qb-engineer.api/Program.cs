@@ -396,6 +396,7 @@ try
     builder.Services.AddScoped<DocumentIndexJob>();
     builder.Services.AddScoped<OverdueMaintenanceJob>();
     builder.Services.AddScoped<ComplianceFormSyncJob>();
+    builder.Services.AddScoped<ReorderAnalysisJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -412,7 +413,8 @@ try
         {
             var path = ctx.Request.Path.Value ?? string.Empty;
             if (path.StartsWith("/hubs/", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/health", StringComparison.OrdinalIgnoreCase))
+                || path.StartsWith("/health", StringComparison.OrdinalIgnoreCase)
+                || path.Equals("/api/v1/version", StringComparison.OrdinalIgnoreCase))
                 return RateLimitPartition.GetNoLimiter("infra");
 
             return RateLimitPartition.GetFixedWindowLimiter(
@@ -560,6 +562,44 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+    app.MapGet("/api/v1/version", async () =>
+    {
+        var appVersion = Environment.GetEnvironmentVariable("APP_VERSION") ?? "dev";
+        var gitCommit = Environment.GetEnvironmentVariable("GIT_COMMIT") ?? string.Empty;
+
+        // In dev, fall back to running git if the env var wasn't set at build time
+        if (string.IsNullOrEmpty(gitCommit))
+        {
+            try
+            {
+                using var proc = new System.Diagnostics.Process();
+                proc.StartInfo = new System.Diagnostics.ProcessStartInfo("git", "rev-parse HEAD")
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = "/app",
+                };
+                proc.Start();
+                gitCommit = (await proc.StandardOutput.ReadToEndAsync()).Trim();
+                await proc.WaitForExitAsync();
+            }
+            catch
+            {
+                gitCommit = string.Empty;
+            }
+        }
+
+        var shortCommit = gitCommit.Length >= 7 ? gitCommit[..7] : gitCommit;
+        return Results.Ok(new
+        {
+            version = appVersion,
+            gitCommit,
+            shortCommit,
+            buildLabel = string.IsNullOrEmpty(shortCommit) ? appVersion : $"{appVersion} ({shortCommit})",
+        });
+    }).AllowAnonymous();
+
     app.MapHealthChecks("/api/v1/health", new HealthCheckOptions
     {
         ResponseWriter = async (context, report) =>
@@ -661,6 +701,10 @@ try
         "check-i9-reverification",
         job => job.CheckReverificationDueAsync(),
         Cron.Weekly(DayOfWeek.Monday, 9)); // Monday 9 AM UTC weekly
+    RecurringJob.AddOrUpdate<ReorderAnalysisJob>(
+        "reorder-analysis",
+        job => job.RunAnalysisAsync(),
+        Cron.Daily(2)); // 2 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

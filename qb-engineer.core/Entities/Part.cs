@@ -21,9 +21,12 @@ public class Part : BaseAuditableEntity
     // Preferred vendor
     public int? PreferredVendorId { get; set; }
 
-    // Inventory thresholds
+    // Inventory thresholds & replenishment
     public decimal? MinStockThreshold { get; set; }
     public decimal? ReorderPoint { get; set; }
+    public decimal? ReorderQuantity { get; set; }
+    public int? LeadTimeDays { get; set; }
+    public int? SafetyStockDays { get; set; }
 
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }

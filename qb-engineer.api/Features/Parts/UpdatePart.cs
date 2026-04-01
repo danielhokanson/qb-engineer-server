@@ -43,6 +43,12 @@ public class UpdatePartHandler(
         if (data.MoldToolRef is not null) part.MoldToolRef = data.MoldToolRef.Trim();
         if (data.ExternalPartNumber is not null) part.ExternalPartNumber = data.ExternalPartNumber.Trim();
         if (data.ToolingAssetId.HasValue) part.ToolingAssetId = data.ToolingAssetId.Value == 0 ? null : data.ToolingAssetId.Value;
+        if (data.PreferredVendorId.HasValue) part.PreferredVendorId = data.PreferredVendorId.Value == 0 ? null : data.PreferredVendorId.Value;
+        if (data.MinStockThreshold.HasValue) part.MinStockThreshold = data.MinStockThreshold.Value == 0 ? null : data.MinStockThreshold.Value;
+        if (data.ReorderPoint.HasValue) part.ReorderPoint = data.ReorderPoint.Value == 0 ? null : data.ReorderPoint.Value;
+        if (data.ReorderQuantity.HasValue) part.ReorderQuantity = data.ReorderQuantity.Value == 0 ? null : data.ReorderQuantity.Value;
+        if (data.LeadTimeDays.HasValue) part.LeadTimeDays = data.LeadTimeDays.Value == 0 ? null : data.LeadTimeDays.Value;
+        if (data.SafetyStockDays.HasValue) part.SafetyStockDays = data.SafetyStockDays.Value;
 
         await repo.SaveChangesAsync(cancellationToken);
 

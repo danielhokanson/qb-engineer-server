@@ -155,6 +155,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<PayStubDeduction> PayStubDeductions => Set<PayStubDeduction>();
     public DbSet<TaxDocument> TaxDocuments => Set<TaxDocument>();
 
+    // Replenishment
+    public DbSet<ReorderSuggestion> ReorderSuggestions => Set<ReorderSuggestion>();
+
     // Training
     public DbSet<TrainingModule> TrainingModules => Set<TrainingModule>();
     public DbSet<TrainingPath> TrainingPaths => Set<TrainingPath>();
