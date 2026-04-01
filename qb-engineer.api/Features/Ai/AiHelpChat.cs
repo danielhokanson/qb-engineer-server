@@ -38,6 +38,12 @@ public class AiHelpChatHandler(
 
     public async Task<AiHelpChatResponse> Handle(AiHelpChatCommand request, CancellationToken ct)
     {
+        using var availCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        availCts.CancelAfter(TimeSpan.FromSeconds(5));
+        var available = await aiService.IsAvailableAsync(availCts.Token).ConfigureAwait(false);
+        if (!available)
+            return new AiHelpChatResponse("The AI service is currently unavailable. Please try again later.");
+
         var role = request.UserRole ?? "General";
         var systemContext = GetSystemContext(role);
         var ragContext = await BuildRagContextAsync(request.Question, role, ct);

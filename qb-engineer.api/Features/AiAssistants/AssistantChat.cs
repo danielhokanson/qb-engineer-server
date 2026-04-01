@@ -33,6 +33,12 @@ public class AssistantChatHandler(
 {
     public async Task<AiHelpChatResponse> Handle(AssistantChatCommand request, CancellationToken ct)
     {
+        using var availCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        availCts.CancelAfter(TimeSpan.FromSeconds(5));
+        var available = await aiService.IsAvailableAsync(availCts.Token).ConfigureAwait(false);
+        if (!available)
+            return new AiHelpChatResponse("The AI service is currently unavailable. Please try again later.");
+
         var assistant = await db.AiAssistants
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == request.AssistantId && a.IsActive, ct)
