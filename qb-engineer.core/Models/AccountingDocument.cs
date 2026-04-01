@@ -8,4 +8,4 @@ public record AccountingDocument(
     List<AccountingLineItem> LineItems,
     string? RefNumber,
     decimal Amount,
-    DateTime Date);
+    DateTimeOffset Date);

@@ -4,7 +4,7 @@ public record MaintenanceLogResponseModel(
     int Id,
     int MaintenanceScheduleId,
     string PerformedByName,
-    DateTime PerformedAt,
+    DateTimeOffset PerformedAt,
     decimal? HoursAtService,
     string? Notes,
     decimal? Cost);

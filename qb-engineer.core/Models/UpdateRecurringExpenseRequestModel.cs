@@ -9,6 +9,6 @@ public record UpdateRecurringExpenseRequestModel(
     string? Description,
     string? Vendor,
     RecurrenceFrequency? Frequency,
-    DateTime? EndDate,
+    DateTimeOffset? EndDate,
     bool? IsActive,
     bool? AutoApprove);

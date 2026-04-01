@@ -32,7 +32,7 @@ public class SyncAllComplianceTemplatesHandler(
 
             if (newHash == template.Sha256Hash)
             {
-                template.LastSyncedAt = DateTime.UtcNow;
+                template.LastSyncedAt = DateTimeOffset.UtcNow;
                 syncCount++;
                 continue;
             }
@@ -54,7 +54,7 @@ public class SyncAllComplianceTemplatesHandler(
 
             template.DocuSealTemplateId = docuSealTemplateId;
             template.Sha256Hash = newHash;
-            template.LastSyncedAt = DateTime.UtcNow;
+            template.LastSyncedAt = DateTimeOffset.UtcNow;
             syncCount++;
         }
 

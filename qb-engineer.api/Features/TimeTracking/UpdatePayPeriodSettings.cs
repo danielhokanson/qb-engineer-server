@@ -6,7 +6,7 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.TimeTracking;
 
-public record UpdatePayPeriodSettingsCommand(string Type, DateTime? AnchorDate) : IRequest;
+public record UpdatePayPeriodSettingsCommand(string Type, DateTimeOffset? AnchorDate) : IRequest;
 
 public class UpdatePayPeriodSettingsValidator : AbstractValidator<UpdatePayPeriodSettingsCommand>
 {

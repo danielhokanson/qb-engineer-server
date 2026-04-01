@@ -23,7 +23,7 @@ public class UpdateFormDefinitionHandler(AppDbContext db)
             .FirstOrDefaultAsync(t => t.Id == request.TemplateId, ct)
             ?? throw new KeyNotFoundException($"Compliance template {request.TemplateId} not found.");
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var revision = request.Revision ?? now.ToString("yyyy-MM");
         var fieldCount = System.Text.RegularExpressions.Regex.Matches(request.FormDefinitionJson, @"""id""").Count;
 

@@ -96,7 +96,7 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 assignee?.AvatarColor,
                 j.Priority.ToString(),
                 j.DueDate,
-                j.DueDate.HasValue && j.DueDate.Value < DateTime.UtcNow && j.CompletedDate == null,
+                j.DueDate.HasValue && j.DueDate.Value < DateTimeOffset.UtcNow && j.CompletedDate == null,
                 j.Customer?.Name,
                 billingStatus,
                 j.Disposition?.ToString(),

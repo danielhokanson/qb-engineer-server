@@ -15,4 +15,4 @@ public record BinContentResponseModel(
     int? JobId,
     string? JobNumber,
     BinContentStatus Status,
-    DateTime PlacedAt);
+    DateTimeOffset PlacedAt);

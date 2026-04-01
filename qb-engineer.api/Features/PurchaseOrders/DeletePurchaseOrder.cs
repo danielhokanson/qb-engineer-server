@@ -17,7 +17,7 @@ public class DeletePurchaseOrderHandler(IPurchaseOrderRepository repo)
         if (po.Status != PurchaseOrderStatus.Draft)
             throw new InvalidOperationException("Only Draft purchase orders can be deleted");
 
-        po.DeletedAt = DateTime.UtcNow;
+        po.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

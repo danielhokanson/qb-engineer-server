@@ -4,6 +4,6 @@ public record AccountingTimeActivity(
     string EmployeeExternalId,
     string? CustomerExternalId,
     decimal Hours,
-    DateTime Date,
+    DateTimeOffset Date,
     string? Description,
     string? ServiceItemExternalId);

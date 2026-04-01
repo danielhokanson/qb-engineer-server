@@ -16,9 +16,9 @@ public record TrainingModuleDetailResponseModel(
     int SortOrder,
     TrainingProgressStatus? MyStatus,
     int? MyQuizScore,
-    DateTime? MyCompletedAt,
+    DateTimeOffset? MyCompletedAt,
     string ContentJson,
     string[] AppRoutes,
-    DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt
 );

@@ -9,6 +9,6 @@ public record PaymentListItemModel(
     decimal Amount,
     decimal AppliedAmount,
     decimal UnappliedAmount,
-    DateTime PaymentDate,
+    DateTimeOffset PaymentDate,
     string? ReferenceNumber,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

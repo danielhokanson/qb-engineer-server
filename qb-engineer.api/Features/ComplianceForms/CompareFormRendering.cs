@@ -133,7 +133,7 @@ public class CompareFormRenderingHandler(
             PageResults: pageResults,
             AiSemanticPassed: aiPassed,
             AiIssues: aiIssues,
-            ComparedAt: DateTime.UtcNow,
+            ComparedAt: DateTimeOffset.UtcNow,
             SourcePageCount: sourcePngs.Count,
             RenderedPageCount: renderedPngs.Count);
 

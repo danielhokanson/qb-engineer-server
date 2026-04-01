@@ -27,7 +27,7 @@ public class CommitJobToCycleHandler(IPlanningCycleRepository cycleRepo, IJobRep
         {
             PlanningCycleId = request.CycleId,
             JobId = request.JobId,
-            CommittedAt = DateTime.UtcNow,
+            CommittedAt = DateTimeOffset.UtcNow,
             SortOrder = maxSort,
         }, cancellationToken);
 

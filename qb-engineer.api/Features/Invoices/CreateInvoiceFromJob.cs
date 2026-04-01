@@ -40,7 +40,7 @@ public class CreateInvoiceFromJobHandler(
 
         var customerName = job.Customer?.Name ?? "Unknown";
         var invoiceNumber = await invoiceRepo.GenerateNextInvoiceNumberAsync(cancellationToken);
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         var invoice = new Invoice
         {

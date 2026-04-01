@@ -3,7 +3,7 @@ namespace QBEngineer.Core.Models;
 public record CreateQuoteRequestModel(
     int CustomerId,
     int? ShippingAddressId,
-    DateTime? ExpirationDate,
+    DateTimeOffset? ExpirationDate,
     string? Notes,
     decimal TaxRate,
     List<CreateQuoteLineModel> Lines);

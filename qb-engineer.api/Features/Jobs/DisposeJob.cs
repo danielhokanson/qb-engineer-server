@@ -36,7 +36,7 @@ public class DisposeJobHandler(
 
         job.Disposition = request.Data.Disposition;
         job.DispositionNotes = request.Data.Notes?.Trim();
-        job.DispositionAt = DateTime.UtcNow;
+        job.DispositionAt = DateTimeOffset.UtcNow;
 
         if (request.Data.Disposition == JobDisposition.CapitalizeAsAsset)
         {

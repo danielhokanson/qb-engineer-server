@@ -11,5 +11,5 @@ public record PurchaseOrderListItemModel(
     int LineCount,
     int TotalOrdered,
     int TotalReceived,
-    DateTime? ExpectedDeliveryDate,
-    DateTime CreatedAt);
+    DateTimeOffset? ExpectedDeliveryDate,
+    DateTimeOffset CreatedAt);

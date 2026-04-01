@@ -16,9 +16,9 @@ public class SalesTaxRate : BaseAuditableEntity
     /// </summary>
     public decimal Rate { get; set; }
     /// <summary>When this rate takes effect (UTC). Used to schedule future rate changes.</summary>
-    public DateTime EffectiveFrom { get; set; }
+    public DateTimeOffset EffectiveFrom { get; set; }
     /// <summary>When this rate expires (UTC). Null = currently active.</summary>
-    public DateTime? EffectiveTo { get; set; }
+    public DateTimeOffset? EffectiveTo { get; set; }
     public bool IsDefault { get; set; }
     public bool IsActive { get; set; } = true;
     public string? Description { get; set; }

@@ -4,12 +4,12 @@ public record PartPriceResponseModel(
     int Id,
     int PartId,
     decimal UnitPrice,
-    DateTime EffectiveFrom,
-    DateTime? EffectiveTo,
+    DateTimeOffset EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
     string? Notes,
     bool IsCurrent);
 
 public record AddPartPriceRequestModel(
     decimal UnitPrice,
-    DateTime? EffectiveFrom,
+    DateTimeOffset? EffectiveFrom,
     string? Notes);

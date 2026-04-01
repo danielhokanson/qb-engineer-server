@@ -12,9 +12,9 @@ public class Job : BaseAuditableEntity
     public int? AssigneeId { get; set; }
     public JobPriority Priority { get; set; } = JobPriority.Normal;
     public int? CustomerId { get; set; }
-    public DateTime? DueDate { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? CompletedDate { get; set; }
+    public DateTimeOffset? DueDate { get; set; }
+    public DateTimeOffset? StartDate { get; set; }
+    public DateTimeOffset? CompletedDate { get; set; }
     public bool IsArchived { get; set; }
     public int BoardPosition { get; set; }
     public int? PartId { get; set; }
@@ -37,7 +37,7 @@ public class Job : BaseAuditableEntity
     // Disposition
     public JobDisposition? Disposition { get; set; }
     public string? DispositionNotes { get; set; }
-    public DateTime? DispositionAt { get; set; }
+    public DateTimeOffset? DispositionAt { get; set; }
 
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
@@ -59,4 +59,5 @@ public class Job : BaseAuditableEntity
     public SalesOrderLine? SalesOrderLine { get; set; }
     public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
     public ICollection<JobPart> JobParts { get; set; } = [];
+    public ICollection<JobNote> Notes { get; set; } = [];
 }

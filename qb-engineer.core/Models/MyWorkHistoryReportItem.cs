@@ -7,7 +7,7 @@ public record MyWorkHistoryReportItem(
     string StageName,
     string? StageColor,
     string? CustomerName,
-    DateTime? DueDate,
-    DateTime CreatedAt,
-    DateTime? CompletedAt
+    DateTimeOffset? DueDate,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? CompletedAt
 );

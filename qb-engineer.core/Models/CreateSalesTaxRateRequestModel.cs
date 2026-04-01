@@ -5,7 +5,7 @@ public record CreateSalesTaxRateRequestModel(
     string Code,
     string? StateCode,
     decimal Rate,
-    /// <summary>UTC datetime when this rate takes effect. Defaults to now if not provided.</summary>
-    DateTime? EffectiveFrom,
+    /// <summary>UTC DateTimeOffset when this rate takes effect. Defaults to now if not provided.</summary>
+    DateTimeOffset? EffectiveFrom,
     bool IsDefault,
     string? Description);

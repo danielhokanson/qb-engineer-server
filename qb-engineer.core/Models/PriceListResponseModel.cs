@@ -8,8 +8,8 @@ public record PriceListResponseModel(
     string? CustomerName,
     bool IsDefault,
     bool IsActive,
-    DateTime? EffectiveFrom,
-    DateTime? EffectiveTo,
+    DateTimeOffset? EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
     List<PriceListEntryResponseModel> Entries,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

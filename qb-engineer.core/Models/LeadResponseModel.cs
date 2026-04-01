@@ -11,8 +11,8 @@ public record LeadResponseModel(
     string? Source,
     LeadStatus Status,
     string? Notes,
-    DateTime? FollowUpDate,
+    DateTimeOffset? FollowUpDate,
     string? LostReason,
     int? ConvertedCustomerId,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

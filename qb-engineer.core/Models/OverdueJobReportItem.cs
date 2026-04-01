@@ -4,6 +4,6 @@ public record OverdueJobReportItem(
     int Id,
     string JobNumber,
     string Title,
-    DateTime DueDate,
+    DateTimeOffset DueDate,
     int DaysOverdue,
     string? AssigneeName);

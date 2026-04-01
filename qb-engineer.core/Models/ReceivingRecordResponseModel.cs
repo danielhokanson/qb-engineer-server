@@ -12,4 +12,4 @@ public record ReceivingRecordResponseModel(
     string? StorageLocationName,
     string? LotNumber,
     string? Notes,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

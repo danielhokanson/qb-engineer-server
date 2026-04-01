@@ -25,7 +25,7 @@ public class DeleteTeamHandler(AppDbContext db) : IRequestHandler<DeleteTeamComm
         foreach (var user in assignedUsers)
             user.TeamId = null;
 
-        team.DeletedAt = DateTime.UtcNow;
+        team.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

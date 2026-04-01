@@ -17,7 +17,7 @@ public class UspsShippingService(
 {
     private const string BaseUrl = "https://api.usps.com";
     private string? _cachedToken;
-    private DateTime _tokenExpiry = DateTime.MinValue;
+    private DateTimeOffset _tokenExpiry = DateTimeOffset.MinValue;
 
     public string CarrierId => "usps";
     public string CarrierName => "USPS";
@@ -135,11 +135,11 @@ public class UspsShippingService(
 
         var doc = JsonDocument.Parse(body);
         var status = doc.RootElement.TryGetProperty("statusSummary", out var ss) ? ss.GetString() ?? "Unknown" : "Unknown";
-        DateTime? estimatedDelivery = null;
+        DateTimeOffset? estimatedDelivery = null;
 
         if (doc.RootElement.TryGetProperty("expectedDeliveryTimeStamp", out var edt))
         {
-            if (DateTime.TryParse(edt.GetString(), out var parsedDt))
+            if (DateTimeOffset.TryParse(edt.GetString(), out var parsedDt))
                 estimatedDelivery = parsedDt;
         }
 
@@ -149,7 +149,7 @@ public class UspsShippingService(
             var loc = summary.TryGetProperty("EventCity", out var city) ? city.GetString() ?? "" : "";
             var evtDesc = summary.TryGetProperty("Event", out var ev) ? ev.GetString() ?? "" : "";
             var dateStr = summary.TryGetProperty("EventTime", out var et) ? et.GetString() : null;
-            DateTime.TryParse(dateStr, out var evtTime);
+            DateTimeOffset.TryParse(dateStr, out var evtTime);
             events.Add(new TrackingEvent(evtTime, loc, evtDesc));
         }
 
@@ -161,7 +161,7 @@ public class UspsShippingService(
 
     private async Task<string?> GetAccessTokenAsync(CancellationToken ct)
     {
-        if (_cachedToken is not null && DateTime.UtcNow < _tokenExpiry)
+        if (_cachedToken is not null && DateTimeOffset.UtcNow < _tokenExpiry)
             return _cachedToken;
 
         var opts = options.Value;
@@ -184,7 +184,7 @@ public class UspsShippingService(
         var doc = JsonDocument.Parse(body);
         _cachedToken = doc.RootElement.GetProperty("access_token").GetString();
         var expiresIn = doc.RootElement.TryGetProperty("expires_in", out var exp) ? exp.GetInt32() : 3600;
-        _tokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn - 60);
+        _tokenExpiry = DateTimeOffset.UtcNow.AddSeconds(expiresIn - 60);
         return _cachedToken;
     }
 

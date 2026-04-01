@@ -23,15 +23,15 @@ public class CompleteModuleHandler(AppDbContext db) : IRequestHandler<CompleteMo
                 UserId = request.UserId,
                 ModuleId = request.ModuleId,
                 Status = TrainingProgressStatus.Completed,
-                StartedAt = DateTime.UtcNow,
-                CompletedAt = DateTime.UtcNow,
+                StartedAt = DateTimeOffset.UtcNow,
+                CompletedAt = DateTimeOffset.UtcNow,
             };
             db.TrainingProgress.Add(progress);
         }
         else
         {
             progress.Status = TrainingProgressStatus.Completed;
-            progress.CompletedAt ??= DateTime.UtcNow;
+            progress.CompletedAt ??= DateTimeOffset.UtcNow;
         }
 
         await db.SaveChangesAsync(ct);
@@ -62,7 +62,7 @@ public class CompleteModuleHandler(AppDbContext db) : IRequestHandler<CompleteMo
             .ToListAsync(ct);
 
         var completedSet = new HashSet<int>(completedModuleIds);
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var anyChanged = false;
 
         foreach (var enrollment in enrollments)

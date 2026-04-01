@@ -20,7 +20,7 @@ public sealed class DeletePayStubHandler(AppDbContext db)
         if (stub.Source != PayrollDocumentSource.Manual)
             throw new InvalidOperationException("Only manually uploaded pay stubs can be deleted.");
 
-        stub.DeletedAt = DateTime.UtcNow;
+        stub.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

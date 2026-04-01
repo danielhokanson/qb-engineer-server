@@ -1,3 +1,3 @@
 namespace QBEngineer.Core.Models;
 
-public record AcknowledgePurchaseOrderRequestModel(DateTime? ExpectedDeliveryDate);
+public record AcknowledgePurchaseOrderRequestModel(DateTimeOffset? ExpectedDeliveryDate);

@@ -52,12 +52,12 @@ public class SyncComplianceTemplateHandler(
 
         if (newHash == latestVersion?.Sha256Hash && !builderVersionChanged)
         {
-            template.LastSyncedAt = DateTime.UtcNow;
+            template.LastSyncedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync(ct);
             return;
         }
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         // PDF changed — extract form definition via pdf.js and create new version
         try
@@ -123,7 +123,7 @@ public class SyncComplianceTemplateHandler(
 
         // Save form definition version first — DocuSeal is best-effort and must not block this
         template.Sha256Hash = newHash;
-        template.LastSyncedAt = DateTime.UtcNow;
+        template.LastSyncedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
 
         // Upload to DocuSeal for e-signature (best-effort — failure does not block form definition)

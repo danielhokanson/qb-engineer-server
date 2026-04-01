@@ -6,7 +6,7 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.TimeTracking;
 
-public record LockPayPeriodCommand(DateTime LockThrough) : IRequest<LockPayPeriodResult>;
+public record LockPayPeriodCommand(DateTimeOffset LockThrough) : IRequest<LockPayPeriodResult>;
 
 public record LockPayPeriodResult(int LockedCount);
 

@@ -4,7 +4,7 @@ using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Api.Features.PurchaseOrders;
 
-public record AcknowledgePurchaseOrderCommand(int Id, DateTime? ExpectedDeliveryDate) : IRequest;
+public record AcknowledgePurchaseOrderCommand(int Id, DateTimeOffset? ExpectedDeliveryDate) : IRequest;
 
 public class AcknowledgePurchaseOrderHandler(IPurchaseOrderRepository repo)
     : IRequestHandler<AcknowledgePurchaseOrderCommand>
@@ -18,7 +18,7 @@ public class AcknowledgePurchaseOrderHandler(IPurchaseOrderRepository repo)
             throw new InvalidOperationException("Only Submitted purchase orders can be acknowledged");
 
         po.Status = PurchaseOrderStatus.Acknowledged;
-        po.AcknowledgedDate = DateTime.UtcNow;
+        po.AcknowledgedDate = DateTimeOffset.UtcNow;
         if (request.ExpectedDeliveryDate.HasValue)
             po.ExpectedDeliveryDate = request.ExpectedDeliveryDate;
 

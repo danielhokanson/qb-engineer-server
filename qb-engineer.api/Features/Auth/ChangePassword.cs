@@ -45,7 +45,7 @@ public class ChangePasswordHandler(UserManager<ApplicationUser> userManager)
             throw new InvalidOperationException($"Password change failed: {errors}");
         }
 
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
         await userManager.UpdateAsync(user);
     }
 }

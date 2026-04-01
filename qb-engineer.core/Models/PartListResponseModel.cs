@@ -12,5 +12,5 @@ public record PartListResponseModel(
     string? Material,
     string? ExternalPartNumber,
     int BomEntryCount,
-    DateTime CreatedAt,
+    DateTimeOffset CreatedAt,
     decimal? DefaultPrice);

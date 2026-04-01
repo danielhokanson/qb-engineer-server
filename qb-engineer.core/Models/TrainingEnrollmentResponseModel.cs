@@ -7,6 +7,6 @@ public record TrainingEnrollmentResponseModel(
     string PathIcon,
     int TotalModules,
     int CompletedModules,
-    DateTime? EnrolledAt,
-    DateTime? CompletedAt
+    DateTimeOffset? EnrolledAt,
+    DateTimeOffset? CompletedAt
 );

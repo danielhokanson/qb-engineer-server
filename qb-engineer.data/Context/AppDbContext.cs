@@ -49,6 +49,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
     public DbSet<ReceivingRecord> ReceivingRecords => Set<ReceivingRecord>();
     public DbSet<JobPart> JobParts => Set<JobPart>();
+    public DbSet<JobNote> JobNotes => Set<JobNote>();
 
     // Order Management
     public DbSet<CustomerAddress> CustomerAddresses => Set<CustomerAddress>();
@@ -195,7 +196,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
 
             var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
             var deletedAtProperty = System.Linq.Expressions.Expression.Property(parameter, nameof(BaseAuditableEntity.DeletedAt));
-            var nullConstant = System.Linq.Expressions.Expression.Constant(null, typeof(DateTime?));
+            var nullConstant = System.Linq.Expressions.Expression.Constant(null, typeof(DateTimeOffset?));
             var filter = System.Linq.Expressions.Expression.Equal(deletedAtProperty, nullConstant);
             var lambda = System.Linq.Expressions.Expression.Lambda(filter, parameter);
 
@@ -206,21 +207,19 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public override int SaveChanges()
     {
         SetTimestamps();
-        NormalizeDateTimes();
         return base.SaveChanges();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         SetTimestamps();
-        NormalizeDateTimes();
         return base.SaveChangesAsync(cancellationToken);
     }
 
     private void SetTimestamps()
     {
         var entries = ChangeTracker.Entries<BaseAuditableEntity>();
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         foreach (var entry in entries)
         {
@@ -233,23 +232,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
                     break;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Npgsql requires DateTime values to have Kind=Utc for timestamptz columns.
-    /// Normalize any Unspecified-kind DateTimes to UTC before saving.
-    /// </summary>
-    private void NormalizeDateTimes()
-    {
-        foreach (var entry in ChangeTracker.Entries()
-            .Where(e => e.State is EntityState.Added or EntityState.Modified))
-        {
-            foreach (var prop in entry.Properties)
-            {
-                if (prop.CurrentValue is DateTime dt && dt.Kind == DateTimeKind.Unspecified)
-                    prop.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
             }
         }
     }

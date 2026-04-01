@@ -5,9 +5,9 @@ namespace QBEngineer.Core.Entities;
 public class PayStub : BaseAuditableEntity
 {
     public int UserId { get; set; }
-    public DateTime PayPeriodStart { get; set; }
-    public DateTime PayPeriodEnd { get; set; }
-    public DateTime PayDate { get; set; }
+    public DateTimeOffset PayPeriodStart { get; set; }
+    public DateTimeOffset PayPeriodEnd { get; set; }
+    public DateTimeOffset PayDate { get; set; }
     public decimal GrossPay { get; set; }
     public decimal NetPay { get; set; }
     public decimal TotalDeductions { get; set; }

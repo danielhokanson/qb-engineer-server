@@ -9,5 +9,5 @@ public record SalesOrderListItemModel(
     string? CustomerPO,
     int LineCount,
     decimal Total,
-    DateTime? RequestedDeliveryDate,
-    DateTime CreatedAt);
+    DateTimeOffset? RequestedDeliveryDate,
+    DateTimeOffset CreatedAt);

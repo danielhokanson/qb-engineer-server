@@ -11,7 +11,7 @@ public class BinMovement : BaseEntity
     public int? FromLocationId { get; set; }
     public int? ToLocationId { get; set; }
     public int MovedBy { get; set; }
-    public DateTime MovedAt { get; set; }
+    public DateTimeOffset MovedAt { get; set; }
     public BinMovementReason? Reason { get; set; }
 
     public StorageLocation? FromLocation { get; set; }

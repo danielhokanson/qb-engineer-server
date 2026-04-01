@@ -15,13 +15,13 @@ public class GetCurrentPayPeriodHandler(AppDbContext db) : IRequestHandler<GetCu
         var anchorSetting = await db.SystemSettings.FirstOrDefaultAsync(s => s.Key == "pay_period_anchor", ct);
 
         var type = typeSetting?.Value ?? "biweekly";
-        var anchor = anchorSetting is not null && DateTime.TryParse(anchorSetting.Value, out var a)
+        var anchor = anchorSetting is not null && DateTimeOffset.TryParse(anchorSetting.Value, out var a)
             ? a
-            : new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc); // default Monday anchor
+            : new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero); // default Monday anchor
 
-        var now = DateTime.UtcNow;
-        DateTime periodStart;
-        DateTime periodEnd;
+        var now = DateTimeOffset.UtcNow;
+        DateTimeOffset periodStart;
+        DateTimeOffset periodEnd;
 
         switch (type.ToLower())
         {
@@ -44,21 +44,21 @@ public class GetCurrentPayPeriodHandler(AppDbContext db) : IRequestHandler<GetCu
             case "semimonthly":
                 if (now.Day <= 15)
                 {
-                    periodStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-                    periodEnd = new DateTime(now.Year, now.Month, 15, 23, 59, 59, DateTimeKind.Utc);
+                    periodStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
+                    periodEnd = new DateTimeOffset(now.Year, now.Month, 15, 23, 59, 59, TimeSpan.Zero);
                 }
                 else
                 {
-                    periodStart = new DateTime(now.Year, now.Month, 16, 0, 0, 0, DateTimeKind.Utc);
+                    periodStart = new DateTimeOffset(now.Year, now.Month, 16, 0, 0, 0, TimeSpan.Zero);
                     var lastDay = DateTime.DaysInMonth(now.Year, now.Month);
-                    periodEnd = new DateTime(now.Year, now.Month, lastDay, 23, 59, 59, DateTimeKind.Utc);
+                    periodEnd = new DateTimeOffset(now.Year, now.Month, lastDay, 23, 59, 59, TimeSpan.Zero);
                 }
                 break;
 
             case "monthly":
-                periodStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                periodStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
                 var last = DateTime.DaysInMonth(now.Year, now.Month);
-                periodEnd = new DateTime(now.Year, now.Month, last, 23, 59, 59, DateTimeKind.Utc);
+                periodEnd = new DateTimeOffset(now.Year, now.Month, last, 23, 59, 59, TimeSpan.Zero);
                 break;
 
             default:

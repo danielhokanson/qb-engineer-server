@@ -98,12 +98,12 @@ public class ExtractFormDefinitionHandler(
         // TODO: Re-enable verification once Ollama is reliably available:
         // var verification = await formVerifier.VerifyAsync(json, rawResult, formType, ct);
 
-        var revision = DateTime.UtcNow.ToString("yyyy-MM");
+        var revision = DateTimeOffset.UtcNow.ToString("yyyy-MM");
         var hash = Convert.ToHexStringLower(SHA256.HashData(pdfBytes));
         var fieldCount = System.Text.RegularExpressions.Regex.Matches(json, @"""id""").Count;
 
         // Expire the current active version for this template
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var currentVersion = await db.FormDefinitionVersions
             .Where(v => v.TemplateId == template.Id && v.IsActive && v.ExpirationDate == null)
             .OrderByDescending(v => v.EffectiveDate)

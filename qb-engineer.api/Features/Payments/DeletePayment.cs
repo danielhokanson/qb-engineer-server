@@ -16,7 +16,7 @@ public class DeletePaymentHandler(IPaymentRepository repo)
         if (payment.Applications.Any())
             throw new InvalidOperationException("Cannot delete a payment with applied invoices. Remove applications first.");
 
-        payment.DeletedAt = DateTime.UtcNow;
+        payment.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

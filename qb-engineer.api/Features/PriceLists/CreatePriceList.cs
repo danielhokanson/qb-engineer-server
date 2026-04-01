@@ -11,8 +11,8 @@ public record CreatePriceListCommand(
     string? Description,
     int? CustomerId,
     bool IsDefault,
-    DateTime? EffectiveFrom,
-    DateTime? EffectiveTo,
+    DateTimeOffset? EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
     List<CreatePriceListEntryModel> Entries) : IRequest<PriceListListItemModel>;
 
 public class CreatePriceListValidator : AbstractValidator<CreatePriceListCommand>

@@ -33,7 +33,7 @@ public class SetWorkflowStatusHandler(
     public async Task<StatusEntryResponseModel> Handle(
         SetWorkflowStatusCommand request, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         // Close any existing active workflow status
         var currentWorkflow = await db.StatusEntries

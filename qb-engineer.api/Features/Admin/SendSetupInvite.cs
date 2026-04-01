@@ -21,7 +21,7 @@ public class SendSetupInviteHandler(
             ?? throw new KeyNotFoundException($"User {request.UserId} not found");
 
         // Generate setup token if none exists
-        if (string.IsNullOrEmpty(user.SetupToken) || user.SetupTokenExpiresAt < DateTime.UtcNow)
+        if (string.IsNullOrEmpty(user.SetupToken) || user.SetupTokenExpiresAt < DateTimeOffset.UtcNow)
         {
             var tokenResult = await mediator.Send(new GenerateSetupTokenCommand(request.UserId), cancellationToken);
             user.SetupToken = tokenResult.Token;

@@ -14,7 +14,7 @@ public record CreateCustomerReturnCommand(
     int OriginalJobId,
     string Reason,
     string? Notes,
-    DateTime ReturnDate,
+    DateTimeOffset ReturnDate,
     bool CreateReworkJob) : IRequest<CustomerReturnListItemModel>;
 
 public class CreateCustomerReturnValidator : AbstractValidator<CreateCustomerReturnCommand>

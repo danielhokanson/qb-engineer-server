@@ -238,7 +238,7 @@ public class NetSuiteAccountingService(
     public Task UpdateInventoryQuantityAsync(string externalItemId, decimal quantityOnHand, CancellationToken ct) =>
         Task.CompletedTask;
 
-    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct) =>
+    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTimeOffset? fromDate, DateTimeOffset? toDate, CancellationToken ct) =>
         Task.FromResult(new List<AccountingPayStub>());
 
     public Task<byte[]?> GetPayStubPdfAsync(string payStubExternalId, CancellationToken ct) =>
@@ -265,7 +265,7 @@ public class NetSuiteAccountingService(
     }
 
     public Task<AccountingSyncStatus> GetSyncStatusAsync(CancellationToken ct) =>
-        Task.FromResult(new AccountingSyncStatus(IsConfigured(options.Value), DateTime.UtcNow, 0, 0));
+        Task.FromResult(new AccountingSyncStatus(IsConfigured(options.Value), DateTimeOffset.UtcNow, 0, 0));
 
     private static bool IsConfigured(NetSuiteOptions opts) =>
         !string.IsNullOrEmpty(opts.AccountId) &&

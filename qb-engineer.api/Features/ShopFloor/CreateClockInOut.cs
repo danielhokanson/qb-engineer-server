@@ -34,7 +34,7 @@ public class ClockInOutHandler(AppDbContext db)
         {
             UserId = request.UserId,
             EventType = eventType,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = DateTimeOffset.UtcNow,
             Source = "kiosk",
         });
 

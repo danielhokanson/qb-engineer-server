@@ -8,9 +8,9 @@ public class Quote : BaseAuditableEntity
     public int CustomerId { get; set; }
     public int? ShippingAddressId { get; set; }
     public QuoteStatus Status { get; set; } = QuoteStatus.Draft;
-    public DateTime? SentDate { get; set; }
-    public DateTime? ExpirationDate { get; set; }
-    public DateTime? AcceptedDate { get; set; }
+    public DateTimeOffset? SentDate { get; set; }
+    public DateTimeOffset? ExpirationDate { get; set; }
+    public DateTimeOffset? AcceptedDate { get; set; }
     public string? Notes { get; set; }
     public decimal TaxRate { get; set; }
 

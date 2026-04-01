@@ -56,6 +56,6 @@ public class CreateMaintenanceScheduleHandler(AppDbContext db)
             schedule.LastPerformedAt,
             schedule.NextDueAt,
             schedule.IsActive,
-            schedule.NextDueAt < DateTime.UtcNow);
+            schedule.NextDueAt < DateTimeOffset.UtcNow);
     }
 }

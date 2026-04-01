@@ -8,7 +8,7 @@ public record MaintenanceScheduleResponseModel(
     string? Description,
     int IntervalDays,
     decimal? IntervalHours,
-    DateTime? LastPerformedAt,
-    DateTime NextDueAt,
+    DateTimeOffset? LastPerformedAt,
+    DateTimeOffset NextDueAt,
     bool IsActive,
     bool IsOverdue);

@@ -39,7 +39,7 @@ public class CreateChatRoomHandler(AppDbContext db) : IRequestHandler<CreateChat
             room.Members.Add(new ChatRoomMember
             {
                 UserId = memberId,
-                JoinedAt = DateTime.UtcNow,
+                JoinedAt = DateTimeOffset.UtcNow,
             });
         }
 

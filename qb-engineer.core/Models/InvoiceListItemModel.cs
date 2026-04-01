@@ -6,9 +6,9 @@ public record InvoiceListItemModel(
     int CustomerId,
     string CustomerName,
     string Status,
-    DateTime InvoiceDate,
-    DateTime DueDate,
+    DateTimeOffset InvoiceDate,
+    DateTimeOffset DueDate,
     decimal Total,
     decimal AmountPaid,
     decimal BalanceDue,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

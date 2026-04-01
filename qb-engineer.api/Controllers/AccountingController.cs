@@ -197,8 +197,8 @@ public class AccountingController(
             AccessToken: root.GetProperty("access_token").GetString()!,
             RefreshToken: root.GetProperty("refresh_token").GetString()!,
             RealmId: realmId,
-            AccessTokenExpiresAt: DateTime.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()),
-            RefreshTokenExpiresAt: DateTime.UtcNow.AddSeconds(root.GetProperty("x_refresh_token_expires_in").GetInt32()));
+            AccessTokenExpiresAt: DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()),
+            RefreshTokenExpiresAt: DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("x_refresh_token_expires_in").GetInt32()));
 
         await tokenService.SaveTokenAsync(tokenData, ct);
         await providerFactory.SetActiveProviderAsync("quickbooks", ct);
@@ -277,7 +277,7 @@ public class AccountingController(
         {
             access_token = root.GetProperty("access_token").GetString(),
             refresh_token = root.GetProperty("refresh_token").GetString(),
-            expires_at = DateTime.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
+            expires_at = DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
         });
 
         await settingRepository.UpsertAsync("xero_oauth_token", tokenEncryption.Encrypt(tokenJson), "Xero OAuth token", ct);
@@ -369,7 +369,7 @@ public class AccountingController(
         {
             access_token = root.GetProperty("access_token").GetString(),
             refresh_token = root.GetProperty("refresh_token").GetString(),
-            expires_at = DateTime.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
+            expires_at = DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
         });
 
         await settingRepository.UpsertAsync("freshbooks_oauth_token", tokenEncryption.Encrypt(tokenJson), "FreshBooks OAuth token", ct);
@@ -467,7 +467,7 @@ public class AccountingController(
         {
             access_token = root.GetProperty("access_token").GetString(),
             refresh_token = root.GetProperty("refresh_token").GetString(),
-            expires_at = DateTime.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
+            expires_at = DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
         });
 
         await settingRepository.UpsertAsync("sage_oauth_token", tokenEncryption.Encrypt(tokenJson), "Sage OAuth token", ct);
@@ -545,7 +545,7 @@ public class AccountingController(
         {
             access_token = root.GetProperty("access_token").GetString(),
             refresh_token = root.GetProperty("refresh_token").GetString(),
-            expires_at = DateTime.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
+            expires_at = DateTimeOffset.UtcNow.AddSeconds(root.GetProperty("expires_in").GetInt32()).ToString("O"),
         });
 
         await settingRepository.UpsertAsync("zoho_oauth_token", tokenEncryption.Encrypt(tokenJson), "Zoho OAuth token", ct);

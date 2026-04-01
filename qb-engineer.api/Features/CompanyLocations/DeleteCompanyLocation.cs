@@ -18,7 +18,7 @@ public class DeleteCompanyLocationHandler(AppDbContext db)
         if (location.IsDefault)
             throw new InvalidOperationException("Cannot delete the default location. Set another location as default first.");
 
-        location.DeletedAt = DateTime.UtcNow;
+        location.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

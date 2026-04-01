@@ -16,7 +16,7 @@ public sealed class DeleteMaintenanceScheduleHandler(AppDbContext db)
             .FirstOrDefaultAsync(s => s.Id == request.ScheduleId, ct)
             ?? throw new KeyNotFoundException($"Maintenance schedule {request.ScheduleId} not found");
 
-        schedule.DeletedAt = DateTime.UtcNow;
+        schedule.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

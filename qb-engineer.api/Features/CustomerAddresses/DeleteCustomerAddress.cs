@@ -13,7 +13,7 @@ public class DeleteCustomerAddressHandler(ICustomerAddressRepository repo)
         var address = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Address {request.Id} not found");
 
-        address.DeletedAt = DateTime.UtcNow;
+        address.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

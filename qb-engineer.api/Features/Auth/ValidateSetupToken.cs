@@ -16,7 +16,7 @@ public class ValidateSetupTokenHandler(
     {
         var normalizedToken = request.Token.Trim().ToUpperInvariant();
         var user = userManager.Users
-            .Where(u => u.SetupToken == normalizedToken && u.SetupTokenExpiresAt > DateTime.UtcNow)
+            .Where(u => u.SetupToken == normalizedToken && u.SetupTokenExpiresAt > DateTimeOffset.UtcNow)
             .FirstOrDefault()
             ?? throw new KeyNotFoundException("Invalid or expired setup token");
 

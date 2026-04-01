@@ -10,8 +10,8 @@ public record InvoiceDetailResponseModel(
     int? ShipmentId,
     string? ShipmentNumber,
     string Status,
-    DateTime InvoiceDate,
-    DateTime DueDate,
+    DateTimeOffset InvoiceDate,
+    DateTimeOffset DueDate,
     string? CreditTerms,
     decimal TaxRate,
     decimal Subtotal,
@@ -22,5 +22,5 @@ public record InvoiceDetailResponseModel(
     string? Notes,
     List<InvoiceLineResponseModel> Lines,
     List<PaymentApplicationResponseModel> PaymentApplications,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

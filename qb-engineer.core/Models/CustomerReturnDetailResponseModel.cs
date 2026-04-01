@@ -13,10 +13,10 @@ public record CustomerReturnDetailResponseModel(
     string Status,
     string Reason,
     string? Notes,
-    DateTime ReturnDate,
+    DateTimeOffset ReturnDate,
     int? InspectedById,
     string? InspectedByName,
-    DateTime? InspectedAt,
+    DateTimeOffset? InspectedAt,
     string? InspectionNotes,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

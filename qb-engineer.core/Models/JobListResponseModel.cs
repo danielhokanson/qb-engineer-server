@@ -10,7 +10,7 @@ public record JobListResponseModel(
     string? AssigneeInitials,
     string? AssigneeColor,
     string PriorityName,
-    DateTime? DueDate,
+    DateTimeOffset? DueDate,
     bool IsOverdue,
     string? CustomerName,
     string? BillingStatus,

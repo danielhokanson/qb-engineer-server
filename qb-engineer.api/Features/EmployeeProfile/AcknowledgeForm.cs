@@ -38,7 +38,7 @@ public class AcknowledgeFormHandler(AppDbContext db) : IRequestHandler<Acknowled
             db.EmployeeProfiles.Add(profile);
         }
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         switch (normalizedKey)
         {

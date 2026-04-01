@@ -38,7 +38,7 @@ public class RunScheduledTaskHandler(AppDbContext db) : IRequestHandler<RunSched
 
         db.Jobs.Add(job);
 
-        task.LastRunAt = DateTime.UtcNow;
+        task.LastRunAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
 
         return job.Id;

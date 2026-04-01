@@ -45,7 +45,7 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, Ap
         if (request.AvatarColor is not null) user.AvatarColor = request.AvatarColor;
         if (request.IsActive.HasValue) user.IsActive = request.IsActive.Value;
 
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
 
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
@@ -65,7 +65,7 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, Ap
         var hasPassword = await userManager.HasPasswordAsync(user);
         var hasPendingToken = user.SetupToken != null
             && user.SetupTokenExpiresAt.HasValue
-            && user.SetupTokenExpiresAt.Value > DateTime.UtcNow;
+            && user.SetupTokenExpiresAt.Value > DateTimeOffset.UtcNow;
         var userScans = await db.Set<QBEngineer.Core.Entities.UserScanIdentifier>()
             .Where(s => s.UserId == user.Id && s.IsActive && s.DeletedAt == null)
             .Select(s => s.IdentifierType)

@@ -20,7 +20,7 @@ public sealed class DeleteTaxDocumentHandler(AppDbContext db)
         if (doc.Source != PayrollDocumentSource.Manual)
             throw new InvalidOperationException("Only manually uploaded tax documents can be deleted.");
 
-        doc.DeletedAt = DateTime.UtcNow;
+        doc.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

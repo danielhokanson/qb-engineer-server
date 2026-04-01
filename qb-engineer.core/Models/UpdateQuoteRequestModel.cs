@@ -2,6 +2,6 @@ namespace QBEngineer.Core.Models;
 
 public record UpdateQuoteRequestModel(
     int? ShippingAddressId,
-    DateTime? ExpirationDate,
+    DateTimeOffset? ExpirationDate,
     string? Notes,
     decimal? TaxRate);

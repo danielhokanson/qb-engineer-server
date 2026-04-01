@@ -37,13 +37,13 @@ public class FormDefinitionVersion : BaseAuditableEntity
     /// <summary>
     /// When this version becomes the active form definition.
     /// </summary>
-    public DateTime EffectiveDate { get; set; }
+    public DateTimeOffset EffectiveDate { get; set; }
 
     /// <summary>
     /// When this version expires. Null = currently active (no successor yet).
     /// Set automatically when a new version is created for the same template/state.
     /// </summary>
-    public DateTime? ExpirationDate { get; set; }
+    public DateTimeOffset? ExpirationDate { get; set; }
 
     /// <summary>
     /// Human-readable version label (e.g., "2026-03", "v2").
@@ -53,7 +53,7 @@ public class FormDefinitionVersion : BaseAuditableEntity
     /// <summary>
     /// When the PDF was extracted to produce this definition.
     /// </summary>
-    public DateTime ExtractedAt { get; set; }
+    public DateTimeOffset ExtractedAt { get; set; }
 
     /// <summary>
     /// Number of form fields in the definition.

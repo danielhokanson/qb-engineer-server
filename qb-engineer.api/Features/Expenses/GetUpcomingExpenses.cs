@@ -14,7 +14,7 @@ public class GetUpcomingExpensesHandler(AppDbContext db) : IRequestHandler<GetUp
 {
     public async Task<List<UpcomingExpenseResponseModel>> Handle(GetUpcomingExpensesQuery request, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var horizon = now.AddDays(request.DaysAhead);
 
         var recurring = await db.RecurringExpenses
@@ -55,7 +55,7 @@ public class GetUpcomingExpensesHandler(AppDbContext db) : IRequestHandler<GetUp
         return result.OrderBy(e => e.DueDate).ToList();
     }
 
-    private static DateTime AdvanceDate(DateTime date, RecurrenceFrequency frequency) => frequency switch
+    private static DateTimeOffset AdvanceDate(DateTimeOffset date, RecurrenceFrequency frequency) => frequency switch
     {
         RecurrenceFrequency.Weekly => date.AddDays(7),
         RecurrenceFrequency.Biweekly => date.AddDays(14),

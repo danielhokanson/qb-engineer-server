@@ -11,9 +11,9 @@ public class RecurringExpense : BaseAuditableEntity
     public string Description { get; set; } = string.Empty;
     public string? Vendor { get; set; }
     public RecurrenceFrequency Frequency { get; set; }
-    public DateTime NextOccurrenceDate { get; set; }
-    public DateTime? LastGeneratedDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateTimeOffset NextOccurrenceDate { get; set; }
+    public DateTimeOffset? LastGeneratedDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
     public bool IsActive { get; set; } = true;
     public bool AutoApprove { get; set; }
 }

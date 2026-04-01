@@ -10,4 +10,4 @@ public record JobLinkResponseModel(
     string LinkedJobTitle,
     string LinkedJobStageName,
     string LinkedJobStageColor,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

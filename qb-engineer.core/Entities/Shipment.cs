@@ -10,8 +10,8 @@ public class Shipment : BaseAuditableEntity
     public ShipmentStatus Status { get; set; } = ShipmentStatus.Pending;
     public string? Carrier { get; set; }
     public string? TrackingNumber { get; set; }
-    public DateTime? ShippedDate { get; set; }
-    public DateTime? DeliveredDate { get; set; }
+    public DateTimeOffset? ShippedDate { get; set; }
+    public DateTimeOffset? DeliveredDate { get; set; }
     public decimal? ShippingCost { get; set; }
     public decimal? Weight { get; set; }
     public string? Notes { get; set; }

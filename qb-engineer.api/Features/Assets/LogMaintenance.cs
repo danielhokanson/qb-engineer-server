@@ -27,7 +27,7 @@ public class LogMaintenanceHandler(AppDbContext db, IHttpContextAccessor httpCon
         var user = await db.Users.FindAsync([userId], ct)
             ?? throw new KeyNotFoundException($"User {userId} not found");
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var data = request.Data;
 
         var log = new MaintenanceLog

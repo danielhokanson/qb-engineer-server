@@ -14,6 +14,6 @@ public class MarkMessagesReadHandler(AppDbContext db) : IRequestHandler<MarkMess
             .Where(m => m.SenderId == request.OtherUserId && m.RecipientId == request.UserId && !m.IsRead)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(m => m.IsRead, true)
-                .SetProperty(m => m.ReadAt, DateTime.UtcNow), ct);
+                .SetProperty(m => m.ReadAt, DateTimeOffset.UtcNow), ct);
     }
 }

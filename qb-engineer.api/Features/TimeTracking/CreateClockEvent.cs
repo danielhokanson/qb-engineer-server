@@ -34,7 +34,7 @@ public class CreateClockEventHandler(ITimeTrackingRepository repo, IHttpContextA
             EventType = data.EventType,
             Reason = data.Reason?.Trim(),
             ScanMethod = data.ScanMethod?.Trim(),
-            Timestamp = DateTime.UtcNow,
+            Timestamp = DateTimeOffset.UtcNow,
             Source = data.Source?.Trim(),
         };
 

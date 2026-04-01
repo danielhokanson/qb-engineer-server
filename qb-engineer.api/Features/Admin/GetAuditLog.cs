@@ -9,8 +9,8 @@ public record GetAuditLogQuery(
     int? UserId,
     string? Action,
     string? EntityType,
-    DateTime? From,
-    DateTime? To,
+    DateTimeOffset? From,
+    DateTimeOffset? To,
     int Page = 1,
     int PageSize = 25) : IRequest<PaginatedResult<AuditLogEntryResponseModel>>;
 

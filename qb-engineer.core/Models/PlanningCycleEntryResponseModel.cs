@@ -10,6 +10,6 @@ public record PlanningCycleEntryResponseModel(
     string? StageColor,
     string Priority,
     bool IsRolledOver,
-    DateTime CommittedAt,
-    DateTime? CompletedAt,
+    DateTimeOffset CommittedAt,
+    DateTimeOffset? CompletedAt,
     int SortOrder);

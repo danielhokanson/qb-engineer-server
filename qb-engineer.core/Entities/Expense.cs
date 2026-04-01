@@ -20,7 +20,7 @@ public class Expense : BaseAuditableEntity
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
 
-    public DateTime ExpenseDate { get; set; }
+    public DateTimeOffset ExpenseDate { get; set; }
 
     public Job? Job { get; set; }
 }

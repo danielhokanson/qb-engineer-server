@@ -16,7 +16,7 @@ public class UpsShippingService(
     ILogger<UpsShippingService> logger) : IShippingCarrierService
 {
     private string? _cachedToken;
-    private DateTime _tokenExpiry = DateTime.MinValue;
+    private DateTimeOffset _tokenExpiry = DateTimeOffset.MinValue;
 
     public string CarrierId => "ups";
     public string CarrierName => "UPS";
@@ -120,7 +120,7 @@ public class UpsShippingService(
         var doc = JsonDocument.Parse(body);
         var events = new List<TrackingEvent>();
         string status = "Unknown";
-        DateTime? estimatedDelivery = null;
+        DateTimeOffset? estimatedDelivery = null;
 
         if (doc.RootElement.TryGetProperty("trackResponse", out var tr) &&
             tr.TryGetProperty("shipment", out var shipmentArr))
@@ -142,7 +142,7 @@ public class UpsShippingService(
                             {
                                 if (dateEl.TryGetProperty("date", out var dv))
                                 {
-                                    if (DateTime.TryParse(dv.GetString(), out var dt))
+                                    if (DateTimeOffset.TryParse(dv.GetString(), out var dt))
                                         estimatedDelivery = dt;
                                     break;
                                 }
@@ -162,7 +162,7 @@ public class UpsShippingService(
                                     ? sdesc.GetString() ?? string.Empty : string.Empty;
                                 var dateStr = act.TryGetProperty("date", out var actDate) ? actDate.GetString() : null;
                                 var timeStr = act.TryGetProperty("time", out var actTime) ? actTime.GetString() : null;
-                                DateTime.TryParse($"{dateStr} {timeStr}", out var eventTime);
+                                DateTimeOffset.TryParse($"{dateStr} {timeStr}", out var eventTime);
                                 events.Add(new TrackingEvent(eventTime, loc, actDesc));
                             }
                         }
@@ -179,7 +179,7 @@ public class UpsShippingService(
 
     private async Task<string?> GetAccessTokenAsync(CancellationToken ct)
     {
-        if (_cachedToken is not null && DateTime.UtcNow < _tokenExpiry)
+        if (_cachedToken is not null && DateTimeOffset.UtcNow < _tokenExpiry)
             return _cachedToken;
 
         var opts = options.Value;
@@ -199,7 +199,7 @@ public class UpsShippingService(
         var doc = JsonDocument.Parse(body);
         _cachedToken = doc.RootElement.GetProperty("access_token").GetString();
         var expiresIn = doc.RootElement.TryGetProperty("expires_in", out var exp) ? exp.GetInt32() : 3600;
-        _tokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn - 60);
+        _tokenExpiry = DateTimeOffset.UtcNow.AddSeconds(expiresIn - 60);
         return _cachedToken;
     }
 

@@ -10,5 +10,5 @@ public record UpdateLeadRequestModel(
     string? Source,
     LeadStatus? Status,
     string? Notes,
-    DateTime? FollowUpDate,
+    DateTimeOffset? FollowUpDate,
     string? LostReason);

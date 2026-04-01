@@ -44,7 +44,7 @@ public class UpdateQcInspectionHandler(AppDbContext db)
         {
             inspection.Status = data.Status;
             if (data.Status is "Passed" or "Failed")
-                inspection.CompletedAt = DateTime.UtcNow;
+                inspection.CompletedAt = DateTimeOffset.UtcNow;
         }
 
         if (data.Notes is not null)

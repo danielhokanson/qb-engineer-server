@@ -2,8 +2,8 @@ namespace QBEngineer.Core.Models;
 
 public record CreateDowntimeLogRequestModel(
     int AssetId,
-    DateTime StartedAt,
-    DateTime? EndedAt,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? EndedAt,
     string Reason,
     string? Resolution,
     bool IsPlanned,

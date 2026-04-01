@@ -5,5 +5,5 @@ public record CreateCustomerReturnRequestModel(
     int OriginalJobId,
     string Reason,
     string? Notes,
-    DateTime ReturnDate,
+    DateTimeOffset ReturnDate,
     bool CreateReworkJob);

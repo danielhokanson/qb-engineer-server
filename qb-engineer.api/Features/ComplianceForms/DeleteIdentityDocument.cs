@@ -17,7 +17,7 @@ public class DeleteIdentityDocumentHandler(AppDbContext db)
             ?? throw new KeyNotFoundException(
                 $"Identity document {request.DocumentId} not found or not owned by user {request.UserId}.");
 
-        document.DeletedAt = DateTime.UtcNow;
+        document.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

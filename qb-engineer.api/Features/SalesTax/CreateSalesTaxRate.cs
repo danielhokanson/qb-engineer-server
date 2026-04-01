@@ -27,7 +27,7 @@ public class CreateSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Create
         if (exists)
             throw new InvalidOperationException($"Tax rate with code '{request.Data.Code}' already exists.");
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var effectiveFrom = request.Data.EffectiveFrom ?? now;
         var stateCode = string.IsNullOrWhiteSpace(request.Data.StateCode) ? null : request.Data.StateCode.Trim().ToUpper();
 

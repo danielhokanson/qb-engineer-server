@@ -55,7 +55,7 @@ public class SignOnboardingFormHandler(
 
         var m = request.Model.FormData;
         var isI9 = formType == ComplianceFormType.I9;
-        var templateName = $"{template.Name} — {request.UserName} — {DateTime.UtcNow:yyyyMMdd}";
+        var templateName = $"{template.Name} — {request.UserName} — {DateTimeOffset.UtcNow:yyyyMMdd}";
 
         IReadOnlyList<SequentialSubmitter> submitters = isI9
             ? [
@@ -169,7 +169,7 @@ public class SignOnboardingFormHandler(
         submission.Status = ComplianceSubmissionStatus.Pending;
 
         if (isI9)
-            submission.I9Section2OverdueAt = AddBusinessDays(DateTime.UtcNow, 3);
+            submission.I9Section2OverdueAt = AddBusinessDays(DateTimeOffset.UtcNow, 3);
 
         await db.SaveChangesAsync(ct);
         return submission;
@@ -196,7 +196,7 @@ public class SignOnboardingFormHandler(
         return fieldValues;
     }
 
-    private static DateTime AddBusinessDays(DateTime date, int days)
+    private static DateTimeOffset AddBusinessDays(DateTimeOffset date, int days)
     {
         var result = date;
         var added = 0;

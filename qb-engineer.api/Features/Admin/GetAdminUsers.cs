@@ -71,7 +71,7 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
             var hasPassword = await userManager.HasPasswordAsync(user);
             var hasPendingToken = user.SetupToken != null
                 && user.SetupTokenExpiresAt.HasValue
-                && user.SetupTokenExpiresAt.Value > DateTime.UtcNow;
+                && user.SetupTokenExpiresAt.Value > DateTimeOffset.UtcNow;
             scanTypes.TryGetValue(user.Id, out var scan);
             profiles.TryGetValue(user.Id, out var profile);
 

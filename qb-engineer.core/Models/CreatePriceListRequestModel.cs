@@ -5,8 +5,8 @@ public record CreatePriceListRequestModel(
     string? Description,
     int? CustomerId,
     bool IsDefault,
-    DateTime? EffectiveFrom,
-    DateTime? EffectiveTo,
+    DateTimeOffset? EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
     List<CreatePriceListEntryModel> Entries);
 
 public record CreatePriceListEntryModel(

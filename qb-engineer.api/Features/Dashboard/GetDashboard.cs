@@ -13,7 +13,7 @@ public class GetDashboardHandler(IDashboardRepository repo, AppDbContext db) : I
 {
     public async Task<DashboardResponseModel> Handle(GetDashboardQuery request, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var today = now.Date;
 
         var data = await repo.GetDashboardDataAsync(cancellationToken);
@@ -144,7 +144,7 @@ public class GetDashboardHandler(IDashboardRepository repo, AppDbContext db) : I
         return $"{displayHour}:{minutes:D2}{period}";
     }
 
-    private static (string Status, string StatusColor) DeriveStatus(int stageIndex, int totalStages, DateTime? dueDate, DateTime today)
+    private static (string Status, string StatusColor) DeriveStatus(int stageIndex, int totalStages, DateTimeOffset? dueDate, DateTimeOffset today)
     {
         if (dueDate.HasValue && dueDate.Value.Date < today)
             return ("LATE", "#ef4444");
@@ -185,7 +185,7 @@ public class GetDashboardHandler(IDashboardRepository repo, AppDbContext db) : I
         _ => ("info", "#94a3b8")
     };
 
-    private static string FormatRelativeTime(DateTime timestamp, DateTime now)
+    private static string FormatRelativeTime(DateTimeOffset timestamp, DateTimeOffset now)
     {
         var diff = now - timestamp;
 

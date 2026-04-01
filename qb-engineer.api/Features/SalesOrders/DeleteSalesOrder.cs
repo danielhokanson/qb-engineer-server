@@ -17,7 +17,7 @@ public class DeleteSalesOrderHandler(ISalesOrderRepository repo)
         if (order.Status != SalesOrderStatus.Draft)
             throw new InvalidOperationException("Only Draft sales orders can be deleted");
 
-        order.DeletedAt = DateTime.UtcNow;
+        order.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

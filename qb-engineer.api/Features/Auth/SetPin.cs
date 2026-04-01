@@ -30,7 +30,7 @@ public class SetPinHandler(
             ?? throw new KeyNotFoundException("User not found");
 
         user.PinHash = HashPin(request.Pin);
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
         await userManager.UpdateAsync(user);
     }
 

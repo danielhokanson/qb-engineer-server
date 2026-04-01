@@ -80,7 +80,7 @@ public class GetAdminProgressSummaryHandler(AppDbContext db, UserManager<Applica
 
             var lastActivityAt = userProgress.Count > 0
                 ? userProgress.Max(p => p.UpdatedAt)
-                : (DateTime?)null;
+                : (DateTimeOffset?)null;
 
             result.Add(new TrainingAdminProgressSummaryResponseModel(
                 user.Id,

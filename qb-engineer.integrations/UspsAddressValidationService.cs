@@ -28,7 +28,7 @@ public class UspsAddressValidationService : IAddressValidationService
     private readonly ILogger<UspsAddressValidationService> _logger;
 
     private string? _accessToken;
-    private DateTime _tokenExpiry = DateTime.MinValue;
+    private DateTimeOffset _tokenExpiry = DateTimeOffset.MinValue;
 
     public UspsAddressValidationService(
         HttpClient httpClient,
@@ -173,7 +173,7 @@ public class UspsAddressValidationService : IAddressValidationService
 
     private async Task EnsureAccessTokenAsync(CancellationToken ct)
     {
-        if (_accessToken != null && DateTime.UtcNow < _tokenExpiry)
+        if (_accessToken != null && DateTimeOffset.UtcNow < _tokenExpiry)
             return;
 
         _logger.LogInformation("[USPS] Requesting OAuth access token");
@@ -193,7 +193,7 @@ public class UspsAddressValidationService : IAddressValidationService
             ?? throw new InvalidOperationException("Failed to parse USPS token response");
 
         _accessToken = tokenResponse.AccessToken;
-        _tokenExpiry = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn - 60); // Refresh 60s early
+        _tokenExpiry = DateTimeOffset.UtcNow.AddSeconds(tokenResponse.ExpiresIn - 60); // Refresh 60s early
 
         _logger.LogInformation("[USPS] OAuth token acquired, expires in {ExpiresIn}s", tokenResponse.ExpiresIn);
     }

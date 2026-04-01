@@ -11,7 +11,7 @@ public class CustomerStatementPdfDocument(
     List<Invoice> invoices,
     List<Payment> payments,
     string companyName,
-    DateTime statementDate) : IDocument
+    DateTimeOffset statementDate) : IDocument
 {
     public void Compose(IDocumentContainer container)
     {

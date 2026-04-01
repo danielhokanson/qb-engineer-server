@@ -91,7 +91,7 @@ public class LocalAccountingService(ILogger<LocalAccountingService> logger) : IA
     public Task UpdateInventoryQuantityAsync(string externalItemId, decimal quantityOnHand, CancellationToken ct) =>
         Task.CompletedTask;
 
-    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct) =>
+    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTimeOffset? fromDate, DateTimeOffset? toDate, CancellationToken ct) =>
         Task.FromResult(new List<AccountingPayStub>());
 
     public Task<byte[]?> GetPayStubPdfAsync(string payStubExternalId, CancellationToken ct) =>
@@ -106,5 +106,5 @@ public class LocalAccountingService(ILogger<LocalAccountingService> logger) : IA
     public Task<bool> TestConnectionAsync(CancellationToken ct) => Task.FromResult(true);
 
     public Task<AccountingSyncStatus> GetSyncStatusAsync(CancellationToken ct) =>
-        Task.FromResult(new AccountingSyncStatus(true, DateTime.UtcNow, 0, 0));
+        Task.FromResult(new AccountingSyncStatus(true, DateTimeOffset.UtcNow, 0, 0));
 }

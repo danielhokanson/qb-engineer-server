@@ -11,5 +11,5 @@ public record ProcessStepResponseModel(
     int? EstimatedMinutes,
     bool IsQcCheckpoint,
     string? QcCriteria,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

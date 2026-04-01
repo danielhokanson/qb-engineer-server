@@ -6,5 +6,5 @@ public record ScanIdentifierResponseModel
     public string IdentifierType { get; init; } = string.Empty;
     public string IdentifierValue { get; init; } = string.Empty;
     public bool IsActive { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
 }

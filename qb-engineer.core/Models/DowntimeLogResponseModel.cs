@@ -5,11 +5,11 @@ public record DowntimeLogResponseModel(
     int AssetId,
     string AssetName,
     int? ReportedById,
-    DateTime StartedAt,
-    DateTime? EndedAt,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? EndedAt,
     string Reason,
     string? Resolution,
     bool IsPlanned,
     string? Notes,
     decimal DurationHours,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

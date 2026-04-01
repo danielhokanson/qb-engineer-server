@@ -29,20 +29,20 @@ public record CompleteI9Section2RequestModel(
     /// </summary>
     string DocumentDataJson,
     /// <summary>Employee first day of work (ISO date).</summary>
-    DateTime StartDate,
+    DateTimeOffset StartDate,
     /// <summary>
     /// Optional: date work authorisation expires for reverification tracking.
     /// Null for US citizens, LPRs, and documents with no expiration.
     /// </summary>
-    DateTime? ReverificationDueAt);
+    DateTimeOffset? ReverificationDueAt);
 
 public record CompleteI9Section2Command(
     int SubmissionId,
     int EmployerUserId,
     string DocumentListType,
     string DocumentDataJson,
-    DateTime StartDate,
-    DateTime? ReverificationDueAt) : IRequest<ComplianceFormSubmissionResponseModel>;
+    DateTimeOffset StartDate,
+    DateTimeOffset? ReverificationDueAt) : IRequest<ComplianceFormSubmissionResponseModel>;
 
 public class CompleteI9Section2Validator : AbstractValidator<CompleteI9Section2Command>
 {
@@ -88,7 +88,7 @@ public class CompleteI9Section2Handler(
         submission.I9EmployerUserId = request.EmployerUserId;
         submission.I9DocumentListType = request.DocumentListType;
         submission.I9DocumentDataJson = request.DocumentDataJson;
-        submission.I9Section2SignedAt = DateTime.UtcNow;
+        submission.I9Section2SignedAt = DateTimeOffset.UtcNow;
         submission.I9ReverificationDueAt = request.ReverificationDueAt;
 
         // If DocuSeal signing is pending, attempt to get the final signed PDF
@@ -135,7 +135,7 @@ public class CompleteI9Section2Handler(
         }
 
         submission.Status = ComplianceSubmissionStatus.Completed;
-        submission.SignedAt = DateTime.UtcNow;
+        submission.SignedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(ct);
 

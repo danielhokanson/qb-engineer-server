@@ -9,4 +9,4 @@ public record ActivityResponseModel(
     string Description,
     string? UserInitials,
     string? UserName,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

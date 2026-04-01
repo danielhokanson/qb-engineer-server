@@ -7,5 +7,5 @@ public record LeadSalesReportItem(
     int TotalQuotes,
     int TotalSalesOrders,
     decimal TotalSalesOrderValue,
-    DateTime PeriodStart,
-    DateTime PeriodEnd);
+    DateTimeOffset PeriodStart,
+    DateTimeOffset PeriodEnd);

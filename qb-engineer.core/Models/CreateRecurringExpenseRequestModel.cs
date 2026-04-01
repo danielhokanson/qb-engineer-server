@@ -9,6 +9,6 @@ public record CreateRecurringExpenseRequestModel(
     string Description,
     string? Vendor,
     RecurrenceFrequency Frequency,
-    DateTime StartDate,
-    DateTime? EndDate,
+    DateTimeOffset StartDate,
+    DateTimeOffset? EndDate,
     bool AutoApprove);

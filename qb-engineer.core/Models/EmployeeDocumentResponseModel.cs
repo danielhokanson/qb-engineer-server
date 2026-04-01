@@ -6,5 +6,5 @@ public record EmployeeDocumentResponseModel(
     string ContentType,
     long Size,
     string? DocumentType,
-    DateTime? ExpirationDate,
-    DateTime CreatedAt);
+    DateTimeOffset? ExpirationDate,
+    DateTimeOffset CreatedAt);

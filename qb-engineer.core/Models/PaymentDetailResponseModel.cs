@@ -9,9 +9,9 @@ public record PaymentDetailResponseModel(
     decimal Amount,
     decimal AppliedAmount,
     decimal UnappliedAmount,
-    DateTime PaymentDate,
+    DateTimeOffset PaymentDate,
     string? ReferenceNumber,
     string? Notes,
     List<PaymentApplicationResponseModel> Applications,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

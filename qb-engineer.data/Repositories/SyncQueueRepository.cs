@@ -25,7 +25,7 @@ public class SyncQueueRepository(AppDbContext db) : ISyncQueueRepository
             Payload = payload,
             Status = SyncStatus.Pending,
             AttemptCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         await db.SyncQueueEntries.AddAsync(entry, ct);
@@ -69,7 +69,7 @@ public class SyncQueueRepository(AppDbContext db) : ISyncQueueRepository
     {
         var entry = await FindRequiredAsync(id, ct);
         entry.Status = SyncStatus.Completed;
-        entry.ProcessedAt = DateTime.UtcNow;
+        entry.ProcessedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 
@@ -108,7 +108,7 @@ public class SyncQueueRepository(AppDbContext db) : ISyncQueueRepository
 
     public async Task PurgeCompletedAsync(int olderThanDays, CancellationToken ct)
     {
-        var cutoff = DateTime.UtcNow.AddDays(-olderThanDays);
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-olderThanDays);
 
         // Hard delete — sync queue entries are operational data, not business records
         var entries = await db.SyncQueueEntries

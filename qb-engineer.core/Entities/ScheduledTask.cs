@@ -9,8 +9,8 @@ public class ScheduledTask : BaseAuditableEntity
     public int? AssigneeId { get; set; }
     public string CronExpression { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
-    public DateTime? LastRunAt { get; set; }
-    public DateTime? NextRunAt { get; set; }
+    public DateTimeOffset? LastRunAt { get; set; }
+    public DateTimeOffset? NextRunAt { get; set; }
 
     public TrackType TrackType { get; set; } = null!;
     public ReferenceData? InternalProjectType { get; set; }

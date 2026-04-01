@@ -13,7 +13,7 @@ public class DeleteRecurringExpenseHandler(AppDbContext db) : IRequestHandler<De
         var entity = await db.RecurringExpenses.FindAsync([request.Id], cancellationToken)
             ?? throw new KeyNotFoundException($"Recurring expense {request.Id} not found");
 
-        entity.DeletedAt = DateTime.UtcNow;
+        entity.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }
 }

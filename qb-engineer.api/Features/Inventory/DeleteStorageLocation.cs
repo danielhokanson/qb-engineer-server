@@ -17,7 +17,7 @@ public sealed class DeleteStorageLocationHandler(IInventoryRepository repo)
         if (contents.Count > 0)
             throw new InvalidOperationException("Cannot delete a location that contains items.");
 
-        location.DeletedAt = DateTime.UtcNow;
+        location.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

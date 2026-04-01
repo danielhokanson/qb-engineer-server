@@ -53,10 +53,10 @@ public class MockShippingService : IShippingService
         var tracking = new ShipmentTracking(
             trackingNumber,
             "In Transit",
-            DateTime.UtcNow.AddDays(3),
+            DateTimeOffset.UtcNow.AddDays(3),
             [
-                new TrackingEvent(DateTime.UtcNow.AddDays(-1), "Origin Facility", "Package picked up"),
-                new TrackingEvent(DateTime.UtcNow, "Distribution Center", "In transit to destination"),
+                new TrackingEvent(DateTimeOffset.UtcNow.AddDays(-1), "Origin Facility", "Package picked up"),
+                new TrackingEvent(DateTimeOffset.UtcNow, "Distribution Center", "In transit to destination"),
             ]);
 
         return Task.FromResult<ShipmentTracking?>(tracking);

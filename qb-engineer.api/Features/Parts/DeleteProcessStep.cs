@@ -16,7 +16,7 @@ public sealed class DeleteProcessStepHandler(IPartRepository repo) : IRequestHan
         if (step.PartId != request.PartId)
             throw new KeyNotFoundException($"Process step {request.StepId} does not belong to part {request.PartId}");
 
-        step.DeletedAt = DateTime.UtcNow;
+        step.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

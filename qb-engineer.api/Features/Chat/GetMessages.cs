@@ -42,7 +42,7 @@ public class GetMessagesHandler(AppDbContext db)
                 .Where(m => unreadIds.Contains(m.Id))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(m => m.IsRead, true)
-                    .SetProperty(m => m.ReadAt, DateTime.UtcNow), ct);
+                    .SetProperty(m => m.ReadAt, DateTimeOffset.UtcNow), ct);
         }
 
         messages.Reverse();

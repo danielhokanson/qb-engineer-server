@@ -5,4 +5,4 @@ public record BarcodeResponseModel(
     string Value,
     string EntityType,
     bool IsActive,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

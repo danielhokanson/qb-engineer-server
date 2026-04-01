@@ -7,9 +7,9 @@ public record QuoteDetailResponseModel(
     string CustomerName,
     int? ShippingAddressId,
     string Status,
-    DateTime? SentDate,
-    DateTime? ExpirationDate,
-    DateTime? AcceptedDate,
+    DateTimeOffset? SentDate,
+    DateTimeOffset? ExpirationDate,
+    DateTimeOffset? AcceptedDate,
     string? Notes,
     decimal TaxRate,
     decimal Subtotal,
@@ -18,5 +18,5 @@ public record QuoteDetailResponseModel(
     int? SalesOrderId,
     string? SalesOrderNumber,
     List<QuoteLineResponseModel> Lines,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

@@ -12,5 +12,5 @@ public record CompanyLocationResponseModel(
     string? Phone,
     bool IsDefault,
     bool IsActive,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

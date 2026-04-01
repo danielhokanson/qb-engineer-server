@@ -18,7 +18,7 @@ public class SendQuoteHandler(IQuoteRepository repo)
             throw new InvalidOperationException("Only Draft quotes can be sent");
 
         quote.Status = QuoteStatus.Sent;
-        quote.SentDate = DateTime.UtcNow;
+        quote.SentDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

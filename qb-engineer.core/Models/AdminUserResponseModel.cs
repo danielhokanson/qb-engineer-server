@@ -11,7 +11,7 @@ public record AdminUserResponseModel(
     string? AvatarColor,
     bool IsActive,
     string[] Roles,
-    DateTime CreatedAt,
+    DateTimeOffset CreatedAt,
     bool HasPassword,
     bool HasPendingSetupToken,
     bool HasRfidIdentifier,

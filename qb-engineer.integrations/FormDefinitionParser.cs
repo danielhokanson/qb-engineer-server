@@ -85,7 +85,7 @@ public partial class FormDefinitionParser(ILogger<FormDefinitionParser> logger) 
             ["formType"] = formType,
             ["title"] = title,
             ["formNumber"] = formNumber,
-            ["revision"] = DateTime.UtcNow.ToString("yyyy-MM"),
+            ["revision"] = DateTimeOffset.UtcNow.ToString("yyyy-MM"),
             ["agency"] = agency,
             ["pages"] = pages,
         };

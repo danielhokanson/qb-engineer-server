@@ -5,7 +5,7 @@ public record CreateRecurringOrderRequestModel(
     int CustomerId,
     int? ShippingAddressId,
     int IntervalDays,
-    DateTime NextGenerationDate,
+    DateTimeOffset NextGenerationDate,
     string? Notes,
     List<CreateRecurringOrderLineModel> Lines);
 

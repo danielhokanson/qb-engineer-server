@@ -101,7 +101,7 @@ public class SubmitFormDataHandler(AppDbContext db, IMediator mediator)
                 Status = ComplianceSubmissionStatus.Completed,
                 FormDataJson = request.FormDataJson,
                 FormDefinitionVersionId = request.FormDefinitionVersionId ?? version?.Id,
-                SignedAt = DateTime.UtcNow,
+                SignedAt = DateTimeOffset.UtcNow,
             };
             db.ComplianceFormSubmissions.Add(submission);
         }
@@ -109,7 +109,7 @@ public class SubmitFormDataHandler(AppDbContext db, IMediator mediator)
         {
             submission.FormDataJson = request.FormDataJson;
             submission.Status = ComplianceSubmissionStatus.Completed;
-            submission.SignedAt = DateTime.UtcNow;
+            submission.SignedAt = DateTimeOffset.UtcNow;
             if (request.FormDefinitionVersionId != null)
                 submission.FormDefinitionVersionId = request.FormDefinitionVersionId;
         }

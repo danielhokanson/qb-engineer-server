@@ -116,7 +116,7 @@ public class FillAndSubmitFormForSigningHandler(
             : [new SequentialSubmitter(1, request.UserEmail, request.UserName, "Employee")];
 
         // Submit to DocuSeal
-        var templateName = $"{template.Name} — {request.UserName} — {DateTime.UtcNow:yyyyMMdd}";
+        var templateName = $"{template.Name} — {request.UserName} — {DateTimeOffset.UtcNow:yyyyMMdd}";
         var multiSubmission = await signingService.CreateSubmissionFromPdfAsync(
             templateName, filledPdfBytes, submitters, ct);
 
@@ -150,7 +150,7 @@ public class FillAndSubmitFormForSigningHandler(
         if (isI9)
         {
             // Compute Section 2 deadline: 3 business days from now (approximated as 3 calendar days + weekends)
-            submission.I9Section2OverdueAt = AddBusinessDays(DateTime.UtcNow, 3);
+            submission.I9Section2OverdueAt = AddBusinessDays(DateTimeOffset.UtcNow, 3);
         }
 
         await db.SaveChangesAsync(ct);
@@ -205,7 +205,7 @@ public class FillAndSubmitFormForSigningHandler(
         ];
     }
 
-    private static DateTime AddBusinessDays(DateTime date, int businessDays)
+    private static DateTimeOffset AddBusinessDays(DateTimeOffset date, int businessDays)
     {
         var result = date;
         var added = 0;

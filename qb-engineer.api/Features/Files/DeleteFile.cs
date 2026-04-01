@@ -17,7 +17,7 @@ public class DeleteFileHandler(IFileRepository fileRepo, IHttpContextAccessor ht
 
         var userId = httpContext.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        file.DeletedAt = DateTime.UtcNow;
+        file.DeletedAt = DateTimeOffset.UtcNow;
         file.DeletedBy = userId;
 
         await fileRepo.SaveChangesAsync(cancellationToken);

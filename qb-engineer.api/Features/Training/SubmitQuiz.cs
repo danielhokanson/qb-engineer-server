@@ -69,8 +69,8 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
                 UserId = request.UserId,
                 ModuleId = request.ModuleId,
                 Status = passed ? TrainingProgressStatus.Completed : TrainingProgressStatus.InProgress,
-                StartedAt = DateTime.UtcNow,
-                CompletedAt = passed ? DateTime.UtcNow : null,
+                StartedAt = DateTimeOffset.UtcNow,
+                CompletedAt = passed ? DateTimeOffset.UtcNow : null,
                 QuizScore = score,
                 QuizAttempts = 1,
                 QuizAnswersJson = answersJson,
@@ -88,7 +88,7 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
             if (passed && progress.Status != TrainingProgressStatus.Completed)
             {
                 progress.Status = TrainingProgressStatus.Completed;
-                progress.CompletedAt ??= DateTime.UtcNow;
+                progress.CompletedAt ??= DateTimeOffset.UtcNow;
                 // Preserve session on pass (used for post-pass review if needed)
             }
             else if (!passed)
@@ -129,7 +129,7 @@ public class SubmitQuizHandler(AppDbContext db) : IRequestHandler<SubmitQuizComm
             .ToListAsync(ct);
 
         var completedSet = new HashSet<int>(completedModuleIds);
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var anyChanged = false;
 
         foreach (var enrollment in enrollments)

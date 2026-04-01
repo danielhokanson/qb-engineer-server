@@ -14,5 +14,5 @@ public record BinMovementResponseModel(
     int? ToLocationId,
     string? ToLocationName,
     string MovedByName,
-    DateTime MovedAt,
+    DateTimeOffset MovedAt,
     BinMovementReason? Reason);

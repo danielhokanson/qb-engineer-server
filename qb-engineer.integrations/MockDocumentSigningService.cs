@@ -69,7 +69,7 @@ public class MockDocumentSigningService : IDocumentSigningService
     public Task<DocumentSigningSubmissionStatus> GetSubmissionStatusAsync(int submissionId, CancellationToken ct)
     {
         _logger.LogInformation("[MockDocuSeal] GetSubmissionStatus: submission {Id}", submissionId);
-        return Task.FromResult(new DocumentSigningSubmissionStatus("completed", DateTime.UtcNow));
+        return Task.FromResult(new DocumentSigningSubmissionStatus("completed", DateTimeOffset.UtcNow));
     }
 
     public Task DeleteTemplateAsync(int templateId, CancellationToken ct)

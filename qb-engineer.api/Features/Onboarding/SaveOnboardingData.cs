@@ -89,7 +89,7 @@ public class SaveOnboardingDataHandler(AppDbContext db)
         profile.Country = "US";
 
         if (!string.IsNullOrWhiteSpace(m.BankName) && !string.IsNullOrWhiteSpace(m.RoutingNumber))
-            profile.DirectDepositCompletedAt ??= DateTime.UtcNow;
+            profile.DirectDepositCompletedAt ??= DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(ct);
 
@@ -106,7 +106,7 @@ public class SaveOnboardingDataHandler(AppDbContext db)
     {
         if (string.IsNullOrWhiteSpace(m.I9DocumentChoice)) return;
 
-        var docs = new List<(IdentityDocumentType DocType, int? AttachmentId, DateTime? ExpiresAt)>();
+        var docs = new List<(IdentityDocumentType DocType, int? AttachmentId, DateTimeOffset? ExpiresAt)>();
 
         if (m.I9DocumentChoice == "A" && m.I9ListAFileAttachmentId.HasValue)
         {
@@ -134,7 +134,7 @@ public class SaveOnboardingDataHandler(AppDbContext db)
                 UserId = userId,
                 DocumentType = docType,
                 FileAttachmentId = attachmentId.Value,
-                ExpiresAt = expiresAt.HasValue ? DateTime.SpecifyKind(expiresAt.Value, DateTimeKind.Utc) : null,
+                ExpiresAt = expiresAt.HasValue ? expiresAt.Value : null,
             };
             db.IdentityDocuments.Add(identityDoc);
             await db.SaveChangesAsync(ct);
@@ -154,7 +154,7 @@ public class SaveOnboardingDataHandler(AppDbContext db)
         var profile = await db.EmployeeProfiles.FirstOrDefaultAsync(p => p.UserId == userId, ct)
             ?? new EmployeeProfileEntity { UserId = userId };
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         if (workersComp) profile.WorkersCompAcknowledgedAt = now;
         if (handbook)    profile.HandbookAcknowledgedAt    = now;
 

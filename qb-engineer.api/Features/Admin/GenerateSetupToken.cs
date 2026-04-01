@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Features.Admin;
 
 public record GenerateSetupTokenCommand(int UserId) : IRequest<SetupTokenResponseModel>;
 
-public record SetupTokenResponseModel(string Token, DateTime ExpiresAt);
+public record SetupTokenResponseModel(string Token, DateTimeOffset ExpiresAt);
 
 public class GenerateSetupTokenHandler(
     UserManager<ApplicationUser> userManager) : IRequestHandler<GenerateSetupTokenCommand, SetupTokenResponseModel>
@@ -27,8 +27,8 @@ public class GenerateSetupTokenHandler(
         var token = $"{new string(code, 0, 4)}-{new string(code, 4, 4)}";
 
         user.SetupToken = token;
-        user.SetupTokenExpiresAt = DateTime.UtcNow.AddDays(7);
-        user.UpdatedAt = DateTime.UtcNow;
+        user.SetupTokenExpiresAt = DateTimeOffset.UtcNow.AddDays(7);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
 
         await userManager.UpdateAsync(user);
 

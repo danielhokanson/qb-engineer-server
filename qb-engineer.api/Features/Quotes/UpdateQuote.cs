@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Features.Quotes;
 public record UpdateQuoteCommand(
     int Id,
     int? ShippingAddressId,
-    DateTime? ExpirationDate,
+    DateTimeOffset? ExpirationDate,
     string? Notes,
     decimal? TaxRate) : IRequest;
 

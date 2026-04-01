@@ -72,7 +72,7 @@ public class ReceivePurchaseOrderHandler(
                 Quantity = data.QuantityReceived,
                 LotNumber = data.LotNumber,
                 PlacedBy = userId,
-                PlacedAt = DateTime.UtcNow,
+                PlacedAt = DateTimeOffset.UtcNow,
                 Notes = data.Notes,
             };
 
@@ -87,7 +87,7 @@ public class ReceivePurchaseOrderHandler(
                 LotNumber = data.LotNumber,
                 ToLocationId = data.LocationId.Value,
                 MovedBy = userId,
-                MovedAt = DateTime.UtcNow,
+                MovedAt = DateTimeOffset.UtcNow,
                 Reason = BinMovementReason.Receive,
             };
 

@@ -14,7 +14,7 @@ public class DeleteProductionRunHandler(AppDbContext db) : IRequestHandler<Delet
             .FirstOrDefaultAsync(pr => pr.Id == request.RunId && pr.JobId == request.JobId, cancellationToken)
             ?? throw new KeyNotFoundException($"Production run {request.RunId} not found on job {request.JobId}.");
 
-        run.DeletedAt = DateTime.UtcNow;
+        run.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }
 }

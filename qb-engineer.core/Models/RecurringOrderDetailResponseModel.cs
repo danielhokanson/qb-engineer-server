@@ -7,10 +7,10 @@ public record RecurringOrderDetailResponseModel(
     string CustomerName,
     int? ShippingAddressId,
     int IntervalDays,
-    DateTime NextGenerationDate,
-    DateTime? LastGeneratedDate,
+    DateTimeOffset NextGenerationDate,
+    DateTimeOffset? LastGeneratedDate,
     bool IsActive,
     string? Notes,
     List<RecurringOrderLineResponseModel> Lines,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

@@ -47,7 +47,7 @@ public class CompletePlanningCycleHandler(IPlanningCycleRepository repo)
                     {
                         PlanningCycleId = newCycle.Id,
                         JobId = entry.JobId,
-                        CommittedAt = DateTime.UtcNow,
+                        CommittedAt = DateTimeOffset.UtcNow,
                         IsRolledOver = true,
                         SortOrder = sortOrder++,
                     }, cancellationToken);

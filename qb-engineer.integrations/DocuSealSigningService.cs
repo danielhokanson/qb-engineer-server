@@ -253,7 +253,7 @@ public class DocuSealSigningService : IDocumentSigningService
     {
         public int Id { get; set; }
         public string Status { get; set; } = string.Empty;
-        public DateTime? CompletedAt { get; set; }
+        public DateTimeOffset? CompletedAt { get; set; }
         public List<DocuSealDocument>? Documents { get; set; }
     }
 

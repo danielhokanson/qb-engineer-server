@@ -8,11 +8,11 @@ public record PurchaseOrderDetailResponseModel(
     int? JobId,
     string? JobNumber,
     string Status,
-    DateTime? SubmittedDate,
-    DateTime? AcknowledgedDate,
-    DateTime? ExpectedDeliveryDate,
-    DateTime? ReceivedDate,
+    DateTimeOffset? SubmittedDate,
+    DateTimeOffset? AcknowledgedDate,
+    DateTimeOffset? ExpectedDeliveryDate,
+    DateTimeOffset? ReceivedDate,
     string? Notes,
     List<PurchaseOrderLineResponseModel> Lines,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

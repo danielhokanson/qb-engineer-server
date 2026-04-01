@@ -11,5 +11,5 @@ public record CustomerReturnListItemModel(
     string? ReworkJobNumber,
     string Status,
     string Reason,
-    DateTime ReturnDate,
-    DateTime CreatedAt);
+    DateTimeOffset ReturnDate,
+    DateTimeOffset CreatedAt);

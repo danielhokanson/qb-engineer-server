@@ -12,6 +12,6 @@ public record QcInspectionResponseModel(
     string? LotNumber,
     string Status,
     string? Notes,
-    DateTime? CompletedAt,
+    DateTimeOffset? CompletedAt,
     List<QcInspectionResultModel> Results,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

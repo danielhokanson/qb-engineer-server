@@ -25,12 +25,12 @@ public class StartTimerHandler(
         if (active is not null)
             throw new InvalidOperationException("A timer is already running. Stop it before starting a new one.");
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var entry = new TimeEntry
         {
             UserId = userId,
             JobId = request.Data.JobId,
-            Date = DateOnly.FromDateTime(now),
+            Date = DateOnly.FromDateTime(now.UtcDateTime),
             DurationMinutes = 0,
             Category = request.Data.Category?.Trim(),
             Notes = request.Data.Notes?.Trim(),

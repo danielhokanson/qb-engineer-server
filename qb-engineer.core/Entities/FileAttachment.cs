@@ -11,7 +11,7 @@ public class FileAttachment : BaseAuditableEntity
     public int EntityId { get; set; }
     public int UploadedById { get; set; }
     public string? DocumentType { get; set; }
-    public DateTime? ExpirationDate { get; set; }
+    public DateTimeOffset? ExpirationDate { get; set; }
     public int? PartRevisionId { get; set; }
     public string? RequiredRole { get; set; }
     public string? Sensitivity { get; set; }

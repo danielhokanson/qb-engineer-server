@@ -16,7 +16,7 @@ public class FedExShippingService(
     ILogger<FedExShippingService> logger) : IShippingCarrierService
 {
     private string? _cachedToken;
-    private DateTime _tokenExpiry = DateTime.MinValue;
+    private DateTimeOffset _tokenExpiry = DateTimeOffset.MinValue;
 
     public string CarrierId => "fedex";
     public string CarrierName => "FedEx";
@@ -184,7 +184,7 @@ public class FedExShippingService(
         var doc = JsonDocument.Parse(body);
         var events = new List<TrackingEvent>();
         string status = "Unknown";
-        DateTime? estimatedDelivery = null;
+        DateTimeOffset? estimatedDelivery = null;
 
         if (doc.RootElement.TryGetProperty("output", out var output) &&
             output.TryGetProperty("completeTrackResults", out var results))
@@ -203,7 +203,7 @@ public class FedExShippingService(
                         edtw.TryGetProperty("window", out var window) &&
                         window.TryGetProperty("ends", out var endDt))
                     {
-                        if (DateTime.TryParse(endDt.GetString(), out var dt))
+                        if (DateTimeOffset.TryParse(endDt.GetString(), out var dt))
                             estimatedDelivery = dt;
                     }
 
@@ -216,7 +216,7 @@ public class FedExShippingService(
                                 ? city.GetString() ?? string.Empty : string.Empty;
                             var evtDesc = scan.TryGetProperty("eventDescription", out var ed) ? ed.GetString() ?? string.Empty : string.Empty;
                             var dateStr = scan.TryGetProperty("date", out var d) ? d.GetString() : null;
-                            DateTime.TryParse(dateStr, out var eventTime);
+                            DateTimeOffset.TryParse(dateStr, out var eventTime);
                             events.Add(new TrackingEvent(eventTime, loc, evtDesc));
                         }
                     }
@@ -232,7 +232,7 @@ public class FedExShippingService(
 
     private async Task<string?> GetAccessTokenAsync(CancellationToken ct)
     {
-        if (_cachedToken is not null && DateTime.UtcNow < _tokenExpiry)
+        if (_cachedToken is not null && DateTimeOffset.UtcNow < _tokenExpiry)
             return _cachedToken;
 
         var opts = options.Value;
@@ -254,7 +254,7 @@ public class FedExShippingService(
         var doc = JsonDocument.Parse(body);
         _cachedToken = doc.RootElement.GetProperty("access_token").GetString();
         var expiresIn = doc.RootElement.TryGetProperty("expires_in", out var exp) ? exp.GetInt32() : 3600;
-        _tokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn - 60);
+        _tokenExpiry = DateTimeOffset.UtcNow.AddSeconds(expiresIn - 60);
         return _cachedToken;
     }
 

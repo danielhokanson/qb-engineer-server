@@ -8,8 +8,8 @@ public record UserTrainingModuleDetail(
     double? QuizScore,
     int QuizAttempts,
     int TimeSpentSeconds,
-    DateTime? StartedAt,
-    DateTime? CompletedAt
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? CompletedAt
 );
 
 public record UserTrainingDetailResponseModel(

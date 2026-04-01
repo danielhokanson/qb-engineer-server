@@ -13,7 +13,7 @@ public class DeletePriceListHandler(IPriceListRepository repo)
         var priceList = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Price list {request.Id} not found");
 
-        priceList.DeletedAt = DateTime.UtcNow;
+        priceList.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

@@ -7,9 +7,9 @@ public class IdentityDocument : BaseAuditableEntity
     public int UserId { get; set; }
     public IdentityDocumentType DocumentType { get; set; }
     public int FileAttachmentId { get; set; }
-    public DateTime? VerifiedAt { get; set; }
+    public DateTimeOffset? VerifiedAt { get; set; }
     public int? VerifiedById { get; set; }
-    public DateTime? ExpiresAt { get; set; }
+    public DateTimeOffset? ExpiresAt { get; set; }
     public string? Notes { get; set; }
 
     public FileAttachment FileAttachment { get; set; } = null!;

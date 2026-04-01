@@ -5,7 +5,7 @@ using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Api.Features.PurchaseOrders;
 
-public record UpdatePurchaseOrderCommand(int Id, string? Notes, DateTime? ExpectedDeliveryDate) : IRequest;
+public record UpdatePurchaseOrderCommand(int Id, string? Notes, DateTimeOffset? ExpectedDeliveryDate) : IRequest;
 
 public class UpdatePurchaseOrderValidator : AbstractValidator<UpdatePurchaseOrderCommand>
 {

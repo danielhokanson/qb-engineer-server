@@ -13,7 +13,7 @@ public class DeleteRecurringOrderHandler(IRecurringOrderRepository repo)
         var ro = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Recurring order {request.Id} not found");
 
-        ro.DeletedAt = DateTime.UtcNow;
+        ro.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

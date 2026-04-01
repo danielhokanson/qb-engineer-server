@@ -12,7 +12,7 @@ public class DeleteSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Delete
         var rate = await db.SalesTaxRates.FindAsync([request.Id], cancellationToken)
             ?? throw new KeyNotFoundException($"Sales tax rate {request.Id} not found.");
 
-        rate.DeletedAt = DateTime.UtcNow;
+        rate.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }
 }

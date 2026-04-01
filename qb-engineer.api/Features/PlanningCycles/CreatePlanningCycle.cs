@@ -9,8 +9,8 @@ namespace QBEngineer.Api.Features.PlanningCycles;
 
 public record CreatePlanningCycleCommand(
     string Name,
-    DateTime StartDate,
-    DateTime EndDate,
+    DateTimeOffset StartDate,
+    DateTimeOffset EndDate,
     string? Goals,
     int? DurationDays) : IRequest<PlanningCycleListItemModel>;
 

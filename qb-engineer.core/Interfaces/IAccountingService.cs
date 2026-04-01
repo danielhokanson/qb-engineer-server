@@ -32,7 +32,7 @@ public interface IAccountingService
     Task UpdateInventoryQuantityAsync(string externalItemId, decimal quantityOnHand, CancellationToken ct);
 
     // Payroll visibility
-    Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct);
+    Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTimeOffset? fromDate, DateTimeOffset? toDate, CancellationToken ct);
     Task<byte[]?> GetPayStubPdfAsync(string payStubExternalId, CancellationToken ct);
     Task<List<AccountingTaxDocument>> GetTaxDocumentsAsync(string employeeExternalId, int? taxYear, CancellationToken ct);
     Task<byte[]?> GetTaxDocumentPdfAsync(string taxDocumentExternalId, CancellationToken ct);

@@ -16,14 +16,14 @@ public class GetShopFloorOverviewHandler(AppDbContext db)
     public async Task<ShopFloorOverviewResponseModel> Handle(
         GetShopFloorOverviewQuery request, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var today = now.Date;
 
         // Active jobs (not archived, not completed)
         var activeJobs = await db.Jobs
             .Include(j => j.CurrentStage)
             .Where(j => !j.IsArchived && j.CompletedDate == null)
-            .OrderBy(j => j.DueDate ?? DateTime.MaxValue)
+            .OrderBy(j => j.DueDate ?? DateTimeOffset.MaxValue)
             .ThenBy(j => j.Priority)
             .Select(j => new
             {

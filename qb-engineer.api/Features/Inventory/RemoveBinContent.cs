@@ -22,7 +22,7 @@ public sealed class RemoveBinContentHandler(
         var userId = int.Parse(
             httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        content.RemovedAt = DateTime.UtcNow;
+        content.RemovedAt = DateTimeOffset.UtcNow;
         content.RemovedBy = userId;
 
         var movement = new BinMovement
@@ -34,7 +34,7 @@ public sealed class RemoveBinContentHandler(
             FromLocationId = content.LocationId,
             ToLocationId = null,
             MovedBy = userId,
-            MovedAt = DateTime.UtcNow,
+            MovedAt = DateTimeOffset.UtcNow,
             Reason = BinMovementReason.Adjustment
         };
 

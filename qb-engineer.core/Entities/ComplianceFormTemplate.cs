@@ -15,7 +15,7 @@ public class ComplianceFormTemplate : BaseAuditableEntity
     public int SortOrder { get; set; }
     public bool RequiresIdentityDocs { get; set; }
     public int? DocuSealTemplateId { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
+    public DateTimeOffset? LastSyncedAt { get; set; }
     public int? ManualOverrideFileId { get; set; }
     public bool BlocksJobAssignment { get; set; }
     public string ProfileCompletionKey { get; set; } = string.Empty;

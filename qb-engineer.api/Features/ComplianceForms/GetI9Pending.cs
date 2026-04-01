@@ -15,8 +15,8 @@ public record I9PendingItemResponseModel(
     int UserId,
     string UserName,
     string UserEmail,
-    DateTime? Section1SignedAt,
-    DateTime? Section2OverdueAt,
+    DateTimeOffset? Section1SignedAt,
+    DateTimeOffset? Section2OverdueAt,
     bool IsOverdue,
     string? DocuSealSubmitUrl);
 
@@ -28,7 +28,7 @@ public class GetI9PendingHandler(AppDbContext db)
     public async Task<List<I9PendingItemResponseModel>> Handle(
         GetI9PendingQuery request, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         var items = await db.ComplianceFormSubmissions
             .AsNoTracking()

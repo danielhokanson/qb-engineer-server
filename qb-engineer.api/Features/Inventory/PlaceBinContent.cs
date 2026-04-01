@@ -45,7 +45,7 @@ public class PlaceBinContentHandler(IInventoryRepository repo, IHttpContextAcces
             JobId = data.JobId,
             Status = data.Status,
             PlacedBy = userId,
-            PlacedAt = DateTime.UtcNow,
+            PlacedAt = DateTimeOffset.UtcNow,
             Notes = data.Notes,
         };
 
@@ -59,7 +59,7 @@ public class PlaceBinContentHandler(IInventoryRepository repo, IHttpContextAcces
             LotNumber = data.LotNumber,
             ToLocationId = data.LocationId,
             MovedBy = userId,
-            MovedAt = DateTime.UtcNow,
+            MovedAt = DateTimeOffset.UtcNow,
             Reason = BinMovementReason.Receive,
         };
 

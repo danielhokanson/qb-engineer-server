@@ -18,7 +18,7 @@ public class ShipShipmentHandler(IShipmentRepository repo)
             throw new InvalidOperationException("Only Pending or Packed shipments can be shipped");
 
         shipment.Status = ShipmentStatus.Shipped;
-        shipment.ShippedDate = DateTime.UtcNow;
+        shipment.ShippedDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

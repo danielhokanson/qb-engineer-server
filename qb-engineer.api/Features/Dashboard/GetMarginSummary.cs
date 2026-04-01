@@ -17,7 +17,7 @@ public class GetMarginSummaryHandler(AppDbContext db)
     public async Task<MarginSummaryResponseModel> Handle(GetMarginSummaryQuery request, CancellationToken ct)
     {
         var laborRate = await GetLaborRateAsync(ct);
-        var cutoff = DateTime.UtcNow.AddDays(-30);
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-30);
 
         var jobs = await db.Jobs
             .Include(j => j.SalesOrderLine)

@@ -15,7 +15,7 @@ public class ReleaseReservationHandler(IInventoryRepository repo) : IRequestHand
 
         var binContent = reservation.BinContent;
 
-        reservation.DeletedAt = DateTime.UtcNow;
+        reservation.DeletedAt = DateTimeOffset.UtcNow;
 
         binContent.ReservedQuantity = Math.Max(0, binContent.ReservedQuantity - reservation.Quantity);
 

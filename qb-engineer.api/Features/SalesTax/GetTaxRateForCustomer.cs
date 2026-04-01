@@ -14,7 +14,7 @@ public class GetTaxRateForCustomerHandler(AppDbContext db)
     public async Task<SalesTaxRateResponseModel?> Handle(
         GetTaxRateForCustomerQuery request, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         // Find the customer's default billing/shipping state (destination-based taxation).
         // Priority: default billing → default any → first address.

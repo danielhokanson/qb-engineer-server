@@ -11,8 +11,8 @@ public record SalesOrderDetailResponseModel(
     int? BillingAddressId,
     string Status,
     string? CreditTerms,
-    DateTime? ConfirmedDate,
-    DateTime? RequestedDeliveryDate,
+    DateTimeOffset? ConfirmedDate,
+    DateTimeOffset? RequestedDeliveryDate,
     string? CustomerPO,
     string? Notes,
     decimal TaxRate,
@@ -20,5 +20,5 @@ public record SalesOrderDetailResponseModel(
     decimal TaxAmount,
     decimal Total,
     List<SalesOrderLineResponseModel> Lines,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

@@ -6,7 +6,7 @@ public class ChatMessage : BaseAuditableEntity
     public int RecipientId { get; set; }
     public string Content { get; set; } = string.Empty;
     public bool IsRead { get; set; }
-    public DateTime? ReadAt { get; set; }
+    public DateTimeOffset? ReadAt { get; set; }
 
     // Group chat support
     public int? ChatRoomId { get; set; }

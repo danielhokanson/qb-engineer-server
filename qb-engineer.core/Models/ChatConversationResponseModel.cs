@@ -6,5 +6,5 @@ public record ChatConversationResponseModel(
     string UserInitials,
     string UserColor,
     string? LastMessage,
-    DateTime? LastMessageAt,
+    DateTimeOffset? LastMessageAt,
     int UnreadCount);

@@ -23,7 +23,7 @@ public class RecordProgressHeartbeatHandler(AppDbContext db) : IRequestHandler<R
                 UserId = request.UserId,
                 ModuleId = request.ModuleId,
                 Status = TrainingProgressStatus.InProgress,
-                StartedAt = DateTime.UtcNow,
+                StartedAt = DateTimeOffset.UtcNow,
                 TimeSpentSeconds = Math.Max(0, request.Seconds),
             });
         }

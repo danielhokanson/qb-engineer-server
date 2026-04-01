@@ -6,8 +6,8 @@ public class RecurringOrder : BaseAuditableEntity
     public int CustomerId { get; set; }
     public int? ShippingAddressId { get; set; }
     public int IntervalDays { get; set; }
-    public DateTime NextGenerationDate { get; set; }
-    public DateTime? LastGeneratedDate { get; set; }
+    public DateTimeOffset NextGenerationDate { get; set; }
+    public DateTimeOffset? LastGeneratedDate { get; set; }
     public bool IsActive { get; set; } = true;
     public string? Notes { get; set; }
 

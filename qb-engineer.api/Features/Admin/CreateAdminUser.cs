@@ -30,9 +30,9 @@ public record CreateAdminUserResponseModel(
     string? AvatarColor,
     bool IsActive,
     string[] Roles,
-    DateTime CreatedAt,
+    DateTimeOffset CreatedAt,
     string SetupToken,
-    DateTime SetupTokenExpiresAt);
+    DateTimeOffset SetupTokenExpiresAt);
 
 public class CreateAdminUserValidator : AbstractValidator<CreateAdminUserCommand>
 {
@@ -87,8 +87,8 @@ public class CreateAdminUserHandler(
         var token = $"{new string(code, 0, 4)}-{new string(code, 4, 4)}";
 
         user.SetupToken = token;
-        user.SetupTokenExpiresAt = DateTime.UtcNow.AddDays(7);
-        user.UpdatedAt = DateTime.UtcNow;
+        user.SetupTokenExpiresAt = DateTimeOffset.UtcNow.AddDays(7);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
 
         await userManager.UpdateAsync(user);
 

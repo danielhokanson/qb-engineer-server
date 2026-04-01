@@ -22,5 +22,5 @@ public record AssetResponseModel(
     string? SourceJobNumber,
     int? SourcePartId,
     string? SourcePartNumber,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

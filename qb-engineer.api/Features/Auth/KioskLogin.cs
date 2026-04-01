@@ -43,7 +43,7 @@ public class KioskLoginHandler(
 
         return new LoginResponse(
             token,
-            DateTime.UtcNow.AddHours(8),
+            DateTimeOffset.UtcNow.AddHours(8),
             new AuthUserResponseModel(
                 user.Id, user.Email!, user.FirstName, user.LastName,
                 user.Initials, user.AvatarColor, roles.ToArray(), false));
@@ -64,7 +64,7 @@ public class KioskLoginHandler(
             issuer: config["Jwt:Issuer"],
             audience: config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(8),
+            expires: DateTimeOffset.UtcNow.AddHours(8).UtcDateTime,
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
 
         return new JwtSecurityTokenHandler().WriteToken(token);

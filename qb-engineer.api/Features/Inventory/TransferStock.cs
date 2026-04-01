@@ -47,7 +47,7 @@ public class TransferStockHandler(
         source.Quantity -= data.Quantity;
         if (source.Quantity == 0)
         {
-            source.RemovedAt = DateTime.UtcNow;
+            source.RemovedAt = DateTimeOffset.UtcNow;
             source.RemovedBy = userId;
         }
 
@@ -62,7 +62,7 @@ public class TransferStockHandler(
             JobId = source.JobId,
             Status = source.Status,
             PlacedBy = userId,
-            PlacedAt = DateTime.UtcNow,
+            PlacedAt = DateTimeOffset.UtcNow,
             Notes = data.Notes,
         };
 
@@ -78,7 +78,7 @@ public class TransferStockHandler(
             FromLocationId = source.LocationId,
             ToLocationId = data.DestinationLocationId,
             MovedBy = userId,
-            MovedAt = DateTime.UtcNow,
+            MovedAt = DateTimeOffset.UtcNow,
             Reason = BinMovementReason.Transfer,
         };
 

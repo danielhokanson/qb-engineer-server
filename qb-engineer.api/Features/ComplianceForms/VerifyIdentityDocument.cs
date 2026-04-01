@@ -16,7 +16,7 @@ public class VerifyIdentityDocumentHandler(AppDbContext db)
             .FirstOrDefaultAsync(d => d.Id == request.DocumentId, ct)
             ?? throw new KeyNotFoundException($"Identity document {request.DocumentId} not found.");
 
-        document.VerifiedAt = DateTime.UtcNow;
+        document.VerifiedAt = DateTimeOffset.UtcNow;
         document.VerifiedById = request.VerifiedById;
 
         await db.SaveChangesAsync(ct);

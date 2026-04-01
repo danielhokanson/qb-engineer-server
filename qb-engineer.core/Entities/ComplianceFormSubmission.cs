@@ -8,7 +8,7 @@ public class ComplianceFormSubmission : BaseAuditableEntity
     public int UserId { get; set; }
     public int? DocuSealSubmissionId { get; set; }
     public ComplianceSubmissionStatus Status { get; set; } = ComplianceSubmissionStatus.Pending;
-    public DateTime? SignedAt { get; set; }
+    public DateTimeOffset? SignedAt { get; set; }
     public int? SignedPdfFileId { get; set; }
     public string? DocuSealSubmitUrl { get; set; }
     public string? FormDataJson { get; set; }
@@ -30,10 +30,10 @@ public class ComplianceFormSubmission : BaseAuditableEntity
     // ── I-9 specific fields ───────────────────────────────────────────────
 
     /// <summary>When employee completed DocuSeal signing of Section 1.</summary>
-    public DateTime? I9Section1SignedAt { get; set; }
+    public DateTimeOffset? I9Section1SignedAt { get; set; }
 
     /// <summary>When employer completed DocuSeal signing of Section 2.</summary>
-    public DateTime? I9Section2SignedAt { get; set; }
+    public DateTimeOffset? I9Section2SignedAt { get; set; }
 
     /// <summary>Employer (manager/admin) who reviewed and signed Section 2.</summary>
     public int? I9EmployerUserId { get; set; }
@@ -52,13 +52,13 @@ public class ComplianceFormSubmission : BaseAuditableEntity
     /// Deadline by which Section 2 must be completed (first day of work + 3 business days).
     /// Set when Section 1 is signed.
     /// </summary>
-    public DateTime? I9Section2OverdueAt { get; set; }
+    public DateTimeOffset? I9Section2OverdueAt { get; set; }
 
     /// <summary>
     /// When the employee's work authorisation document(s) expire.
     /// Null for documents with no expiration (US citizen, LPR, etc.).
     /// </summary>
-    public DateTime? I9ReverificationDueAt { get; set; }
+    public DateTimeOffset? I9ReverificationDueAt { get; set; }
 
     public ComplianceFormTemplate Template { get; set; } = null!;
     public FormDefinitionVersion? FormDefinitionVersion { get; set; }

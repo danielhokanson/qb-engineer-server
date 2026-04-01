@@ -10,8 +10,8 @@ public record TimeEntryResponseModel(
     int DurationMinutes,
     string? Category,
     string? Notes,
-    DateTime? TimerStart,
-    DateTime? TimerStop,
+    DateTimeOffset? TimerStart,
+    DateTimeOffset? TimerStop,
     bool IsManual,
     bool IsLocked,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

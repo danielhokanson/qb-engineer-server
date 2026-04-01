@@ -16,5 +16,5 @@ public record ExpenseResponseModel(
     int? ApprovedBy,
     string? ApprovedByName,
     string? ApprovalNotes,
-    DateTime ExpenseDate,
-    DateTime CreatedAt);
+    DateTimeOffset ExpenseDate,
+    DateTimeOffset CreatedAt);

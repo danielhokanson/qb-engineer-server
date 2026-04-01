@@ -13,7 +13,7 @@ public class CompleteEntryHandler(IPlanningCycleRepository repo)
         var entry = await repo.FindEntryAsync(request.CycleId, request.JobId, cancellationToken)
             ?? throw new KeyNotFoundException($"Entry not found for cycle {request.CycleId} and job {request.JobId}");
 
-        entry.CompletedAt = DateTime.UtcNow;
+        entry.CompletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

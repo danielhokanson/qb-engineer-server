@@ -13,7 +13,7 @@ public record CreatePartRevisionCommand(
     string Revision,
     string? ChangeDescription,
     string? ChangeReason,
-    DateTime EffectiveDate) : IRequest<PartRevisionResponseModel>;
+    DateTimeOffset EffectiveDate) : IRequest<PartRevisionResponseModel>;
 
 public class CreatePartRevisionCommandValidator : AbstractValidator<CreatePartRevisionCommand>
 {

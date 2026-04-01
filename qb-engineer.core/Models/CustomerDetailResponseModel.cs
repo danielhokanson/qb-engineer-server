@@ -10,7 +10,7 @@ public record CustomerDetailResponseModel(
     string? ExternalId,
     string? ExternalRef,
     string? Provider,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
     List<ContactResponseModel> Contacts,
     List<CustomerJobSummaryModel> Jobs);

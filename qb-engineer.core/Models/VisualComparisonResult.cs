@@ -33,7 +33,7 @@ public record VisualComparisonResult(
     /// <summary>
     /// When the comparison was performed.
     /// </summary>
-    DateTime ComparedAt,
+    DateTimeOffset ComparedAt,
 
     /// <summary>
     /// Number of pages in the source PDF that were compared.

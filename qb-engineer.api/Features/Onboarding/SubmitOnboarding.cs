@@ -86,7 +86,7 @@ public class SubmitOnboardingHandler(
                       ]
                     : [new SequentialSubmitter(1, request.UserEmail, request.UserName, "Employee")];
 
-                var templateName = $"[MOCK] {template.Name} — {request.UserName} — {DateTime.UtcNow:yyyyMMdd}";
+                var templateName = $"[MOCK] {template.Name} — {request.UserName} — {DateTimeOffset.UtcNow:yyyyMMdd}";
                 var multiSub = await signingService.CreateSubmissionFromPdfAsync(
                     templateName, [], submitters, ct);
 
@@ -181,7 +181,7 @@ public class SubmitOnboardingHandler(
 
         // Direct deposit completion
         if (!string.IsNullOrWhiteSpace(m.BankName) && !string.IsNullOrWhiteSpace(m.RoutingNumber))
-            profile.DirectDepositCompletedAt ??= DateTime.UtcNow;
+            profile.DirectDepositCompletedAt ??= DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(ct);
 
@@ -202,7 +202,7 @@ public class SubmitOnboardingHandler(
         if (string.IsNullOrWhiteSpace(m.I9DocumentChoice))
             return;
 
-        var docs = new List<(IdentityDocumentType DocType, int? AttachmentId, DateTime? ExpiresAt)>();
+        var docs = new List<(IdentityDocumentType DocType, int? AttachmentId, DateTimeOffset? ExpiresAt)>();
 
         if (m.I9DocumentChoice == "A" && m.I9ListAFileAttachmentId.HasValue)
         {
@@ -225,7 +225,7 @@ public class SubmitOnboardingHandler(
                 UserId = userId,
                 DocumentType = docType,
                 FileAttachmentId = attachmentId.Value,
-                ExpiresAt = expiresAt.HasValue ? DateTime.SpecifyKind(expiresAt.Value, DateTimeKind.Utc) : null,
+                ExpiresAt = expiresAt.HasValue ? expiresAt.Value : null,
             };
             db.IdentityDocuments.Add(identityDoc);
             await db.SaveChangesAsync(ct);
@@ -246,7 +246,7 @@ public class SubmitOnboardingHandler(
         var profile = await db.EmployeeProfiles.FirstOrDefaultAsync(p => p.UserId == userId, ct)
             ?? new Core.Entities.EmployeeProfile { UserId = userId };
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         if (workersComp)
             profile.WorkersCompAcknowledgedAt = now;
         if (handbook)

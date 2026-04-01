@@ -28,7 +28,7 @@ public class ReportRepository(AppDbContext db) : IReportRepository
 
     public async Task<List<OverdueJobReportItem>> GetOverdueJobsAsync(CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = DateTimeOffset.UtcNow.Date;
 
         var overdueJobs = await db.Jobs
             .Where(j => !j.IsArchived && j.DueDate.HasValue && j.DueDate.Value < today)
@@ -105,7 +105,7 @@ public class ReportRepository(AppDbContext db) : IReportRepository
 
     public async Task<List<JobCompletionTrendItem>> GetJobCompletionTrendAsync(int months, CancellationToken ct)
     {
-        var cutoff = DateTime.UtcNow.AddMonths(-months);
+        var cutoff = DateTimeOffset.UtcNow.AddMonths(-months);
 
         var createdDates = await db.Jobs
             .Where(j => j.CreatedAt >= cutoff)
@@ -130,7 +130,7 @@ public class ReportRepository(AppDbContext db) : IReportRepository
         var result = new List<JobCompletionTrendItem>();
         for (var i = months - 1; i >= 0; i--)
         {
-            var d = DateTime.UtcNow.AddMonths(-i);
+            var d = DateTimeOffset.UtcNow.AddMonths(-i);
             var monthLabel = d.ToString("MMM yyyy");
             var createdCount = created.FirstOrDefault(c => c.Year == d.Year && c.Month == d.Month)?.Count ?? 0;
             var completedCount = completed.FirstOrDefault(c => c.Year == d.Year && c.Month == d.Month)?.Count ?? 0;
@@ -202,7 +202,7 @@ public class ReportRepository(AppDbContext db) : IReportRepository
 
     public async Task<List<TeamWorkloadReportItem>> GetTeamWorkloadAsync(CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = DateTimeOffset.UtcNow.Date;
         var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
         if (today.DayOfWeek == DayOfWeek.Sunday) startOfWeek = startOfWeek.AddDays(-7);
         var weekStart = DateOnly.FromDateTime(startOfWeek);
@@ -318,7 +318,7 @@ public class ReportRepository(AppDbContext db) : IReportRepository
 
     public async Task<List<ArAgingReportItem>> GetArAgingAsync(CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = DateTimeOffset.UtcNow.Date;
 
         var invoices = await db.Invoices
             .Include(i => i.Customer)
@@ -651,7 +651,7 @@ public class ReportRepository(AppDbContext db) : IReportRepository
     {
         var startUtc = start.UtcDateTime;
         var endUtc = end.UtcDateTime;
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         var assets = await db.Assets
             .Select(a => new { a.Id, a.Name })

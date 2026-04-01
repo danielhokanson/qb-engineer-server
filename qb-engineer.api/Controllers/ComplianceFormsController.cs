@@ -247,9 +247,9 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
         var status = data.TryGetProperty("status", out var statusProp)
             ? statusProp.GetString() ?? "completed"
             : "completed";
-        DateTime? completedAt = data.TryGetProperty("completed_at", out var completedProp)
+        DateTimeOffset? completedAt = data.TryGetProperty("completed_at", out var completedProp)
             ? completedProp.GetDateTime()
-            : DateTime.UtcNow;
+            : DateTimeOffset.UtcNow;
 
         await mediator.Send(new HandleDocuSealWebhookCommand(submissionId, status, completedAt, isSubmitterEvent), ct);
         return Ok();

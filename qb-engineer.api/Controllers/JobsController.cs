@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -285,4 +286,31 @@ public class JobsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetInternalProjectTypesQuery());
         return Ok(result);
     }
+
+    // Notes
+    [HttpGet("{id:int}/notes")]
+    public async Task<ActionResult<List<JobNoteResponseModel>>> GetNotes(int id, CancellationToken ct)
+        => Ok(await mediator.Send(new GetJobNotesQuery(id), ct));
+
+    [HttpPost("{id:int}/notes")]
+    public async Task<ActionResult<JobNoteResponseModel>> CreateNote(int id, [FromBody] CreateNoteRequest req, CancellationToken ct)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var note = await mediator.Send(new CreateJobNoteCommand(id, req.Text, userId, req.MentionedUserIds ?? []), ct);
+        return Created($"/api/v1/jobs/{id}/notes/{note.Id}", note);
+    }
+
+    [HttpDelete("{id:int}/notes/{noteId:int}")]
+    public async Task<ActionResult> DeleteNote(int id, int noteId, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteJobNoteCommand(noteId), ct);
+        return NoContent();
+    }
+
+    // History
+    [HttpGet("{id:int}/history")]
+    public async Task<ActionResult<List<ActivityResponseModel>>> GetHistory(int id, CancellationToken ct)
+        => Ok(await mediator.Send(new GetJobHistoryQuery(id), ct));
 }
+
+public record CreateNoteRequest(string Text, int[]? MentionedUserIds = null);

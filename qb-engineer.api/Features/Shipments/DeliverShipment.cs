@@ -18,7 +18,7 @@ public class DeliverShipmentHandler(IShipmentRepository repo)
             throw new InvalidOperationException("Only Shipped or InTransit shipments can be marked delivered");
 
         shipment.Status = ShipmentStatus.Delivered;
-        shipment.DeliveredDate = DateTime.UtcNow;
+        shipment.DeliveredDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

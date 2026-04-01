@@ -7,4 +7,4 @@ public record CreateLeadRequestModel(
     string? Phone,
     string? Source,
     string? Notes,
-    DateTime? FollowUpDate);
+    DateTimeOffset? FollowUpDate);

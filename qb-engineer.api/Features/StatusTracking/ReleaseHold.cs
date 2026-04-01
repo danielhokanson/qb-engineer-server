@@ -24,7 +24,7 @@ public class ReleaseHoldHandler(IStatusEntryRepository repository)
             throw new InvalidOperationException("This status entry is not an active hold.");
         }
 
-        entry.EndedAt = DateTime.UtcNow;
+        entry.EndedAt = DateTimeOffset.UtcNow;
 
         if (request.Data?.Notes is not null)
         {

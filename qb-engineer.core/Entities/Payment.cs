@@ -11,7 +11,7 @@ public class Payment : BaseAuditableEntity
     public int CustomerId { get; set; }
     public PaymentMethod Method { get; set; }
     public decimal Amount { get; set; }
-    public DateTime PaymentDate { get; set; }
+    public DateTimeOffset PaymentDate { get; set; }
     public string? ReferenceNumber { get; set; }
     public string? Notes { get; set; }
 
@@ -19,7 +19,7 @@ public class Payment : BaseAuditableEntity
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
+    public DateTimeOffset? LastSyncedAt { get; set; }
 
     public decimal AppliedAmount => Applications.Sum(a => a.Amount);
     public decimal UnappliedAmount => Amount - AppliedAmount;

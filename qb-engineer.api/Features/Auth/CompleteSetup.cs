@@ -35,7 +35,7 @@ public class CompleteSetupHandler(
     {
         var normalizedToken = request.Token.Trim().ToUpperInvariant();
         var users = userManager.Users
-            .Where(u => u.SetupToken == normalizedToken && u.SetupTokenExpiresAt > DateTime.UtcNow);
+            .Where(u => u.SetupToken == normalizedToken && u.SetupTokenExpiresAt > DateTimeOffset.UtcNow);
 
         var user = users.FirstOrDefault()
             ?? throw new InvalidOperationException("Invalid or expired setup token");
@@ -62,7 +62,7 @@ public class CompleteSetupHandler(
         user.SetupToken = null;
         user.SetupTokenExpiresAt = null;
         user.EmailConfirmed = true;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
 
         await userManager.UpdateAsync(user);
 
@@ -72,7 +72,7 @@ public class CompleteSetupHandler(
 
         return new LoginResponse(
             token,
-            DateTime.UtcNow.AddHours(24),
+            DateTimeOffset.UtcNow.AddHours(24),
             new AuthUserResponseModel(
                 user.Id, user.Email!, user.FirstName, user.LastName,
                 user.Initials, user.AvatarColor, roles.ToArray(), false));
@@ -93,7 +93,7 @@ public class CompleteSetupHandler(
             issuer: config["Jwt:Issuer"],
             audience: config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(24),
+            expires: DateTimeOffset.UtcNow.AddHours(24).UtcDateTime,
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
 
         return new JwtSecurityTokenHandler().WriteToken(token);

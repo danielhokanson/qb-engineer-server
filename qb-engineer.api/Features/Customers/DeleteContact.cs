@@ -15,7 +15,7 @@ public class DeleteContactHandler(AppDbContext db)
             .FirstOrDefaultAsync(c => c.Id == request.ContactId && c.CustomerId == request.CustomerId, cancellationToken)
             ?? throw new KeyNotFoundException($"Contact {request.ContactId} not found");
 
-        contact.DeletedAt = DateTime.UtcNow;
+        contact.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }
 }

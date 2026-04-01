@@ -9,4 +9,4 @@ public record PriceListListItemModel(
     bool IsDefault,
     bool IsActive,
     int EntryCount,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

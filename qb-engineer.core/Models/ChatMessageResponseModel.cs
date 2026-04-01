@@ -9,4 +9,4 @@ public record ChatMessageResponseModel(
     int RecipientId,
     string Content,
     bool IsRead,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

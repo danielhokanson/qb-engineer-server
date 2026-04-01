@@ -26,7 +26,7 @@ public class AddChatRoomMemberHandler(AppDbContext db) : IRequestHandler<AddChat
         {
             ChatRoomId = request.RoomId,
             UserId = request.UserId,
-            JoinedAt = DateTime.UtcNow,
+            JoinedAt = DateTimeOffset.UtcNow,
         });
 
         await db.SaveChangesAsync(ct);

@@ -35,7 +35,7 @@ public class DhlShippingService(
                           $"&length={pkg.LengthIn:F0}" +
                           $"&width={pkg.WidthIn:F0}" +
                           $"&height={pkg.HeightIn:F0}" +
-                          $"&plannedShippingDateAndTime={DateTime.UtcNow:yyyy-MM-ddTHH:mm:sszzz}" +
+                          $"&plannedShippingDateAndTime={DateTimeOffset.UtcNow:yyyy-MM-ddTHH:mm:sszzz}" +
                           $"&isCustomsDeclarable=false&unitOfMeasurement=imperial";
 
         var response = await client.GetAsync($"{opts.BaseUrl}/rates{queryString}", ct);
@@ -70,8 +70,8 @@ public class DhlShippingService(
 
                 var days = product.TryGetProperty("deliveryCapabilities", out var dc) &&
                            dc.TryGetProperty("estimatedDeliveryDateAndTime", out var edd) &&
-                           DateTime.TryParse(edd.GetString(), out var deliveryDt)
-                    ? (int)Math.Ceiling((deliveryDt - DateTime.UtcNow).TotalDays) : 5;
+                           DateTimeOffset.TryParse(edd.GetString(), out var deliveryDt)
+                    ? (int)Math.Ceiling((deliveryDt - DateTimeOffset.UtcNow).TotalDays) : 5;
 
                 if (amount > 0)
                     rates.Add(new ShippingRate($"dhl-{productCode.ToLowerInvariant()}", "DHL Express", productName, amount, Math.Max(1, days)));
@@ -92,7 +92,7 @@ public class DhlShippingService(
 
         var payload = new
         {
-            plannedShippingDateAndTime = $"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:sszzz}",
+            plannedShippingDateAndTime = $"{DateTimeOffset.UtcNow:yyyy-MM-ddTHH:mm:sszzz}",
             pickup = new { isRequested = false },
             productCode,
             accounts = new[] { new { typeCode = "shipper", number = opts.AccountNumber } },
@@ -168,7 +168,7 @@ public class DhlShippingService(
         var doc = JsonDocument.Parse(body);
         var events = new List<TrackingEvent>();
         string status = "Unknown";
-        DateTime? estimatedDelivery = null;
+        DateTimeOffset? estimatedDelivery = null;
 
         if (doc.RootElement.TryGetProperty("shipments", out var shipments))
         {
@@ -180,7 +180,7 @@ public class DhlShippingService(
 
                 if (shipment.TryGetProperty("estimatedTimeOfDelivery", out var etd))
                 {
-                    if (DateTime.TryParse(etd.GetString(), out var parsedDt))
+                    if (DateTimeOffset.TryParse(etd.GetString(), out var parsedDt))
                         estimatedDelivery = parsedDt;
                 }
 
@@ -194,7 +194,7 @@ public class DhlShippingService(
                             ? city.GetString() ?? "" : "";
                         var evtDesc = evt.TryGetProperty("description", out var ed) ? ed.GetString() ?? "" : "";
                         var dateStr = evt.TryGetProperty("timestamp", out var ts) ? ts.GetString() : null;
-                        DateTime.TryParse(dateStr, out var eventTime);
+                        DateTimeOffset.TryParse(dateStr, out var eventTime);
                         events.Add(new TrackingEvent(eventTime, loc, evtDesc));
                     }
                 }
@@ -212,7 +212,7 @@ public class DhlShippingService(
         var testUrl = $"{opts.BaseUrl}/rates?originCountryCode=US&originPostalCode=10001" +
                       $"&destinationCountryCode=US&destinationPostalCode=90210" +
                       $"&weight=1&length=12&width=12&height=6" +
-                      $"&plannedShippingDateAndTime={DateTime.UtcNow:yyyy-MM-ddTHH:mm:sszzz}" +
+                      $"&plannedShippingDateAndTime={DateTimeOffset.UtcNow:yyyy-MM-ddTHH:mm:sszzz}" +
                       $"&isCustomsDeclarable=false&unitOfMeasurement=imperial";
         try
         {

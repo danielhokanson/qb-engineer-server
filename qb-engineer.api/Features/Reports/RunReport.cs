@@ -326,7 +326,7 @@ public class RunReportHandler(AppDbContext context) : IRequestHandler<RunReportC
         if (propertyType == typeof(string))
             return BuildStringComparison(property, filter);
 
-        if (propertyType == typeof(DateTime) || propertyType == typeof(DateOnly))
+        if (propertyType == typeof(DateTimeOffset) || propertyType == typeof(DateOnly))
             return BuildDateComparison(property, propertyType, filter);
 
         if (propertyType == typeof(decimal) || propertyType == typeof(int) || propertyType == typeof(double) || propertyType == typeof(float) || propertyType == typeof(long))
@@ -385,14 +385,14 @@ public class RunReportHandler(AppDbContext context) : IRequestHandler<RunReportC
         }
         else
         {
-            if (!DateTime.TryParse(filter.Value, out var dateValue)) return null;
-            dateValue = DateTime.SpecifyKind(dateValue, DateTimeKind.Utc);
+            if (!DateTimeOffset.TryParse(filter.Value, out var dateValue)) return null;
+            // DateTimeOffset already carries UTC offset — no SpecifyKind needed
             var value = Expression.Constant(dateValue);
 
             if (filter.Operator == ReportFilterOperator.Between)
             {
-                if (filter.Value2 == null || !DateTime.TryParse(filter.Value2, out var dateValue2)) return null;
-                dateValue2 = DateTime.SpecifyKind(dateValue2, DateTimeKind.Utc);
+                if (filter.Value2 == null || !DateTimeOffset.TryParse(filter.Value2, out var dateValue2)) return null;
+                // DateTimeOffset already carries UTC offset — no SpecifyKind needed
                 var value2 = Expression.Constant(dateValue2);
                 return Expression.AndAlso(
                     Expression.GreaterThanOrEqual(property, value),

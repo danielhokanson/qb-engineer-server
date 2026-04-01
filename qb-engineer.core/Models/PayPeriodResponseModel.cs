@@ -2,6 +2,6 @@ namespace QBEngineer.Core.Models;
 
 public record PayPeriodResponseModel(
     string Type,
-    DateTime PeriodStart,
-    DateTime PeriodEnd,
+    DateTimeOffset PeriodStart,
+    DateTimeOffset PeriodEnd,
     int DaysRemaining);

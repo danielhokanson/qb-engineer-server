@@ -33,7 +33,7 @@ public class GetDowntimeLogsHandler(AppDbContext db) : IRequestHandler<GetDownti
                 d.Notes,
                 d.EndedAt.HasValue
                     ? (decimal)(d.EndedAt.Value - d.StartedAt).TotalHours
-                    : (decimal)(DateTime.UtcNow - d.StartedAt).TotalHours,
+                    : (decimal)(DateTimeOffset.UtcNow - d.StartedAt).TotalHours,
                 d.CreatedAt))
             .ToListAsync(cancellationToken);
     }

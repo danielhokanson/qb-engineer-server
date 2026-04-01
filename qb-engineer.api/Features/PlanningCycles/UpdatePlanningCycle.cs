@@ -8,8 +8,8 @@ namespace QBEngineer.Api.Features.PlanningCycles;
 public record UpdatePlanningCycleCommand(
     int Id,
     string? Name,
-    DateTime? StartDate,
-    DateTime? EndDate,
+    DateTimeOffset? StartDate,
+    DateTimeOffset? EndDate,
     string? Goals) : IRequest;
 
 public class UpdatePlanningCycleValidator : AbstractValidator<UpdatePlanningCycleCommand>

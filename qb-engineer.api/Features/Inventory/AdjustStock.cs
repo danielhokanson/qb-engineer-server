@@ -42,7 +42,7 @@ public class AdjustStockHandler(
 
         if (data.NewQuantity == 0)
         {
-            content.RemovedAt = DateTime.UtcNow;
+            content.RemovedAt = DateTimeOffset.UtcNow;
             content.RemovedBy = userId;
         }
 
@@ -56,7 +56,7 @@ public class AdjustStockHandler(
             FromLocationId = delta < 0 ? content.LocationId : null,
             ToLocationId = delta > 0 ? content.LocationId : null,
             MovedBy = userId,
-            MovedAt = DateTime.UtcNow,
+            MovedAt = DateTimeOffset.UtcNow,
             Reason = BinMovementReason.Adjustment,
         };
 

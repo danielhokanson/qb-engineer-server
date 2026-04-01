@@ -8,4 +8,4 @@ public record ChatMessageEvent(
     string SenderColor,
     int RecipientId,
     string Content,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

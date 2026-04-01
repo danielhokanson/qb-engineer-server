@@ -13,7 +13,7 @@ namespace QBEngineer.Api.Features.ComplianceForms;
 public record HandleDocuSealWebhookCommand(
     int SubmissionId,
     string Status,
-    DateTime? CompletedAt,
+    DateTimeOffset? CompletedAt,
     /// <summary>
     /// true = individual submitter completed (I-9 Section 1 by employee).
     /// false = all submitters completed (form.completed — final signed PDF ready).
@@ -41,7 +41,7 @@ public class HandleDocuSealWebhookHandler(
             && submission.Template.FormType == QBEngineer.Core.Enums.ComplianceFormType.I9
             && submission.I9Section1SignedAt is null)
         {
-            submission.I9Section1SignedAt = request.CompletedAt ?? DateTime.UtcNow;
+            submission.I9Section1SignedAt = request.CompletedAt ?? DateTimeOffset.UtcNow;
             submission.Status = ComplianceSubmissionStatus.Opened;
             // Section 2 overdue deadline was set when submission was created — preserve it
             await db.SaveChangesAsync(ct);
@@ -64,7 +64,7 @@ public class HandleDocuSealWebhookHandler(
         // ── I-9 Section 2: all submitters signed — capture Section 2 timestamp ──────────
         if (submission.Template.FormType == QBEngineer.Core.Enums.ComplianceFormType.I9)
         {
-            submission.I9Section2SignedAt = request.CompletedAt ?? DateTime.UtcNow;
+            submission.I9Section2SignedAt = request.CompletedAt ?? DateTimeOffset.UtcNow;
         }
 
         // Download signed PDF from DocuSeal
@@ -96,7 +96,7 @@ public class HandleDocuSealWebhookHandler(
 
         // Update submission
         submission.Status = ComplianceSubmissionStatus.Completed;
-        submission.SignedAt = request.CompletedAt ?? DateTime.UtcNow;
+        submission.SignedAt = request.CompletedAt ?? DateTimeOffset.UtcNow;
         submission.SignedPdfFileId = fileAttachment.Id;
 
         await db.SaveChangesAsync(ct);

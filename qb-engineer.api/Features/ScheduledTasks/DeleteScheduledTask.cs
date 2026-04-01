@@ -13,7 +13,7 @@ public class DeleteScheduledTaskHandler(AppDbContext db) : IRequestHandler<Delet
         var task = await db.ScheduledTasks.FirstOrDefaultAsync(t => t.Id == request.Id, ct)
             ?? throw new KeyNotFoundException($"Scheduled task {request.Id} not found.");
 
-        task.DeletedAt = DateTime.UtcNow;
+        task.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

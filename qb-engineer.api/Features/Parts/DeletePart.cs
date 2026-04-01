@@ -13,7 +13,7 @@ public sealed class DeletePartHandler(IPartRepository repo)
         var part = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Part {request.Id} not found");
 
-        part.DeletedAt = DateTime.UtcNow;
+        part.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

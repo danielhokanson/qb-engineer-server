@@ -11,7 +11,7 @@ namespace QBEngineer.Api.Features.ComplianceForms;
 public record UploadIdentityDocumentCommand(
     int UserId,
     IdentityDocumentType DocumentType,
-    DateTime? ExpiresAt,
+    DateTimeOffset? ExpiresAt,
     int FileAttachmentId) : IRequest<IdentityDocumentResponseModel>;
 
 public class UploadIdentityDocumentHandler(AppDbContext db)

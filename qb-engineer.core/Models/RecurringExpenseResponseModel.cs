@@ -12,9 +12,9 @@ public record RecurringExpenseResponseModel(
     string Description,
     string? Vendor,
     RecurrenceFrequency Frequency,
-    DateTime NextOccurrenceDate,
-    DateTime? LastGeneratedDate,
-    DateTime? EndDate,
+    DateTimeOffset NextOccurrenceDate,
+    DateTimeOffset? LastGeneratedDate,
+    DateTimeOffset? EndDate,
     bool IsActive,
     bool AutoApprove,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

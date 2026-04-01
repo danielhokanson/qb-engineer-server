@@ -6,4 +6,4 @@ public record CustomerActivityReportItem(
     int ActiveJobs,
     int CompletedJobs,
     int TotalJobs,
-    DateTime? LastJobDate);
+    DateTimeOffset? LastJobDate);

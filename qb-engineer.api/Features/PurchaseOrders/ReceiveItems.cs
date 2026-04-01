@@ -47,7 +47,7 @@ public class ReceiveItemsHandler(IPurchaseOrderRepository repo)
         if (allReceived)
         {
             po.Status = PurchaseOrderStatus.Received;
-            po.ReceivedDate = DateTime.UtcNow;
+            po.ReceivedDate = DateTimeOffset.UtcNow;
         }
         else if (anyReceived)
         {

@@ -11,8 +11,8 @@ public class SalesOrder : BaseAuditableEntity
     public int? BillingAddressId { get; set; }
     public SalesOrderStatus Status { get; set; } = SalesOrderStatus.Draft;
     public CreditTerms? CreditTerms { get; set; }
-    public DateTime? ConfirmedDate { get; set; }
-    public DateTime? RequestedDeliveryDate { get; set; }
+    public DateTimeOffset? ConfirmedDate { get; set; }
+    public DateTimeOffset? RequestedDeliveryDate { get; set; }
     public string? CustomerPO { get; set; }
     public string? Notes { get; set; }
     public decimal TaxRate { get; set; }

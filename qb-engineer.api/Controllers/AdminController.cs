@@ -203,7 +203,7 @@ public class AdminController(IMediator mediator) : ControllerBase
     [HttpGet("audit-log")]
     public async Task<ActionResult<PaginatedResult<AuditLogEntryResponseModel>>> GetAuditLog(
         [FromQuery] int? userId, [FromQuery] string? action, [FromQuery] string? entityType,
-        [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+        [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 25)
     {
         var result = await mediator.Send(new GetAuditLogQuery(userId, action, entityType, from, to, page, pageSize));

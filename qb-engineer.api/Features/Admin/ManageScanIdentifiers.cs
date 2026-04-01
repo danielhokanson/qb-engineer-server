@@ -91,7 +91,7 @@ public class RemoveScanIdentifierHandler(AppDbContext db) : IRequestHandler<Remo
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken)
             ?? throw new KeyNotFoundException("Scan identifier not found");
 
-        identifier.DeletedAt = DateTime.UtcNow;
+        identifier.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }
 }

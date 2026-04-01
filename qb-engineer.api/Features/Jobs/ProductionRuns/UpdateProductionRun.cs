@@ -61,10 +61,10 @@ public class UpdateProductionRunHandler(AppDbContext db) : IRequestHandler<Updat
         run.RunTimeMinutes = request.RunTimeMinutes;
 
         if (newStatus == ProductionRunStatus.InProgress && run.StartedAt is null)
-            run.StartedAt = DateTime.UtcNow;
+            run.StartedAt = DateTimeOffset.UtcNow;
 
         if (newStatus == ProductionRunStatus.Completed && run.CompletedAt is null)
-            run.CompletedAt = DateTime.UtcNow;
+            run.CompletedAt = DateTimeOffset.UtcNow;
 
         run.Status = newStatus;
 

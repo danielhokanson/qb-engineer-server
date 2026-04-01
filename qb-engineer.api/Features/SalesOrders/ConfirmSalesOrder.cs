@@ -18,7 +18,7 @@ public class ConfirmSalesOrderHandler(ISalesOrderRepository repo)
             throw new InvalidOperationException("Only Draft orders can be confirmed");
 
         order.Status = SalesOrderStatus.Confirmed;
-        order.ConfirmedDate = DateTime.UtcNow;
+        order.ConfirmedDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

@@ -4,7 +4,7 @@ namespace QBEngineer.Core.Models;
 
 public record AdminUpdateEmployeeProfileRequestModel(
     // Employment
-    DateTime? StartDate,
+    DateTimeOffset? StartDate,
     string? Department,
     string? JobTitle,
     string? EmployeeNumber,
@@ -13,10 +13,10 @@ public record AdminUpdateEmployeeProfileRequestModel(
     decimal? SalaryAmount,
 
     // Tax/Compliance completion dates
-    DateTime? W4CompletedAt,
-    DateTime? StateWithholdingCompletedAt,
-    DateTime? I9CompletedAt,
-    DateTime? I9ExpirationDate,
-    DateTime? DirectDepositCompletedAt,
-    DateTime? WorkersCompAcknowledgedAt,
-    DateTime? HandbookAcknowledgedAt);
+    DateTimeOffset? W4CompletedAt,
+    DateTimeOffset? StateWithholdingCompletedAt,
+    DateTimeOffset? I9CompletedAt,
+    DateTimeOffset? I9ExpirationDate,
+    DateTimeOffset? DirectDepositCompletedAt,
+    DateTimeOffset? WorkersCompAcknowledgedAt,
+    DateTimeOffset? HandbookAcknowledgedAt);

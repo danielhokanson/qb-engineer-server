@@ -86,7 +86,7 @@ public class GetMyStateFormDefinitionHandler(
             return new StateFormDefinitionResult(stateCode, stateRef.Label, category, null, null);
 
         // 4. Check for current effective version for this state
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var currentVersion = await db.FormDefinitionVersions
             .AsNoTracking()
             .Where(v => v.StateCode == stateCode && v.IsActive

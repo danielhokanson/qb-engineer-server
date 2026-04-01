@@ -9,8 +9,8 @@ public class TrainingProgress : BaseAuditableEntity
     public TrainingProgressStatus Status { get; set; }
     public int? QuizScore { get; set; }
     public int? QuizAttempts { get; set; }
-    public DateTime? StartedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
     public int TimeSpentSeconds { get; set; }
     public string? QuizAnswersJson { get; set; }
     /// <summary>

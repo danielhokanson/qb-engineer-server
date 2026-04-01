@@ -18,7 +18,7 @@ public class DeleteAiAssistantHandler(AppDbContext db) : IRequestHandler<DeleteA
         if (entity.IsBuiltIn)
             throw new InvalidOperationException("Built-in assistants cannot be deleted. Disable them instead.");
 
-        entity.DeletedAt = DateTime.UtcNow;
+        entity.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

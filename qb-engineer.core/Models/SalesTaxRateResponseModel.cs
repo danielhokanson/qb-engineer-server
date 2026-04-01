@@ -6,8 +6,8 @@ public record SalesTaxRateResponseModel(
     string Code,
     string? StateCode,
     decimal Rate,
-    DateTime EffectiveFrom,
-    DateTime? EffectiveTo,
+    DateTimeOffset EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
     bool IsDefault,
     bool IsActive,
     string? Description);

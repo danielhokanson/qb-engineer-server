@@ -13,7 +13,7 @@ public class DeleteCustomerHandler(ICustomerRepository repo)
         var customer = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Customer {request.Id} not found");
 
-        customer.DeletedAt = DateTime.UtcNow;
+        customer.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

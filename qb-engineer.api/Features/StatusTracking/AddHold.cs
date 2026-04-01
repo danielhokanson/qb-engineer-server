@@ -60,7 +60,7 @@ public class AddHoldHandler(
             StatusCode = request.Data.StatusCode,
             StatusLabel = label,
             Category = "hold",
-            StartedAt = DateTime.UtcNow,
+            StartedAt = DateTimeOffset.UtcNow,
             EndedAt = null,
             Notes = request.Data.Notes?.Trim(),
         };

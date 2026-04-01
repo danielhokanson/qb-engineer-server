@@ -12,5 +12,5 @@ public record BinStockResponseModel(
     BinContentStatus Status,
     string? LotNumber,
     int? LotId,
-    DateTime? LotExpirationDate,
+    DateTimeOffset? LotExpirationDate,
     string? SupplierLotNumber);

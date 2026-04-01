@@ -8,5 +8,5 @@ public record TrainingAdminProgressSummaryResponseModel(
     int TotalCompleted,
     int TotalModulesAcrossAllPaths,
     double OverallCompletionPct,
-    DateTime? LastActivityAt
+    DateTimeOffset? LastActivityAt
 );

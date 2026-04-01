@@ -5,5 +5,5 @@ public record ChatRoomResponseModel(
     string Name,
     bool IsGroup,
     int CreatedById,
-    DateTime CreatedAt,
+    DateTimeOffset CreatedAt,
     List<ChatRoomMemberResponseModel> Members);

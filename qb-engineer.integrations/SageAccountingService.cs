@@ -10,7 +10,7 @@ using QBEngineer.Core.Models;
 
 namespace QBEngineer.Integrations;
 
-public record SageTokenData(string AccessToken, string RefreshToken, DateTime AccessTokenExpiresAt);
+public record SageTokenData(string AccessToken, string RefreshToken, DateTimeOffset AccessTokenExpiresAt);
 
 public class SageAccountingService(
     ISystemSettingRepository settings,
@@ -222,7 +222,7 @@ public class SageAccountingService(
     public Task UpdateInventoryQuantityAsync(string externalItemId, decimal quantityOnHand, CancellationToken ct) =>
         Task.CompletedTask;
 
-    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct) =>
+    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTimeOffset? fromDate, DateTimeOffset? toDate, CancellationToken ct) =>
         Task.FromResult(new List<AccountingPayStub>());
 
     public Task<byte[]?> GetPayStubPdfAsync(string payStubExternalId, CancellationToken ct) =>
@@ -249,8 +249,8 @@ public class SageAccountingService(
     public async Task<AccountingSyncStatus> GetSyncStatusAsync(CancellationToken ct)
     {
         var token = await GetTokenAsync(ct);
-        var connected = token is not null && token.AccessTokenExpiresAt > DateTime.UtcNow;
-        return new AccountingSyncStatus(connected, connected ? DateTime.UtcNow : null, 0, 0);
+        var connected = token is not null && token.AccessTokenExpiresAt > DateTimeOffset.UtcNow;
+        return new AccountingSyncStatus(connected, connected ? DateTimeOffset.UtcNow : null, 0, 0);
     }
 
     private async Task<HttpClient?> GetAuthenticatedClientAsync(CancellationToken ct)
@@ -258,7 +258,7 @@ public class SageAccountingService(
         var token = await GetTokenAsync(ct);
         if (token is null) return null;
 
-        if (token.AccessTokenExpiresAt <= DateTime.UtcNow.Add(RefreshBuffer))
+        if (token.AccessTokenExpiresAt <= DateTimeOffset.UtcNow.Add(RefreshBuffer))
         {
             token = await RefreshTokenAsync(token, ct);
             if (token is null) return null;
@@ -305,7 +305,7 @@ public class SageAccountingService(
         var newToken = new SageTokenData(
             AccessToken: doc.RootElement.GetProperty("access_token").GetString()!,
             RefreshToken: doc.RootElement.GetProperty("refresh_token").GetString()!,
-            AccessTokenExpiresAt: DateTime.UtcNow.AddSeconds(doc.RootElement.TryGetProperty("expires_in", out var exp) ? exp.GetInt32() : 3600));
+            AccessTokenExpiresAt: DateTimeOffset.UtcNow.AddSeconds(doc.RootElement.TryGetProperty("expires_in", out var exp) ? exp.GetInt32() : 3600));
 
         var json = JsonSerializer.Serialize(newToken);
         var encrypted = encryption.Encrypt(json);

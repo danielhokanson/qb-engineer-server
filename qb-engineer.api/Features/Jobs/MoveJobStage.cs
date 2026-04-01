@@ -135,7 +135,7 @@ public class MoveJobStageHandler(
             ],
             RefNumber: job.JobNumber,
             Amount: 0m,
-            Date: DateTime.UtcNow);
+            Date: DateTimeOffset.UtcNow);
 
         var payload = JsonSerializer.Serialize(document);
 

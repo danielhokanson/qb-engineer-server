@@ -6,7 +6,7 @@ public record PartRevisionResponseModel(
     string Revision,
     string? ChangeDescription,
     string? ChangeReason,
-    DateTime EffectiveDate,
+    DateTimeOffset EffectiveDate,
     bool IsCurrent,
     int FileCount,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

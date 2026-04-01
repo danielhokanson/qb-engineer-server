@@ -149,7 +149,7 @@ public class InitialSetupHandler(
         // Generate JWT
         var userRoles = await userManager.GetRolesAsync(user);
         var token = GenerateJwtToken(user, userRoles);
-        var expiresAt = DateTime.UtcNow.AddHours(24);
+        var expiresAt = DateTimeOffset.UtcNow.AddHours(24);
 
         var userResponse = new AuthUserResponseModel(
             user.Id, user.Email!, user.FirstName, user.LastName,
@@ -186,7 +186,7 @@ public class InitialSetupHandler(
             issuer: config["Jwt:Issuer"] ?? "qb-engineer",
             audience: config["Jwt:Audience"] ?? "qb-engineer-ui",
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(24),
+            expires: DateTimeOffset.UtcNow.AddHours(24).UtcDateTime,
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

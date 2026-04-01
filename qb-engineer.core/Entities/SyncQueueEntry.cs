@@ -11,6 +11,6 @@ public class SyncQueueEntry : BaseEntity
     public SyncStatus Status { get; set; } = SyncStatus.Pending;
     public int AttemptCount { get; set; }
     public string? ErrorMessage { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? ProcessedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? ProcessedAt { get; set; }
 }

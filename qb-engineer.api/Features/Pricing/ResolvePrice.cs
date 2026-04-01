@@ -15,7 +15,7 @@ public class ResolvePriceHandler(AppDbContext db)
 {
     public async Task<PriceResolutionResponseModel> Handle(ResolvePriceQuery request, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         // 1. Try customer-specific price list
         if (request.CustomerId.HasValue)
@@ -39,7 +39,7 @@ public class ResolvePriceHandler(AppDbContext db)
     }
 
     private async Task<PriceResolutionResponseModel?> ResolvePriceFromListAsync(
-        int partId, int quantity, int customerId, DateTime now, CancellationToken ct)
+        int partId, int quantity, int customerId, DateTimeOffset now, CancellationToken ct)
     {
         var entry = await db.PriceListEntries
             .Include(e => e.PriceList)
@@ -59,7 +59,7 @@ public class ResolvePriceHandler(AppDbContext db)
     }
 
     private async Task<PriceResolutionResponseModel?> ResolvePriceFromDefaultListAsync(
-        int partId, int quantity, DateTime now, CancellationToken ct)
+        int partId, int quantity, DateTimeOffset now, CancellationToken ct)
     {
         var entry = await db.PriceListEntries
             .Include(e => e.PriceList)

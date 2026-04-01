@@ -28,7 +28,7 @@ public class UpdateTimeEntryHandler(ITimeTrackingRepository repo) : IRequestHand
         if (entry.IsLocked)
             throw new InvalidOperationException("This time entry is locked and cannot be edited.");
 
-        if (entry.Date < DateOnly.FromDateTime(DateTime.UtcNow))
+        if (entry.Date < DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime))
             throw new InvalidOperationException("Time entries from previous days cannot be edited.");
 
         var data = request.Data;

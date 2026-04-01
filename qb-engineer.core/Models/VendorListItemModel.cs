@@ -8,4 +8,4 @@ public record VendorListItemModel(
     string? Phone,
     bool IsActive,
     int PoCount,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

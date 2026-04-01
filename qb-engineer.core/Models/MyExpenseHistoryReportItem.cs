@@ -6,5 +6,5 @@ public record MyExpenseHistoryReportItem(
     string Description,
     decimal Amount,
     string Status,
-    DateTime ExpenseDate,
+    DateTimeOffset ExpenseDate,
     string? Vendor);

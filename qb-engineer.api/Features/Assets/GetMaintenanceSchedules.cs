@@ -21,7 +21,7 @@ public class GetMaintenanceSchedulesHandler(AppDbContext db)
         if (request.AssetId.HasValue)
             query = query.Where(s => s.AssetId == request.AssetId.Value);
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         return await query
             .OrderBy(s => s.NextDueAt)

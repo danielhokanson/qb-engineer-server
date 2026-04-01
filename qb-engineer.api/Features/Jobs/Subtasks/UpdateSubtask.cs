@@ -47,7 +47,7 @@ public class UpdateSubtaskHandler(
 
             if (request.IsCompleted.Value)
             {
-                subtask.CompletedAt = DateTime.UtcNow;
+                subtask.CompletedAt = DateTimeOffset.UtcNow;
             }
             else
             {

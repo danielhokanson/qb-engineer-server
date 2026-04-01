@@ -23,13 +23,13 @@ public class RecordModuleStartHandler(AppDbContext db) : IRequestHandler<RecordM
                 UserId = request.UserId,
                 ModuleId = request.ModuleId,
                 Status = TrainingProgressStatus.InProgress,
-                StartedAt = DateTime.UtcNow,
+                StartedAt = DateTimeOffset.UtcNow,
             });
         }
         else if (progress.Status != TrainingProgressStatus.Completed)
         {
             progress.Status = TrainingProgressStatus.InProgress;
-            progress.StartedAt ??= DateTime.UtcNow;
+            progress.StartedAt ??= DateTimeOffset.UtcNow;
         }
 
         await db.SaveChangesAsync(ct);

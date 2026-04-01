@@ -8,6 +8,6 @@ public class ClockEvent : BaseEntity
     public ClockEventType EventType { get; set; }
     public string? Reason { get; set; }
     public string? ScanMethod { get; set; }
-    public DateTime Timestamp { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
     public string? Source { get; set; }
 }

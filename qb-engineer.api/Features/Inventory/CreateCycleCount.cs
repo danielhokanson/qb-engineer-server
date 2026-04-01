@@ -42,7 +42,7 @@ public class CreateCycleCountHandler(
         {
             LocationId = data.LocationId,
             CountedById = userId,
-            CountedAt = DateTime.UtcNow,
+            CountedAt = DateTimeOffset.UtcNow,
             Status = "Pending",
             Notes = data.Notes,
         };

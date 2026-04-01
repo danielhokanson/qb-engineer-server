@@ -8,5 +8,5 @@ public record RdReportItem(
     decimal TotalHours,
     string CurrentStage,
     string? AssigneeName,
-    DateTime? StartDate,
-    DateTime? CompletedDate);
+    DateTimeOffset? StartDate,
+    DateTimeOffset? CompletedDate);

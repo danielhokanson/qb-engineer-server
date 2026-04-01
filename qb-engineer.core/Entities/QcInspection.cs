@@ -9,7 +9,7 @@ public class QcInspection : BaseAuditableEntity
     public string? LotNumber { get; set; }
     public string Status { get; set; } = "InProgress";
     public string? Notes { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
 
     public Job? Job { get; set; }
     public ProductionRun? ProductionRun { get; set; }

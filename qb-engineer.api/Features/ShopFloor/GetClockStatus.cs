@@ -13,7 +13,7 @@ public record ClockWorkerModel(
     string Initials,
     string AvatarColor,
     bool IsClockedIn,
-    DateTime? ClockedInAt,
+    DateTimeOffset? ClockedInAt,
     string Status,
     string? CurrentTask,
     string? CurrentJobNumber,
@@ -26,7 +26,7 @@ public class GetClockStatusHandler(AppDbContext db)
 {
     public async Task<List<ClockWorkerModel>> Handle(GetClockStatusQuery request, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var today = now.Date;
 
         var usersQuery = db.Users.Where(u => u.IsActive);
@@ -65,7 +65,7 @@ public class GetClockStatusHandler(AppDbContext db)
             else status = "Out";
 
             timersByUser.TryGetValue(u.Id, out var timer);
-            var clockInTime = isClockedIn && hasEvent ? evt!.Timestamp : (DateTime?)null;
+            var clockInTime = isClockedIn && hasEvent ? evt!.Timestamp : (DateTimeOffset?)null;
 
             var timeOnTask = "";
             if (isClockedIn && timer?.TimerStart != null)

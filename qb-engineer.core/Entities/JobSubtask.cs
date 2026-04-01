@@ -7,7 +7,7 @@ public class JobSubtask : BaseAuditableEntity
     public bool IsCompleted { get; set; }
     public int? AssigneeId { get; set; }
     public int SortOrder { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
     public int? CompletedById { get; set; }
 
     public Job Job { get; set; } = null!;

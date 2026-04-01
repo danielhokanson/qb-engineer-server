@@ -75,7 +75,7 @@ public class CreateLotRecordHandler(AppDbContext db)
 
     private async Task<string> GenerateLotNumber(CancellationToken cancellationToken)
     {
-        var datePrefix = $"LOT-{DateTime.UtcNow:yyyyMMdd}";
+        var datePrefix = $"LOT-{DateTimeOffset.UtcNow:yyyyMMdd}";
         var todayCount = await db.LotRecords
             .CountAsync(l => l.LotNumber.StartsWith(datePrefix), cancellationToken);
         return $"{datePrefix}-{(todayCount + 1):D3}";

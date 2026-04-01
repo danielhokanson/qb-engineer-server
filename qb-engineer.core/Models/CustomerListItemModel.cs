@@ -9,4 +9,4 @@ public record CustomerListItemModel(
     bool IsActive,
     int ContactCount,
     int JobCount,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

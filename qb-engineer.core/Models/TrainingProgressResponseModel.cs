@@ -7,7 +7,7 @@ public record TrainingProgressResponseModel(
     TrainingProgressStatus Status,
     int? QuizScore,
     int? QuizAttempts,
-    DateTime? StartedAt,
-    DateTime? CompletedAt,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? CompletedAt,
     int TimeSpentSeconds
 );

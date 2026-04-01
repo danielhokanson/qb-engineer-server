@@ -66,7 +66,7 @@ public class MockAccountingService : IAccountingService
     public Task<AccountingPayment?> GetPaymentAsync(string externalId, CancellationToken ct)
     {
         _logger.LogInformation("[MockAccounting] GetPayment({ExternalId}) — returning mock payment", externalId);
-        var payment = new AccountingPayment(externalId, 1000.00m, DateTime.UtcNow.AddDays(-3), "Check");
+        var payment = new AccountingPayment(externalId, 1000.00m, DateTimeOffset.UtcNow.AddDays(-3), "Check");
         return Task.FromResult<AccountingPayment?>(payment);
     }
 
@@ -145,13 +145,13 @@ public class MockAccountingService : IAccountingService
         return Task.CompletedTask;
     }
 
-    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTimeOffset? fromDate, DateTimeOffset? toDate, CancellationToken ct)
     {
         _logger.LogInformation("[MockAccounting] GetPayStubs({ExternalId}, from={From}, to={To})", employeeExternalId, fromDate, toDate);
         var stubs = new List<AccountingPayStub>
         {
             new("MOCK-PAYSTUB-001",
-                DateTime.UtcNow.AddDays(-28), DateTime.UtcNow.AddDays(-15), DateTime.UtcNow.AddDays(-14),
+                DateTimeOffset.UtcNow.AddDays(-28), DateTimeOffset.UtcNow.AddDays(-15), DateTimeOffset.UtcNow.AddDays(-14),
                 3500.00m, 2612.50m,
                 [
                     new("FederalTax", "Federal Income Tax", 420.00m),
@@ -161,7 +161,7 @@ public class MockAccountingService : IAccountingService
                     new("HealthInsurance", "Health Insurance Premium", 24.75m),
                 ]),
             new("MOCK-PAYSTUB-002",
-                DateTime.UtcNow.AddDays(-42), DateTime.UtcNow.AddDays(-29), DateTime.UtcNow.AddDays(-28),
+                DateTimeOffset.UtcNow.AddDays(-42), DateTimeOffset.UtcNow.AddDays(-29), DateTimeOffset.UtcNow.AddDays(-28),
                 3500.00m, 2612.50m,
                 [
                     new("FederalTax", "Federal Income Tax", 420.00m),
@@ -171,7 +171,7 @@ public class MockAccountingService : IAccountingService
                     new("HealthInsurance", "Health Insurance Premium", 24.75m),
                 ]),
             new("MOCK-PAYSTUB-003",
-                DateTime.UtcNow.AddDays(-56), DateTime.UtcNow.AddDays(-43), DateTime.UtcNow.AddDays(-42),
+                DateTimeOffset.UtcNow.AddDays(-56), DateTimeOffset.UtcNow.AddDays(-43), DateTimeOffset.UtcNow.AddDays(-42),
                 3500.00m, 2612.50m,
                 [
                     new("FederalTax", "Federal Income Tax", 420.00m),
@@ -225,7 +225,7 @@ public class MockAccountingService : IAccountingService
     public Task<AccountingSyncStatus> GetSyncStatusAsync(CancellationToken ct)
     {
         _logger.LogInformation("[MockAccounting] GetSyncStatus");
-        var status = new AccountingSyncStatus(true, DateTime.UtcNow, 0, 0);
+        var status = new AccountingSyncStatus(true, DateTimeOffset.UtcNow, 0, 0);
         return Task.FromResult(status);
     }
 }

@@ -9,6 +9,6 @@ public record UpcomingExpenseResponseModel(
     string Classification,
     string? Vendor,
     decimal Amount,
-    DateTime DueDate,
+    DateTimeOffset DueDate,
     RecurrenceFrequency Frequency,
     bool AutoApprove);

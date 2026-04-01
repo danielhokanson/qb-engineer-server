@@ -15,6 +15,6 @@ public record VendorDetailResponseModel(
     string? Notes,
     bool IsActive,
     string? ExternalId,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
     List<PurchaseOrderListItemModel> PurchaseOrders);

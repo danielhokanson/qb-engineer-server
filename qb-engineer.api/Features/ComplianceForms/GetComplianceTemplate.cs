@@ -32,7 +32,7 @@ public class GetComplianceTemplateHandler(
         var builder = builderFactory.TryGetBuilder(t.FormType);
         if (builder is not null)
         {
-            var now = DateTime.UtcNow;
+            var now = DateTimeOffset.UtcNow;
             var currentVersion = t.FormDefinitionVersions?
                 .Where(v => v.IsActive && v.EffectiveDate <= now && (v.ExpirationDate == null || v.ExpirationDate > now))
                 .OrderByDescending(v => v.EffectiveDate)
@@ -64,7 +64,7 @@ public class GetComplianceTemplateHandler(
         ComplianceFormTemplate template,
         IFormDefinitionBuilder builder,
         FormDefinitionVersion? staleVersion,
-        DateTime now,
+        DateTimeOffset now,
         CancellationToken ct)
     {
         try

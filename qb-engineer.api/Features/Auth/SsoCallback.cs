@@ -59,7 +59,7 @@ public class SsoCallbackHandler(
 
         return new LoginResponse(
             token,
-            DateTime.UtcNow.AddHours(24),
+            DateTimeOffset.UtcNow.AddHours(24),
             new AuthUserResponseModel(
                 user.Id, user.Email!, user.FirstName, user.LastName,
                 user.Initials, user.AvatarColor, roles.ToArray(), false));
@@ -92,7 +92,7 @@ public class SsoCallbackHandler(
             issuer: config["Jwt:Issuer"] ?? "qb-engineer",
             audience: config["Jwt:Audience"] ?? "qb-engineer-ui",
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(24),
+            expires: DateTimeOffset.UtcNow.AddHours(24).UtcDateTime,
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

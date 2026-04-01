@@ -9,4 +9,4 @@ public record AuditLogEntryResponseModel(
     int? EntityId,
     string? Details,
     string? IpAddress,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

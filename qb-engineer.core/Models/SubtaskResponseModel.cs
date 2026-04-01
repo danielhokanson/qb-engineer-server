@@ -7,4 +7,4 @@ public record SubtaskResponseModel(
     bool IsCompleted,
     int? AssigneeId,
     int SortOrder,
-    DateTime? CompletedAt);
+    DateTimeOffset? CompletedAt);

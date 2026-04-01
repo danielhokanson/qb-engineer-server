@@ -11,7 +11,7 @@ public class Lead : BaseAuditableEntity
     public string? Source { get; set; }
     public LeadStatus Status { get; set; } = LeadStatus.New;
     public string? Notes { get; set; }
-    public DateTime? FollowUpDate { get; set; }
+    public DateTimeOffset? FollowUpDate { get; set; }
     public string? LostReason { get; set; }
     public int? ConvertedCustomerId { get; set; }
     public string? CustomFieldValues { get; set; }

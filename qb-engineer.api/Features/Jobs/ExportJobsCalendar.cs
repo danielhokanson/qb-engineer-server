@@ -52,7 +52,7 @@ public class ExportJobsCalendarHandler(AppDbContext db) : IRequestHandler<Export
                 desc += $"\\nPriority: {job.Priority}";
             sb.AppendLine($"DESCRIPTION:{EscapeIcs(desc)}");
 
-            sb.AppendLine($"DTSTAMP:{DateTime.UtcNow:yyyyMMddTHHmmssZ}");
+            sb.AppendLine($"DTSTAMP:{DateTimeOffset.UtcNow:yyyyMMddTHHmmssZ}");
             sb.AppendLine("END:VEVENT");
         }
 

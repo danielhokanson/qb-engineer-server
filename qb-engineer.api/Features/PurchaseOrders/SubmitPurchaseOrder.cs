@@ -18,7 +18,7 @@ public class SubmitPurchaseOrderHandler(IPurchaseOrderRepository repo)
             throw new InvalidOperationException("Only Draft purchase orders can be submitted");
 
         po.Status = PurchaseOrderStatus.Submitted;
-        po.SubmittedDate = DateTime.UtcNow;
+        po.SubmittedDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

@@ -9,5 +9,5 @@ public record ClockEventResponseModel(
     ClockEventType EventType,
     string? Reason,
     string? ScanMethod,
-    DateTime Timestamp,
+    DateTimeOffset Timestamp,
     string? Source);

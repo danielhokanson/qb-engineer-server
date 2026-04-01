@@ -12,7 +12,7 @@ public static class ComplianceTemplateMapper
 {
     public static ComplianceFormTemplateResponseModel ToResponse(ComplianceFormTemplate t)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var currentVersion = t.FormDefinitionVersions?
             .Where(v => v.IsActive && v.EffectiveDate <= now && (v.ExpirationDate == null || v.ExpirationDate > now))
             .OrderByDescending(v => v.EffectiveDate)

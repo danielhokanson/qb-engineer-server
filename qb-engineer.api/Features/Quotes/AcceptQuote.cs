@@ -18,7 +18,7 @@ public class AcceptQuoteHandler(IQuoteRepository repo)
             throw new InvalidOperationException("Only Sent quotes can be accepted");
 
         quote.Status = QuoteStatus.Accepted;
-        quote.AcceptedDate = DateTime.UtcNow;
+        quote.AcceptedDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

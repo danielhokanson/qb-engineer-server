@@ -8,8 +8,8 @@ public class TimeEntry : BaseAuditableEntity
     public int DurationMinutes { get; set; }
     public string? Category { get; set; }
     public string? Notes { get; set; }
-    public DateTime? TimerStart { get; set; }
-    public DateTime? TimerStop { get; set; }
+    public DateTimeOffset? TimerStart { get; set; }
+    public DateTimeOffset? TimerStop { get; set; }
     public bool IsManual { get; set; }
     public bool IsLocked { get; set; }
     public string? AccountingTimeActivityId { get; set; }

@@ -29,7 +29,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 (p.ExternalPartNumber != null && p.ExternalPartNumber.ToLower().Contains(term)));
         }
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         var parts = await query
             .Include(p => p.BOMEntries)

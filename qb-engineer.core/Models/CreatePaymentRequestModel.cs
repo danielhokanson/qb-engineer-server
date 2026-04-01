@@ -4,7 +4,7 @@ public record CreatePaymentRequestModel(
     int CustomerId,
     string Method,
     decimal Amount,
-    DateTime PaymentDate,
+    DateTimeOffset PaymentDate,
     string? ReferenceNumber,
     string? Notes,
     List<CreatePaymentApplicationModel>? Applications);

@@ -69,7 +69,7 @@ public class UpdateCycleCountHandler(
 
                         if (line.ActualQuantity == 0)
                         {
-                            content.RemovedAt = DateTime.UtcNow;
+                            content.RemovedAt = DateTimeOffset.UtcNow;
                             content.RemovedBy = userId;
                         }
 
@@ -83,7 +83,7 @@ public class UpdateCycleCountHandler(
                             FromLocationId = line.Variance < 0 ? content.LocationId : null,
                             ToLocationId = line.Variance > 0 ? content.LocationId : null,
                             MovedBy = userId,
-                            MovedAt = DateTime.UtcNow,
+                            MovedAt = DateTimeOffset.UtcNow,
                             Reason = BinMovementReason.CycleCount,
                         };
 

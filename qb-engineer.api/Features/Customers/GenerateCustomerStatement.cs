@@ -35,7 +35,7 @@ public class GenerateCustomerStatementHandler(AppDbContext db)
         var companyName = companySetting?.Value ?? "QB Engineer";
 
         var document = new CustomerStatementPdfDocument(
-            customer, invoices, payments, companyName, DateTime.UtcNow);
+            customer, invoices, payments, companyName, DateTimeOffset.UtcNow);
 
         return document.GeneratePdf();
     }

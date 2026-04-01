@@ -17,7 +17,7 @@ public class DeleteInvoiceHandler(IInvoiceRepository repo)
         if (invoice.Status != InvoiceStatus.Draft)
             throw new InvalidOperationException("Only Draft invoices can be deleted");
 
-        invoice.DeletedAt = DateTime.UtcNow;
+        invoice.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

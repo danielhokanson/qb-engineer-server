@@ -13,7 +13,7 @@ public sealed class DeleteAssetHandler(IAssetRepository repo)
         var asset = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Asset {request.Id} not found");
 
-        asset.DeletedAt = DateTime.UtcNow;
+        asset.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

@@ -23,5 +23,5 @@ public record PartDetailResponseModel(
     string? ToolingAssetName,
     List<BOMEntryResponseModel> BomEntries,
     List<BOMUsageResponseModel> UsedIn,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

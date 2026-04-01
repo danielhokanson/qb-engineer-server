@@ -12,8 +12,8 @@ public class BinContent : BaseEntity
     public int? JobId { get; set; }
     public BinContentStatus Status { get; set; } = BinContentStatus.Stored;
     public int PlacedBy { get; set; }
-    public DateTime PlacedAt { get; set; }
-    public DateTime? RemovedAt { get; set; }
+    public DateTimeOffset PlacedAt { get; set; }
+    public DateTimeOffset? RemovedAt { get; set; }
     public int? RemovedBy { get; set; }
     public string? Notes { get; set; }
 

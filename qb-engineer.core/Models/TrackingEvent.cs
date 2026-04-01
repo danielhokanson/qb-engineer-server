@@ -1,6 +1,6 @@
 namespace QBEngineer.Core.Models;
 
 public record TrackingEvent(
-    DateTime Timestamp,
+    DateTimeOffset Timestamp,
     string Location,
     string Description);

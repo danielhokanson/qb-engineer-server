@@ -67,7 +67,7 @@ public class DownloadSubmissionPdfHandler(AppDbContext db, IStorageService stora
     private static byte[] GeneratePdf(Core.Entities.ComplianceFormSubmission submission)
     {
         var formName = submission.Template?.Name ?? "Compliance Form";
-        var submittedOn = submission.SignedAt?.ToString("MM/dd/yyyy") ?? DateTime.UtcNow.ToString("MM/dd/yyyy");
+        var submittedOn = submission.SignedAt?.ToString("MM/dd/yyyy") ?? DateTimeOffset.UtcNow.ToString("MM/dd/yyyy");
 
         // Parse submitted data
         var formData = ParseFormData(submission.FormDataJson);

@@ -40,7 +40,7 @@ public class CreateScheduledTaskHandler(AppDbContext db) : IRequestHandler<Creat
             InternalProjectTypeId = request.InternalProjectTypeId,
             AssigneeId = request.AssigneeId,
             CronExpression = request.CronExpression,
-            NextRunAt = DateTime.UtcNow, // Will be calculated by the job runner
+            NextRunAt = DateTimeOffset.UtcNow, // Will be calculated by the job runner
         };
 
         db.ScheduledTasks.Add(task);

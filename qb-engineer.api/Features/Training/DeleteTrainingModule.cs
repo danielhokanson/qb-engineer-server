@@ -14,7 +14,7 @@ public class DeleteTrainingModuleHandler(AppDbContext db) : IRequestHandler<Dele
         var module = await db.TrainingModules.FirstOrDefaultAsync(m => m.Id == request.Id, ct)
             ?? throw new KeyNotFoundException($"Training module {request.Id} not found.");
 
-        module.DeletedAt = DateTime.UtcNow;
+        module.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

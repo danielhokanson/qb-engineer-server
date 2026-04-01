@@ -18,5 +18,5 @@ public record SavedReportResponseModel(
     bool IsShared,
     int UserId,
     string? UserName,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

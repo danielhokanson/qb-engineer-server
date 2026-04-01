@@ -10,6 +10,6 @@ public record ScheduledTaskResponseModel(
     int? AssigneeId,
     string CronExpression,
     bool IsActive,
-    DateTime? LastRunAt,
-    DateTime? NextRunAt,
-    DateTime CreatedAt);
+    DateTimeOffset? LastRunAt,
+    DateTimeOffset? NextRunAt,
+    DateTimeOffset CreatedAt);

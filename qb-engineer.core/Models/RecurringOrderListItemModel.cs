@@ -6,8 +6,8 @@ public record RecurringOrderListItemModel(
     int CustomerId,
     string CustomerName,
     int IntervalDays,
-    DateTime NextGenerationDate,
-    DateTime? LastGeneratedDate,
+    DateTimeOffset NextGenerationDate,
+    DateTimeOffset? LastGeneratedDate,
     bool IsActive,
     int LineCount,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

@@ -6,7 +6,7 @@ public class PartRevision : BaseAuditableEntity
     public string Revision { get; set; } = string.Empty;
     public string? ChangeDescription { get; set; }
     public string? ChangeReason { get; set; }
-    public DateTime EffectiveDate { get; set; }
+    public DateTimeOffset EffectiveDate { get; set; }
     public bool IsCurrent { get; set; }
 
     public Part Part { get; set; } = null!;

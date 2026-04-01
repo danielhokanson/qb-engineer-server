@@ -11,9 +11,9 @@ public class CustomerReturn : BaseAuditableEntity
     public string Reason { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public CustomerReturnStatus Status { get; set; } = CustomerReturnStatus.Received;
-    public DateTime ReturnDate { get; set; }
+    public DateTimeOffset ReturnDate { get; set; }
     public int? InspectedById { get; set; }
-    public DateTime? InspectedAt { get; set; }
+    public DateTimeOffset? InspectedAt { get; set; }
     public string? InspectionNotes { get; set; }
 
     // Navigation

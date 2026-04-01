@@ -3,8 +3,8 @@ namespace QBEngineer.Core.Models;
 public record CycleReviewReportItem(
     int CycleId,
     string CycleName,
-    DateTime StartDate,
-    DateTime EndDate,
+    DateTimeOffset StartDate,
+    DateTimeOffset EndDate,
     int TotalEntries,
     int CompletedEntries,
     decimal CompletionRate,

@@ -8,14 +8,14 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Parts;
 
-public record AddPartPriceCommand(int PartId, decimal UnitPrice, DateTime? EffectiveFrom, string? Notes) : IRequest<PartPriceResponseModel>;
+public record AddPartPriceCommand(int PartId, decimal UnitPrice, DateTimeOffset? EffectiveFrom, string? Notes) : IRequest<PartPriceResponseModel>;
 
 public class AddPartPriceHandler(AppDbContext db)
     : IRequestHandler<AddPartPriceCommand, PartPriceResponseModel>
 {
     public async Task<PartPriceResponseModel> Handle(AddPartPriceCommand request, CancellationToken ct)
     {
-        var effectiveFrom = (request.EffectiveFrom ?? DateTime.UtcNow).ToUniversalTime();
+        var effectiveFrom = (request.EffectiveFrom ?? DateTimeOffset.UtcNow).ToUniversalTime();
 
         // End-date any currently active price that starts before the new effective date
         var active = await db.PartPrices

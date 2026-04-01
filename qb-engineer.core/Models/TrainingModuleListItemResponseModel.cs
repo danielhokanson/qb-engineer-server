@@ -16,5 +16,5 @@ public record TrainingModuleListItemResponseModel(
     int SortOrder,
     TrainingProgressStatus? MyStatus,
     int? MyQuizScore,
-    DateTime? MyCompletedAt
+    DateTimeOffset? MyCompletedAt
 );

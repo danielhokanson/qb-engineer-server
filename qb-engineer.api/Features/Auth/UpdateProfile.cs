@@ -48,7 +48,7 @@ public class UpdateProfileHandler(UserManager<ApplicationUser> userManager, AppD
         user.LastName = request.LastName;
         user.Initials = request.Initials;
         user.AvatarColor = request.AvatarColor;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
 
         await userManager.UpdateAsync(user);
 

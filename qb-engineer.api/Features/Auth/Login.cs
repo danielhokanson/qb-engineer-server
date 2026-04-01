@@ -24,7 +24,7 @@ public record AuthUserResponseModel(
 
 public record LoginCommand(string Email, string Password) : IRequest<LoginResponse>;
 
-public record LoginResponse(string Token, DateTime ExpiresAt, AuthUserResponseModel User);
+public record LoginResponse(string Token, DateTimeOffset ExpiresAt, AuthUserResponseModel User);
 
 public class LoginValidator : AbstractValidator<LoginCommand>
 {
@@ -58,7 +58,7 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
 
         var token = GenerateJwtToken(user, roles);
 
-        var expiresAt = DateTime.UtcNow.AddHours(24);
+        var expiresAt = DateTimeOffset.UtcNow.AddHours(24);
 
         var profileComplete = await CheckProfileComplete(user.Id, cancellationToken);
 
@@ -103,7 +103,7 @@ public class LoginHandler(UserManager<ApplicationUser> userManager, IConfigurati
             issuer: config["Jwt:Issuer"] ?? "qb-engineer",
             audience: config["Jwt:Audience"] ?? "qb-engineer-ui",
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(24),
+            expires: DateTimeOffset.UtcNow.AddHours(24).UtcDateTime,
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

@@ -138,7 +138,7 @@ public class QuickBooksAccountingService(
                 return new AccountingPayment(
                     ExternalId: p.GetProperty("Id").GetString()!,
                     Amount: p.GetProperty("TotalAmt").GetDecimal(),
-                    Date: DateTime.Parse(p.GetProperty("TxnDate").GetString()!),
+                    Date: DateTimeOffset.Parse(p.GetProperty("TxnDate").GetString()!),
                     Method: p.TryGetProperty("PaymentMethodRef", out var pm)
                         ? pm.GetProperty("name").GetString() ?? "Unknown"
                         : "Unknown");
@@ -365,7 +365,7 @@ public class QuickBooksAccountingService(
 
         var payload = new
         {
-            AdjDate = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            AdjDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd"),
             Line = new[]
             {
                 new
@@ -384,7 +384,7 @@ public class QuickBooksAccountingService(
         logger.LogInformation("[QuickBooks] UpdateInventoryQuantity({ExternalItemId}) — adjusted by {Adjustment}", externalItemId, adjustment);
     }
 
-    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    public Task<List<AccountingPayStub>> GetPayStubsAsync(string employeeExternalId, DateTimeOffset? fromDate, DateTimeOffset? toDate, CancellationToken ct)
     {
         logger.LogWarning("QB Payroll API not yet implemented — GetPayStubsAsync");
         return Task.FromResult(new List<AccountingPayStub>());
@@ -424,7 +424,7 @@ public class QuickBooksAccountingService(
     public async Task<AccountingSyncStatus> GetSyncStatusAsync(CancellationToken ct)
     {
         var isConnected = await tokenService.IsConnectedAsync(ct);
-        return new AccountingSyncStatus(isConnected, isConnected ? DateTime.UtcNow : null, 0, 0);
+        return new AccountingSyncStatus(isConnected, isConnected ? DateTimeOffset.UtcNow : null, 0, 0);
     }
 
     // --- Private helpers ---

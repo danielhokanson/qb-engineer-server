@@ -17,7 +17,7 @@ public record CreateJobCommand(
     int? AssigneeId,
     int? CustomerId,
     JobPriority? Priority,
-    DateTime? DueDate) : IRequest<JobDetailResponseModel>;
+    DateTimeOffset? DueDate) : IRequest<JobDetailResponseModel>;
 
 public class CreateJobCommandValidator : AbstractValidator<CreateJobCommand>
 {

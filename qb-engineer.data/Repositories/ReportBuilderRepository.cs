@@ -51,7 +51,7 @@ public class ReportBuilderRepository(AppDbContext context) : IReportBuilderRepos
             .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userIdInt)
             ?? throw new KeyNotFoundException($"Saved report {id} not found or access denied.");
 
-        report.DeletedAt = DateTime.UtcNow;
+        report.DeletedAt = DateTimeOffset.UtcNow;
         report.DeletedBy = userId;
         await context.SaveChangesAsync();
     }

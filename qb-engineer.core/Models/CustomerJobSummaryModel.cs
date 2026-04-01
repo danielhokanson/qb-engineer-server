@@ -6,4 +6,4 @@ public record CustomerJobSummaryModel(
     string Title,
     string? StageName,
     string? StageColor,
-    DateTime? DueDate);
+    DateTimeOffset? DueDate);

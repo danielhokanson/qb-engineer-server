@@ -2,7 +2,7 @@ namespace QBEngineer.Core.Models;
 
 public record UpdateEmployeeProfileRequestModel(
     // Personal
-    DateTime? DateOfBirth,
+    DateTimeOffset? DateOfBirth,
     string? Gender,
 
     // Address

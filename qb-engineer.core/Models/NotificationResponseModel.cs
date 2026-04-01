@@ -14,4 +14,4 @@ public record NotificationResponseModel(
     int? EntityId,
     string? SenderInitials,
     string? SenderColor,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

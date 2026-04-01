@@ -6,4 +6,4 @@ public record CreateExpenseRequestModel(
     string Description,
     int? JobId,
     string? ReceiptFileId,
-    DateTime ExpenseDate);
+    DateTimeOffset ExpenseDate);

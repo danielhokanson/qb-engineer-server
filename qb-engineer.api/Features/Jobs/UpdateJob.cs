@@ -16,7 +16,7 @@ public record UpdateJobCommand(
     int? AssigneeId,
     int? CustomerId,
     JobPriority? Priority,
-    DateTime? DueDate,
+    DateTimeOffset? DueDate,
     int? IterationCount,
     string? IterationNotes) : IRequest<JobDetailResponseModel>;
 

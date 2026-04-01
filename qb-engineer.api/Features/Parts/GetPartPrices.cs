@@ -21,7 +21,7 @@ public class GetPartPricesHandler(AppDbContext db)
             .OrderByDescending(p => p.EffectiveFrom)
             .ToListAsync(ct);
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         return prices.Select(p => new PartPriceResponseModel(
             p.Id,
             p.PartId,

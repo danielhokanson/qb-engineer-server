@@ -64,7 +64,7 @@ public class EmbeddingRepository(AppDbContext context) : IEmbeddingRepository
 
     public async Task DeleteEmbeddingsAsync(string entityType, int entityId, CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var embeddings = await context.DocumentEmbeddings
             .Where(e => e.EntityType == entityType && e.EntityId == entityId)
             .ToListAsync(ct);

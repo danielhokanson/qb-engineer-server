@@ -12,8 +12,8 @@ public class ProductionRun : BaseAuditableEntity
     public int CompletedQuantity { get; set; }
     public int ScrapQuantity { get; set; }
     public ProductionRunStatus Status { get; set; } = ProductionRunStatus.Planned;
-    public DateTime? StartedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
     public string? Notes { get; set; }
     public decimal? SetupTimeMinutes { get; set; }
     public decimal? RunTimeMinutes { get; set; }

@@ -13,7 +13,7 @@ public class DeleteVendorHandler(IVendorRepository repo)
         var vendor = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Vendor {request.Id} not found");
 
-        vendor.DeletedAt = DateTime.UtcNow;
+        vendor.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

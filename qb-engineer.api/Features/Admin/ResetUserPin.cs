@@ -15,7 +15,7 @@ public class ResetUserPinHandler(
             ?? throw new KeyNotFoundException($"User {request.UserId} not found");
 
         user.PinHash = null;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
         await userManager.UpdateAsync(user);
     }
 }

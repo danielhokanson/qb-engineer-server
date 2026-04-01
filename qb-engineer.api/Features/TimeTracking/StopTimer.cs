@@ -34,7 +34,7 @@ public class StopTimerHandler(
         if (active is null)
             throw new InvalidOperationException("No active timer found.");
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         active.TimerStop = now;
         active.DurationMinutes = (int)(now - active.TimerStart!.Value).TotalMinutes;
         if (!string.IsNullOrWhiteSpace(request.Data.Notes))

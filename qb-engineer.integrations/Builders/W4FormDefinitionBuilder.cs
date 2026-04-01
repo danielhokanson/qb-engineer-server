@@ -127,7 +127,7 @@ public class W4FormDefinitionBuilder : IFormDefinitionBuilder
             ["builderVersion"] = BuilderVersion,
             ["title"] = "W-4",
             ["formNumber"] = "Form W-4",
-            ["revision"] = DateTime.UtcNow.ToString("yyyy"),
+            ["revision"] = DateTimeOffset.UtcNow.ToString("yyyy"),
             ["agency"] = "Department of the Treasury — Internal Revenue Service",
             ["formLayout"] = "government",
             ["maxWidth"] = "850px",

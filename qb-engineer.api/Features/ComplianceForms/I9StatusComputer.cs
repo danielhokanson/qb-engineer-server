@@ -19,7 +19,7 @@ public static class I9StatusComputer
         if (submission is null)
             return I9ComplianceStatus.NotStarted;
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         // Fully complete + check for reverification
         if (submission.I9Section2SignedAt.HasValue)

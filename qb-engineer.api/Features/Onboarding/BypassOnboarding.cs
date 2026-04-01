@@ -22,7 +22,7 @@ public class BypassOnboardingHandler(AppDbContext db) : IRequestHandler<BypassOn
             db.EmployeeProfiles.Add(profile);
         }
 
-        profile.OnboardingBypassedAt = DateTime.UtcNow;
+        profile.OnboardingBypassedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

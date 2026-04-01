@@ -8,7 +8,7 @@ public class LotRecord : BaseAuditableEntity
     public int? ProductionRunId { get; set; }
     public int? PurchaseOrderLineId { get; set; }
     public int Quantity { get; set; }
-    public DateTime? ExpirationDate { get; set; }
+    public DateTimeOffset? ExpirationDate { get; set; }
     public string? SupplierLotNumber { get; set; }
     public string? Notes { get; set; }
 

@@ -7,9 +7,9 @@ public record StatusEntryResponseModel(
     string StatusCode,
     string StatusLabel,
     string Category,
-    DateTime StartedAt,
-    DateTime? EndedAt,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? EndedAt,
     string? Notes,
     int? SetById,
     string? SetByName,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

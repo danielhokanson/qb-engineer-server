@@ -6,8 +6,8 @@ public record CycleCountResponseModel(
     string LocationName,
     int CountedById,
     string CountedByName,
-    DateTime CountedAt,
+    DateTimeOffset CountedAt,
     string Status,
     string? Notes,
     List<CycleCountLineResponseModel> Lines,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

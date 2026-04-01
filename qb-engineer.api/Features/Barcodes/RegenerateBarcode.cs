@@ -36,7 +36,7 @@ public class RegenerateBarcodeHandler(AppDbContext db, IBarcodeService barcodeSe
         foreach (var barcode in existing)
         {
             barcode.IsActive = false;
-            barcode.DeletedAt = DateTime.UtcNow;
+            barcode.DeletedAt = DateTimeOffset.UtcNow;
         }
 
         await db.SaveChangesAsync(cancellationToken);

@@ -10,12 +10,12 @@ public record ShipmentDetailResponseModel(
     string Status,
     string? Carrier,
     string? TrackingNumber,
-    DateTime? ShippedDate,
-    DateTime? DeliveredDate,
+    DateTimeOffset? ShippedDate,
+    DateTimeOffset? DeliveredDate,
     decimal? ShippingCost,
     decimal? Weight,
     string? Notes,
     int? InvoiceId,
     List<ShipmentLineResponseModel> Lines,
-    DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

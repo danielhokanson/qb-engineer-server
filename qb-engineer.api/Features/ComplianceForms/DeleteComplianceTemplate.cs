@@ -30,7 +30,7 @@ public class DeleteComplianceTemplateHandler(AppDbContext db)
         if (SystemFormTypes.Contains(template.FormType))
             throw new InvalidOperationException("System compliance templates cannot be deleted.");
 
-        template.DeletedAt = DateTime.UtcNow;
+        template.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
     }
 }

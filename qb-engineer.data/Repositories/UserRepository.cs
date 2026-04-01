@@ -11,7 +11,8 @@ public class UserRepository(AppDbContext db) : IUserRepository
     {
         return await db.Users
             .Where(u => u.IsActive)
-            .OrderBy(u => u.FirstName)
+            .OrderBy(u => u.LastName)
+            .ThenBy(u => u.FirstName)
             .GroupJoin(
                 db.EmployeeProfiles,
                 u => u.Id,
@@ -20,7 +21,7 @@ public class UserRepository(AppDbContext db) : IUserRepository
             .Select(x => new UserResponseModel(
                 x.User.Id,
                 x.User.Initials ?? "??",
-                (x.User.FirstName + " " + x.User.LastName).Trim(),
+                (x.User.LastName + ", " + x.User.FirstName).Trim(',', ' '),
                 x.User.AvatarColor ?? "#94a3b8",
                 x.Profile != null &&
                     x.Profile.W4CompletedAt != null &&
@@ -46,7 +47,7 @@ public class UserRepository(AppDbContext db) : IUserRepository
             .Select(x => new UserResponseModel(
                 x.User.Id,
                 x.User.Initials ?? "??",
-                (x.User.FirstName + " " + x.User.LastName).Trim(),
+                (x.User.LastName + ", " + x.User.FirstName).Trim(',', ' '),
                 x.User.AvatarColor ?? "#94a3b8",
                 x.Profile != null &&
                     x.Profile.W4CompletedAt != null &&

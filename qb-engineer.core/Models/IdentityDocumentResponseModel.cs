@@ -8,9 +8,9 @@ public record IdentityDocumentResponseModel(
     IdentityDocumentType DocumentType,
     int FileAttachmentId,
     string FileName,
-    DateTime? VerifiedAt,
+    DateTimeOffset? VerifiedAt,
     int? VerifiedById,
     string? VerifiedByName,
-    DateTime? ExpiresAt,
+    DateTimeOffset? ExpiresAt,
     string? Notes,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

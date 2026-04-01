@@ -17,7 +17,7 @@ public class DeleteQuoteHandler(IQuoteRepository repo)
         if (quote.Status != QuoteStatus.Draft)
             throw new InvalidOperationException("Only Draft quotes can be deleted");
 
-        quote.DeletedAt = DateTime.UtcNow;
+        quote.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

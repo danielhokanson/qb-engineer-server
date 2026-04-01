@@ -2,6 +2,6 @@ namespace QBEngineer.Core.Models;
 
 public record AccountingSyncStatus(
     bool Connected,
-    DateTime? LastSyncAt,
+    DateTimeOffset? LastSyncAt,
     int QueueDepth,
     int FailedCount);

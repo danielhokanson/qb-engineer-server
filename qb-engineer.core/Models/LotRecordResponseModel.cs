@@ -11,7 +11,7 @@ public record LotRecordResponseModel(
     int? ProductionRunId,
     int? PurchaseOrderLineId,
     int Quantity,
-    DateTime? ExpirationDate,
+    DateTimeOffset? ExpirationDate,
     string? SupplierLotNumber,
     string? Notes,
-    DateTime CreatedAt);
+    DateTimeOffset CreatedAt);

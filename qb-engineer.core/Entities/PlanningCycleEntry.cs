@@ -4,8 +4,8 @@ public class PlanningCycleEntry : BaseEntity
 {
     public int PlanningCycleId { get; set; }
     public int JobId { get; set; }
-    public DateTime CommittedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTimeOffset CommittedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
     public bool IsRolledOver { get; set; }
     public int SortOrder { get; set; }
 

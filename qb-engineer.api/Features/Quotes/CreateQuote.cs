@@ -9,7 +9,7 @@ namespace QBEngineer.Api.Features.Quotes;
 public record CreateQuoteCommand(
     int CustomerId,
     int? ShippingAddressId,
-    DateTime? ExpirationDate,
+    DateTimeOffset? ExpirationDate,
     string? Notes,
     decimal TaxRate,
     List<CreateQuoteLineModel> Lines) : IRequest<QuoteListItemModel>;

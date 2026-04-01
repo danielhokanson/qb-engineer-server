@@ -12,8 +12,8 @@ public class Invoice : BaseAuditableEntity
     public int? SalesOrderId { get; set; }
     public int? ShipmentId { get; set; }
     public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
-    public DateTime InvoiceDate { get; set; }
-    public DateTime DueDate { get; set; }
+    public DateTimeOffset InvoiceDate { get; set; }
+    public DateTimeOffset DueDate { get; set; }
     public CreditTerms? CreditTerms { get; set; }
     public decimal TaxRate { get; set; }
     public string? Notes { get; set; }
@@ -22,7 +22,7 @@ public class Invoice : BaseAuditableEntity
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
-    public DateTime? LastSyncedAt { get; set; }
+    public DateTimeOffset? LastSyncedAt { get; set; }
 
     public decimal Subtotal => Lines.Sum(l => l.LineTotal);
     public decimal TaxAmount => Subtotal * TaxRate;

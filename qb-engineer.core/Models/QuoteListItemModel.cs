@@ -8,5 +8,5 @@ public record QuoteListItemModel(
     string Status,
     int LineCount,
     decimal Total,
-    DateTime? ExpirationDate,
-    DateTime CreatedAt);
+    DateTimeOffset? ExpirationDate,
+    DateTimeOffset CreatedAt);

@@ -17,7 +17,7 @@ public sealed class DeleteLeadHandler(ILeadRepository repo)
         if (lead.Status == LeadStatus.Converted)
             throw new InvalidOperationException("Converted leads cannot be deleted.");
 
-        lead.DeletedAt = DateTime.UtcNow;
+        lead.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

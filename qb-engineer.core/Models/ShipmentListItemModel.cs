@@ -9,5 +9,5 @@ public record ShipmentListItemModel(
     string Status,
     string? Carrier,
     string? TrackingNumber,
-    DateTime? ShippedDate,
-    DateTime CreatedAt);
+    DateTimeOffset? ShippedDate,
+    DateTimeOffset CreatedAt);

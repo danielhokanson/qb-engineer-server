@@ -31,7 +31,7 @@ public class GetPurchaseOrdersForCalendarHandler(AppDbContext db)
                 po.Id,
                 po.PONumber,
                 po.Vendor != null ? po.Vendor.CompanyName : "Unknown Vendor",
-                DateOnly.FromDateTime(po.ExpectedDeliveryDate!.Value),
+                DateOnly.FromDateTime(po.ExpectedDeliveryDate!.Value.UtcDateTime),
                 po.Status.ToString(),
                 po.Lines.Count
             ))

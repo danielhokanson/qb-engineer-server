@@ -5,5 +5,5 @@ public record UninvoicedJobResponseModel(
     string JobNumber,
     string Title,
     string? CustomerName,
-    DateTime CompletedDate,
+    DateTimeOffset CompletedDate,
     int? CustomerId);

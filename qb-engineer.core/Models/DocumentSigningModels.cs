@@ -2,7 +2,7 @@ namespace QBEngineer.Core.Models;
 
 public record DocumentSigningSubmission(int SubmissionId, string SubmitUrl);
 
-public record DocumentSigningSubmissionStatus(string Status, DateTime? CompletedAt);
+public record DocumentSigningSubmissionStatus(string Status, DateTimeOffset? CompletedAt);
 
 /// <summary>
 /// One signer in a sequential multi-party signing flow.

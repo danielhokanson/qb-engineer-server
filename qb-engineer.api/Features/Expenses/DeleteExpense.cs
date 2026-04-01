@@ -17,7 +17,7 @@ public sealed class DeleteExpenseHandler(IExpenseRepository repo)
         if (expense.Status != ExpenseStatus.Pending)
             throw new InvalidOperationException("Only pending expenses can be deleted.");
 
-        expense.DeletedAt = DateTime.UtcNow;
+        expense.DeletedAt = DateTimeOffset.UtcNow;
         await repo.SaveChangesAsync(cancellationToken);
     }
 }

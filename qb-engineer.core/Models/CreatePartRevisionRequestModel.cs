@@ -4,4 +4,4 @@ public record CreatePartRevisionRequestModel(
     string Revision,
     string? ChangeDescription,
     string? ChangeReason,
-    DateTime EffectiveDate);
+    DateTimeOffset EffectiveDate);

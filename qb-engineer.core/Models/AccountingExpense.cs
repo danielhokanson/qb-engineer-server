@@ -4,7 +4,7 @@ public record AccountingExpense(
     string? VendorExternalId,
     string? CustomerExternalId,
     decimal Amount,
-    DateTime Date,
+    DateTimeOffset Date,
     string? Description,
     string? Category,
     string? RefNumber);
