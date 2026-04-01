@@ -82,7 +82,9 @@ public class GetDashboardHandler(IDashboardRepository repo, AppDbContext db) : I
             var userName = a.UserId.HasValue && data.Users.TryGetValue(a.UserId.Value, out var user)
                 ? user.FirstName
                 : "System";
-            var text = $"{userName} {a.Description}";
+            var cleanDescription = System.Text.RegularExpressions.Regex.Replace(
+                a.Description, @"@\[([^\]]+)\]\(user:\d+\)", "@$1");
+            var text = $"{userName} {cleanDescription}";
             var time = FormatRelativeTime(a.CreatedAt, now);
 
             return new ActivityEntryResponseModel(icon, iconColor, text, time);
