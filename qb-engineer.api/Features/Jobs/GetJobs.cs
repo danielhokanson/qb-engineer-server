@@ -9,7 +9,8 @@ public record GetJobsQuery(
     int? CurrentStageId,
     int? AssigneeId,
     bool IsArchived = false,
-    string? Search = null) : IRequest<List<JobListResponseModel>>;
+    string? Search = null,
+    int? CustomerId = null) : IRequest<List<JobListResponseModel>>;
 
 public class GetJobsHandler(IJobRepository repo) : IRequestHandler<GetJobsQuery, List<JobListResponseModel>>
 {
@@ -21,6 +22,7 @@ public class GetJobsHandler(IJobRepository repo) : IRequestHandler<GetJobsQuery,
             request.AssigneeId,
             request.IsArchived,
             request.Search,
-            cancellationToken);
+            cancellationToken,
+            request.CustomerId);
     }
 }

@@ -23,9 +23,10 @@ public class JobsController(IMediator mediator) : ControllerBase
         [FromQuery] int? stageId,
         [FromQuery] int? assigneeId,
         [FromQuery] bool isArchived = false,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] int? customerId = null)
     {
-        var result = await mediator.Send(new GetJobsQuery(trackTypeId, stageId, assigneeId, isArchived, search));
+        var result = await mediator.Send(new GetJobsQuery(trackTypeId, stageId, assigneeId, isArchived, search, customerId));
         return Ok(result);
     }
 

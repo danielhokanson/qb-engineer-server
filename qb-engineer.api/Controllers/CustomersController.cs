@@ -94,4 +94,11 @@ public class CustomersController(IMediator mediator) : ControllerBase
         var pdf = await mediator.Send(new GenerateCustomerStatementQuery(id));
         return File(pdf, "application/pdf", $"statement-{id}.pdf");
     }
+
+    [HttpGet("{id:int}/summary")]
+    public async Task<ActionResult<CustomerSummaryResponseModel>> GetSummary(int id, CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetCustomerSummaryQuery(id), ct);
+        return Ok(result);
+    }
 }

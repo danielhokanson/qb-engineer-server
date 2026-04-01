@@ -10,7 +10,7 @@ public class JobRepository(AppDbContext db) : IJobRepository
 {
     public async Task<List<JobListResponseModel>> GetJobsAsync(
         int? trackTypeId, int? stageId, int? assigneeId,
-        bool isArchived, string? search, CancellationToken ct)
+        bool isArchived, string? search, CancellationToken ct, int? customerId = null)
     {
         var query = db.Jobs
             .Include(j => j.CurrentStage)
@@ -25,6 +25,9 @@ public class JobRepository(AppDbContext db) : IJobRepository
 
         if (assigneeId.HasValue)
             query = query.Where(j => j.AssigneeId == assigneeId.Value);
+
+        if (customerId.HasValue)
+            query = query.Where(j => j.CustomerId == customerId.Value);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
