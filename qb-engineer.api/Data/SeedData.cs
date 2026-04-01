@@ -82,13 +82,13 @@ public static class SeedData
             var apex = customers.First(c => c.Name == "Apex Manufacturing");
             var meridian = customers.First(c => c.Name == "Meridian Systems");
 
-            var today = DateTime.UtcNow.Date;
+            var today = DateTimeOffset.UtcNow.Date;
             var yesterday = today.AddDays(-1);
 
             // Helper
             int pos = 0;
             Job MakeJob(string number, string title, int trackTypeId, int stageId,
-                int? assigneeId = null, int? customerId = null, DateTime? dueDate = null,
+                int? assigneeId = null, int? customerId = null, DateTimeOffset? dueDate = null,
                 JobPriority priority = JobPriority.Normal)
             {
                 return new Job
@@ -231,7 +231,7 @@ public static class SeedData
         // ── 8. Activity Log ──────────────────────────────────────────────
         if (!await db.JobActivityLogs.AnyAsync())
         {
-            var now = DateTime.UtcNow;
+            var now = DateTimeOffset.UtcNow;
 
             // Look up job IDs for activity entries
             var j1042 = await db.Jobs.FirstAsync(j => j.JobNumber == "J-1042");
@@ -609,7 +609,7 @@ public static class SeedData
     {
         if (await db.SalesTaxRates.AnyAsync()) return;
 
-        var epoch = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var epoch = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         // US state-level base rates (2024/2025). Rates are the STATE base rate only.
         // Local (county/city) rates add on top — admins should adjust to their effective
