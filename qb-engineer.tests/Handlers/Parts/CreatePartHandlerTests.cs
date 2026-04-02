@@ -39,7 +39,7 @@ public class CreatePartHandlerTests
 
         var expectedResult = new PartDetailResponseModel(
             1, "PRT-00001", description, "A", PartStatus.Draft, PartType.Part,
-            material, null, null, null, null, null, null, null, null, null, null, null,
+            material, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             new List<BOMEntryResponseModel>(), new List<BOMUsageResponseModel>(),
             DateTime.UtcNow, DateTime.UtcNow);
 
@@ -74,7 +74,7 @@ public class CreatePartHandlerTests
 
         var expectedResult = new PartDetailResponseModel(
             1, "PRT-00001", "Test Part", "A", PartStatus.Draft, PartType.Part,
-            null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             new List<BOMEntryResponseModel>(), new List<BOMUsageResponseModel>(),
             DateTime.UtcNow, DateTime.UtcNow);
 
@@ -101,7 +101,7 @@ public class CreatePartHandlerTests
 
         var expectedResult = new PartDetailResponseModel(
             1, "ASM-00001", "Test Part", "C", PartStatus.Draft, PartType.Assembly,
-            null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             new List<BOMEntryResponseModel>(), new List<BOMUsageResponseModel>(),
             DateTime.UtcNow, DateTime.UtcNow);
 
@@ -129,7 +129,7 @@ public class CreatePartHandlerTests
 
         var expectedResult = new PartDetailResponseModel(
             1, "ASM-00001", "Test", "A", PartStatus.Draft, PartType.Assembly,
-            null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             new List<BOMEntryResponseModel>(), new List<BOMUsageResponseModel>(),
             DateTime.UtcNow, DateTime.UtcNow);
 
@@ -156,7 +156,7 @@ public class CreatePartHandlerTests
 
         var expectedResult = new PartDetailResponseModel(
             1, "PRT-00001", "Trimmed", "B", PartStatus.Draft, PartType.Part,
-            "Steel", "M-100", null, null, null, null, null, null, null, null, null, null,
+            "Steel", "M-100", null, null, null, null, null, null, null, null, null, null, null, null, null,
             new List<BOMEntryResponseModel>(), new List<BOMUsageResponseModel>(),
             DateTime.UtcNow, DateTime.UtcNow);
 
@@ -187,7 +187,7 @@ public class CreatePartHandlerTests
 
         var expectedResult = new PartDetailResponseModel(
             1, "RAW-00001", "Steel Bar", "A", PartStatus.Draft, PartType.RawMaterial,
-            "Steel", null, "VENDOR-12345", null, null, null, null, null, null, null, null, null,
+            "Steel", null, "VENDOR-12345", null, null, null, null, null, null, null, null, null, null, null, null,
             new List<BOMEntryResponseModel>(), new List<BOMUsageResponseModel>(),
             DateTime.UtcNow, DateTime.UtcNow);
 
