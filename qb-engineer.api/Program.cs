@@ -432,6 +432,11 @@ try
                 || path.Equals("/api/v1/version", StringComparison.OrdinalIgnoreCase))
                 return RateLimitPartition.GetNoLimiter("infra");
 
+            // Bypass rate limiting for loopback (E2E tests, local dev tools)
+            var ip = ctx.Connection.RemoteIpAddress;
+            if (ip != null && System.Net.IPAddress.IsLoopback(ip))
+                return RateLimitPartition.GetNoLimiter("loopback");
+
             return RateLimitPartition.GetFixedWindowLimiter(
                 ctx.User?.Identity?.Name ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
                 _ => new FixedWindowRateLimiterOptions
