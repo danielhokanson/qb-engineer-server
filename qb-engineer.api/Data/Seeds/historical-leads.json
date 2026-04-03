@@ -1,0 +1,90 @@
+[
+  {
+    "companyName": "Vertex Precision Inc",
+    "contactName": "Rachel Okonkwo",
+    "email": "rokonkwo@vertexprecision.com",
+    "source": "Trade Show",
+    "status": "Converted",
+    "notes": "Met at IMTS 2021. Interested in CNC bracket assemblies.",
+    "convertedCustomerRef": "customer:vertex",
+    "createdByRef": "user:admin",
+    "createdAt": "2021-10-15"
+  },
+  {
+    "companyName": "Cascade Industrial LLC",
+    "contactName": "Dave Whitmore",
+    "email": "dwhitmore@cascadeindustrial.com",
+    "source": "Referral",
+    "status": "Converted",
+    "notes": "Referral from Apex Manufacturing. Needs shaft housings.",
+    "convertedCustomerRef": "customer:cascade",
+    "createdByRef": "user:admin",
+    "createdAt": "2022-01-20"
+  },
+  {
+    "companyName": "NovaTech Electronics",
+    "contactName": "Priya Nair",
+    "email": "pnair@novatechelectronics.com",
+    "source": "Web",
+    "status": "Converted",
+    "notes": "Inbound inquiry for heat sink arrays. High volume potential.",
+    "convertedCustomerRef": "customer:novatech",
+    "createdByRef": "user:akim",
+    "createdAt": "2022-04-03"
+  },
+  {
+    "companyName": "Blue Ridge Fabrication",
+    "contactName": "Carl Hendricks",
+    "email": "chendricks@blueridgefab.com",
+    "source": "Cold Call",
+    "status": "Converted",
+    "notes": "Cold outreach. Interested in pneumatic manifold machining.",
+    "convertedCustomerRef": "customer:blue-ridge",
+    "createdByRef": "user:dhart",
+    "createdAt": "2022-07-18"
+  },
+  {
+    "companyName": "Atlas Defense Systems",
+    "contactName": "Col. Rick Morgan",
+    "email": "rmorgan@atlasdefense.com",
+    "source": "Government RFQ",
+    "status": "Lost",
+    "notes": "RFQ for precision housings. Lost on price.",
+    "lostReason": "Price \u2014 competitor came in 18% lower on a sole-source bid",
+    "createdByRef": "user:admin",
+    "createdAt": "2022-11-01"
+  },
+  {
+    "companyName": "Glacier Energy Corp",
+    "contactName": "Mitch Olsen",
+    "email": "molsen@glacierenergy.com",
+    "source": "Trade Show",
+    "status": "Lost",
+    "notes": "Wind turbine bearing components. Volume too high for current capacity.",
+    "lostReason": "Capacity \u2014 required 2,000 pcs/month, beyond current floor capacity",
+    "createdByRef": "user:akim",
+    "createdAt": "2023-02-14"
+  },
+  {
+    "companyName": "Ironclad Robotics",
+    "contactName": "Dana Foley",
+    "email": "dfoley@irnclad.io",
+    "source": "LinkedIn",
+    "status": "Quoting",
+    "notes": "Robot arm joint machining. Sent preliminary quote for 50-unit trial.",
+    "followUpDate": "2026-04-10",
+    "createdByRef": "user:dhart",
+    "createdAt": "2026-02-20"
+  },
+  {
+    "companyName": "Solstice Medical",
+    "contactName": "Dr. Amy Chen",
+    "email": "achen@solsticemed.com",
+    "source": "Referral",
+    "status": "Contacted",
+    "notes": "ISO 13485 compliant machining for surgical instrument handles. High value.",
+    "followUpDate": "2026-04-08",
+    "createdByRef": "user:admin",
+    "createdAt": "2026-03-10"
+  }
+]

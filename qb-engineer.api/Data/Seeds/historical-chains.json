@@ -1,0 +1,1025 @@
+[
+  {
+    "chainId": "V-1",
+    "customerRef": "customer:vertex",
+    "estimate": {
+      "title": "Precision Mounting Bracket Assy \u2014 25 pcs",
+      "estimatedAmount": 6250.00,
+      "status": "Accepted",
+      "assignedToRef": "user:akim",
+      "validUntil": "2022-03-01",
+      "convertedAt": "2022-02-10",
+      "createdAt": "2022-02-01"
+    },
+    "quote": {
+      "quoteNumber": "Q-2201",
+      "status": "Accepted",
+      "sentDate": "2022-02-12",
+      "expirationDate": "2022-03-12",
+      "acceptedDate": "2022-02-18",
+      "taxRate": 0.0000,
+      "notes": "Net30 terms. Delivery 4 weeks ARO.",
+      "createdAt": "2022-02-12",
+      "lines": [
+        { "partRef": "part:P-1001", "description": "Precision Mounting Bracket Assembly", "quantity": 25, "unitPrice": 248.00 }
+      ]
+    },
+    "salesOrder": {
+      "orderNumber": "SO-2201",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2022-02-20",
+      "requestedDeliveryDate": "2022-03-20",
+      "customerPO": "VPI-PO-0041",
+      "taxRate": 0.0000,
+      "createdAt": "2022-02-20",
+      "lines": [
+        { "$id": "sol:SO-2201:0", "partRef": "part:P-1001", "description": "Precision Mounting Bracket Assembly", "quantity": 25, "unitPrice": 248.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2201", "title": "Bracket Assy \u2014 Vertex 25 pcs", "stageCode": "payment_received", "assigneeRef": "user:akim", "createdAt": "2022-02-21", "dueDate": "2022-03-20" }
+    ],
+    "purchaseOrders": [
+      {
+        "poNumber": "PO-2201",
+        "vendorRef": "vendor:acme-metals",
+        "jobRef": "job:J-2201",
+        "status": "Received",
+        "submittedDate": "2022-02-22",
+        "expectedDeliveryDate": "2022-03-01",
+        "receivedDate": "2022-03-02",
+        "notes": "Aluminum bar stock for bracket run",
+        "createdAt": "2022-02-22",
+        "lines": [
+          { "partRef": "part:M-001", "description": "6061-T6 Aluminum Bar 1\" dia x 12\"", "orderedQuantity": 30, "unitPrice": 8.50 }
+        ]
+      }
+    ],
+    "lots": [
+      { "lotNumber": "LOT-2201", "partRef": "part:P-1001", "jobRef": "job:J-2201", "quantity": 25, "notes": "First production run for Vertex Precision", "createdAt": "2022-03-15" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2201",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10123456784",
+      "shippedDate": "2022-03-18",
+      "deliveredDate": "2022-03-21",
+      "shippingCost": 42.00,
+      "notes": "Full order ship",
+      "createdAt": "2022-03-18",
+      "lines": [
+        { "soLineRef": "sol:SO-2201:0", "quantity": 25 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2201",
+      "status": "Paid",
+      "invoiceDate": "2022-03-18",
+      "dueDate": "2022-04-17",
+      "creditTerms": "Net30",
+      "taxRate": 0.0000,
+      "notes": "Full shipment invoiced",
+      "createdAt": "2022-03-18",
+      "lines": [
+        { "description": "Precision Mounting Bracket Assembly x25", "quantity": 25, "unitPrice": 248.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2201",
+      "method": "BankTransfer",
+      "amount": 6200.00,
+      "paymentDate": "2022-04-14",
+      "referenceNumber": "ACH-VPI-041",
+      "notes": "Paid 3 days early",
+      "createdAt": "2022-04-14"
+    }
+  },
+  {
+    "chainId": "V-2",
+    "customerRef": "customer:vertex",
+    "salesOrder": {
+      "orderNumber": "SO-2231",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2022-07-05",
+      "requestedDeliveryDate": "2022-08-05",
+      "customerPO": "VPI-PO-0068",
+      "taxRate": 0.0000,
+      "createdAt": "2022-07-05",
+      "lines": [
+        { "$id": "sol:SO-2231:0", "partRef": "part:P-1002", "description": "Shaft Housing CNC", "quantity": 15, "unitPrice": 312.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2231", "title": "Shaft Housing \u2014 Vertex 15 pcs", "stageCode": "payment_received", "assigneeRef": "user:dhart", "createdAt": "2022-07-06", "dueDate": "2022-08-05" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2231",
+      "status": "Delivered",
+      "carrier": "FedEx Ground",
+      "trackingNumber": "396401234567890",
+      "shippedDate": "2022-08-02",
+      "deliveredDate": "2022-08-04",
+      "shippingCost": 55.00,
+      "createdAt": "2022-08-02",
+      "lines": [
+        { "soLineRef": "sol:SO-2231:0", "quantity": 15 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2231",
+      "status": "Paid",
+      "invoiceDate": "2022-08-02",
+      "dueDate": "2022-09-01",
+      "creditTerms": "Net30",
+      "taxRate": 0.0000,
+      "createdAt": "2022-08-02",
+      "lines": [
+        { "description": "Shaft Housing CNC x15", "quantity": 15, "unitPrice": 312.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2231",
+      "method": "Check",
+      "amount": 4680.00,
+      "paymentDate": "2022-08-30",
+      "referenceNumber": "CHK-8821",
+      "createdAt": "2022-08-30"
+    }
+  },
+  {
+    "chainId": "V-3",
+    "customerRef": "customer:vertex",
+    "salesOrder": {
+      "orderNumber": "SO-2301",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2023-04-10",
+      "requestedDeliveryDate": "2023-05-15",
+      "customerPO": "VPI-PO-0112",
+      "taxRate": 0.0000,
+      "createdAt": "2023-04-10",
+      "lines": [
+        { "$id": "sol:SO-2301:0", "partRef": "part:P-1001", "description": "Precision Mounting Bracket Assembly Rev C", "quantity": 50, "unitPrice": 238.00 },
+        { "$id": "sol:SO-2301:1", "partRef": "part:P-1003", "description": "Motor Mount Plate v2", "quantity": 20, "unitPrice": 195.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2301", "title": "Bracket Assy Rev C \u2014 Vertex 50 pcs", "stageCode": "payment_received", "assigneeRef": "user:akim", "createdAt": "2023-04-11", "dueDate": "2023-05-15" },
+      { "jobNumber": "J-2302", "title": "Motor Mount v2 \u2014 Vertex 20 pcs", "stageCode": "payment_received", "assigneeRef": "user:dhart", "createdAt": "2023-04-11", "dueDate": "2023-05-15" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2301",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10187654321",
+      "shippedDate": "2023-05-12",
+      "deliveredDate": "2023-05-16",
+      "shippingCost": 88.00,
+      "createdAt": "2023-05-12",
+      "lines": [
+        { "soLineRef": "sol:SO-2301:0", "quantity": 50 },
+        { "soLineRef": "sol:SO-2301:1", "quantity": 20 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2301",
+      "status": "Paid",
+      "invoiceDate": "2023-05-12",
+      "dueDate": "2023-06-11",
+      "creditTerms": "Net30",
+      "taxRate": 0.0000,
+      "createdAt": "2023-05-12",
+      "lines": [
+        { "description": "Bracket Assy Rev C x50", "quantity": 50, "unitPrice": 238.00 },
+        { "description": "Motor Mount Plate v2 x20", "quantity": 20, "unitPrice": 195.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2301",
+      "method": "BankTransfer",
+      "amount": 15800.00,
+      "paymentDate": "2023-06-09",
+      "referenceNumber": "ACH-VPI-112",
+      "createdAt": "2023-06-09"
+    }
+  },
+  {
+    "chainId": "V-4",
+    "customerRef": "customer:vertex",
+    "salesOrder": {
+      "orderNumber": "SO-2401",
+      "status": "Shipped",
+      "creditTerms": "Net30",
+      "confirmedDate": "2024-08-05",
+      "requestedDeliveryDate": "2024-09-05",
+      "customerPO": "VPI-PO-0198",
+      "taxRate": 0.0000,
+      "createdAt": "2024-08-05",
+      "lines": [
+        { "$id": "sol:SO-2401:0", "partRef": "part:P-1006", "description": "Pneumatic Manifold Block", "quantity": 8, "unitPrice": 685.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2401", "title": "Pneumatic Manifold \u2014 Vertex 8 pcs", "stageCode": "invoiced_sent", "assigneeRef": "user:jsilva", "createdAt": "2024-08-06", "dueDate": "2024-09-05" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2401",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10198765432",
+      "shippedDate": "2024-09-03",
+      "deliveredDate": "2024-09-06",
+      "shippingCost": 62.00,
+      "createdAt": "2024-09-03",
+      "lines": [
+        { "soLineRef": "sol:SO-2401:0", "quantity": 8 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2401",
+      "status": "Overdue",
+      "invoiceDate": "2024-09-03",
+      "dueDate": "2024-10-03",
+      "creditTerms": "Net30",
+      "taxRate": 0.0000,
+      "notes": "Payment overdue \u2014 second notice sent 10/15/2024",
+      "createdAt": "2024-09-03",
+      "lines": [
+        { "description": "Pneumatic Manifold Block x8", "quantity": 8, "unitPrice": 685.00 }
+      ]
+    }
+  },
+  {
+    "chainId": "C-1",
+    "customerRef": "customer:cascade",
+    "salesOrder": {
+      "orderNumber": "SO-2241",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2022-08-15",
+      "requestedDeliveryDate": "2022-09-20",
+      "customerPO": "CIL-2022-0083",
+      "taxRate": 0.0000,
+      "createdAt": "2022-08-15",
+      "lines": [
+        { "$id": "sol:SO-2241:0", "partRef": "part:P-1002", "description": "Shaft Housing CNC", "quantity": 20, "unitPrice": 295.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2241", "title": "Shaft Housing \u2014 Cascade 20 pcs", "stageCode": "payment_received", "assigneeRef": "user:dhart", "createdAt": "2022-08-16", "dueDate": "2022-09-20" }
+    ],
+    "returns": [
+      {
+        "returnNumber": "RET-2241",
+        "jobRef": "job:J-2241",
+        "reason": "Shipping damage \u2014 3 pcs cosmetic damage to flanged end",
+        "status": "Closed",
+        "returnDate": "2022-10-05",
+        "inspectedByRef": "user:jsilva",
+        "inspectedAt": "2022-10-07",
+        "inspectionNotes": "Verified: surface scoring on 3 units. Repolished and returned.",
+        "notes": "Customer reported damage on delivery. Inspected and reworked.",
+        "createdAt": "2022-10-05"
+      }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2241",
+      "status": "Delivered",
+      "carrier": "FedEx Ground",
+      "trackingNumber": "396412345678901",
+      "shippedDate": "2022-09-16",
+      "deliveredDate": "2022-09-19",
+      "shippingCost": 75.00,
+      "createdAt": "2022-09-16",
+      "lines": [
+        { "soLineRef": "sol:SO-2241:0", "quantity": 20 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2241",
+      "status": "Paid",
+      "invoiceDate": "2022-09-16",
+      "dueDate": "2022-10-16",
+      "creditTerms": "Net30",
+      "taxRate": 0.0000,
+      "createdAt": "2022-09-16",
+      "lines": [
+        { "description": "Shaft Housing CNC x20", "quantity": 20, "unitPrice": 295.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2241",
+      "method": "Check",
+      "amount": 5900.00,
+      "paymentDate": "2022-10-14",
+      "referenceNumber": "CHK-CIL-0083",
+      "createdAt": "2022-10-14"
+    }
+  },
+  {
+    "chainId": "C-2",
+    "customerRef": "customer:cascade",
+    "quote": {
+      "quoteNumber": "Q-2315",
+      "status": "Accepted",
+      "sentDate": "2023-03-20",
+      "expirationDate": "2023-04-20",
+      "acceptedDate": "2023-03-28",
+      "taxRate": 0.0000,
+      "notes": "Net30",
+      "createdAt": "2023-03-20",
+      "lines": [
+        { "partRef": "part:P-1004", "description": "48-tooth Spur Gear Blank", "quantity": 30, "unitPrice": 178.00 }
+      ]
+    },
+    "salesOrder": {
+      "orderNumber": "SO-2315",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2023-03-29",
+      "requestedDeliveryDate": "2023-05-01",
+      "customerPO": "CIL-2023-0044",
+      "taxRate": 0.0000,
+      "createdAt": "2023-03-29",
+      "lines": [
+        { "$id": "sol:SO-2315:0", "partRef": "part:P-1004", "description": "48-tooth Spur Gear Blank", "quantity": 30, "unitPrice": 178.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2315", "title": "Gear Blank 48T \u2014 Cascade 30 pcs", "stageCode": "payment_received", "assigneeRef": "user:mreyes", "createdAt": "2023-03-30", "dueDate": "2023-05-01" }
+    ],
+    "lots": [
+      { "lotNumber": "LOT-2315", "partRef": "part:P-1004", "jobRef": "job:J-2315", "quantity": 30, "notes": "48T spur gear blank lot for Cascade Industrial", "createdAt": "2023-04-25" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2315",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10211223344",
+      "shippedDate": "2023-04-28",
+      "deliveredDate": "2023-05-02",
+      "shippingCost": 65.00,
+      "createdAt": "2023-04-28",
+      "lines": [
+        { "soLineRef": "sol:SO-2315:0", "quantity": 30 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2315",
+      "status": "Paid",
+      "invoiceDate": "2023-04-28",
+      "dueDate": "2023-05-28",
+      "creditTerms": "Net30",
+      "taxRate": 0.0000,
+      "createdAt": "2023-04-28",
+      "lines": [
+        { "description": "48-tooth Spur Gear Blank x30", "quantity": 30, "unitPrice": 178.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2315",
+      "method": "BankTransfer",
+      "amount": 5340.00,
+      "paymentDate": "2023-05-25",
+      "referenceNumber": "ACH-CIL-0044",
+      "createdAt": "2023-05-25"
+    }
+  },
+  {
+    "chainId": "C-3",
+    "customerRef": "customer:cascade",
+    "salesOrder": {
+      "orderNumber": "SO-2401C",
+      "status": "Shipped",
+      "creditTerms": "Net45",
+      "confirmedDate": "2024-01-15",
+      "requestedDeliveryDate": "2024-02-28",
+      "customerPO": "CIL-2024-0011",
+      "taxRate": 0.0000,
+      "createdAt": "2024-01-15",
+      "lines": [
+        { "$id": "sol:SO-2401C:0", "partRef": "part:P-1005", "description": "Electrical Connector Plate", "quantity": 40, "unitPrice": 145.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2401C", "title": "Connector Plate \u2014 Cascade 40 pcs", "stageCode": "payment_received", "assigneeRef": "user:akim", "createdAt": "2024-01-16", "dueDate": "2024-02-28" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2401C",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10299887766",
+      "shippedDate": "2024-02-25",
+      "deliveredDate": "2024-02-28",
+      "shippingCost": 55.00,
+      "createdAt": "2024-02-25",
+      "lines": [
+        { "soLineRef": "sol:SO-2401C:0", "quantity": 40 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2401C",
+      "status": "PartiallyPaid",
+      "invoiceDate": "2024-02-25",
+      "dueDate": "2024-04-10",
+      "creditTerms": "Net45",
+      "taxRate": 0.0000,
+      "notes": "Awaiting balance payment",
+      "createdAt": "2024-02-25",
+      "lines": [
+        { "description": "Electrical Connector Plate x40", "quantity": 40, "unitPrice": 145.00 }
+      ]
+    },
+    "payments": [
+      {
+        "paymentNumber": "PMT-2401C-1",
+        "method": "Check",
+        "amount": 3000.00,
+        "paymentDate": "2024-03-15",
+        "referenceNumber": "CHK-CIL-0011A",
+        "notes": "Partial \u2014 balance to follow",
+        "createdAt": "2024-03-15"
+      }
+    ]
+  },
+  {
+    "chainId": "N-1",
+    "customerRef": "customer:novatech",
+    "estimate": {
+      "title": "Heat Sink Array \u2014 30 pcs prototype run",
+      "estimatedAmount": 8100.00,
+      "status": "Accepted",
+      "assignedToRef": "user:akim",
+      "validUntil": "2022-09-01",
+      "convertedAt": "2022-08-20",
+      "createdAt": "2022-08-10"
+    },
+    "quote": {
+      "quoteNumber": "Q-2251",
+      "status": "Accepted",
+      "sentDate": "2022-08-22",
+      "expirationDate": "2022-09-22",
+      "acceptedDate": "2022-08-30",
+      "taxRate": 0.0725,
+      "notes": "CA state tax applies. Net30.",
+      "createdAt": "2022-08-22",
+      "lines": [
+        { "partRef": "part:P-1007", "description": "Heat Sink Array \u2014 Extrusion Profile", "quantity": 30, "unitPrice": 265.00 }
+      ]
+    },
+    "salesOrder": {
+      "orderNumber": "SO-2251",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2022-09-01",
+      "requestedDeliveryDate": "2022-10-10",
+      "customerPO": "NTE-PO-0021",
+      "taxRate": 0.0725,
+      "createdAt": "2022-09-01",
+      "lines": [
+        { "$id": "sol:SO-2251:0", "partRef": "part:P-1007", "description": "Heat Sink Array \u2014 Extrusion", "quantity": 30, "unitPrice": 265.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2251", "title": "Heat Sink Array \u2014 NovaTech 30 pcs", "stageCode": "payment_received", "assigneeRef": "user:akim", "createdAt": "2022-09-02", "dueDate": "2022-10-10" }
+    ],
+    "lots": [
+      { "lotNumber": "LOT-2251", "partRef": "part:P-1007", "jobRef": "job:J-2251", "quantity": 30, "notes": "Prototype heat sink lot \u2014 NovaTech qualification run", "createdAt": "2022-10-03" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2251",
+      "status": "Delivered",
+      "carrier": "FedEx Priority",
+      "trackingNumber": "796423456789012",
+      "shippedDate": "2022-10-07",
+      "deliveredDate": "2022-10-09",
+      "shippingCost": 95.00,
+      "createdAt": "2022-10-07",
+      "lines": [
+        { "soLineRef": "sol:SO-2251:0", "quantity": 30 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2251",
+      "status": "Paid",
+      "invoiceDate": "2022-10-07",
+      "dueDate": "2022-11-06",
+      "creditTerms": "Net30",
+      "taxRate": 0.0725,
+      "createdAt": "2022-10-07",
+      "lines": [
+        { "description": "Heat Sink Array x30", "quantity": 30, "unitPrice": 265.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2251",
+      "method": "Wire",
+      "amount": 8629.50,
+      "paymentDate": "2022-11-04",
+      "referenceNumber": "WIRE-NTE-0021",
+      "notes": "Wire transfer \u2014 incl CA tax",
+      "createdAt": "2022-11-04"
+    }
+  },
+  {
+    "chainId": "N-2",
+    "customerRef": "customer:novatech",
+    "salesOrder": {
+      "orderNumber": "SO-2331",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2023-07-10",
+      "requestedDeliveryDate": "2023-09-01",
+      "customerPO": "NTE-PO-0058",
+      "taxRate": 0.0725,
+      "createdAt": "2023-07-10",
+      "lines": [
+        { "$id": "sol:SO-2331:0", "partRef": "part:P-1007", "description": "Heat Sink Array \u2014 Production Run", "quantity": 100, "unitPrice": 245.00 },
+        { "$id": "sol:SO-2331:1", "partRef": "part:P-1009", "description": "High-Temp Polymer Seal Kit", "quantity": 100, "unitPrice": 38.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2331", "title": "Heat Sink Array \u2014 NovaTech 100 pcs", "stageCode": "payment_received", "assigneeRef": "user:akim", "createdAt": "2023-07-11", "dueDate": "2023-09-01", "priority": "High" },
+      { "jobNumber": "J-2332", "title": "Polymer Seal Kits \u2014 NovaTech 100 pcs", "stageCode": "payment_received", "assigneeRef": "user:jsilva", "createdAt": "2023-07-11", "dueDate": "2023-09-01" }
+    ],
+    "lots": [
+      { "lotNumber": "LOT-2331", "partRef": "part:P-1007", "jobRef": "job:J-2331", "quantity": 100, "notes": "Production lot \u2014 NovaTech high-volume run", "createdAt": "2023-08-20" }
+    ],
+    "returns": [
+      {
+        "returnNumber": "RET-2331",
+        "jobRef": "job:J-2331",
+        "reason": "Dimensional non-conformance \u2014 fin spacing 0.005\" over tolerance on 5 pcs",
+        "status": "Resolved",
+        "returnDate": "2023-09-20",
+        "inspectedByRef": "user:akim",
+        "inspectedAt": "2023-09-22",
+        "inspectionNotes": "Confirmed OOT on 5 units. Scrapped and replaced at no charge.",
+        "notes": "Customer returned 5 pcs. Root cause: tool wear. Replaced free of charge.",
+        "createdAt": "2023-09-20"
+      }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2331",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10233445566",
+      "shippedDate": "2023-08-28",
+      "deliveredDate": "2023-08-31",
+      "shippingCost": 145.00,
+      "createdAt": "2023-08-28",
+      "lines": [
+        { "soLineRef": "sol:SO-2331:0", "quantity": 100 },
+        { "soLineRef": "sol:SO-2331:1", "quantity": 100 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2331",
+      "status": "Paid",
+      "invoiceDate": "2023-08-28",
+      "dueDate": "2023-09-27",
+      "creditTerms": "Net30",
+      "taxRate": 0.0725,
+      "createdAt": "2023-08-28",
+      "lines": [
+        { "description": "Heat Sink Array x100", "quantity": 100, "unitPrice": 245.00 },
+        { "description": "High-Temp Polymer Seal Kit x100", "quantity": 100, "unitPrice": 38.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2331",
+      "method": "Wire",
+      "amount": 30443.25,
+      "paymentDate": "2023-09-25",
+      "referenceNumber": "WIRE-NTE-0058",
+      "createdAt": "2023-09-25"
+    }
+  },
+  {
+    "chainId": "N-3",
+    "customerRef": "customer:novatech",
+    "salesOrder": {
+      "orderNumber": "SO-2501N",
+      "status": "InProduction",
+      "creditTerms": "Net30",
+      "confirmedDate": "2025-02-10",
+      "requestedDeliveryDate": "2025-04-01",
+      "customerPO": "NTE-PO-0102",
+      "taxRate": 0.0725,
+      "createdAt": "2025-02-10",
+      "lines": [
+        { "$id": "sol:SO-2501N:0", "partRef": "part:P-1007", "description": "Heat Sink Array \u2014 Annual Blanket Q1", "quantity": 150, "unitPrice": 240.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2501N", "title": "Heat Sink Array \u2014 NovaTech 150 pcs Q1", "stageCode": "in_production", "assigneeRef": "user:akim", "createdAt": "2025-02-11", "dueDate": "2025-04-01", "priority": "High" }
+    ],
+    "purchaseOrders": [
+      {
+        "poNumber": "PO-2501N",
+        "vendorRef": "vendor:acme-metals",
+        "jobRef": "job:J-2501N",
+        "status": "Received",
+        "submittedDate": "2025-02-12",
+        "expectedDeliveryDate": "2025-02-20",
+        "receivedDate": "2025-02-21",
+        "notes": "6063-T5 extrusion for heat sink run",
+        "createdAt": "2025-02-12",
+        "lines": [
+          { "partRef": "part:M-001", "description": "6063-T5 Aluminum Extrusion Stock", "orderedQuantity": 180, "unitPrice": 11.20 }
+        ]
+      }
+    ]
+  },
+  {
+    "chainId": "B-1",
+    "customerRef": "customer:blue-ridge",
+    "estimate": {
+      "title": "Pneumatic Manifold Block \u2014 10 pcs estimate",
+      "estimatedAmount": 7200.00,
+      "status": "Accepted",
+      "assignedToRef": "user:dhart",
+      "validUntil": "2022-11-01",
+      "convertedAt": "2022-10-15",
+      "createdAt": "2022-10-05"
+    },
+    "salesOrder": {
+      "orderNumber": "SO-2261",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2022-10-18",
+      "requestedDeliveryDate": "2022-11-25",
+      "customerPO": "BRF-2022-0016",
+      "taxRate": 0.0475,
+      "createdAt": "2022-10-18",
+      "lines": [
+        { "$id": "sol:SO-2261:0", "partRef": "part:P-1006", "description": "Pneumatic Manifold Block", "quantity": 10, "unitPrice": 710.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2261", "title": "Pneumatic Manifold \u2014 Blue Ridge 10 pcs", "stageCode": "payment_received", "assigneeRef": "user:dhart", "createdAt": "2022-10-19", "dueDate": "2022-11-25" }
+    ],
+    "returns": [
+      {
+        "returnNumber": "RET-2261",
+        "jobRef": "job:J-2261",
+        "reason": "Surface porosity on 2 units \u2014 unacceptable for pneumatic application",
+        "status": "Closed",
+        "returnDate": "2022-12-10",
+        "inspectedByRef": "user:dhart",
+        "inspectedAt": "2022-12-12",
+        "inspectionNotes": "Confirmed porosity. Determined to be raw material defect in that batch. Replaced from next material lot.",
+        "notes": "Blue Ridge returned 2 manifolds. Material batch issue. Replaced FOC.",
+        "createdAt": "2022-12-10"
+      }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2261",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10261627384",
+      "shippedDate": "2022-11-22",
+      "deliveredDate": "2022-11-28",
+      "shippingCost": 85.00,
+      "createdAt": "2022-11-22",
+      "lines": [
+        { "soLineRef": "sol:SO-2261:0", "quantity": 10 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2261",
+      "status": "Paid",
+      "invoiceDate": "2022-11-22",
+      "dueDate": "2022-12-22",
+      "creditTerms": "Net30",
+      "taxRate": 0.0475,
+      "notes": "NC state tax applied",
+      "createdAt": "2022-11-22",
+      "lines": [
+        { "description": "Pneumatic Manifold Block x10", "quantity": 10, "unitPrice": 710.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2261",
+      "method": "Check",
+      "amount": 7436.75,
+      "paymentDate": "2022-12-20",
+      "referenceNumber": "CHK-BRF-016",
+      "notes": "Includes NC tax",
+      "createdAt": "2022-12-20"
+    }
+  },
+  {
+    "chainId": "B-2",
+    "customerRef": "customer:blue-ridge",
+    "salesOrder": {
+      "orderNumber": "SO-2421B",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2024-04-08",
+      "requestedDeliveryDate": "2024-05-15",
+      "customerPO": "BRF-2024-0033",
+      "taxRate": 0.0475,
+      "createdAt": "2024-04-08",
+      "lines": [
+        { "$id": "sol:SO-2421B:0", "partRef": "part:P-1008", "description": "Custom Weld Flange 2\" NPT", "quantity": 24, "unitPrice": 225.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2421B", "title": "Custom Flange 2\" NPT \u2014 Blue Ridge 24 pcs", "stageCode": "payment_received", "assigneeRef": "user:mreyes", "createdAt": "2024-04-09", "dueDate": "2024-05-15" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2421B",
+      "status": "Delivered",
+      "carrier": "FedEx Ground",
+      "trackingNumber": "796434567890123",
+      "shippedDate": "2024-05-13",
+      "deliveredDate": "2024-05-16",
+      "shippingCost": 72.00,
+      "createdAt": "2024-05-13",
+      "lines": [
+        { "soLineRef": "sol:SO-2421B:0", "quantity": 24 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2421B",
+      "status": "Paid",
+      "invoiceDate": "2024-05-13",
+      "dueDate": "2024-06-12",
+      "creditTerms": "Net30",
+      "taxRate": 0.0475,
+      "createdAt": "2024-05-13",
+      "lines": [
+        { "description": "Custom Weld Flange 2\" NPT x24", "quantity": 24, "unitPrice": 225.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2421B",
+      "method": "BankTransfer",
+      "amount": 5657.40,
+      "paymentDate": "2024-06-10",
+      "referenceNumber": "ACH-BRF-033",
+      "createdAt": "2024-06-10"
+    }
+  },
+  {
+    "chainId": "A-1",
+    "customerRef": "customer:acme-corp",
+    "salesOrder": {
+      "orderNumber": "SO-2211A",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2022-05-10",
+      "requestedDeliveryDate": "2022-06-15",
+      "customerPO": "ACME-PO-2022-441",
+      "taxRate": 0.0560,
+      "createdAt": "2022-05-10",
+      "lines": [
+        { "$id": "sol:SO-2211A:0", "partRef": "part:P-1003", "description": "Motor Mount Plate v2", "quantity": 40, "unitPrice": 188.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2211A", "title": "Motor Mount v2 \u2014 Acme 40 pcs", "stageCode": "payment_received", "assigneeRef": "user:jsilva", "createdAt": "2022-05-11", "dueDate": "2022-06-15" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2211A",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10211223300",
+      "shippedDate": "2022-06-12",
+      "deliveredDate": "2022-06-15",
+      "shippingCost": 78.00,
+      "createdAt": "2022-06-12",
+      "lines": [
+        { "soLineRef": "sol:SO-2211A:0", "quantity": 40 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2211A",
+      "status": "Paid",
+      "invoiceDate": "2022-06-12",
+      "dueDate": "2022-07-12",
+      "creditTerms": "Net30",
+      "taxRate": 0.0560,
+      "createdAt": "2022-06-12",
+      "lines": [
+        { "description": "Motor Mount Plate v2 x40", "quantity": 40, "unitPrice": 188.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2211A",
+      "method": "Check",
+      "amount": 7938.88,
+      "paymentDate": "2022-07-10",
+      "referenceNumber": "CHK-ACME-441",
+      "notes": "Incl AZ tax",
+      "createdAt": "2022-07-10"
+    }
+  },
+  {
+    "chainId": "A-2",
+    "customerRef": "customer:acme-corp",
+    "salesOrder": {
+      "orderNumber": "SO-2321A",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2023-09-05",
+      "requestedDeliveryDate": "2023-10-05",
+      "customerPO": "ACME-PO-2023-782",
+      "taxRate": 0.0560,
+      "createdAt": "2023-09-05",
+      "lines": [
+        { "$id": "sol:SO-2321A:0", "partRef": "part:P-1009", "description": "High-Temp Polymer Seal Kit", "quantity": 60, "unitPrice": 42.00 },
+        { "$id": "sol:SO-2321A:1", "partRef": "part:P-1005", "description": "Electrical Connector Plate", "quantity": 25, "unitPrice": 148.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2321A", "title": "Polymer Seals & Connector Plates \u2014 Acme", "stageCode": "payment_received", "assigneeRef": "user:mreyes", "createdAt": "2023-09-06", "dueDate": "2023-10-05" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2321A",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10321232456",
+      "shippedDate": "2023-10-03",
+      "deliveredDate": "2023-10-06",
+      "shippingCost": 52.00,
+      "createdAt": "2023-10-03",
+      "lines": [
+        { "soLineRef": "sol:SO-2321A:0", "quantity": 60 },
+        { "soLineRef": "sol:SO-2321A:1", "quantity": 25 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2321A",
+      "status": "Paid",
+      "invoiceDate": "2023-10-03",
+      "dueDate": "2023-11-02",
+      "creditTerms": "Net30",
+      "taxRate": 0.0560,
+      "createdAt": "2023-10-03",
+      "lines": [
+        { "description": "Polymer Seal Kit x60", "quantity": 60, "unitPrice": 42.00 },
+        { "description": "Connector Plate x25", "quantity": 25, "unitPrice": 148.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2321A",
+      "method": "BankTransfer",
+      "amount": 6484.18,
+      "paymentDate": "2023-10-30",
+      "referenceNumber": "ACH-ACME-782",
+      "createdAt": "2023-10-30"
+    }
+  },
+  {
+    "chainId": "AP-1",
+    "customerRef": "customer:apex-mfg",
+    "salesOrder": {
+      "orderNumber": "SO-2221AP",
+      "status": "Completed",
+      "creditTerms": "Net30",
+      "confirmedDate": "2022-06-20",
+      "requestedDeliveryDate": "2022-07-25",
+      "customerPO": "APEX-22-0205",
+      "taxRate": 0.0290,
+      "createdAt": "2022-06-20",
+      "lines": [
+        { "$id": "sol:SO-2221AP:0", "partRef": "part:P-1004", "description": "48T Spur Gear Blank", "quantity": 25, "unitPrice": 182.00 },
+        { "$id": "sol:SO-2221AP:1", "partRef": "part:P-1002", "description": "Shaft Housing CNC", "quantity": 10, "unitPrice": 310.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2221AP", "title": "Gear Blank 48T \u2014 Apex 25 pcs", "stageCode": "payment_received", "assigneeRef": "user:akim", "createdAt": "2022-06-21", "dueDate": "2022-07-25" },
+      { "jobNumber": "J-2222AP", "title": "Shaft Housing \u2014 Apex 10 pcs", "stageCode": "payment_received", "assigneeRef": "user:dhart", "createdAt": "2022-06-21", "dueDate": "2022-07-25" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2221AP",
+      "status": "Delivered",
+      "carrier": "FedEx Ground",
+      "trackingNumber": "796445678901234",
+      "shippedDate": "2022-07-22",
+      "deliveredDate": "2022-07-26",
+      "shippingCost": 82.00,
+      "createdAt": "2022-07-22",
+      "lines": [
+        { "soLineRef": "sol:SO-2221AP:0", "quantity": 25 },
+        { "soLineRef": "sol:SO-2221AP:1", "quantity": 10 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2221AP",
+      "status": "Paid",
+      "invoiceDate": "2022-07-22",
+      "dueDate": "2022-08-21",
+      "creditTerms": "Net30",
+      "taxRate": 0.0290,
+      "createdAt": "2022-07-22",
+      "lines": [
+        { "description": "Gear Blank 48T x25", "quantity": 25, "unitPrice": 182.00 },
+        { "description": "Shaft Housing x10", "quantity": 10, "unitPrice": 310.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2221AP",
+      "method": "BankTransfer",
+      "amount": 7723.60,
+      "paymentDate": "2022-08-18",
+      "referenceNumber": "ACH-APEX-0205",
+      "createdAt": "2022-08-18"
+    }
+  },
+  {
+    "chainId": "AP-2",
+    "customerRef": "customer:apex-mfg",
+    "quote": {
+      "quoteNumber": "Q-2341AP",
+      "status": "Accepted",
+      "sentDate": "2023-11-05",
+      "expirationDate": "2023-12-05",
+      "acceptedDate": "2023-11-14",
+      "taxRate": 0.0290,
+      "notes": "Net45 for volume order",
+      "createdAt": "2023-11-05",
+      "lines": [
+        { "partRef": "part:P-1001", "description": "Precision Mounting Bracket Assy", "quantity": 75, "unitPrice": 232.00 },
+        { "partRef": "part:P-1006", "description": "Pneumatic Manifold Block", "quantity": 12, "unitPrice": 665.00 }
+      ]
+    },
+    "salesOrder": {
+      "orderNumber": "SO-2341AP",
+      "status": "Completed",
+      "creditTerms": "Net45",
+      "confirmedDate": "2023-11-15",
+      "requestedDeliveryDate": "2024-01-20",
+      "customerPO": "APEX-23-0534",
+      "taxRate": 0.0290,
+      "createdAt": "2023-11-15",
+      "lines": [
+        { "$id": "sol:SO-2341AP:0", "partRef": "part:P-1001", "description": "Precision Mounting Bracket Assy", "quantity": 75, "unitPrice": 232.00 },
+        { "$id": "sol:SO-2341AP:1", "partRef": "part:P-1006", "description": "Pneumatic Manifold Block", "quantity": 12, "unitPrice": 665.00 }
+      ]
+    },
+    "jobs": [
+      { "jobNumber": "J-2341AP", "title": "Bracket Assy \u2014 Apex 75 pcs", "stageCode": "payment_received", "assigneeRef": "user:akim", "createdAt": "2023-11-16", "dueDate": "2024-01-20", "priority": "High" },
+      { "jobNumber": "J-2342AP", "title": "Pneumatic Manifold \u2014 Apex 12 pcs", "stageCode": "payment_received", "assigneeRef": "user:jsilva", "createdAt": "2023-11-16", "dueDate": "2024-01-20" }
+    ],
+    "purchaseOrders": [
+      {
+        "poNumber": "PO-2341AP",
+        "vendorRef": "vendor:acme-metals",
+        "jobRef": "job:J-2341AP",
+        "status": "Received",
+        "submittedDate": "2023-11-17",
+        "expectedDeliveryDate": "2023-11-28",
+        "receivedDate": "2023-11-29",
+        "notes": "Aluminum bar stock for Apex bracket run",
+        "createdAt": "2023-11-17",
+        "lines": [
+          { "partRef": "part:M-001", "description": "6061-T6 Bar Stock", "orderedQuantity": 90, "unitPrice": 8.50 }
+        ]
+      }
+    ],
+    "lots": [
+      { "lotNumber": "LOT-2341AP", "partRef": "part:P-1001", "jobRef": "job:J-2341AP", "quantity": 75, "notes": "Bracket assy lot \u2014 Apex volume order", "createdAt": "2024-01-10" }
+    ],
+    "shipment": {
+      "shipmentNumber": "SH-2341AP",
+      "status": "Delivered",
+      "carrier": "UPS Ground",
+      "trackingNumber": "1Z999AA10341234567",
+      "shippedDate": "2024-01-17",
+      "deliveredDate": "2024-01-22",
+      "shippingCost": 125.00,
+      "createdAt": "2024-01-17",
+      "lines": [
+        { "soLineRef": "sol:SO-2341AP:0", "quantity": 75 },
+        { "soLineRef": "sol:SO-2341AP:1", "quantity": 12 }
+      ]
+    },
+    "invoice": {
+      "invoiceNumber": "INV-2341AP",
+      "status": "Paid",
+      "invoiceDate": "2024-01-17",
+      "dueDate": "2024-03-02",
+      "creditTerms": "Net45",
+      "taxRate": 0.0290,
+      "createdAt": "2024-01-17",
+      "lines": [
+        { "description": "Precision Mounting Bracket Assy x75", "quantity": 75, "unitPrice": 232.00 },
+        { "description": "Pneumatic Manifold Block x12", "quantity": 12, "unitPrice": 665.00 }
+      ]
+    },
+    "payment": {
+      "paymentNumber": "PMT-2341AP",
+      "method": "Wire",
+      "amount": 25618.80,
+      "paymentDate": "2024-02-28",
+      "referenceNumber": "WIRE-APEX-0534",
+      "createdAt": "2024-02-28"
+    }
+  }
+]

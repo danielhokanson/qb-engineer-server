@@ -46,4 +46,10 @@
     <InternalsVisibleTo Include="qb-engineer.tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Data\Seeds\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

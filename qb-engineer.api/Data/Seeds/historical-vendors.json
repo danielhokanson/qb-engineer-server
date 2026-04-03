@@ -1,0 +1,72 @@
+[
+  {
+    "$id": "vendor:acme-metals",
+    "companyName": "Acme Metals Supply",
+    "contactName": "Frank Donovan",
+    "email": "frank@acmemetals.com",
+    "phone": "(602) 555-0142",
+    "address": "4400 Industrial Blvd",
+    "city": "Phoenix",
+    "state": "AZ",
+    "zipCode": "85034",
+    "country": "USA",
+    "paymentTerms": "Net30",
+    "createdAt": "2021-06-01"
+  },
+  {
+    "$id": "vendor:precision-polymers",
+    "companyName": "Precision Polymers Inc",
+    "contactName": "Linda Marsh",
+    "email": "lmarsh@precisionpolymers.com",
+    "phone": "(503) 555-0278",
+    "address": "1820 Composite Way",
+    "city": "Portland",
+    "state": "OR",
+    "zipCode": "97201",
+    "country": "USA",
+    "paymentTerms": "Net30",
+    "createdAt": "2021-08-15"
+  },
+  {
+    "$id": "vendor:pacific-tool",
+    "companyName": "Pacific Tool Supply",
+    "contactName": "Greg Tanaka",
+    "email": "gtanaka@pacifictool.com",
+    "phone": "(206) 555-0391",
+    "address": "710 Tool Center Dr",
+    "city": "Seattle",
+    "state": "WA",
+    "zipCode": "98108",
+    "country": "USA",
+    "paymentTerms": "Net15",
+    "createdAt": "2021-09-01"
+  },
+  {
+    "$id": "vendor:national-fastener",
+    "companyName": "National Fastener Corp",
+    "contactName": "Bob Pruitt",
+    "email": "bpruitt@nationalfastener.com",
+    "phone": "(312) 555-0054",
+    "address": "3300 Hardware Ave",
+    "city": "Chicago",
+    "state": "IL",
+    "zipCode": "60632",
+    "country": "USA",
+    "paymentTerms": "Net30",
+    "createdAt": "2022-01-10"
+  },
+  {
+    "$id": "vendor:color-coat",
+    "companyName": "ColorCoat Services",
+    "contactName": "Maria Vasquez",
+    "email": "mvasquez@colorcoat.com",
+    "phone": "(480) 555-0819",
+    "address": "900 Finishing Ln",
+    "city": "Tempe",
+    "state": "AZ",
+    "zipCode": "85281",
+    "country": "USA",
+    "paymentTerms": "DueOnReceipt",
+    "createdAt": "2022-03-01"
+  }
+]

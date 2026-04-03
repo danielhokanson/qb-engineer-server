@@ -1,0 +1,118 @@
+{
+  "newCustomers": [
+    {
+      "$id": "customer:vertex",
+      "name": "Vertex Precision Inc",
+      "email": "orders@vertexprecision.com",
+      "phone": "(971) 555-0234",
+      "createdAt": "2022-01-20",
+      "contacts": [
+        { "firstName": "Rachel", "lastName": "Okonkwo", "email": "rokonkwo@vertexprecision.com", "phone": "(971) 555-0235", "isPrimary": true, "createdAt": "2022-01-20" },
+        { "firstName": "Tom", "lastName": "Engel", "email": "tengel@vertexprecision.com", "phone": "(971) 555-0236", "isPrimary": false, "createdAt": "2022-02-01" }
+      ],
+      "address": {
+        "label": "HQ",
+        "addressType": "Both",
+        "line1": "2250 Precision Pkwy",
+        "city": "Hillsboro",
+        "state": "OR",
+        "postalCode": "97124",
+        "country": "USA"
+      }
+    },
+    {
+      "$id": "customer:cascade",
+      "name": "Cascade Industrial LLC",
+      "email": "purchasing@cascadeindustrial.com",
+      "phone": "(253) 555-0387",
+      "createdAt": "2022-03-05",
+      "contacts": [
+        { "firstName": "Dave", "lastName": "Whitmore", "email": "dwhitmore@cascadeindustrial.com", "phone": "(253) 555-0388", "isPrimary": true, "createdAt": "2022-03-05" }
+      ],
+      "address": {
+        "label": "HQ",
+        "addressType": "Both",
+        "line1": "510 Valley Industrial Way",
+        "city": "Tacoma",
+        "state": "WA",
+        "postalCode": "98421",
+        "country": "USA"
+      }
+    },
+    {
+      "$id": "customer:novatech",
+      "name": "NovaTech Electronics",
+      "email": "supply@novatechelectronics.com",
+      "phone": "(408) 555-0512",
+      "createdAt": "2022-06-12",
+      "contacts": [
+        { "firstName": "Priya", "lastName": "Nair", "email": "pnair@novatechelectronics.com", "phone": "(408) 555-0513", "isPrimary": true, "createdAt": "2022-06-12" },
+        { "firstName": "James", "lastName": "Cho", "email": "jcho@novatechelectronics.com", "phone": "(408) 555-0514", "isPrimary": false, "createdAt": "2022-07-01" }
+      ],
+      "address": {
+        "label": "HQ",
+        "addressType": "Both",
+        "line1": "3800 Silicon Blvd Ste 200",
+        "city": "San Jose",
+        "state": "CA",
+        "postalCode": "95134",
+        "country": "USA"
+      }
+    },
+    {
+      "$id": "customer:blue-ridge",
+      "name": "Blue Ridge Fabrication",
+      "email": "ops@blueridgefab.com",
+      "phone": "(828) 555-0671",
+      "createdAt": "2022-09-01",
+      "contacts": [
+        { "firstName": "Carl", "lastName": "Hendricks", "email": "chendricks@blueridgefab.com", "phone": "(828) 555-0672", "isPrimary": true, "createdAt": "2022-09-01" }
+      ],
+      "address": {
+        "label": "HQ",
+        "addressType": "Both",
+        "line1": "88 Ridgeline Rd",
+        "city": "Asheville",
+        "state": "NC",
+        "postalCode": "28806",
+        "country": "USA"
+      }
+    }
+  ],
+  "existingCustomerExtras": [
+    {
+      "$id": "customer:acme-corp",
+      "lookupName": "Acme Corp",
+      "contacts": [
+        { "firstName": "Steve", "lastName": "Baxter", "email": "sbaxter@acmecorp.com", "phone": "(602) 555-0101", "isPrimary": true, "createdAt": "2021-06-01" }
+      ],
+      "address": {
+        "label": "HQ",
+        "addressType": "Both",
+        "line1": "100 Acme Corporate Dr",
+        "city": "Phoenix",
+        "state": "AZ",
+        "postalCode": "85001",
+        "country": "USA",
+        "createdAt": "2021-06-01"
+      }
+    },
+    {
+      "$id": "customer:apex-mfg",
+      "lookupName": "Apex Manufacturing",
+      "contacts": [
+        { "firstName": "Karen", "lastName": "Tully", "email": "ktully@apexmfg.com", "phone": "(720) 555-0202", "isPrimary": true, "createdAt": "2021-06-01" }
+      ],
+      "address": {
+        "label": "HQ",
+        "addressType": "Both",
+        "line1": "4500 Manufacturing Blvd",
+        "city": "Denver",
+        "state": "CO",
+        "postalCode": "80239",
+        "country": "USA",
+        "createdAt": "2021-06-01"
+      }
+    }
+  ]
+}

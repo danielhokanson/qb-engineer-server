@@ -7,7 +7,7 @@ using Serilog;
 
 namespace QBEngineer.Api.Data;
 
-public static class SeedData
+public static partial class SeedData
 {
     public static async Task SeedAsync(IServiceProvider services)
     {
@@ -601,6 +601,9 @@ public static class SeedData
 
         // ── Sales Tax Rates ────────────────────────────────────────────────
         await SeedSalesTaxRatesAsync(db);
+
+        // ── Historical Data ────────────────────────────────────────────────
+        await SeedHistoricalDataAsync(db, admin.Id, akim.Id, dhart.Id, jsilva.Id, mreyes.Id);
 
         Log.Information("Database seeding complete");
     }
@@ -2150,3 +2153,4 @@ public static class SeedData
         return user;
     }
 }
+
