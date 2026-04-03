@@ -230,8 +230,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedAt = now;
-                    entry.Entity.UpdatedAt = now;
+                    if (entry.Entity.CreatedAt == default) entry.Entity.CreatedAt = now;
+                    if (entry.Entity.UpdatedAt == default) entry.Entity.UpdatedAt = entry.Entity.CreatedAt;
                     break;
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
