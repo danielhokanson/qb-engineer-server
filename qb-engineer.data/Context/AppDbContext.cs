@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Data.Context;
 
@@ -10,8 +11,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
 {
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    private readonly IClock _clock;
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, IClock clock) : base(options)
     {
+        _clock = clock;
     }
 
     public DbSet<TrackType> TrackTypes => Set<TrackType>();
@@ -223,7 +227,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     private void SetTimestamps()
     {
         var entries = ChangeTracker.Entries<BaseAuditableEntity>();
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.UtcNow;
 
         foreach (var entry in entries)
         {

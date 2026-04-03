@@ -11,7 +11,8 @@ namespace QBEngineer.Api.Data;
 public static partial class SeedData
 {
     private static async Task SeedHistoricalDataAsync(
-        AppDbContext db, int adminId, int akimId, int dhartId, int jsilvaId, int mreyesId)
+        AppDbContext db, int adminId, int akimId, int dhartId, int jsilvaId, int mreyesId,
+        int pmorrisId, int lwilsonId, int cthompsonId, int bkellyId)
     {
         if (await db.Vendors.AnyAsync()) return;
 

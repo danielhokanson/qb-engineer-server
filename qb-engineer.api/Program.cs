@@ -54,6 +54,21 @@ try
         .WriteTo.Console()
         .Enrich.FromLogContext());
 
+    // Clock abstraction — MockClock in development (controllable via /api/v1/dev/clock),
+    // SystemClock in production.
+    var useMockClock = builder.Environment.IsDevelopment();
+    if (useMockClock)
+    {
+        var mockClock = new MockClock();
+        builder.Services.AddSingleton<MockClock>(mockClock);
+        builder.Services.AddSingleton<IClock>(mockClock);
+        Log.Information("Clock: MockClock (development) — controllable via POST /api/v1/dev/clock");
+    }
+    else
+    {
+        builder.Services.AddSingleton<IClock, SystemClock>();
+    }
+
     // EF Core + PostgreSQL (with pgvector for AI embeddings)
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(
@@ -555,6 +570,62 @@ try
             options.WithTitle("QB Engineer API");
             options.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
         });
+
+        // ── Dev-only: clock control for E2E simulation ─────────────────────
+        var devClock = app.Services.GetRequiredService<MockClock>();
+
+        app.MapPost("/api/v1/dev/clock", (ClockSetRequest req) =>
+        {
+            devClock.Set(req.Now);
+            return Results.Ok(new { now = devClock.UtcNow });
+        });
+
+        app.MapGet("/api/v1/dev/clock", () =>
+            Results.Ok(new { now = devClock.UtcNow }));
+
+        app.MapDelete("/api/v1/dev/clock", () =>
+        {
+            devClock.Set(DateTimeOffset.UtcNow);
+            return Results.Ok(new { now = devClock.UtcNow });
+        });
+
+        // ── Dev-only: simulation state summary ─────────────────────────────
+        app.MapGet("/api/v1/dev/simulation-state", async (AppDbContext db) =>
+        {
+            var jobsByStage = await db.Jobs
+                .Where(j => j.DeletedAt == null)
+                .Include(j => j.CurrentStage)
+                .GroupBy(j => j.CurrentStage != null ? j.CurrentStage.Name : "Unknown")
+                .Select(g => new { Stage = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Stage, x => x.Count);
+
+            var now = devClock.UtcNow;
+            return Results.Ok(new
+            {
+                openLeads       = await db.Leads.CountAsync(l => l.DeletedAt == null
+                                    && l.Status != QBEngineer.Core.Enums.LeadStatus.Converted
+                                    && l.Status != QBEngineer.Core.Enums.LeadStatus.Lost),
+                openQuotes      = await db.Quotes.CountAsync(q => q.DeletedAt == null
+                                    && q.Status == QBEngineer.Core.Enums.QuoteStatus.Draft),
+                openSalesOrders = await db.SalesOrders.CountAsync(so => so.DeletedAt == null
+                                    && so.Status != QBEngineer.Core.Enums.SalesOrderStatus.Completed
+                                    && so.Status != QBEngineer.Core.Enums.SalesOrderStatus.Cancelled),
+                jobsByStage,
+                unpaidInvoices  = await db.Invoices.CountAsync(i => i.DeletedAt == null
+                                    && i.Status != QBEngineer.Core.Enums.InvoiceStatus.Paid
+                                    && i.Status != QBEngineer.Core.Enums.InvoiceStatus.Voided),
+                overduePos      = await db.PurchaseOrders.CountAsync(po => po.DeletedAt == null
+                                    && po.Status == QBEngineer.Core.Enums.PurchaseOrderStatus.Submitted
+                                    && po.ExpectedDeliveryDate < now),
+                activeTimers    = await db.ClockEvents.CountAsync(ce =>
+                                    ce.EventType == QBEngineer.Core.Enums.ClockEventType.ClockIn
+                                    && !db.ClockEvents.Any(ce2 => ce2.UserId == ce.UserId
+                                        && ce2.EventType == QBEngineer.Core.Enums.ClockEventType.ClockOut
+                                        && ce2.Timestamp > ce.Timestamp)),
+                pendingExpenses = await db.Expenses.CountAsync(e => e.DeletedAt == null
+                                    && e.Status == QBEngineer.Core.Enums.ExpenseStatus.Pending),
+            });
+        }).RequireAuthorization();
     }
 
     app.UseSession();
@@ -726,3 +797,6 @@ finally
 
 // Make Program accessible to integration tests via WebApplicationFactory
 public partial class Program { }
+
+// Dev-only request model for the clock control endpoint
+internal sealed record ClockSetRequest(DateTimeOffset Now);

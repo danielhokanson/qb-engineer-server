@@ -40,6 +40,18 @@ public static partial class SeedData
         var mreyes = await EnsureUserAsync(userManager, "mreyes@qbengineer.local",
             "M.", "Reyes", "MR", "#15803d", "Engineer123!", "Engineer");
 
+        var pmorris = await EnsureUserAsync(userManager, "pmorris@qbengineer.local",
+            "P.", "Morris", "PM", "#0369a1", "Engineer123!", "PM");
+
+        var lwilson = await EnsureUserAsync(userManager, "lwilson@qbengineer.local",
+            "L.", "Wilson", "LW", "#7c3aed", "Engineer123!", "Manager");
+
+        var cthompson = await EnsureUserAsync(userManager, "cthompson@qbengineer.local",
+            "C.", "Thompson", "CT", "#b45309", "Engineer123!", "OfficeManager");
+
+        var bkelly = await EnsureUserAsync(userManager, "bkelly@qbengineer.local",
+            "B.", "Kelly", "BK", "#0f766e", "Engineer123!", "ProductionWorker");
+
         await db.SaveChangesAsync();
 
         // ── 4. Track Types, Stages & Reference Data ────────────────────
@@ -603,7 +615,8 @@ public static partial class SeedData
         await SeedSalesTaxRatesAsync(db);
 
         // ── Historical Data ────────────────────────────────────────────────
-        await SeedHistoricalDataAsync(db, admin.Id, akim.Id, dhart.Id, jsilva.Id, mreyes.Id);
+        await SeedHistoricalDataAsync(db, admin.Id, akim.Id, dhart.Id, jsilva.Id, mreyes.Id,
+            pmorris.Id, lwilson.Id, cthompson.Id, bkelly.Id);
 
         Log.Information("Database seeding complete");
     }
