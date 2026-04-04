@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 using QBEngineer.Data.Context;
+using QBEngineer.Integrations;
 
 namespace QBEngineer.Tests.Helpers;
 
@@ -36,7 +37,7 @@ public static class TestDbContextFactory
 /// </summary>
 public class TestAppDbContext : AppDbContext
 {
-    public TestAppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    public TestAppDbContext(DbContextOptions<AppDbContext> options) : base(options, new SystemClock())
     {
     }
 
