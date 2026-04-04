@@ -76,6 +76,14 @@ public class TrackTypeRepository(AppDbContext db) : ITrackTypeRepository
         return await db.JobStages.FirstOrDefaultAsync(s => s.Id == stageId, ct);
     }
 
+    public async Task<List<JobStage>> GetStagesByTrackTypeAsync(int trackTypeId, CancellationToken ct)
+    {
+        return await db.JobStages
+            .Where(s => s.TrackTypeId == trackTypeId && s.IsActive)
+            .OrderBy(s => s.SortOrder)
+            .ToListAsync(ct);
+    }
+
     public async Task<TrackType?> FindAsync(int id, CancellationToken ct)
     {
         return await db.TrackTypes

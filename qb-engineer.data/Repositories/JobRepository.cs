@@ -176,20 +176,12 @@ public class JobRepository(AppDbContext db) : IJobRepository
 
     public async Task<string> GenerateNextJobNumberAsync(CancellationToken ct)
     {
-        var maxJobNumber = await db.Jobs
-            .Where(j => j.JobNumber.StartsWith("J-"))
-            .Select(j => j.JobNumber)
-            .OrderByDescending(jn => jn.Length)
-            .ThenByDescending(jn => jn)
-            .FirstOrDefaultAsync(ct);
+        // Use a PostgreSQL sequence for atomic, concurrent-safe job number generation.
+        var nextVal = await db.Database
+            .SqlQueryRaw<int>("SELECT CAST(nextval('job_number_seq') AS int) AS \"Value\"")
+            .SingleAsync(ct);
 
-        if (maxJobNumber is not null
-            && int.TryParse(maxJobNumber[2..], out var currentNumber))
-        {
-            return $"J-{currentNumber + 1}";
-        }
-
-        return "J-1001";
+        return $"J-{nextVal}";
     }
 
     public async Task<int> GetMaxBoardPositionAsync(int stageId, CancellationToken ct)

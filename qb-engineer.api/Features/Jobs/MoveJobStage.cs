@@ -53,6 +53,19 @@ public class MoveJobStageHandler(
 
         job.CurrentStageId = request.StageId;
 
+        // Mark job as completed when moved to the final stage of its track
+        var allStages = await trackRepo.GetStagesByTrackTypeAsync(job.TrackTypeId, cancellationToken);
+        var lastStage = allStages.OrderByDescending(s => s.SortOrder).FirstOrDefault();
+        if (lastStage is not null && lastStage.Id == request.StageId)
+        {
+            job.CompletedDate = DateTime.UtcNow;
+        }
+        else if (job.CompletedDate.HasValue && targetStage.SortOrder < (lastStage?.SortOrder ?? int.MaxValue))
+        {
+            // Clear CompletedDate if moved backward from the final stage
+            job.CompletedDate = null;
+        }
+
         var maxPosition = await jobRepo.GetMaxBoardPositionAsync(request.StageId, cancellationToken);
         job.BoardPosition = maxPosition + 1;
 

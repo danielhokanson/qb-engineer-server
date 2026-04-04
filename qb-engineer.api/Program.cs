@@ -421,15 +421,20 @@ try
         .AddCheck<MinioHealthCheck>("minio")
         .AddCheck<SignalRHealthCheck>("signalr");
 
-    // Rate limiting — exclude SignalR hubs (they retry on auth failure and can starve real API calls)
+    // Rate limiting — disabled in Development (simulation, E2E tests need unrestricted access)
     builder.Services.AddRateLimiter(options =>
     {
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
         {
+            // In Development, disable all rate limiting
+            if (builder.Environment.IsDevelopment())
+                return RateLimitPartition.GetNoLimiter("dev");
+
             var path = ctx.Request.Path.Value ?? string.Empty;
             if (path.StartsWith("/hubs/", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/health", StringComparison.OrdinalIgnoreCase)
-                || path.Equals("/api/v1/version", StringComparison.OrdinalIgnoreCase))
+                || path.Equals("/api/v1/version", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/api/v1/dev/", StringComparison.OrdinalIgnoreCase))
                 return RateLimitPartition.GetNoLimiter("infra");
 
             // Bypass rate limiting for loopback (E2E tests, local dev tools)
@@ -441,7 +446,7 @@ try
                 ctx.User?.Identity?.Name ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
                 _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 500,
+                    PermitLimit = 2000,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 });
