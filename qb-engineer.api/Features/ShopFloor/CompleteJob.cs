@@ -1,0 +1,31 @@
+using MediatR;
+
+using Microsoft.EntityFrameworkCore;
+
+using QBEngineer.Data.Context;
+
+namespace QBEngineer.Api.Features.ShopFloor;
+
+public record CompleteJobCommand(int JobId) : IRequest;
+
+public class CompleteJobHandler(AppDbContext db) : IRequestHandler<CompleteJobCommand>
+{
+    public async Task Handle(CompleteJobCommand request, CancellationToken ct)
+    {
+        var job = await db.Jobs
+            .Include(j => j.CurrentStage)
+            .FirstOrDefaultAsync(j => j.Id == request.JobId, ct)
+            ?? throw new KeyNotFoundException($"Job {request.JobId} not found");
+
+        var lastStage = await db.JobStages
+            .Where(s => s.TrackTypeId == job.TrackTypeId)
+            .OrderByDescending(s => s.SortOrder)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new InvalidOperationException("No stages found for track type");
+
+        job.CurrentStageId = lastStage.Id;
+        job.CompletedDate = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(ct);
+    }
+}

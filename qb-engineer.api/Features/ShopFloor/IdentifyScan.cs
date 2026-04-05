@@ -38,7 +38,7 @@ public class IdentifyScanHandler(
         {
             return barcode.EntityType switch
             {
-                BarcodeEntityType.User => new ScanIdentificationResult("employee"),
+                BarcodeEntityType.User => await ResolveEmployeeFromBarcode(barcode, cancellationToken),
                 BarcodeEntityType.Job => await ResolveJobResult(barcode.JobId!.Value, cancellationToken),
                 BarcodeEntityType.Part => new ScanIdentificationResult("part", barcode.PartId),
                 BarcodeEntityType.SalesOrder => new ScanIdentificationResult("sales-order", barcode.SalesOrderId),
@@ -50,21 +50,35 @@ public class IdentifyScanHandler(
         }
 
         // 2. Check UserScanIdentifiers (RFID, NFC, barcode, biometric — auth-specific)
-        var hasIdentifier = await db.UserScanIdentifiers
-            .AnyAsync(x => x.IdentifierValue == scanValue && x.IsActive, cancellationToken);
+        var identifier = await db.UserScanIdentifiers
+            .FirstOrDefaultAsync(x => x.IdentifierValue == scanValue && x.IsActive, cancellationToken);
 
-        if (hasIdentifier)
-            return new ScanIdentificationResult("employee");
+        if (identifier != null)
+        {
+            var user = await userManager.FindByIdAsync(identifier.UserId.ToString());
+            return new ScanIdentificationResult("employee", user?.Id, null, user != null ? $"{user.LastName}, {user.FirstName}" : null);
+        }
 
         // 3. Fallback: ApplicationUser.EmployeeBarcode (legacy)
-        var hasEmployeeBarcode = await userManager.Users
-            .AnyAsync(u => u.EmployeeBarcode == scanValue && u.IsActive, cancellationToken);
+        var employeeByBarcode = await userManager.Users
+            .FirstOrDefaultAsync(u => u.EmployeeBarcode == scanValue && u.IsActive, cancellationToken);
 
-        if (hasEmployeeBarcode)
-            return new ScanIdentificationResult("employee");
+        if (employeeByBarcode != null)
+            return new ScanIdentificationResult("employee", employeeByBarcode.Id, null, $"{employeeByBarcode.LastName}, {employeeByBarcode.FirstName}");
 
         // 4. Unknown scan
         return new ScanIdentificationResult("unknown");
+    }
+
+    private async Task<ScanIdentificationResult> ResolveEmployeeFromBarcode(Core.Entities.Barcode barcode, CancellationToken cancellationToken)
+    {
+        if (barcode.UserId.HasValue)
+        {
+            var user = await userManager.FindByIdAsync(barcode.UserId.Value.ToString());
+            if (user != null)
+                return new ScanIdentificationResult("employee", user.Id, null, $"{user.LastName}, {user.FirstName}");
+        }
+        return new ScanIdentificationResult("employee");
     }
 
     private async Task<ScanIdentificationResult> ResolveJobResult(int jobId, CancellationToken cancellationToken)

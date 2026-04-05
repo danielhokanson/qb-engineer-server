@@ -751,7 +751,7 @@ public static partial class SeedData
             );
             await db.SaveChangesAsync();
 
-            var rnd = new TrackType { Name = "R&D/Tooling", Code = "rnd", SortOrder = 2 };
+            var rnd = new TrackType { Name = "R&D/Tooling", Code = "rnd", SortOrder = 2, IsShopFloor = false };
             db.TrackTypes.Add(rnd);
             await db.SaveChangesAsync();
 

@@ -7,6 +7,7 @@ public record ShopFloorJobResponseModel(
     string StageName,
     string StageColor,
     string PriorityName,
+    int? AssigneeId,
     string? AssigneeInitials,
     string? AssigneeColor,
     string? DueDate,

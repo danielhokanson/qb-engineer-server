@@ -19,10 +19,17 @@ public class GetShopFloorOverviewHandler(AppDbContext db)
         var now = DateTimeOffset.UtcNow;
         var today = now.Date;
 
-        // Active jobs (not archived, not completed)
+        // Shop-floor track types only (production, maintenance — not R&D/admin)
+        var shopFloorTrackIds = await db.TrackTypes
+            .Where(t => t.IsShopFloor && t.IsActive)
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken);
+
+        // Active shop-floor jobs (not archived, not completed)
         var activeJobs = await db.Jobs
             .Include(j => j.CurrentStage)
-            .Where(j => !j.IsArchived && j.CompletedDate == null)
+            .Where(j => !j.IsArchived && j.CompletedDate == null
+                && shopFloorTrackIds.Contains(j.TrackTypeId))
             .OrderBy(j => j.DueDate ?? DateTimeOffset.MaxValue)
             .ThenBy(j => j.Priority)
             .Select(j => new
@@ -68,6 +75,7 @@ public class GetShopFloorOverviewHandler(AppDbContext db)
                 j.StageName,
                 j.StageColor,
                 j.Priority.ToString(),
+                j.AssigneeId,
                 assignee?.Initials,
                 assignee?.AvatarColor,
                 j.DueDate?.ToString("yyyy-MM-ddTHH:mm:ssZ"),
@@ -159,8 +167,10 @@ public class GetShopFloorOverviewHandler(AppDbContext db)
 
     private static string FormatDuration(TimeSpan duration)
     {
-        if (duration.TotalMinutes < 1) return "< 1m";
-        if (duration.TotalHours < 1) return $"{(int)duration.TotalMinutes}m";
-        return $"{(int)duration.TotalHours}h {duration.Minutes}m";
+        if (duration.TotalHours >= 1)
+            return $"{(int)duration.TotalHours}h {duration.Minutes:D2}m {duration.Seconds:D2}s";
+        if (duration.TotalMinutes >= 1)
+            return $"{(int)duration.TotalMinutes}m {duration.Seconds:D2}s";
+        return $"{duration.Seconds}s";
     }
 }

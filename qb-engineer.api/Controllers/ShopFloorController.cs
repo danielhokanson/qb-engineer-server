@@ -63,6 +63,20 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("assign-job")]
+    public async Task<IActionResult> AssignJob([FromBody] AssignJobRequestModel model)
+    {
+        await mediator.Send(new AssignJobCommand(model.JobId, model.UserId));
+        return NoContent();
+    }
+
+    [HttpPost("complete-job")]
+    public async Task<IActionResult> CompleteJob([FromBody] CompleteJobRequestModel model)
+    {
+        await mediator.Send(new CompleteJobCommand(model.JobId));
+        return NoContent();
+    }
+
     // ─── Teams ───
     [AllowAnonymous]
     [HttpGet("teams")]
@@ -148,3 +162,5 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
 public record SetupTerminalRequestModel(string Name, string DeviceToken, int TeamId);
 public record IdentifyScanRequestModel(string ScanValue);
 public record AssignTeamMembersRequestModel(List<int> UserIds);
+public record AssignJobRequestModel(int JobId, int UserId);
+public record CompleteJobRequestModel(int JobId);

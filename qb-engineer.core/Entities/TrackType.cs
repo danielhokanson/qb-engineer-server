@@ -8,6 +8,7 @@ public class TrackType : BaseAuditableEntity
     public bool IsDefault { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsShopFloor { get; set; } = true;
 
     // Custom field definitions (JSONB)
     public string? CustomFieldDefinitions { get; set; }
