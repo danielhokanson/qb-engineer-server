@@ -15,7 +15,10 @@ namespace QBEngineer.Data.Migrations
                 table: "track_types",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
+
+            // R&D/Tooling is not a shop floor track
+            migrationBuilder.Sql("UPDATE track_types SET is_shop_floor = false WHERE code = 'rnd';");
         }
 
         /// <inheritdoc />

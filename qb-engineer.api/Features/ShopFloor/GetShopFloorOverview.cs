@@ -19,17 +19,11 @@ public class GetShopFloorOverviewHandler(AppDbContext db)
         var now = DateTimeOffset.UtcNow;
         var today = now.Date;
 
-        // Shop-floor track types only (production, maintenance — not R&D/admin)
-        var shopFloorTrackIds = await db.TrackTypes
-            .Where(t => t.IsShopFloor && t.IsActive)
-            .Select(t => t.Id)
-            .ToListAsync(cancellationToken);
-
-        // Active shop-floor jobs (not archived, not completed)
+        // Active jobs in shop-floor stages only (physical work, not admin/office stages)
         var activeJobs = await db.Jobs
             .Include(j => j.CurrentStage)
             .Where(j => !j.IsArchived && j.CompletedDate == null
-                && shopFloorTrackIds.Contains(j.TrackTypeId))
+                && j.CurrentStage.IsShopFloor)
             .OrderBy(j => j.DueDate ?? DateTimeOffset.MaxValue)
             .ThenBy(j => j.Priority)
             .Select(j => new

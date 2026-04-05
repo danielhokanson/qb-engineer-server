@@ -12,6 +12,7 @@ public class JobStage : BaseAuditableEntity
     public int? WIPLimit { get; set; }
     public AccountingDocumentType? AccountingDocumentType { get; set; }
     public bool IsIrreversible { get; set; }
+    public bool IsShopFloor { get; set; }
     public bool IsActive { get; set; } = true;
 
     public TrackType TrackType { get; set; } = null!;

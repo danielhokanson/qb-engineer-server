@@ -57,18 +57,13 @@ public class GetClockStatusHandler(AppDbContext db)
 
         var timersByUser = activeTimers.ToDictionary(t => t.UserId);
 
-        // Load assigned shop-floor jobs per user (production/maintenance only, not R&D/admin)
-        var shopFloorTrackIds = await db.TrackTypes
-            .Where(t => t.IsShopFloor && t.IsActive)
-            .Select(t => t.Id)
-            .ToListAsync(ct);
-
+        // Load assigned jobs in shop-floor stages only (physical work, not admin/office stages)
         var userIds = users.Select(u => u.Id).ToList();
         var assignedJobs = await db.Jobs
             .Include(j => j.CurrentStage)
             .Where(j => j.AssigneeId.HasValue
                 && userIds.Contains(j.AssigneeId.Value)
-                && shopFloorTrackIds.Contains(j.TrackTypeId)
+                && j.CurrentStage.IsShopFloor
                 && !j.IsArchived
                 && j.CompletedDate == null)
             .OrderBy(j => j.Priority)
