@@ -16,6 +16,7 @@ public class OperationConfiguration : IEntityTypeConfiguration<Operation>
         builder.Property(e => e.QcCriteria).HasMaxLength(1000);
 
         builder.HasIndex(e => e.PartId);
+        builder.HasIndex(e => e.ReferencedOperationId);
 
         builder.HasOne(e => e.Part)
             .WithMany(p => p.Operations)
@@ -25,6 +26,11 @@ public class OperationConfiguration : IEntityTypeConfiguration<Operation>
         builder.HasOne(e => e.WorkCenter)
             .WithMany()
             .HasForeignKey(e => e.WorkCenterId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(e => e.ReferencedOperation)
+            .WithMany()
+            .HasForeignKey(e => e.ReferencedOperationId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

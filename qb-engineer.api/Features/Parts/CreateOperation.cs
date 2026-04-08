@@ -38,6 +38,7 @@ public class CreateOperationHandler(IPartRepository repo) : IRequestHandler<Crea
             EstimatedMinutes = request.Data.EstimatedMinutes,
             IsQcCheckpoint = request.Data.IsQcCheckpoint,
             QcCriteria = request.Data.QcCriteria?.Trim(),
+            ReferencedOperationId = request.Data.ReferencedOperationId,
         };
 
         part.Operations.Add(operation);

@@ -198,6 +198,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
         return await db.Operations
             .Where(s => s.PartId == partId)
             .Include(s => s.WorkCenter)
+            .Include(s => s.ReferencedOperation)
+            .Include(s => s.Materials).ThenInclude(m => m.BomEntry).ThenInclude(b => b.ChildPart)
             .OrderBy(s => s.StepNumber)
             .Select(s => new OperationResponseModel(
                 s.Id,
@@ -210,6 +212,16 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 s.EstimatedMinutes,
                 s.IsQcCheckpoint,
                 s.QcCriteria,
+                s.ReferencedOperationId,
+                s.ReferencedOperation != null ? $"Op {s.ReferencedOperation.StepNumber}: {s.ReferencedOperation.Title}" : null,
+                s.Materials.Select(m => new OperationMaterialResponseModel(
+                    m.Id,
+                    m.OperationId,
+                    m.BomEntryId,
+                    m.BomEntry.ChildPart.PartNumber,
+                    m.BomEntry.ChildPart.Description,
+                    m.Quantity,
+                    m.Notes)).ToList(),
                 s.CreatedAt,
                 s.UpdatedAt))
             .ToListAsync(ct);

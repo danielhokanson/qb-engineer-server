@@ -7,4 +7,5 @@ public record CreateOperationRequestModel(
     int? WorkCenterId,
     int? EstimatedMinutes,
     bool IsQcCheckpoint,
-    string? QcCriteria);
+    string? QcCriteria,
+    int? ReferencedOperationId);

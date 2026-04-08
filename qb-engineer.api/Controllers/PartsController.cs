@@ -108,6 +108,31 @@ public class PartsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:int}/operations/{operationId:int}/materials")]
+    public async Task<ActionResult<OperationMaterialResponseModel>> CreateOperationMaterial(int id, int operationId, [FromBody] CreateOperationMaterialRequestModel request)
+        => StatusCode(201, await mediator.Send(new CreateOperationMaterialCommand(id, operationId, request)));
+
+    [HttpDelete("{id:int}/operations/{operationId:int}/materials/{materialId:int}")]
+    public async Task<IActionResult> DeleteOperationMaterial(int id, int operationId, int materialId)
+    {
+        await mediator.Send(new DeleteOperationMaterialCommand(id, operationId, materialId));
+        return NoContent();
+    }
+
+    [HttpGet("{id:int}/operations/{operationId:int}/activity")]
+    public async Task<ActionResult<List<ActivityResponseModel>>> GetOperationActivity(int id, int operationId)
+    {
+        var result = await mediator.Send(new GetEntityActivityQuery("Operation", operationId));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/operations/{operationId:int}/activity")]
+    public async Task<IActionResult> AddOperationComment(int id, int operationId, [FromBody] AddOperationCommentRequestModel request)
+    {
+        await mediator.Send(new AddOperationCommentCommand(id, operationId, request.Comment));
+        return StatusCode(201);
+    }
+
     [HttpPost("{id:int}/link-accounting-item")]
     public async Task<IActionResult> LinkAccountingItem(int id, [FromBody] LinkAccountingItemRequestModel request)
     {

@@ -11,5 +11,8 @@ public record OperationResponseModel(
     int? EstimatedMinutes,
     bool IsQcCheckpoint,
     string? QcCriteria,
+    int? ReferencedOperationId,
+    string? ReferencedOperationTitle,
+    List<OperationMaterialResponseModel> Materials,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

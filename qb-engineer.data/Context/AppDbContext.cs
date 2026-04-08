@@ -106,6 +106,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
 
     // Operations
     public DbSet<Operation> Operations => Set<Operation>();
+    public DbSet<OperationMaterial> OperationMaterials => Set<OperationMaterial>();
 
     // Cycle Counts
     public DbSet<CycleCount> CycleCounts => Set<CycleCount>();

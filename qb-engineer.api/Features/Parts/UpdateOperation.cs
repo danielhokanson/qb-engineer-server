@@ -40,6 +40,7 @@ public class UpdateOperationHandler(IPartRepository repo) : IRequestHandler<Upda
         if (data.EstimatedMinutes is not null) operation.EstimatedMinutes = data.EstimatedMinutes;
         if (data.IsQcCheckpoint.HasValue) operation.IsQcCheckpoint = data.IsQcCheckpoint.Value;
         if (data.QcCriteria is not null) operation.QcCriteria = data.QcCriteria.Trim();
+        if (data.ReferencedOperationId is not null) operation.ReferencedOperationId = data.ReferencedOperationId == 0 ? null : data.ReferencedOperationId;
 
         await repo.SaveChangesAsync(cancellationToken);
 

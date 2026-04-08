@@ -10,7 +10,10 @@ public class Operation : BaseAuditableEntity
     public int? EstimatedMinutes { get; set; }
     public bool IsQcCheckpoint { get; set; }
     public string? QcCriteria { get; set; }
+    public int? ReferencedOperationId { get; set; }
 
     public Part Part { get; set; } = null!;
     public Asset? WorkCenter { get; set; }
+    public Operation? ReferencedOperation { get; set; }
+    public ICollection<OperationMaterial> Materials { get; set; } = [];
 }
