@@ -16,7 +16,7 @@ public interface IPartRepository
     Task<int> GetMaxBomSortOrderAsync(int parentPartId, CancellationToken ct);
     Task AddBomEntryAsync(BOMEntry entry, CancellationToken ct);
     Task RemoveBomEntryAsync(BOMEntry entry);
-    Task<List<ProcessStepResponseModel>> GetProcessStepsAsync(int partId, CancellationToken ct);
-    Task<ProcessStep?> FindProcessStepAsync(int stepId, CancellationToken ct);
+    Task<List<OperationResponseModel>> GetOperationsAsync(int partId, CancellationToken ct);
+    Task<Operation?> FindOperationAsync(int operationId, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }

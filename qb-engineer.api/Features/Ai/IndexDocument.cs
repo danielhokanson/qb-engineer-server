@@ -109,7 +109,7 @@ public class IndexDocumentHandler(
     private async Task<List<(string, string)>> ExtractPartFieldsAsync(int id, CancellationToken ct)
     {
         var part = await db.Parts
-            .Include(p => p.ProcessSteps)
+            .Include(p => p.Operations)
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id, ct);
         if (part is null) return [];
@@ -122,13 +122,13 @@ public class IndexDocumentHandler(
         if (!string.IsNullOrWhiteSpace(part.Material))
             fields.Add(("Material", part.Material));
 
-        if (part.ProcessSteps.Count > 0)
+        if (part.Operations.Count > 0)
         {
             var instructions = string.Join("\n",
-                part.ProcessSteps
+                part.Operations
                     .OrderBy(s => s.StepNumber)
                     .Select(s => $"Step {s.StepNumber}: {s.Title}. {s.Instructions ?? ""}"));
-            fields.Add(("ProcessSteps", instructions));
+            fields.Add(("Operations", instructions));
         }
 
         return fields;

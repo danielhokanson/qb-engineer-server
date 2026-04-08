@@ -1,6 +1,6 @@
 namespace QBEngineer.Core.Entities;
 
-public class ProcessStep : BaseAuditableEntity
+public class Operation : BaseAuditableEntity
 {
     public int PartId { get; set; }
     public int StepNumber { get; set; }

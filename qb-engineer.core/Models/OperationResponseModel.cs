@@ -1,6 +1,6 @@
 namespace QBEngineer.Core.Models;
 
-public record ProcessStepResponseModel(
+public record OperationResponseModel(
     int Id,
     int PartId,
     int StepNumber,

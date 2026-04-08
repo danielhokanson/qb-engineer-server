@@ -5,9 +5,9 @@ using QBEngineer.Core.Entities;
 
 namespace QBEngineer.Data.Configuration;
 
-public class ProcessStepConfiguration : IEntityTypeConfiguration<ProcessStep>
+public class OperationConfiguration : IEntityTypeConfiguration<Operation>
 {
-    public void Configure(EntityTypeBuilder<ProcessStep> builder)
+    public void Configure(EntityTypeBuilder<Operation> builder)
     {
         builder.Ignore(e => e.IsDeleted);
 
@@ -18,7 +18,7 @@ public class ProcessStepConfiguration : IEntityTypeConfiguration<ProcessStep>
         builder.HasIndex(e => e.PartId);
 
         builder.HasOne(e => e.Part)
-            .WithMany(p => p.ProcessSteps)
+            .WithMany(p => p.Operations)
             .HasForeignKey(e => e.PartId)
             .OnDelete(DeleteBehavior.Cascade);
 

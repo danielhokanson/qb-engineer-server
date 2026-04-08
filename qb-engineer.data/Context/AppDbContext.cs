@@ -104,8 +104,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<QcInspectionResult> QcInspectionResults => Set<QcInspectionResult>();
     public DbSet<LotRecord> LotRecords => Set<LotRecord>();
 
-    // Process Steps
-    public DbSet<ProcessStep> ProcessSteps => Set<ProcessStep>();
+    // Operations
+    public DbSet<Operation> Operations => Set<Operation>();
 
     // Cycle Counts
     public DbSet<CycleCount> CycleCounts => Set<CycleCount>();

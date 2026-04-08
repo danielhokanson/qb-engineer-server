@@ -89,22 +89,22 @@ public class PartsController(IMediator mediator) : ControllerBase
         return Created($"/api/v1/parts/{id}/revisions/{result.Id}", result);
     }
 
-    [HttpGet("{id:int}/process-steps")]
-    public async Task<ActionResult<List<ProcessStepResponseModel>>> GetProcessSteps(int id)
-        => Ok(await mediator.Send(new GetProcessStepsQuery(id)));
+    [HttpGet("{id:int}/operations")]
+    public async Task<ActionResult<List<OperationResponseModel>>> GetOperations(int id)
+        => Ok(await mediator.Send(new GetOperationsQuery(id)));
 
-    [HttpPost("{id:int}/process-steps")]
-    public async Task<ActionResult<ProcessStepResponseModel>> CreateProcessStep(int id, [FromBody] CreateProcessStepRequestModel request)
-        => StatusCode(201, await mediator.Send(new CreateProcessStepCommand(id, request)));
+    [HttpPost("{id:int}/operations")]
+    public async Task<ActionResult<OperationResponseModel>> CreateOperation(int id, [FromBody] CreateOperationRequestModel request)
+        => StatusCode(201, await mediator.Send(new CreateOperationCommand(id, request)));
 
-    [HttpPatch("{id:int}/process-steps/{stepId:int}")]
-    public async Task<ActionResult<ProcessStepResponseModel>> UpdateProcessStep(int id, int stepId, [FromBody] UpdateProcessStepRequestModel request)
-        => Ok(await mediator.Send(new UpdateProcessStepCommand(id, stepId, request)));
+    [HttpPatch("{id:int}/operations/{operationId:int}")]
+    public async Task<ActionResult<OperationResponseModel>> UpdateOperation(int id, int operationId, [FromBody] UpdateOperationRequestModel request)
+        => Ok(await mediator.Send(new UpdateOperationCommand(id, operationId, request)));
 
-    [HttpDelete("{id:int}/process-steps/{stepId:int}")]
-    public async Task<IActionResult> DeleteProcessStep(int id, int stepId)
+    [HttpDelete("{id:int}/operations/{operationId:int}")]
+    public async Task<IActionResult> DeleteOperation(int id, int operationId)
     {
-        await mediator.Send(new DeleteProcessStepCommand(id, stepId));
+        await mediator.Send(new DeleteOperationCommand(id, operationId));
         return NoContent();
     }
 

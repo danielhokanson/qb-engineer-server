@@ -38,6 +38,6 @@ public class Part : BaseAuditableEntity
     public Vendor? PreferredVendor { get; set; }
     public ICollection<BOMEntry> BOMEntries { get; set; } = [];
     public ICollection<BOMEntry> UsedInBOM { get; set; } = [];
-    public ICollection<ProcessStep> ProcessSteps { get; set; } = [];
+    public ICollection<Operation> Operations { get; set; } = [];
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];
 }

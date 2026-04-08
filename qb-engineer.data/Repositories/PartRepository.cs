@@ -193,13 +193,13 @@ public class PartRepository(AppDbContext db) : IPartRepository
         return db.SaveChangesAsync(default);
     }
 
-    public async Task<List<ProcessStepResponseModel>> GetProcessStepsAsync(int partId, CancellationToken ct)
+    public async Task<List<OperationResponseModel>> GetOperationsAsync(int partId, CancellationToken ct)
     {
-        return await db.ProcessSteps
+        return await db.Operations
             .Where(s => s.PartId == partId)
             .Include(s => s.WorkCenter)
             .OrderBy(s => s.StepNumber)
-            .Select(s => new ProcessStepResponseModel(
+            .Select(s => new OperationResponseModel(
                 s.Id,
                 s.PartId,
                 s.StepNumber,
@@ -215,8 +215,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
             .ToListAsync(ct);
     }
 
-    public Task<ProcessStep?> FindProcessStepAsync(int stepId, CancellationToken ct)
-        => db.ProcessSteps.FirstOrDefaultAsync(s => s.Id == stepId, ct);
+    public Task<Operation?> FindOperationAsync(int operationId, CancellationToken ct)
+        => db.Operations.FirstOrDefaultAsync(s => s.Id == operationId, ct);
 
     public Task SaveChangesAsync(CancellationToken ct)
         => db.SaveChangesAsync(ct);

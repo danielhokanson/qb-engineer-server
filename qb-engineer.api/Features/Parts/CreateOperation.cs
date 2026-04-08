@@ -7,11 +7,11 @@ using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Parts;
 
-public record CreateProcessStepCommand(int PartId, CreateProcessStepRequestModel Data) : IRequest<ProcessStepResponseModel>;
+public record CreateOperationCommand(int PartId, CreateOperationRequestModel Data) : IRequest<OperationResponseModel>;
 
-public class CreateProcessStepValidator : AbstractValidator<CreateProcessStepCommand>
+public class CreateOperationValidator : AbstractValidator<CreateOperationCommand>
 {
-    public CreateProcessStepValidator()
+    public CreateOperationValidator()
     {
         RuleFor(x => x.PartId).GreaterThan(0);
         RuleFor(x => x.Data.StepNumber).GreaterThan(0);
@@ -21,14 +21,14 @@ public class CreateProcessStepValidator : AbstractValidator<CreateProcessStepCom
     }
 }
 
-public class CreateProcessStepHandler(IPartRepository repo) : IRequestHandler<CreateProcessStepCommand, ProcessStepResponseModel>
+public class CreateOperationHandler(IPartRepository repo) : IRequestHandler<CreateOperationCommand, OperationResponseModel>
 {
-    public async Task<ProcessStepResponseModel> Handle(CreateProcessStepCommand request, CancellationToken cancellationToken)
+    public async Task<OperationResponseModel> Handle(CreateOperationCommand request, CancellationToken cancellationToken)
     {
         var part = await repo.FindAsync(request.PartId, cancellationToken)
             ?? throw new KeyNotFoundException($"Part {request.PartId} not found");
 
-        var step = new ProcessStep
+        var operation = new Operation
         {
             PartId = request.PartId,
             StepNumber = request.Data.StepNumber,
@@ -40,10 +40,10 @@ public class CreateProcessStepHandler(IPartRepository repo) : IRequestHandler<Cr
             QcCriteria = request.Data.QcCriteria?.Trim(),
         };
 
-        part.ProcessSteps.Add(step);
+        part.Operations.Add(operation);
         await repo.SaveChangesAsync(cancellationToken);
 
-        var steps = await repo.GetProcessStepsAsync(request.PartId, cancellationToken);
-        return steps.First(s => s.Id == step.Id);
+        var operations = await repo.GetOperationsAsync(request.PartId, cancellationToken);
+        return operations.First(s => s.Id == operation.Id);
     }
 }
