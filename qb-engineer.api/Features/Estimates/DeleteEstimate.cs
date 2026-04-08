@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using QBEngineer.Core.Enums;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Estimates;
@@ -9,7 +11,8 @@ public class DeleteEstimateHandler(AppDbContext db) : IRequestHandler<DeleteEsti
 {
     public async Task Handle(DeleteEstimateCommand request, CancellationToken ct)
     {
-        var estimate = await db.Estimates.FindAsync([request.Id], ct)
+        var estimate = await db.Quotes
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.Type == QuoteType.Estimate, ct)
             ?? throw new KeyNotFoundException($"Estimate {request.Id} not found.");
 
         if (estimate.DeletedAt != null)

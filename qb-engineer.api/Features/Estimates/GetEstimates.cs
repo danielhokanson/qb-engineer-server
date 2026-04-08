@@ -8,15 +8,15 @@ namespace QBEngineer.Api.Features.Estimates;
 
 public record GetEstimatesQuery(
     int? CustomerId = null,
-    EstimateStatus? Status = null) : IRequest<List<EstimateListItemModel>>;
+    QuoteStatus? Status = null) : IRequest<List<EstimateListItemModel>>;
 
 public class GetEstimatesHandler(AppDbContext db) : IRequestHandler<GetEstimatesQuery, List<EstimateListItemModel>>
 {
     public async Task<List<EstimateListItemModel>> Handle(GetEstimatesQuery request, CancellationToken ct)
     {
-        var query = db.Estimates
+        var query = db.Quotes
             .AsNoTracking()
-            .Where(e => e.DeletedAt == null)
+            .Where(e => e.Type == QuoteType.Estimate)
             .AsQueryable();
 
         if (request.CustomerId.HasValue)
@@ -31,11 +31,11 @@ public class GetEstimatesHandler(AppDbContext db) : IRequestHandler<GetEstimates
                 e.Id,
                 e.CustomerId,
                 e.Customer.Name,
-                e.Title,
-                e.EstimatedAmount,
-                e.Status,
-                e.ValidUntil,
-                e.ConvertedToQuoteId,
+                e.Title ?? string.Empty,
+                e.EstimatedAmount ?? 0,
+                e.Status.ToString(),
+                e.ExpirationDate,
+                e.GeneratedQuote != null ? e.GeneratedQuote.Id : (int?)null,
                 e.AssignedToId != null
                     ? db.Users.Where(u => u.Id == e.AssignedToId).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault()
                     : null,

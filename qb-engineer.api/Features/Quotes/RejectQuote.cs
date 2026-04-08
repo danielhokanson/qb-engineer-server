@@ -17,7 +17,7 @@ public class RejectQuoteHandler(IQuoteRepository repo)
         if (quote.Status != QuoteStatus.Sent)
             throw new InvalidOperationException("Only Sent quotes can be rejected");
 
-        quote.Status = QuoteStatus.Rejected;
+        quote.Status = QuoteStatus.Declined;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

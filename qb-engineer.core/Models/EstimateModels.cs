@@ -8,9 +8,9 @@ public record EstimateListItemModel(
     string CustomerName,
     string Title,
     decimal EstimatedAmount,
-    EstimateStatus Status,
+    string Status,
     DateTimeOffset? ValidUntil,
-    int? ConvertedToQuoteId,
+    int? GeneratedQuoteId,
     string? AssignedToName,
     DateTimeOffset CreatedAt);
 
@@ -21,12 +21,12 @@ public record EstimateDetailResponseModel(
     string Title,
     string? Description,
     decimal EstimatedAmount,
-    EstimateStatus Status,
+    string Status,
     DateTimeOffset? ValidUntil,
     string? Notes,
     int? AssignedToId,
     string? AssignedToName,
-    int? ConvertedToQuoteId,
+    int? GeneratedQuoteId,
     DateTimeOffset? ConvertedAt,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
@@ -44,7 +44,7 @@ public record UpdateEstimateRequestModel(
     string? Title,
     string? Description,
     decimal? EstimatedAmount,
-    EstimateStatus? Status,
+    QuoteStatus? Status,
     DateTimeOffset? ValidUntil,
     string? Notes,
     int? AssignedToId);

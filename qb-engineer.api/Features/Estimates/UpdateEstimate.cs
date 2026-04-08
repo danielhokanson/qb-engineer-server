@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Enums;
 using QBEngineer.Data.Context;
 
@@ -10,7 +11,7 @@ public record UpdateEstimateCommand(
     string? Title,
     string? Description,
     decimal? EstimatedAmount,
-    EstimateStatus? Status,
+    QuoteStatus? Status,
     DateTimeOffset? ValidUntil,
     string? Notes,
     int? AssignedToId) : IRequest;
@@ -30,7 +31,8 @@ public class UpdateEstimateHandler(AppDbContext db) : IRequestHandler<UpdateEsti
 {
     public async Task Handle(UpdateEstimateCommand request, CancellationToken ct)
     {
-        var estimate = await db.Estimates.FindAsync([request.Id], ct)
+        var estimate = await db.Quotes
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.Type == QuoteType.Estimate, ct)
             ?? throw new KeyNotFoundException($"Estimate {request.Id} not found.");
 
         if (estimate.DeletedAt != null)
@@ -40,7 +42,7 @@ public class UpdateEstimateHandler(AppDbContext db) : IRequestHandler<UpdateEsti
         if (request.Description is not null) estimate.Description = request.Description;
         if (request.EstimatedAmount.HasValue) estimate.EstimatedAmount = request.EstimatedAmount.Value;
         if (request.Status.HasValue) estimate.Status = request.Status.Value;
-        if (request.ValidUntil.HasValue) estimate.ValidUntil = request.ValidUntil;
+        if (request.ValidUntil.HasValue) estimate.ExpirationDate = request.ValidUntil;
         if (request.Notes is not null) estimate.Notes = request.Notes;
         estimate.AssignedToId = request.AssignedToId;
 

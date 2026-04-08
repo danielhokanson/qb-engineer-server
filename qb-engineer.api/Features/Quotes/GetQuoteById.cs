@@ -18,7 +18,7 @@ public class GetQuoteByIdHandler(IQuoteRepository repo)
 
         return new QuoteDetailResponseModel(
             quote.Id,
-            quote.QuoteNumber,
+            quote.QuoteNumber ?? string.Empty,
             quote.CustomerId,
             quote.Customer.Name,
             quote.ShippingAddressId,
@@ -33,6 +33,7 @@ public class GetQuoteByIdHandler(IQuoteRepository repo)
             subtotal * (1 + quote.TaxRate),
             quote.SalesOrder?.Id,
             quote.SalesOrder?.OrderNumber,
+            quote.SourceEstimateId,
             quote.Lines.Select(l => new QuoteLineResponseModel(
                 l.Id,
                 l.PartId,

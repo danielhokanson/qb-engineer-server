@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -34,28 +35,29 @@ public class CreateEstimateHandler(AppDbContext db) : IRequestHandler<CreateEsti
         var customer = await db.Customers.FindAsync([request.CustomerId], ct)
             ?? throw new KeyNotFoundException($"Customer {request.CustomerId} not found.");
 
-        var estimate = new Estimate
+        var estimate = new Quote
         {
+            Type = QuoteType.Estimate,
             CustomerId = request.CustomerId,
             Title = request.Title,
             Description = request.Description,
             EstimatedAmount = request.EstimatedAmount,
-            ValidUntil = request.ValidUntil,
+            ExpirationDate = request.ValidUntil,
             Notes = request.Notes,
             AssignedToId = request.AssignedToId,
         };
 
-        db.Estimates.Add(estimate);
+        db.Quotes.Add(estimate);
         await db.SaveChangesAsync(ct);
 
         return new EstimateListItemModel(
             estimate.Id,
             estimate.CustomerId,
             customer.Name,
-            estimate.Title,
-            estimate.EstimatedAmount,
-            estimate.Status,
-            estimate.ValidUntil,
+            estimate.Title!,
+            estimate.EstimatedAmount ?? 0,
+            estimate.Status.ToString(),
+            estimate.ExpirationDate,
             null,
             null,
             estimate.CreatedAt);

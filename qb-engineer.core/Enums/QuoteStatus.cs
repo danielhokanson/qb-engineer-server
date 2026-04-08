@@ -5,7 +5,8 @@ public enum QuoteStatus
     Draft,
     Sent,
     Accepted,
-    Rejected,
+    Declined,
     Expired,
+    ConvertedToQuote,
     ConvertedToOrder
 }

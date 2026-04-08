@@ -15,7 +15,7 @@ public class EstimatesController(IMediator mediator) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<EstimateListItemModel>>> GetEstimates(
         [FromQuery] int? customerId,
-        [FromQuery] EstimateStatus? status,
+        [FromQuery] QuoteStatus? status,
         CancellationToken ct = default)
     {
         var result = await mediator.Send(new GetEstimatesQuery(customerId, status), ct);

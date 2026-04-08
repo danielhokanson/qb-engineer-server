@@ -69,7 +69,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PaymentApplication> PaymentApplications => Set<PaymentApplication>();
-    public DbSet<Estimate> Estimates => Set<Estimate>();
 
     // Pricing
     public DbSet<PriceList> PriceLists => Set<PriceList>();

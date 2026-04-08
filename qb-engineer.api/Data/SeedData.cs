@@ -829,8 +829,10 @@ public static partial class SeedData
                 new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_draft", Label = "Draft", SortOrder = 1 },
                 new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_sent", Label = "Sent", SortOrder = 2 },
                 new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_accepted", Label = "Accepted", SortOrder = 3 },
-                new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_rejected", Label = "Rejected", SortOrder = 4 },
+                new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_declined", Label = "Declined", SortOrder = 4 },
                 new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_expired", Label = "Expired", SortOrder = 5 },
+                new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_converted_to_quote", Label = "Converted to Quote", SortOrder = 6 },
+                new ReferenceData { GroupCode = "quote_workflow_status", Code = "quote_status_converted_to_order", Label = "Converted to Order", SortOrder = 7 },
 
                 // Sales Order Workflow Statuses
                 new ReferenceData { GroupCode = "so_workflow_status", Code = "so_status_draft", Label = "Draft", SortOrder = 1 },

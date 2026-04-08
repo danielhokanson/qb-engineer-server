@@ -17,6 +17,7 @@ public record QuoteDetailResponseModel(
     decimal Total,
     int? SalesOrderId,
     string? SalesOrderNumber,
+    int? SourceEstimateId,
     List<QuoteLineResponseModel> Lines,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

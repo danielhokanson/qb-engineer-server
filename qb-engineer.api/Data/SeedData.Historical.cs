@@ -214,22 +214,23 @@ public static partial class SeedData
             var custId = customerIds[chain.CustomerRef];
             var addrId = addressIds[chain.CustomerRef];
 
-            // Estimate
-            Estimate? estimate = null;
+            // Estimate (stored as Quote with Type=Estimate)
+            Quote? estimate = null;
             if (chain.Estimate is { } se)
             {
-                estimate = new Estimate
+                estimate = new Quote
                 {
+                    Type = QuoteType.Estimate,
                     CustomerId = custId,
                     Title = se.Title,
                     EstimatedAmount = se.EstimatedAmount,
-                    Status = Enum.Parse<EstimateStatus>(se.Status),
+                    Status = Enum.Parse<QuoteStatus>(se.Status),
                     AssignedToId = userIdMap[se.AssignedToRef],
-                    ValidUntil = D(se.ValidUntil),
+                    ExpirationDate = D(se.ValidUntil),
                     ConvertedAt = D(se.ConvertedAt),
                     CreatedAt = D(se.CreatedAt),
                 };
-                db.Estimates.Add(estimate);
+                db.Quotes.Add(estimate);
                 await db.SaveChangesAsync();
             }
 
@@ -239,6 +240,7 @@ public static partial class SeedData
             {
                 quote = new Quote
                 {
+                    Type = QuoteType.Quote,
                     QuoteNumber = sq.QuoteNumber,
                     CustomerId = custId,
                     Status = Enum.Parse<QuoteStatus>(sq.Status),
@@ -248,6 +250,7 @@ public static partial class SeedData
                     TaxRate = sq.TaxRate,
                     Notes = sq.Notes,
                     CreatedAt = D(sq.CreatedAt),
+                    SourceEstimateId = estimate?.Id,
                 };
                 foreach (var ql in sq.Lines)
                 {
@@ -261,7 +264,7 @@ public static partial class SeedData
                 }
                 db.Quotes.Add(quote);
                 if (estimate != null)
-                    estimate.ConvertedToQuote = quote;
+                    estimate.Status = QuoteStatus.ConvertedToQuote;
                 await db.SaveChangesAsync();
             }
 

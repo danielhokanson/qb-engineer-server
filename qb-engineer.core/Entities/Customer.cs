@@ -22,5 +22,4 @@ public class Customer : BaseAuditableEntity
     public ICollection<Payment> Payments { get; set; } = [];
     public ICollection<PriceList> PriceLists { get; set; } = [];
     public ICollection<RecurringOrder> RecurringOrders { get; set; } = [];
-    public ICollection<Estimate> Estimates { get; set; } = [];
 }

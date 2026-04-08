@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -11,10 +12,11 @@ public class GetEstimateHandler(AppDbContext db) : IRequestHandler<GetEstimateQu
 {
     public async Task<EstimateDetailResponseModel> Handle(GetEstimateQuery request, CancellationToken ct)
     {
-        var e = await db.Estimates
+        var e = await db.Quotes
             .AsNoTracking()
             .Include(x => x.Customer)
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.DeletedAt == null, ct)
+            .Include(x => x.GeneratedQuote)
+            .FirstOrDefaultAsync(x => x.Id == request.Id && x.Type == QuoteType.Estimate && x.DeletedAt == null, ct)
             ?? throw new KeyNotFoundException($"Estimate {request.Id} not found.");
 
         string? assignedToName = null;
@@ -30,15 +32,15 @@ public class GetEstimateHandler(AppDbContext db) : IRequestHandler<GetEstimateQu
             e.Id,
             e.CustomerId,
             e.Customer.Name,
-            e.Title,
+            e.Title ?? string.Empty,
             e.Description,
-            e.EstimatedAmount,
-            e.Status,
-            e.ValidUntil,
+            e.EstimatedAmount ?? 0,
+            e.Status.ToString(),
+            e.ExpirationDate,
             e.Notes,
             e.AssignedToId,
             assignedToName,
-            e.ConvertedToQuoteId,
+            e.GeneratedQuote?.Id,
             e.ConvertedAt,
             e.CreatedAt,
             e.UpdatedAt);

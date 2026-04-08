@@ -15,6 +15,7 @@ public class QuoteRepository(AppDbContext db) : IQuoteRepository
         var query = db.Quotes
             .Include(q => q.Customer)
             .Include(q => q.Lines)
+            .Where(q => q.Type == QuoteType.Quote)
             .AsQueryable();
 
         if (customerId.HasValue)
@@ -27,7 +28,7 @@ public class QuoteRepository(AppDbContext db) : IQuoteRepository
             .OrderByDescending(q => q.CreatedAt)
             .Select(q => new QuoteListItemModel(
                 q.Id,
-                q.QuoteNumber,
+                q.QuoteNumber ?? string.Empty,
                 q.CustomerId,
                 q.Customer.Name,
                 q.Status.ToString(),
@@ -40,7 +41,7 @@ public class QuoteRepository(AppDbContext db) : IQuoteRepository
 
     public async Task<Quote?> FindAsync(int id, CancellationToken ct)
     {
-        return await db.Quotes.FirstOrDefaultAsync(q => q.Id == id, ct);
+        return await db.Quotes.FirstOrDefaultAsync(q => q.Id == id && q.Type == QuoteType.Quote, ct);
     }
 
     public async Task<Quote?> FindWithDetailsAsync(int id, CancellationToken ct)
@@ -50,13 +51,15 @@ public class QuoteRepository(AppDbContext db) : IQuoteRepository
             .Include(q => q.Lines)
                 .ThenInclude(l => l.Part)
             .Include(q => q.SalesOrder)
-            .FirstOrDefaultAsync(q => q.Id == id, ct);
+            .Include(q => q.SourceEstimate)
+            .FirstOrDefaultAsync(q => q.Id == id && q.Type == QuoteType.Quote, ct);
     }
 
     public async Task<string> GenerateNextQuoteNumberAsync(CancellationToken ct)
     {
         var last = await db.Quotes
             .IgnoreQueryFilters()
+            .Where(q => q.Type == QuoteType.Quote && q.QuoteNumber != null)
             .OrderByDescending(q => q.Id)
             .Select(q => q.QuoteNumber)
             .FirstOrDefaultAsync(ct);

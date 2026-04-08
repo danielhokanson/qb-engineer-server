@@ -18,12 +18,14 @@ public class GetCustomerSummaryHandler(AppDbContext db)
             .FirstOrDefaultAsync(c => c.Id == request.Id && c.DeletedAt == null, ct)
             ?? throw new KeyNotFoundException($"Customer {request.Id} not found.");
 
-        var estimateCount = await db.Estimates
+        var estimateCount = await db.Quotes
             .CountAsync(e => e.CustomerId == request.Id && e.DeletedAt == null
-                && (e.Status == EstimateStatus.Draft || e.Status == EstimateStatus.Sent), ct);
+                && e.Type == QuoteType.Estimate
+                && (e.Status == QuoteStatus.Draft || e.Status == QuoteStatus.Sent), ct);
 
         var quoteCount = await db.Quotes
             .CountAsync(q => q.CustomerId == request.Id && q.DeletedAt == null
+                && q.Type == QuoteType.Quote
                 && (q.Status == QuoteStatus.Draft || q.Status == QuoteStatus.Sent), ct);
 
         var orderCount = await db.SalesOrders

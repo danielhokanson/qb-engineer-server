@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -9,41 +10,41 @@ namespace QBEngineer.Api.Features.Estimates;
 
 public record ConvertEstimateToQuoteCommand(int EstimateId) : IRequest<QuoteListItemModel>;
 
-public class ConvertEstimateToQuoteHandler(AppDbContext db)
+public class ConvertEstimateToQuoteHandler(AppDbContext db, IQuoteRepository quoteRepo)
     : IRequestHandler<ConvertEstimateToQuoteCommand, QuoteListItemModel>
 {
     public async Task<QuoteListItemModel> Handle(ConvertEstimateToQuoteCommand request, CancellationToken ct)
     {
-        var estimate = await db.Estimates
+        var estimate = await db.Quotes
             .Include(e => e.Customer)
-            .FirstOrDefaultAsync(e => e.Id == request.EstimateId && e.DeletedAt == null, ct)
+            .Include(e => e.GeneratedQuote)
+            .FirstOrDefaultAsync(e => e.Id == request.EstimateId && e.Type == QuoteType.Estimate && e.DeletedAt == null, ct)
             ?? throw new KeyNotFoundException($"Estimate {request.EstimateId} not found.");
 
-        if (estimate.ConvertedToQuoteId.HasValue)
+        if (estimate.GeneratedQuote != null)
             throw new InvalidOperationException("Estimate has already been converted to a quote.");
 
-        var quoteNumber = await GenerateQuoteNumberAsync(ct);
+        var quoteNumber = await quoteRepo.GenerateNextQuoteNumberAsync(ct);
         var quote = new Quote
         {
+            Type = QuoteType.Quote,
             QuoteNumber = quoteNumber,
             CustomerId = estimate.CustomerId,
             Status = QuoteStatus.Draft,
             Notes = estimate.Description ?? estimate.Notes,
-            ExpirationDate = estimate.ValidUntil,
+            ExpirationDate = estimate.ExpirationDate,
             TaxRate = 0,
+            SourceEstimateId = estimate.Id,
         };
 
         db.Quotes.Add(quote);
-        await db.SaveChangesAsync(ct);
-
-        estimate.ConvertedToQuoteId = quote.Id;
+        estimate.Status = QuoteStatus.ConvertedToQuote;
         estimate.ConvertedAt = DateTimeOffset.UtcNow;
-        estimate.Status = EstimateStatus.Accepted;
         await db.SaveChangesAsync(ct);
 
         return new QuoteListItemModel(
             quote.Id,
-            quote.QuoteNumber,
+            quote.QuoteNumber!,
             estimate.CustomerId,
             estimate.Customer.Name,
             quote.Status.ToString(),
@@ -51,11 +52,5 @@ public class ConvertEstimateToQuoteHandler(AppDbContext db)
             0m,
             quote.ExpirationDate,
             quote.CreatedAt);
-    }
-
-    private async Task<string> GenerateQuoteNumberAsync(CancellationToken ct)
-    {
-        var count = await db.Quotes.CountAsync(ct);
-        return $"Q-{(count + 1):D5}";
     }
 }
