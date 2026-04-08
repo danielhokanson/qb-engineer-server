@@ -177,7 +177,7 @@ public class GetIntegrationSettingsHandler(
                 SandboxSteps:
                 [
                     "Ollama is already running locally via Docker — no external account is needed.",
-                    "Pull the default model by running: docker exec qb-engineer-ai ollama pull llama3.2:3b",
+                    "Pull the default model by running: docker exec qb-engineer-ai ollama pull gemma3:4b",
                     "Pull the embedding model: docker exec qb-engineer-ai ollama pull all-minilm:l6-v2",
                     "The Base URL is pre-configured. Larger models (7B+) give better results but require more RAM.",
                 ],

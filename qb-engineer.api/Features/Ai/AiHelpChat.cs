@@ -404,7 +404,7 @@ public class AiHelpChatHandler(
 
         DOCKER / INFRASTRUCTURE:
         - 7 containers: qb-engineer-ui, qb-engineer-api, qb-engineer-db (PostgreSQL + pgvector), qb-engineer-storage (MinIO), qb-engineer-ai (Ollama), qb-engineer-backup, qb-engineer-signing (DocuSeal).
-        - Ollama models: llama3.2:3b (generation), all-minilm:l6-v2 (embeddings). Models auto-pulled by qb-engineer-ai-init on first start.
+        - Ollama models: gemma3:4b (generation), all-minilm:l6-v2 (embeddings). Models auto-pulled by qb-engineer-ai-init on first start.
         - Documentation is indexed into pgvector from /app/docs and re-indexed daily at 3 AM.
 
         COMMON WORKFLOWS:
