@@ -13,7 +13,7 @@ namespace QBEngineer.Integrations;
 public class OllamaAiService : IAiService
 {
     private readonly HttpClient _httpClient;
-    private readonly OllamaOptions _options;
+    private readonly AiOptions _options;
     private readonly ILogger<OllamaAiService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -24,7 +24,7 @@ public class OllamaAiService : IAiService
 
     public OllamaAiService(
         HttpClient httpClient,
-        IOptions<OllamaOptions> options,
+        IOptions<AiOptions> options,
         ILogger<OllamaAiService> logger)
     {
         _httpClient = httpClient;

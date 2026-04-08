@@ -15,7 +15,7 @@ public record IndexDocumentationCommand : IRequest<int>;
 public class IndexDocumentationHandler(
     IAiService aiService,
     IEmbeddingRepository embeddingRepo,
-    IOptions<OllamaOptions> ollamaOptions,
+    IOptions<AiOptions> ollamaOptions,
     ILogger<IndexDocumentationHandler> logger) : IRequestHandler<IndexDocumentationCommand, int>
 {
     private const string EntityType = "Documentation";

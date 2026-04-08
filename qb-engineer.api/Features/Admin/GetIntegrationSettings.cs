@@ -15,7 +15,7 @@ public class GetIntegrationSettingsHandler(
     IOptions<MinioOptions> minioOptions,
     IOptions<UspsOptions> uspsOptions,
     IOptions<DocuSealOptions> docuSealOptions,
-    IOptions<OllamaOptions> ollamaOptions,
+    IOptions<AiOptions> ollamaOptions,
     IOptions<UpsOptions> upsOptions,
     IOptions<FedExOptions> fedExOptions,
     IOptions<DhlOptions> dhlOptions,

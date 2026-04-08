@@ -241,7 +241,7 @@ try
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection(MinioOptions.SectionName));
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
     builder.Services.Configure<QuickBooksOptions>(builder.Configuration.GetSection(QuickBooksOptions.SectionName));
-    builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
+    builder.Services.Configure<AiOptions>(builder.Configuration.GetSection(AiOptions.SectionName));
     builder.Services.Configure<UspsOptions>(builder.Configuration.GetSection(UspsOptions.SectionName));
     builder.Services.Configure<DocuSealOptions>(builder.Configuration.GetSection(DocuSealOptions.SectionName));
     // Shipping carrier options

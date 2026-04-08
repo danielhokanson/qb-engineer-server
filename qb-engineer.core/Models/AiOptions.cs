@@ -1,8 +1,8 @@
 namespace QBEngineer.Core.Models;
 
-public class OllamaOptions
+public class AiOptions
 {
-    public const string SectionName = "Ollama";
+    public const string SectionName = "Ai";
 
     public string BaseUrl { get; set; } = "http://qb-engineer-ai:11434";
     public string Model { get; set; } = "gemma3:4b";
