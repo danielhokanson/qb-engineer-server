@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/recurring-orders")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class RecurringOrdersController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

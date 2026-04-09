@@ -11,7 +11,7 @@ namespace QBEngineer.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/payments")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class PaymentsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/planning-cycles")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,PM")]
 public class PlanningCyclesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

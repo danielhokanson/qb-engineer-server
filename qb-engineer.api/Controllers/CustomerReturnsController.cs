@@ -10,7 +10,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/customer-returns")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class CustomerReturnsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

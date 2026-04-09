@@ -10,7 +10,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/parts")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,Engineer")]
 public class PartsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

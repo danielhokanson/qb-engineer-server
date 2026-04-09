@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/customers/{customerId:int}/addresses")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
 public class CustomerAddressesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

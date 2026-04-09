@@ -9,7 +9,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/estimates")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
 public class EstimatesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

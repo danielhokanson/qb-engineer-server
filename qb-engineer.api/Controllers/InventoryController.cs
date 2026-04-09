@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/inventory")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager,Engineer,ProductionWorker")]
 public class InventoryController(IMediator mediator) : ControllerBase
 {
     [HttpGet("locations")]

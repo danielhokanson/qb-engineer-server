@@ -9,7 +9,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/shipments")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class ShipmentsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

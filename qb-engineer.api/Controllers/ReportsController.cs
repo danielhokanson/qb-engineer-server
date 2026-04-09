@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/reports")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
 public class ReportsController(IMediator mediator) : ControllerBase
 {
     [HttpGet("jobs-by-stage")]

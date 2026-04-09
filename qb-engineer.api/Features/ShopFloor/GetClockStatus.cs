@@ -1,10 +1,13 @@
 using MediatR;
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
+
+using ApplicationUser = QBEngineer.Data.Context.ApplicationUser;
 
 namespace QBEngineer.Api.Features.ShopFloor;
 
@@ -21,11 +24,12 @@ public record ClockWorkerModel(
     string? CurrentJobNumber,
     string TimeOnTask,
     DateTimeOffset? StatusSince,
-    List<WorkerAssignmentModel> Assignments);
+    List<WorkerAssignmentModel> Assignments,
+    string Role);
 
 public record GetClockStatusQuery(int? TeamId = null) : IRequest<List<ClockWorkerModel>>;
 
-public class GetClockStatusHandler(AppDbContext db)
+public class GetClockStatusHandler(AppDbContext db, UserManager<ApplicationUser> userManager)
     : IRequestHandler<GetClockStatusQuery, List<ClockWorkerModel>>
 {
     public async Task<List<ClockWorkerModel>> Handle(GetClockStatusQuery request, CancellationToken ct)
@@ -40,6 +44,24 @@ public class GetClockStatusHandler(AppDbContext db)
         var users = await usersQuery
             .Select(u => new { u.Id, Name = (u.FirstName + " " + u.LastName).Trim(), u.Email, u.Initials, u.AvatarColor })
             .ToListAsync(ct);
+
+        // Fetch primary role for each user (highest-privilege role wins)
+        var roleOrder = new[] { "Admin", "Manager", "OfficeManager", "PM", "Engineer", "ProductionWorker" };
+        var userRoles = new Dictionary<int, string>();
+        foreach (var u in users)
+        {
+            var appUser = await userManager.FindByIdAsync(u.Id.ToString());
+            if (appUser != null)
+            {
+                var roles = await userManager.GetRolesAsync(appUser);
+                var primary = roleOrder.FirstOrDefault(r => roles.Contains(r)) ?? "ProductionWorker";
+                userRoles[u.Id] = primary;
+            }
+            else
+            {
+                userRoles[u.Id] = "ProductionWorker";
+            }
+        }
 
         var latestEvents = await db.ClockEvents
             .Where(e => e.Timestamp >= today)
@@ -153,7 +175,8 @@ public class GetClockStatusHandler(AppDbContext db)
                 timer?.Job?.JobNumber,
                 timeOnTask,
                 statusSince,
-                userAssignments ?? []);
+                userAssignments ?? [],
+                userRoles.GetValueOrDefault(u.Id, "ProductionWorker"));
         }).OrderBy(w => w.Status == "Out").ThenBy(w => w.Name).ToList();
     }
 

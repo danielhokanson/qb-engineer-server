@@ -8,7 +8,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/price-lists")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class PriceListsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
