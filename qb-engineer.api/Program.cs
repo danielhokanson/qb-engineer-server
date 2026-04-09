@@ -121,6 +121,16 @@ try
                     context.Token = accessToken;
                 }
                 return Task.CompletedTask;
+            },
+            OnTokenValidated = async context =>
+            {
+                var userManager = context.HttpContext.RequestServices
+                    .GetRequiredService<UserManager<ApplicationUser>>();
+                var userId = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null || await userManager.FindByIdAsync(userId) == null)
+                {
+                    context.Fail("User no longer exists.");
+                }
             }
         };
     });

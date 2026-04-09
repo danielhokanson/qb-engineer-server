@@ -38,33 +38,41 @@ public static partial class SeedData
         // ══════════════════════════════════════════════════════════════════
 
         // ── 3. Admin user ─────────────────────────────────────────────────
+        // Password comes from SEED_USER_PASSWORD env var (set during setup)
+        var seedPassword = Environment.GetEnvironmentVariable("SEED_USER_PASSWORD");
+        if (string.IsNullOrWhiteSpace(seedPassword))
+        {
+            Log.Error("SEED_USER_PASSWORD environment variable is required for demo data seeding");
+            return;
+        }
+
         var admin = await EnsureUserAsync(userManager, "admin@qbengineer.local",
-            "Admin", "User", "AU", "#0d9488", "Admin123!", "Admin");
+            "Admin", "User", "AU", "#0d9488", seedPassword, "Admin");
 
         // ── 4. Team members ───────────────────────────────────────────────
         var akim = await EnsureUserAsync(userManager, "akim@qbengineer.local",
-            "A.", "Kim", "AK", "#0d9488", "Engineer123!", "Engineer");
+            "A.", "Kim", "AK", "#0d9488", seedPassword, "Engineer");
 
         var dhart = await EnsureUserAsync(userManager, "dhart@qbengineer.local",
-            "D.", "Hart", "DH", "#7c3aed", "Engineer123!", "Engineer");
+            "D.", "Hart", "DH", "#7c3aed", seedPassword, "Engineer");
 
         var jsilva = await EnsureUserAsync(userManager, "jsilva@qbengineer.local",
-            "J.", "Silva", "JS", "#c2410c", "Engineer123!", "Engineer");
+            "J.", "Silva", "JS", "#c2410c", seedPassword, "Engineer");
 
         var mreyes = await EnsureUserAsync(userManager, "mreyes@qbengineer.local",
-            "M.", "Reyes", "MR", "#15803d", "Engineer123!", "Engineer");
+            "M.", "Reyes", "MR", "#15803d", seedPassword, "Engineer");
 
         var pmorris = await EnsureUserAsync(userManager, "pmorris@qbengineer.local",
-            "P.", "Morris", "PM", "#0369a1", "Engineer123!", "PM");
+            "P.", "Morris", "PM", "#0369a1", seedPassword, "PM");
 
         var lwilson = await EnsureUserAsync(userManager, "lwilson@qbengineer.local",
-            "L.", "Wilson", "LW", "#7c3aed", "Engineer123!", "Manager");
+            "L.", "Wilson", "LW", "#7c3aed", seedPassword, "Manager");
 
         var cthompson = await EnsureUserAsync(userManager, "cthompson@qbengineer.local",
-            "C.", "Thompson", "CT", "#b45309", "Engineer123!", "OfficeManager");
+            "C.", "Thompson", "CT", "#b45309", seedPassword, "OfficeManager");
 
         var bkelly = await EnsureUserAsync(userManager, "bkelly@qbengineer.local",
-            "B.", "Kelly", "BK", "#0f766e", "Engineer123!", "ProductionWorker");
+            "B.", "Kelly", "BK", "#0f766e", seedPassword, "ProductionWorker");
 
         await db.SaveChangesAsync();
 
