@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 using QBEngineer.Core.Interfaces;
 
@@ -18,7 +19,9 @@ public class AiSearchSuggestValidator : AbstractValidator<AiSearchSuggestCommand
     }
 }
 
-public class AiSearchSuggestHandler(IAiService aiService) : IRequestHandler<AiSearchSuggestCommand, List<AiSearchSuggestion>>
+public class AiSearchSuggestHandler(
+    IAiService aiService,
+    ILogger<AiSearchSuggestHandler> logger) : IRequestHandler<AiSearchSuggestCommand, List<AiSearchSuggestion>>
 {
     public async Task<List<AiSearchSuggestion>> Handle(AiSearchSuggestCommand request, CancellationToken ct)
     {
@@ -56,7 +59,16 @@ public class AiSearchSuggestHandler(IAiService aiService) : IRequestHandler<AiSe
             User query: "{request.Query}"
             """;
 
-        var response = await aiService.GenerateTextAsync(prompt, ct);
+        string response;
+        try
+        {
+            response = await aiService.GenerateTextAsync(prompt, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "AI service unavailable for search suggestions");
+            return GetFallbackSuggestions(request.Query);
+        }
 
         try
         {

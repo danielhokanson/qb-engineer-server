@@ -2,6 +2,7 @@ using System.Text;
 
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pgvector;
 
 using QBEngineer.Core.Interfaces;
@@ -25,11 +26,24 @@ public class RagSearchValidator : AbstractValidator<RagSearchCommand>
 
 public class RagSearchHandler(
     IAiService aiService,
-    IEmbeddingRepository embeddingRepo) : IRequestHandler<RagSearchCommand, RagSearchResponseModel>
+    IEmbeddingRepository embeddingRepo,
+    ILogger<RagSearchHandler> logger) : IRequestHandler<RagSearchCommand, RagSearchResponseModel>
 {
+    private static readonly RagSearchResponseModel EmptyResponse = new([], null);
+
     public async Task<RagSearchResponseModel> Handle(RagSearchCommand request, CancellationToken ct)
     {
-        var queryEmbeddingArray = await aiService.GetEmbeddingAsync(request.Query, ct);
+        float[] queryEmbeddingArray;
+        try
+        {
+            queryEmbeddingArray = await aiService.GetEmbeddingAsync(request.Query, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "AI embedding service unavailable for search query");
+            return EmptyResponse;
+        }
+
         var queryVector = new Vector(queryEmbeddingArray);
 
         var similar = await embeddingRepo.SearchSimilarAsync(
@@ -52,29 +66,36 @@ public class RagSearchHandler(
 
         if (request.IncludeAnswer && results.Count > 0)
         {
-            var contextChunks = results.Take(5);
-            var contextBuilder = new StringBuilder();
-            foreach (var chunk in contextChunks)
+            try
             {
-                contextBuilder.AppendLine($"[{chunk.EntityType} #{chunk.EntityId} — {chunk.SourceField}]:");
-                contextBuilder.AppendLine(chunk.ChunkText);
-                contextBuilder.AppendLine();
+                var contextChunks = results.Take(5);
+                var contextBuilder = new StringBuilder();
+                foreach (var chunk in contextChunks)
+                {
+                    contextBuilder.AppendLine($"[{chunk.EntityType} #{chunk.EntityId} — {chunk.SourceField}]:");
+                    contextBuilder.AppendLine(chunk.ChunkText);
+                    contextBuilder.AppendLine();
+                }
+
+                var prompt = $"""
+                    You are a helpful assistant for a manufacturing operations platform called QB Engineer.
+                    Use the following context to answer the user's question. If the context doesn't contain
+                    relevant information, say so. Be concise and factual.
+
+                    Context:
+                    {contextBuilder}
+
+                    Question: {request.Query}
+
+                    Answer:
+                    """;
+
+                generatedAnswer = await aiService.GenerateTextAsync(prompt, ct);
             }
-
-            var prompt = $"""
-                You are a helpful assistant for a manufacturing operations platform called QB Engineer.
-                Use the following context to answer the user's question. If the context doesn't contain
-                relevant information, say so. Be concise and factual.
-
-                Context:
-                {contextBuilder}
-
-                Question: {request.Query}
-
-                Answer:
-                """;
-
-            generatedAnswer = await aiService.GenerateTextAsync(prompt, ct);
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex, "AI text generation unavailable for search answer");
+            }
         }
 
         return new RagSearchResponseModel(results, generatedAnswer);
