@@ -54,6 +54,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<ReceivingRecord> ReceivingRecords => Set<ReceivingRecord>();
     public DbSet<JobPart> JobParts => Set<JobPart>();
     public DbSet<JobNote> JobNotes => Set<JobNote>();
+    public DbSet<EntityNote> EntityNotes => Set<EntityNote>();
 
     // Order Management
     public DbSet<CustomerAddress> CustomerAddresses => Set<CustomerAddress>();
