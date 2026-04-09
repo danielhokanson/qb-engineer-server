@@ -368,17 +368,31 @@ try
         });
     builder.Services.AddOpenApi();
 
-    // CORS
+    // CORS — read allowed origins from CORS_ORIGINS env var (comma-separated),
+    // plus internal Docker service names that are always needed.
+    var corsOrigins = new List<string>
+    {
+        "http://localhost:4200",
+        "http://localhost:4201",
+        "http://localhost:80",
+        "http://localhost",
+        "http://qb-engineer-ui",
+        "http://qb-engineer-ui:80",
+    };
+    var envOrigins = builder.Configuration["CORS_ORIGINS"];
+    if (!string.IsNullOrWhiteSpace(envOrigins))
+    {
+        foreach (var origin in envOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!corsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+                corsOrigins.Add(origin);
+        }
+    }
     builder.Services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
         {
-            policy.WithOrigins(
-                    "http://localhost:4200",
-                    "http://localhost:4201",
-                    "http://localhost:80",
-                    "http://qb-engineer-ui",
-                    "http://qb-engineer-ui:80")
+            policy.WithOrigins(corsOrigins.ToArray())
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
