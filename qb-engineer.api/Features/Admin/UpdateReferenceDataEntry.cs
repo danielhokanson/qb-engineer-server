@@ -39,6 +39,6 @@ public class UpdateReferenceDataHandler(AppDbContext db)
         await db.SaveChangesAsync(cancellationToken);
 
         return new ReferenceDataResponseModel(
-            entry.Id, entry.Code, entry.Label, entry.SortOrder, entry.IsActive, entry.Metadata);
+            entry.Id, entry.Code, entry.Label, entry.SortOrder, entry.IsActive, entry.IsSeedData, entry.Metadata);
     }
 }

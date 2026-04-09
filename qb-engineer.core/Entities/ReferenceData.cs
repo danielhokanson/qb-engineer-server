@@ -7,6 +7,7 @@ public class ReferenceData : BaseEntity
     public string Label { get; set; } = string.Empty;
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsSeedData { get; set; }
     public int? ParentId { get; set; }
     public string? Metadata { get; set; }
 

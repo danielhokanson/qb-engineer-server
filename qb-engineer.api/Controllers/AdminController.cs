@@ -94,6 +94,13 @@ public class AdminController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpDelete("reference-data/{id:int}")]
+    public async Task<IActionResult> DeleteReferenceData(int id)
+    {
+        await mediator.Send(new DeleteReferenceDataCommand(id));
+        return NoContent();
+    }
+
     // ── Brand Settings (public — no auth required for login screen theming) ──
 
     [AllowAnonymous]

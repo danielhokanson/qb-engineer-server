@@ -6,4 +6,5 @@ public record ReferenceDataResponseModel(
     string Label,
     int SortOrder,
     bool IsActive,
+    bool IsSeedData,
     string? Metadata);

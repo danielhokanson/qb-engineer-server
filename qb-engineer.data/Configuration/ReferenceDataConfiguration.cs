@@ -14,6 +14,7 @@ public class ReferenceDataConfiguration : IEntityTypeConfiguration<ReferenceData
         builder.Property(e => e.Code).HasMaxLength(50);
         builder.Property(e => e.Label).HasMaxLength(200);
         builder.Property(e => e.Metadata).HasColumnType("jsonb");
+        builder.Property(e => e.IsSeedData).HasDefaultValue(false);
 
         builder.HasOne(e => e.Parent)
             .WithMany(e => e.Children)

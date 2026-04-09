@@ -15,7 +15,7 @@ public class GetInternalProjectTypesHandler(AppDbContext db)
         return await db.ReferenceData
             .Where(r => r.GroupCode == "internal_project_type" && r.IsActive)
             .OrderBy(r => r.SortOrder)
-            .Select(r => new ReferenceDataResponseModel(r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.Metadata))
+            .Select(r => new ReferenceDataResponseModel(r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData, r.Metadata))
             .ToListAsync(ct);
     }
 }

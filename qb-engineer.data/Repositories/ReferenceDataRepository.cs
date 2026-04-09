@@ -19,7 +19,7 @@ public class ReferenceDataRepository(AppDbContext db) : IReferenceDataRepository
             .Select(g => new ReferenceDataGroupResponseModel(
                 g.Key,
                 g.Select(r => new ReferenceDataResponseModel(
-                    r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.Metadata))
+                    r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData, r.Metadata))
                 .ToList()))
             .ToList();
     }
@@ -30,7 +30,7 @@ public class ReferenceDataRepository(AppDbContext db) : IReferenceDataRepository
             .Where(r => r.GroupCode == groupCode)
             .OrderBy(r => r.SortOrder)
             .Select(r => new ReferenceDataResponseModel(
-                r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.Metadata))
+                r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData, r.Metadata))
             .ToListAsync(ct);
     }
 }
