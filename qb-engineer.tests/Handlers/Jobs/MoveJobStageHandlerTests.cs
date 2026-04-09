@@ -61,12 +61,14 @@ public class MoveJobStageHandlerTests
             BoardPosition = 3,
         };
 
-        var fromStage = new JobStage { Id = fromStageId, TrackTypeId = trackTypeId, Name = "Quoted" };
-        var toStage = new JobStage { Id = toStageId, TrackTypeId = trackTypeId, Name = "Order Confirmed" };
+        var fromStage = new JobStage { Id = fromStageId, TrackTypeId = trackTypeId, Name = "Quoted", SortOrder = 1 };
+        var toStage = new JobStage { Id = toStageId, TrackTypeId = trackTypeId, Name = "Order Confirmed", SortOrder = 2 };
 
         _jobRepo.Setup(r => r.FindAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(job);
         _trackRepo.Setup(r => r.FindStageAsync(toStageId, It.IsAny<CancellationToken>())).ReturnsAsync(toStage);
         _trackRepo.Setup(r => r.FindStageAsync(fromStageId, It.IsAny<CancellationToken>())).ReturnsAsync(fromStage);
+        _trackRepo.Setup(r => r.GetStagesByTrackTypeAsync(trackTypeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<JobStage> { fromStage, toStage });
         _jobRepo.Setup(r => r.GetMaxBoardPositionAsync(toStageId, It.IsAny<CancellationToken>())).ReturnsAsync(7);
 
         var expectedResult = new JobDetailResponseModel(
@@ -156,12 +158,14 @@ public class MoveJobStageHandlerTests
         var toStageId = 6;
 
         var job = new Job { Id = 1, TrackTypeId = trackTypeId, CurrentStageId = fromStageId };
-        var fromStage = new JobStage { Id = fromStageId, TrackTypeId = trackTypeId, Name = "Materials Ordered" };
-        var toStage = new JobStage { Id = toStageId, TrackTypeId = trackTypeId, Name = "Materials Received" };
+        var fromStage = new JobStage { Id = fromStageId, TrackTypeId = trackTypeId, Name = "Materials Ordered", SortOrder = 3 };
+        var toStage = new JobStage { Id = toStageId, TrackTypeId = trackTypeId, Name = "Materials Received", SortOrder = 4 };
 
         _jobRepo.Setup(r => r.FindAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(job);
         _trackRepo.Setup(r => r.FindStageAsync(toStageId, It.IsAny<CancellationToken>())).ReturnsAsync(toStage);
         _trackRepo.Setup(r => r.FindStageAsync(fromStageId, It.IsAny<CancellationToken>())).ReturnsAsync(fromStage);
+        _trackRepo.Setup(r => r.GetStagesByTrackTypeAsync(trackTypeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<JobStage> { fromStage, toStage });
         _jobRepo.Setup(r => r.GetMaxBoardPositionAsync(toStageId, It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
         var expectedResult = new JobDetailResponseModel(
@@ -198,12 +202,14 @@ public class MoveJobStageHandlerTests
         var toStageId = 6;
 
         var job = new Job { Id = 1, TrackTypeId = trackTypeId, CurrentStageId = fromStageId };
-        var fromStage = new JobStage { Id = fromStageId, TrackTypeId = trackTypeId, Name = "Quoted" };
-        var toStage = new JobStage { Id = toStageId, TrackTypeId = trackTypeId, Name = "Order Confirmed" };
+        var fromStage = new JobStage { Id = fromStageId, TrackTypeId = trackTypeId, Name = "Quoted", SortOrder = 1 };
+        var toStage = new JobStage { Id = toStageId, TrackTypeId = trackTypeId, Name = "Order Confirmed", SortOrder = 2 };
 
         _jobRepo.Setup(r => r.FindAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(job);
         _trackRepo.Setup(r => r.FindStageAsync(toStageId, It.IsAny<CancellationToken>())).ReturnsAsync(toStage);
         _trackRepo.Setup(r => r.FindStageAsync(fromStageId, It.IsAny<CancellationToken>())).ReturnsAsync(fromStage);
+        _trackRepo.Setup(r => r.GetStagesByTrackTypeAsync(trackTypeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<JobStage> { fromStage, toStage });
         _jobRepo.Setup(r => r.GetMaxBoardPositionAsync(toStageId, It.IsAny<CancellationToken>())).ReturnsAsync(2);
 
         var expectedResult = new JobDetailResponseModel(
