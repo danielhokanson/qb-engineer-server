@@ -526,8 +526,10 @@ try
             await db.Database.MigrateAsync();
             Log.Information("Database migrations applied successfully");
 
-            // Seed essential data idempotently (roles, users, track types, reference data, etc.)
-            await SeedData.SeedAsync(scope.ServiceProvider);
+            // Seed essential data idempotently (roles, track types, reference data).
+            // Demo data (users, customers, jobs, etc.) only seeded when SEED_DEMO_DATA=true.
+            var seedDemoData = builder.Configuration.GetValue<bool>("SEED_DEMO_DATA");
+            await SeedData.SeedAsync(scope.ServiceProvider, seedDemoData);
 
             // Seed built-in AI assistants (idempotent)
             await QBEngineer.Api.Features.AiAssistants.SeedAiAssistants.EnsureSeededAsync(db);

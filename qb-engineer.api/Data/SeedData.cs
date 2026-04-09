@@ -9,13 +9,13 @@ namespace QBEngineer.Api.Data;
 
 public static partial class SeedData
 {
-    public static async Task SeedAsync(IServiceProvider services)
+    public static async Task SeedAsync(IServiceProvider services, bool seedDemoData = true)
     {
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var db = services.GetRequiredService<AppDbContext>();
 
-        // ── 1. Roles ──────────────────────────────────────────────────────
+        // ── 1. Roles (essential — app won't work without these) ──────────
         string[] roles = ["Admin", "Manager", "Engineer", "PM", "ProductionWorker", "OfficeManager"];
         foreach (var role in roles)
         {
@@ -23,11 +23,25 @@ public static partial class SeedData
                 await roleManager.CreateAsync(new IdentityRole<int>(role));
         }
 
-        // ── 2. Admin user ─────────────────────────────────────────────────
+        // ── 2. Track Types, Stages & Reference Data (essential) ──────────
+        await SeedEssentialDataAsync(db);
+
+        // ── Stop here for clean installs — setup wizard handles user creation ──
+        if (!seedDemoData)
+        {
+            Log.Information("SEED_DEMO_DATA=false — skipping demo data (clean install)");
+            return;
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        // Everything below is demo/development data only
+        // ══════════════════════════════════════════════════════════════════
+
+        // ── 3. Admin user ─────────────────────────────────────────────────
         var admin = await EnsureUserAsync(userManager, "admin@qbengineer.local",
             "Admin", "User", "AU", "#0d9488", "Admin123!", "Admin");
 
-        // ── 3. Team members ───────────────────────────────────────────────
+        // ── 4. Team members ───────────────────────────────────────────────
         var akim = await EnsureUserAsync(userManager, "akim@qbengineer.local",
             "A.", "Kim", "AK", "#0d9488", "Engineer123!", "Engineer");
 
@@ -53,9 +67,6 @@ public static partial class SeedData
             "B.", "Kelly", "BK", "#0f766e", "Engineer123!", "ProductionWorker");
 
         await db.SaveChangesAsync();
-
-        // ── 4. Track Types, Stages & Reference Data ────────────────────
-        await SeedEssentialDataAsync(db);
 
         // ── 5. Customers ──────────────────────────────────────────────────
         if (!await db.Customers.AnyAsync())
