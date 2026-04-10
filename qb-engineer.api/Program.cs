@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
 using QBEngineer.Api.Behaviors;
 using QBEngineer.Api.Data;
@@ -48,11 +50,23 @@ try
     builder.Configuration.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
 
     // Serilog
-    builder.Host.UseSerilog((context, services, config) => config
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .WriteTo.Console()
-        .Enrich.FromLogContext());
+    builder.Host.UseSerilog((context, services, config) =>
+    {
+        config
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .WriteTo.Console()
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("Application", "qb-engineer-api")
+            .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName);
+
+        var seqUrl = context.Configuration["Seq:ServerUrl"];
+        if (!string.IsNullOrWhiteSpace(seqUrl))
+        {
+            var seqApiKey = context.Configuration["Seq:ApiKey"];
+            config.WriteTo.Seq(seqUrl, apiKey: string.IsNullOrWhiteSpace(seqApiKey) ? null : seqApiKey);
+        }
+    });
 
     // Clock abstraction — MockClock in development (controllable via /api/v1/dev/clock),
     // SystemClock in production.
@@ -481,65 +495,171 @@ try
 
     var app = builder.Build();
 
-    // Database initialization (skip migrations for in-memory provider used in integration tests)
+    // ── Database initialization ──────────────────────────────────────────
+    // All database lifecycle events are logged at Warning or higher for traceability.
+    // If the database is ever unexpectedly wiped, these logs (persisted in Seq) provide
+    // a full audit trail of what happened and why.
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+        Log.Information("[DB-LIFECYCLE] Database initialization starting. Provider: {Provider}",
+            db.Database.ProviderName);
+
         if (db.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
         {
+            Log.Information("[DB-LIFECYCLE] In-memory provider detected — using EnsureCreated (test mode)");
             await db.Database.EnsureCreatedAsync();
         }
         else
         {
             var forceRecreate = builder.Configuration.GetValue<bool>("RECREATE_DB");
+            var seedDemoDataFlag = builder.Configuration.GetValue<bool>("SEED_DEMO_DATA");
+            var canConnect = await db.Database.CanConnectAsync();
+
+            Log.Information(
+                "[DB-LIFECYCLE] Config: RECREATE_DB={RecreateDb}, SEED_DEMO_DATA={SeedDemo}, CanConnect={CanConnect}",
+                forceRecreate, seedDemoDataFlag, canConnect);
 
             if (forceRecreate)
             {
                 // Manual escape hatch — set RECREATE_DB=true to force a wipe (dev use only)
-                Log.Warning("RECREATE_DB=true — dropping and recreating database from migrations...");
+                Log.Warning(
+                    "[DB-LIFECYCLE] ⚠ RECREATE_DB=true — DELETING entire database and recreating from migrations. " +
+                    "This destroys ALL data. If this was not intentional, check your .env file.");
                 await db.Database.EnsureDeletedAsync();
+                Log.Warning("[DB-LIFECYCLE] Database deleted successfully. Will recreate via MigrateAsync.");
             }
-            else if (await db.Database.CanConnectAsync())
+            else if (canConnect)
             {
-                // DB exists — check for legacy schema (EnsureCreated, no migrations history)
+                // DB exists — verify migrations history is intact
                 IEnumerable<string> applied;
+                bool historyTableMissing = false;
                 try
                 {
                     applied = await db.Database.GetAppliedMigrationsAsync();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // __EFMigrationsHistory table missing — definitely a pre-migration schema
+                    // __EFMigrationsHistory table missing entirely
                     applied = [];
+                    historyTableMissing = true;
+                    Log.Warning(
+                        "[DB-LIFECYCLE] __EFMigrationsHistory table not found: {Error}. " +
+                        "This can happen if the database was created without EF migrations.",
+                        ex.Message);
                 }
 
-                if (!applied.Any())
-                {
-                    // No migration history. Verify app tables actually exist (vs. brand-new empty DB).
-                    bool hasLegacySchema = false;
-                    try { hasLegacySchema = await db.Jobs.AnyAsync(); }
-                    catch { /* table doesn't exist — this is a fresh DB, not a legacy one */ }
+                var appliedList = applied.ToList();
+                var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
+                var allMigrations = db.Database.GetMigrations().ToList();
 
-                    if (hasLegacySchema)
+                Log.Information(
+                    "[DB-LIFECYCLE] Migration state: {Applied} applied, {Pending} pending, {Total} total in assembly",
+                    appliedList.Count, pendingMigrations.Count, allMigrations.Count);
+
+                if (!appliedList.Any())
+                {
+                    // No migration history but DB exists. Check if there's actual data.
+                    bool hasExistingData = false;
+                    try { hasExistingData = await db.Jobs.AnyAsync(); }
+                    catch { /* table doesn't exist — fresh DB, nothing to recover */ }
+
+                    if (hasExistingData)
                     {
+                        // Schema exists with data but no migrations history.
+                        // Self-heal: verify each migration's schema changes against information_schema,
+                        // mark verified ones as applied, leave unverified ones pending for MigrateAsync().
                         Log.Warning(
-                            "Legacy schema detected (database exists with tables but no migrations history). " +
-                            "Performing one-time forced recreation so the migration baseline is established. " +
-                            "This only happens once — all future schema changes will use incremental migrations.");
-                        await db.Database.EnsureDeletedAsync();
+                            "[DB-LIFECYCLE] ⚠ SELF-HEALING: Database has existing data but NO migration history. " +
+                            "History table missing: {HistoryMissing}. Verifying each migration's schema " +
+                            "changes against information_schema to recover...",
+                            historyTableMissing);
+
+                        if (historyTableMissing)
+                        {
+                            Log.Information("[DB-LIFECYCLE] Creating __EFMigrationsHistory table");
+                            await db.Database.ExecuteSqlRawAsync(
+                                """
+                                CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+                                    "MigrationId" character varying(150) NOT NULL,
+                                    "ProductVersion" character varying(32) NOT NULL,
+                                    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+                                )
+                                """);
+                        }
+
+                        var migrationsAssembly = ((IInfrastructure<IServiceProvider>)db).Instance.GetRequiredService<IMigrationsAssembly>();
+                        var efVersion = typeof(DbContext).Assembly.GetName().Version?.ToString() ?? "9.0.3";
+                        var verified = 0;
+                        var pending = 0;
+
+                        foreach (var (migrationId, typeInfo) in migrationsAssembly.Migrations)
+                        {
+                            var migration = (Migration)Activator.CreateInstance(typeInfo.AsType())!;
+                            var isApplied = await QBEngineer.Data.Migrations.MigrationSchemaVerifier
+                                .IsMigrationApplied(db, migration, migrationId);
+
+                            if (isApplied)
+                            {
+                                await db.Database.ExecuteSqlRawAsync(
+                                    """
+                                    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                                    VALUES ({0}, {1})
+                                    ON CONFLICT ("MigrationId") DO NOTHING
+                                    """,
+                                    migrationId, efVersion);
+                                verified++;
+                                Log.Debug("[DB-LIFECYCLE] Migration {MigrationId}: schema verified ✓", migrationId);
+                            }
+                            else
+                            {
+                                pending++;
+                                Log.Warning(
+                                    "[DB-LIFECYCLE] Migration {MigrationId}: schema NOT verified — will be applied by MigrateAsync",
+                                    migrationId);
+                            }
+                        }
+
+                        Log.Information(
+                            "[DB-LIFECYCLE] Self-healing complete: {Verified} migrations verified, {Pending} pending",
+                            verified, pending);
+                    }
+                    else
+                    {
+                        Log.Information(
+                            "[DB-LIFECYCLE] No existing data found — fresh database, all migrations will be applied");
+                    }
+                }
+                else
+                {
+                    Log.Information(
+                        "[DB-LIFECYCLE] Migration history intact. Applied: [{AppliedMigrations}]",
+                        string.Join(", ", appliedList.TakeLast(5)));
+                    if (pendingMigrations.Any())
+                    {
+                        Log.Information(
+                            "[DB-LIFECYCLE] Pending migrations to apply: [{PendingMigrations}]",
+                            string.Join(", ", pendingMigrations));
                     }
                 }
             }
+            else
+            {
+                Log.Information("[DB-LIFECYCLE] Cannot connect to database — MigrateAsync will create it");
+            }
 
             // Apply all pending migrations (creates DB from scratch if it doesn't exist)
+            Log.Information("[DB-LIFECYCLE] Running MigrateAsync...");
             await db.Database.MigrateAsync();
-            Log.Information("Database migrations applied successfully");
+            Log.Information("[DB-LIFECYCLE] Database migrations applied successfully");
 
             // Seed essential data idempotently (roles, track types, reference data).
             // Demo data (users, customers, jobs, etc.) only seeded when SEED_DEMO_DATA=true.
             var seedDemoData = builder.Configuration.GetValue<bool>("SEED_DEMO_DATA");
+            Log.Information("[DB-LIFECYCLE] Running seed data (demo={SeedDemo})...", seedDemoData);
             await SeedData.SeedAsync(scope.ServiceProvider, seedDemoData);
+            Log.Information("[DB-LIFECYCLE] Seed data complete");
 
             // Seed built-in AI assistants (idempotent)
             await QBEngineer.Api.Features.AiAssistants.SeedAiAssistants.EnsureSeededAsync(db);
