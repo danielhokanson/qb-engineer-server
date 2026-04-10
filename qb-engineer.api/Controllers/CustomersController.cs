@@ -81,6 +81,43 @@ public class CustomersController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    // ─── Contact Interactions ───
+
+    [HttpGet("{id:int}/interactions")]
+    public async Task<ActionResult<List<ContactInteractionResponseModel>>> GetInteractions(
+        int id, [FromQuery] int? contactId)
+    {
+        var result = await mediator.Send(new GetContactInteractionsQuery(id, contactId));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/interactions")]
+    public async Task<ActionResult<ContactInteractionResponseModel>> CreateInteraction(
+        int id, [FromBody] ContactInteractionRequestModel request)
+    {
+        var result = await mediator.Send(new CreateContactInteractionCommand(
+            id, request.ContactId, request.Type, request.Subject,
+            request.Body, request.InteractionDate, request.DurationMinutes));
+        return Created($"/api/v1/customers/{id}/interactions/{result.Id}", result);
+    }
+
+    [HttpPatch("{id:int}/interactions/{interactionId:int}")]
+    public async Task<ActionResult<ContactInteractionResponseModel>> UpdateInteraction(
+        int id, int interactionId, [FromBody] ContactInteractionRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateContactInteractionCommand(
+            id, interactionId, request.Type, request.Subject,
+            request.Body, request.InteractionDate, request.DurationMinutes));
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}/interactions/{interactionId:int}")]
+    public async Task<IActionResult> DeleteInteraction(int id, int interactionId)
+    {
+        await mediator.Send(new DeleteContactInteractionCommand(id, interactionId));
+        return NoContent();
+    }
+
     [HttpGet("{id:int}/activity")]
     public async Task<ActionResult<List<ActivityResponseModel>>> GetCustomerActivity(int id)
     {
