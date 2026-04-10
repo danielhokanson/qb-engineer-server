@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -96,6 +97,28 @@ public class TimeTrackingController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<LockPayPeriodResult>> LockPayPeriod([FromBody] LockPayPeriodCommand command)
     {
         var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    // ─── Admin Time Corrections ───
+
+    [HttpPatch("entries/{id:int}/correct")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<TimeEntryResponseModel>> CorrectTimeEntry(int id, [FromBody] AdminCorrectTimeEntryRequestModel request)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await mediator.Send(new AdminCorrectTimeEntryCommand(id, userId, request));
+        return Ok(result);
+    }
+
+    [HttpGet("corrections")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<TimeCorrectionLogResponseModel>>> GetCorrections(
+        [FromQuery] int? userId,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to)
+    {
+        var result = await mediator.Send(new GetTimeCorrectionsQuery(userId, from, to));
         return Ok(result);
     }
 }

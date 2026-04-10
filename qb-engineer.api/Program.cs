@@ -938,10 +938,18 @@ try
         "check-i9-reverification",
         job => job.CheckReverificationDueAsync(),
         Cron.Weekly(DayOfWeek.Monday, 9)); // Monday 9 AM UTC weekly
+    RecurringJob.AddOrUpdate<CheckMismatchedClockEventsJob>(
+        "check-mismatched-clock-events",
+        job => job.CheckMismatchedEventsAsync(),
+        Cron.Daily(22)); // 10 PM UTC daily
     RecurringJob.AddOrUpdate<ReorderAnalysisJob>(
         "reorder-analysis",
         job => job.RunAnalysisAsync(),
         Cron.Daily(2)); // 2 AM UTC daily
+    RecurringJob.AddOrUpdate<EventReminderJob>(
+        "event-reminders",
+        job => job.SendRemindersAsync(),
+        "*/15 * * * *"); // Every 15 minutes
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

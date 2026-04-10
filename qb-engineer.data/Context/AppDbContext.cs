@@ -26,6 +26,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<JobActivityLog> JobActivityLogs => Set<JobActivityLog>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<ContactInteraction> ContactInteractions => Set<ContactInteraction>();
     public DbSet<Part> Parts => Set<Part>();
     public DbSet<PartPrice> PartPrices => Set<PartPrice>();
     public DbSet<BOMEntry> BOMEntries => Set<BOMEntry>();
@@ -41,6 +42,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
     public DbSet<ClockEvent> ClockEvents => Set<ClockEvent>();
+    public DbSet<TimeCorrectionLog> TimeCorrectionLogs => Set<TimeCorrectionLog>();
     public DbSet<UserPreference> UserPreferences => Set<UserPreference>();
     public DbSet<FileAttachment> FileAttachments => Set<FileAttachment>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -170,6 +172,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<TrainingPathModule> TrainingPathModules => Set<TrainingPathModule>();
     public DbSet<TrainingPathEnrollment> TrainingPathEnrollments => Set<TrainingPathEnrollment>();
     public DbSet<TrainingProgress> TrainingProgress => Set<TrainingProgress>();
+
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventAttendee> EventAttendees => Set<EventAttendee>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
