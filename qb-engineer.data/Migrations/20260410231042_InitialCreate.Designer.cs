@@ -13,8 +13,8 @@ using QBEngineer.Data.Context;
 namespace QBEngineer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260405094529_AddJobStageIsShopFloor")]
-    partial class AddJobStageIsShopFloor
+    [Migration("20260410231042_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1078,6 +1078,12 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("event_type");
 
+                    b.Property<string>("EventTypeCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("event_type_code");
+
                     b.Property<string>("Reason")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -1103,6 +1109,9 @@ namespace QBEngineer.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_clock_events");
+
+                    b.HasIndex("EventTypeCode")
+                        .HasDatabaseName("ix_clock_events_event_type_code");
 
                     b.HasIndex("UserId", "Timestamp")
                         .HasDatabaseName("ix_clock_events_user_id_timestamp");
@@ -1516,6 +1525,76 @@ namespace QBEngineer.Data.Migrations
                         .HasDatabaseName("ix_contacts_customer_id");
 
                     b.ToTable("contacts");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.ContactInteraction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("body");
+
+                    b.Property<int>("ContactId")
+                        .HasColumnType("integer")
+                        .HasColumnName("contact_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<DateTimeOffset>("InteractionDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("interaction_date");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("subject");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_contact_interactions");
+
+                    b.HasIndex("ContactId")
+                        .HasDatabaseName("ix_contact_interactions_contact_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_contact_interactions_user_id");
+
+                    b.ToTable("contact_interactions");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.Customer", b =>
@@ -2195,7 +2274,7 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("employee_profiles");
                 });
 
-            modelBuilder.Entity("QBEngineer.Core.Entities.Estimate", b =>
+            modelBuilder.Entity("QBEngineer.Core.Entities.EntityNote", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2204,25 +2283,70 @@ namespace QBEngineer.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AssignedToId")
-                        .HasColumnType("integer")
-                        .HasColumnName("assigned_to_id");
-
-                    b.Property<DateTimeOffset?>("ConvertedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("converted_at");
+                        .HasColumnName("created_at");
 
-                    b.Property<int?>("ConvertedToQuoteId")
+                    b.Property<int?>("CreatedBy")
                         .HasColumnType("integer")
-                        .HasColumnName("converted_to_quote_id");
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("entity_type");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_entity_notes");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_entity_notes_created_by");
+
+                    b.HasIndex("EntityType", "EntityId")
+                        .HasDatabaseName("ix_entity_notes_entity_type_entity_id");
+
+                    b.ToTable("entity_notes", (string)null);
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.Event", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int>("CreatedByUserId")
                         .HasColumnType("integer")
-                        .HasColumnName("customer_id");
+                        .HasColumnName("created_by_user_id");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2237,51 +2361,97 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("description");
 
-                    b.Property<decimal>("EstimatedAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("estimated_amount");
+                    b.Property<DateTimeOffset>("EndTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_time");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("notes");
-
-                    b.Property<string>("Status")
+                    b.Property<string>("EventType")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("event_type");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_cancelled");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("location");
+
+                    b.Property<DateTimeOffset?>("ReminderSentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reminder_sent_at");
+
+                    b.Property<DateTimeOffset>("StartTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_time");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("title");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<DateTimeOffset?>("ValidUntil")
+                    b.HasKey("Id")
+                        .HasName("pk_events");
+
+                    b.HasIndex("CreatedByUserId")
+                        .HasDatabaseName("ix_events_created_by_user_id");
+
+                    b.HasIndex("StartTime")
+                        .HasDatabaseName("ix_events_start_time");
+
+                    b.ToTable("events");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.EventAttendee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("integer")
+                        .HasColumnName("event_id");
+
+                    b.Property<DateTimeOffset?>("RespondedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("valid_until");
+                        .HasColumnName("responded_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_estimates");
+                        .HasName("pk_event_attendees");
 
-                    b.HasIndex("AssignedToId")
-                        .HasDatabaseName("ix_estimates_assigned_to_id");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_event_attendees_user_id");
 
-                    b.HasIndex("ConvertedToQuoteId")
-                        .HasDatabaseName("ix_estimates_converted_to_quote_id");
+                    b.HasIndex("EventId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_event_attendees_event_id_user_id");
 
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_estimates_customer_id");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("ix_estimates_status");
-
-                    b.ToTable("estimates");
+                    b.ToTable("event_attendees");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.Expense", b =>
@@ -3808,6 +3978,141 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("notifications");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Operation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int?>("EstimatedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_minutes");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("instructions");
+
+                    b.Property<bool>("IsQcCheckpoint")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_qc_checkpoint");
+
+                    b.Property<int>("PartId")
+                        .HasColumnType("integer")
+                        .HasColumnName("part_id");
+
+                    b.Property<string>("QcCriteria")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("qc_criteria");
+
+                    b.Property<int?>("ReferencedOperationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("referenced_operation_id");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("step_number");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("WorkCenterId")
+                        .HasColumnType("integer")
+                        .HasColumnName("work_center_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_operations");
+
+                    b.HasIndex("PartId")
+                        .HasDatabaseName("ix_operations_part_id");
+
+                    b.HasIndex("ReferencedOperationId")
+                        .HasDatabaseName("ix_operations_referenced_operation_id");
+
+                    b.HasIndex("WorkCenterId")
+                        .HasDatabaseName("ix_operations_work_center_id");
+
+                    b.ToTable("operations");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.OperationMaterial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BomEntryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bom_entry_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("OperationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("operation_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_operation_materials");
+
+                    b.HasIndex("BomEntryId")
+                        .HasDatabaseName("ix_operation_materials_bom_entry_id");
+
+                    b.HasIndex("OperationId")
+                        .HasDatabaseName("ix_operation_materials_operation_id");
+
+                    b.ToTable("operation_materials");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.Part", b =>
                 {
                     b.Property<int>("Id")
@@ -4515,79 +4820,6 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("price_list_entries");
                 });
 
-            modelBuilder.Entity("QBEngineer.Core.Entities.ProcessStep", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<int?>("EstimatedMinutes")
-                        .HasColumnType("integer")
-                        .HasColumnName("estimated_minutes");
-
-                    b.Property<string>("Instructions")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)")
-                        .HasColumnName("instructions");
-
-                    b.Property<bool>("IsQcCheckpoint")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_qc_checkpoint");
-
-                    b.Property<int>("PartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("part_id");
-
-                    b.Property<string>("QcCriteria")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("qc_criteria");
-
-                    b.Property<int>("StepNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("step_number");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("title");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int?>("WorkCenterId")
-                        .HasColumnType("integer")
-                        .HasColumnName("work_center_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_process_steps");
-
-                    b.HasIndex("PartId")
-                        .HasDatabaseName("ix_process_steps_part_id");
-
-                    b.HasIndex("WorkCenterId")
-                        .HasDatabaseName("ix_process_steps_work_center_id");
-
-                    b.ToTable("process_steps");
-                });
-
             modelBuilder.Entity("QBEngineer.Core.Entities.ProductionRun", b =>
                 {
                     b.Property<int>("Id")
@@ -5075,6 +5307,14 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("accepted_date");
 
+                    b.Property<int?>("AssignedToId")
+                        .HasColumnType("integer")
+                        .HasColumnName("assigned_to_id");
+
+                    b.Property<DateTimeOffset?>("ConvertedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("converted_at");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -5090,6 +5330,16 @@ namespace QBEngineer.Data.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text")
                         .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<decimal?>("EstimatedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("estimated_amount");
 
                     b.Property<DateTimeOffset?>("ExpirationDate")
                         .HasColumnType("timestamp with time zone")
@@ -5116,7 +5366,6 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnName("provider");
 
                     b.Property<string>("QuoteNumber")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("quote_number");
@@ -5129,14 +5378,31 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("shipping_address_id");
 
-                    b.Property<int>("Status")
+                    b.Property<int?>("SourceEstimateId")
                         .HasColumnType("integer")
+                        .HasColumnName("source_estimate_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("status");
 
                     b.Property<decimal>("TaxRate")
                         .HasPrecision(8, 6)
                         .HasColumnType("numeric(8,6)")
                         .HasColumnName("tax_rate");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -5145,18 +5411,29 @@ namespace QBEngineer.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_quotes");
 
+                    b.HasIndex("AssignedToId")
+                        .HasDatabaseName("ix_quotes_assigned_to_id");
+
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_quotes_customer_id");
 
                     b.HasIndex("QuoteNumber")
                         .IsUnique()
-                        .HasDatabaseName("ix_quotes_quote_number");
+                        .HasDatabaseName("ix_quotes_quote_number")
+                        .HasFilter("quote_number IS NOT NULL");
 
                     b.HasIndex("ShippingAddressId")
                         .HasDatabaseName("ix_quotes_shipping_address_id");
 
+                    b.HasIndex("SourceEstimateId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_quotes_source_estimate_id");
+
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_quotes_status");
+
+                    b.HasIndex("Type")
+                        .HasDatabaseName("ix_quotes_type");
 
                     b.ToTable("quotes");
                 });
@@ -5510,6 +5787,14 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("code");
 
+                    b.Property<DateTimeOffset?>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateTimeOffset?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_to");
+
                     b.Property<string>("GroupCode")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -5519,6 +5804,12 @@ namespace QBEngineer.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsSeedData")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_seed_data");
 
                     b.Property<string>("Label")
                         .IsRequired()
@@ -6819,6 +7110,79 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("terminology_entries");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.TimeCorrectionLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CorrectedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("corrected_by_user_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("OriginalCategory")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("original_category");
+
+                    b.Property<DateOnly>("OriginalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("original_date");
+
+                    b.Property<int>("OriginalDurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("original_duration_minutes");
+
+                    b.Property<int?>("OriginalJobId")
+                        .HasColumnType("integer")
+                        .HasColumnName("original_job_id");
+
+                    b.Property<string>("OriginalNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("original_notes");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("TimeEntryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("time_entry_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_time_correction_logs");
+
+                    b.HasIndex("CorrectedByUserId")
+                        .HasDatabaseName("ix_time_correction_logs_corrected_by_user_id");
+
+                    b.HasIndex("TimeEntryId")
+                        .HasDatabaseName("ix_time_correction_logs_time_entry_id");
+
+                    b.ToTable("time_correction_logs");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.TimeEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -7354,6 +7718,89 @@ namespace QBEngineer.Data.Migrations
                         .HasDatabaseName("ix_training_progress_user_id_module_id");
 
                     b.ToTable("training_progress");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.UserIntegration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("category");
+
+                    b.Property<string>("ConfigJson")
+                        .HasColumnType("text")
+                        .HasColumnName("config_json");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("EncryptedCredentials")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("encrypted_credentials");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTimeOffset?>("LastSyncAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_sync_at");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("provider_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_integrations");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_integrations_user_id");
+
+                    b.HasIndex("UserId", "ProviderId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_integrations_user_id_provider_id")
+                        .HasFilter("deleted_at IS NULL");
+
+                    b.ToTable("user_integrations");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.UserPreference", b =>
@@ -8054,6 +8501,18 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.ContactInteraction", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.Contact", "Contact")
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_contact_interactions_contacts_contact_id");
+
+                    b.Navigation("Contact");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.CustomerAddress", b =>
                 {
                     b.HasOne("QBEngineer.Core.Entities.Customer", "Customer")
@@ -8146,30 +8605,25 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("Asset");
                 });
 
-            modelBuilder.Entity("QBEngineer.Core.Entities.Estimate", b =>
+            modelBuilder.Entity("QBEngineer.Core.Entities.EntityNote", b =>
                 {
                     b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
                         .WithMany()
-                        .HasForeignKey("AssignedToId")
+                        .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_estimates__asp_net_users_assigned_to_id");
+                        .HasConstraintName("fk_entity_notes__asp_net_users_created_by");
+                });
 
-                    b.HasOne("QBEngineer.Core.Entities.Quote", "ConvertedToQuote")
-                        .WithMany()
-                        .HasForeignKey("ConvertedToQuoteId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_estimates__quotes_converted_to_quote_id");
-
-                    b.HasOne("QBEngineer.Core.Entities.Customer", "Customer")
-                        .WithMany("Estimates")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+            modelBuilder.Entity("QBEngineer.Core.Entities.EventAttendee", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.Event", "Event")
+                        .WithMany("Attendees")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_estimates_customers_customer_id");
+                        .HasConstraintName("fk_event_attendees_events_event_id");
 
-                    b.Navigation("ConvertedToQuote");
-
-                    b.Navigation("Customer");
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.Expense", b =>
@@ -8518,6 +8972,55 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("MaintenanceJob");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Operation", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.Part", "Part")
+                        .WithMany("Operations")
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_operations__parts_part_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.Operation", "ReferencedOperation")
+                        .WithMany()
+                        .HasForeignKey("ReferencedOperationId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_operations_operations_referenced_operation_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.Asset", "WorkCenter")
+                        .WithMany()
+                        .HasForeignKey("WorkCenterId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_operations_assets_work_center_id");
+
+                    b.Navigation("Part");
+
+                    b.Navigation("ReferencedOperation");
+
+                    b.Navigation("WorkCenter");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.OperationMaterial", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.BOMEntry", "BomEntry")
+                        .WithMany()
+                        .HasForeignKey("BomEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_operation_materials_bomentries_bom_entry_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.Operation", "Operation")
+                        .WithMany("Materials")
+                        .HasForeignKey("OperationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_operation_materials_operations_operation_id");
+
+                    b.Navigation("BomEntry");
+
+                    b.Navigation("Operation");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.Part", b =>
                 {
                     b.HasOne("QBEngineer.Core.Entities.Vendor", "PreferredVendor")
@@ -8670,26 +9173,6 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("PriceList");
                 });
 
-            modelBuilder.Entity("QBEngineer.Core.Entities.ProcessStep", b =>
-                {
-                    b.HasOne("QBEngineer.Core.Entities.Part", "Part")
-                        .WithMany("ProcessSteps")
-                        .HasForeignKey("PartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_process_steps_parts_part_id");
-
-                    b.HasOne("QBEngineer.Core.Entities.Asset", "WorkCenter")
-                        .WithMany()
-                        .HasForeignKey("WorkCenterId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_process_steps_assets_work_center_id");
-
-                    b.Navigation("Part");
-
-                    b.Navigation("WorkCenter");
-                });
-
             modelBuilder.Entity("QBEngineer.Core.Entities.ProductionRun", b =>
                 {
                     b.HasOne("QBEngineer.Core.Entities.Job", "Job")
@@ -8824,6 +9307,12 @@ namespace QBEngineer.Data.Migrations
 
             modelBuilder.Entity("QBEngineer.Core.Entities.Quote", b =>
                 {
+                    b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedToId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_quotes__asp_net_users_assigned_to_id");
+
                     b.HasOne("QBEngineer.Core.Entities.Customer", "Customer")
                         .WithMany("Quotes")
                         .HasForeignKey("CustomerId")
@@ -8837,9 +9326,17 @@ namespace QBEngineer.Data.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_quotes_customer_addresses_shipping_address_id");
 
+                    b.HasOne("QBEngineer.Core.Entities.Quote", "SourceEstimate")
+                        .WithOne("GeneratedQuote")
+                        .HasForeignKey("QBEngineer.Core.Entities.Quote", "SourceEstimateId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_quotes_quotes_source_estimate_id");
+
                     b.Navigation("Customer");
 
                     b.Navigation("ShippingAddress");
+
+                    b.Navigation("SourceEstimate");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.QuoteLine", b =>
@@ -9176,6 +9673,18 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("FileAttachment");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.TimeCorrectionLog", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.TimeEntry", "TimeEntry")
+                        .WithMany()
+                        .HasForeignKey("TimeEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_time_correction_logs__time_entries_time_entry_id");
+
+                    b.Navigation("TimeEntry");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.TimeEntry", b =>
                 {
                     b.HasOne("QBEngineer.Core.Entities.Job", "Job")
@@ -9317,8 +9826,6 @@ namespace QBEngineer.Data.Migrations
 
                     b.Navigation("Contacts");
 
-                    b.Navigation("Estimates");
-
                     b.Navigation("Invoices");
 
                     b.Navigation("Jobs");
@@ -9337,6 +9844,11 @@ namespace QBEngineer.Data.Migrations
             modelBuilder.Entity("QBEngineer.Core.Entities.CycleCount", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.Event", b =>
+                {
+                    b.Navigation("Attendees");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.FormDefinitionVersion", b =>
@@ -9378,11 +9890,16 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("Logs");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Operation", b =>
+                {
+                    b.Navigation("Materials");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.Part", b =>
                 {
                     b.Navigation("BOMEntries");
 
-                    b.Navigation("ProcessSteps");
+                    b.Navigation("Operations");
 
                     b.Navigation("PurchaseOrderLines");
 
@@ -9436,6 +9953,8 @@ namespace QBEngineer.Data.Migrations
 
             modelBuilder.Entity("QBEngineer.Core.Entities.Quote", b =>
                 {
+                    b.Navigation("GeneratedQuote");
+
                     b.Navigation("Lines");
 
                     b.Navigation("SalesOrder");

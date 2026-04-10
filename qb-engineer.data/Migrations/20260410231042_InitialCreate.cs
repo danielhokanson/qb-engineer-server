@@ -30,7 +30,7 @@ namespace QBEngineer.Data.Migrations
                     field_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     old_value = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     new_value = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -56,9 +56,9 @@ namespace QBEngineer.Data.Migrations
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     temperature = table.Column<double>(type: "double precision", nullable: false),
                     max_context_chunks = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -89,7 +89,7 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_id = table.Column<int>(type: "integer", nullable: false),
                     action = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     entity_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     entity_id = table.Column<int>(type: "integer", nullable: true),
                     details = table.Column<string>(type: "text", nullable: true),
@@ -109,9 +109,10 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_id = table.Column<int>(type: "integer", nullable: false),
                     event_type = table.Column<int>(type: "integer", nullable: false),
+                    event_type_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     reason = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     scan_method = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    timestamp = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     source = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true)
                 },
                 constraints: table =>
@@ -135,9 +136,9 @@ namespace QBEngineer.Data.Migrations
                     phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     is_default = table.Column<bool>(type: "boolean", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -159,9 +160,9 @@ namespace QBEngineer.Data.Migrations
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     external_ref = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -196,9 +197,9 @@ namespace QBEngineer.Data.Migrations
                     source_field = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     embedding = table.Column<Vector>(type: "vector(384)", nullable: true),
                     model_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -213,7 +214,7 @@ namespace QBEngineer.Data.Migrations
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_id = table.Column<int>(type: "integer", nullable: false),
-                    date_of_birth = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    date_of_birth = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     gender = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     street1 = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     street2 = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
@@ -226,28 +227,55 @@ namespace QBEngineer.Data.Migrations
                     emergency_contact_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     emergency_contact_phone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     emergency_contact_relationship = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    start_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     department = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     job_title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     employee_number = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     pay_type = table.Column<int>(type: "integer", nullable: true),
                     hourly_rate = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     salary_amount = table.Column<decimal>(type: "numeric(12,2)", precision: 12, scale: 2, nullable: true),
-                    w4_completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    state_withholding_completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    i9_completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    i9_expiration_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    direct_deposit_completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    workers_comp_acknowledged_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    handbook_acknowledged_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    w4_completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    state_withholding_completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    i9_completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    i9_expiration_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    direct_deposit_completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    workers_comp_acknowledged_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    handbook_acknowledged_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    onboarding_bypassed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_employee_profiles", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "events",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    start_time = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    end_time = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    location = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    event_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    is_required = table.Column<bool>(type: "boolean", nullable: false),
+                    created_by_user_id = table.Column<int>(type: "integer", nullable: false),
+                    is_cancelled = table.Column<bool>(type: "boolean", nullable: false),
+                    reminder_sent_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_events", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -268,9 +296,9 @@ namespace QBEngineer.Data.Migrations
                     entity_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     entity_id = table.Column<int>(type: "integer", nullable: true),
                     sender_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -285,14 +313,14 @@ namespace QBEngineer.Data.Migrations
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    end_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    start_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    end_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     goals = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
                     duration_days = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -313,14 +341,14 @@ namespace QBEngineer.Data.Migrations
                     description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
                     vendor = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     frequency = table.Column<int>(type: "integer", nullable: false),
-                    next_occurrence_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    last_generated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    end_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    next_occurrence_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    last_generated_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    end_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     auto_approve = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -339,6 +367,9 @@ namespace QBEngineer.Data.Migrations
                     label = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    is_seed_data = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    effective_from = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    effective_to = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     parent_id = table.Column<int>(type: "integer", nullable: true),
                     metadata = table.Column<string>(type: "jsonb", nullable: true)
                 },
@@ -361,13 +392,16 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    state_code = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: true),
                     rate = table.Column<decimal>(type: "numeric(8,6)", precision: 8, scale: 6, nullable: false),
+                    effective_from = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    effective_to = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_default = table.Column<bool>(type: "boolean", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -388,9 +422,9 @@ namespace QBEngineer.Data.Migrations
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -417,8 +451,8 @@ namespace QBEngineer.Data.Migrations
                     status = table.Column<int>(type: "integer", nullable: false),
                     attempt_count = table.Column<int>(type: "integer", nullable: false),
                     error_message = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    processed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    processed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -450,9 +484,9 @@ namespace QBEngineer.Data.Migrations
                     color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -468,9 +502,9 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     label = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -490,10 +524,11 @@ namespace QBEngineer.Data.Migrations
                     is_default = table.Column<bool>(type: "boolean", nullable: false),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    is_shop_floor = table.Column<bool>(type: "boolean", nullable: false),
                     custom_field_definitions = table.Column<string>(type: "jsonb", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -515,14 +550,39 @@ namespace QBEngineer.Data.Migrations
                     is_auto_assigned = table.Column<bool>(type: "boolean", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_training_paths", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "user_integrations",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    user_id = table.Column<int>(type: "integer", nullable: false),
+                    category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    provider_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    display_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    encrypted_credentials = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    last_sync_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    last_error = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    config_json = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_user_integrations", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -546,9 +606,9 @@ namespace QBEngineer.Data.Migrations
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     external_ref = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -588,10 +648,10 @@ namespace QBEngineer.Data.Migrations
                     initials = table.Column<string>(type: "text", nullable: true),
                     avatar_color = table.Column<string>(type: "text", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     setup_token = table.Column<string>(type: "text", nullable: true),
-                    setup_token_expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    setup_token_expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     pin_hash = table.Column<string>(type: "text", nullable: true),
                     employee_barcode = table.Column<string>(type: "text", nullable: true),
                     team_id = table.Column<int>(type: "integer", nullable: true),
@@ -640,9 +700,9 @@ namespace QBEngineer.Data.Migrations
                     phone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     is_primary = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -672,9 +732,9 @@ namespace QBEngineer.Data.Migrations
                     postal_code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     country = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     is_default = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -701,14 +761,14 @@ namespace QBEngineer.Data.Migrations
                     source = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    follow_up_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    follow_up_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     lost_reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     converted_customer_id = table.Column<int>(type: "integer", nullable: true),
                     custom_field_values = table.Column<string>(type: "jsonb", nullable: true),
                     created_by = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -732,16 +792,16 @@ namespace QBEngineer.Data.Migrations
                     customer_id = table.Column<int>(type: "integer", nullable: false),
                     method = table.Column<int>(type: "integer", nullable: false),
                     amount = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
-                    payment_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    payment_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     reference_number = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     external_ref = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    last_synced_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    last_synced_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -766,11 +826,11 @@ namespace QBEngineer.Data.Migrations
                     customer_id = table.Column<int>(type: "integer", nullable: true),
                     is_default = table.Column<bool>(type: "boolean", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    effective_from = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    effective_to = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    effective_from = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    effective_to = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -782,6 +842,28 @@ namespace QBEngineer.Data.Migrations
                         principalTable: "customers",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "event_attendees",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    event_id = table.Column<int>(type: "integer", nullable: false),
+                    user_id = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    responded_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_event_attendees", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_event_attendees_events_event_id",
+                        column: x => x.event_id,
+                        principalTable: "events",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -797,7 +879,7 @@ namespace QBEngineer.Data.Migrations
                     from_location_id = table.Column<int>(type: "integer", nullable: true),
                     to_location_id = table.Column<int>(type: "integer", nullable: true),
                     moved_by = table.Column<int>(type: "integer", nullable: false),
-                    moved_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    moved_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     reason = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
@@ -828,9 +910,9 @@ namespace QBEngineer.Data.Migrations
                     team_id = table.Column<int>(type: "integer", nullable: false),
                     configured_by_user_id = table.Column<int>(type: "integer", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -858,10 +940,11 @@ namespace QBEngineer.Data.Migrations
                     wiplimit = table.Column<int>(type: "integer", nullable: true),
                     accounting_document_type = table.Column<int>(type: "integer", nullable: true),
                     is_irreversible = table.Column<bool>(type: "boolean", nullable: false),
+                    is_shop_floor = table.Column<bool>(type: "boolean", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -888,11 +971,11 @@ namespace QBEngineer.Data.Migrations
                     assignee_id = table.Column<int>(type: "integer", nullable: true),
                     cron_expression = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    last_run_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    next_run_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    last_run_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    next_run_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1006,9 +1089,9 @@ namespace QBEngineer.Data.Migrations
                     name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     is_group = table.Column<bool>(type: "boolean", nullable: false),
                     created_by_id = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1030,12 +1113,12 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     location_id = table.Column<int>(type: "integer", nullable: false),
                     counted_by_id = table.Column<int>(type: "integer", nullable: false),
-                    counted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    counted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1053,6 +1136,32 @@ namespace QBEngineer.Data.Migrations
                         principalTable: "storage_locations",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "entity_notes",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    entity_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    entity_id = table.Column<int>(type: "integer", nullable: false),
+                    text = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
+                    created_by = table.Column<int>(type: "integer", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_entity_notes", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_entity_notes__asp_net_users_created_by",
+                        column: x => x.created_by,
+                        principalTable: "asp_net_users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -1074,9 +1183,9 @@ namespace QBEngineer.Data.Migrations
                     chart_value_field = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     is_shared = table.Column<bool>(type: "boolean", nullable: false),
                     user_id = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1101,13 +1210,13 @@ namespace QBEngineer.Data.Migrations
                     status_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     status_label = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     category = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    started_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ended_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     set_by_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1140,9 +1249,9 @@ namespace QBEngineer.Data.Migrations
                     is_onboarding_required = table.Column<bool>(type: "boolean", nullable: false),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     created_by_user_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1164,12 +1273,12 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_id = table.Column<int>(type: "integer", nullable: false),
                     path_id = table.Column<int>(type: "integer", nullable: false),
-                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_auto_assigned = table.Column<bool>(type: "boolean", nullable: false),
                     assigned_by_user_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1204,9 +1313,9 @@ namespace QBEngineer.Data.Migrations
                     user_id = table.Column<int>(type: "integer", nullable: false),
                     key = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     value_json = table.Column<string>(type: "jsonb", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1230,9 +1339,9 @@ namespace QBEngineer.Data.Migrations
                     identifier_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     identifier_value = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1247,31 +1356,73 @@ namespace QBEngineer.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "contact_interactions",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    contact_id = table.Column<int>(type: "integer", nullable: false),
+                    user_id = table.Column<int>(type: "integer", nullable: false),
+                    type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    subject = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    body = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    interaction_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    duration_minutes = table.Column<int>(type: "integer", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_contact_interactions", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_contact_interactions_contacts_contact_id",
+                        column: x => x.contact_id,
+                        principalTable: "contacts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "quotes",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    quote_number = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     customer_id = table.Column<int>(type: "integer", nullable: false),
-                    shipping_address_id = table.Column<int>(type: "integer", nullable: true),
-                    status = table.Column<int>(type: "integer", nullable: false),
-                    sent_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    expiration_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    accepted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    expiration_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    assigned_to_id = table.Column<int>(type: "integer", nullable: true),
+                    title = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
+                    description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    estimated_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                    quote_number = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    shipping_address_id = table.Column<int>(type: "integer", nullable: true),
+                    sent_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    accepted_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     tax_rate = table.Column<decimal>(type: "numeric(8,6)", precision: 8, scale: 6, nullable: false),
+                    source_estimate_id = table.Column<int>(type: "integer", nullable: true),
+                    converted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     external_ref = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_quotes", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_quotes__asp_net_users_assigned_to_id",
+                        column: x => x.assigned_to_id,
+                        principalTable: "asp_net_users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_quotes_customer_addresses_shipping_address_id",
                         column: x => x.shipping_address_id,
@@ -1284,6 +1435,12 @@ namespace QBEngineer.Data.Migrations
                         principalTable: "customers",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_quotes_quotes_source_estimate_id",
+                        column: x => x.source_estimate_id,
+                        principalTable: "quotes",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -1296,13 +1453,13 @@ namespace QBEngineer.Data.Migrations
                     customer_id = table.Column<int>(type: "integer", nullable: false),
                     shipping_address_id = table.Column<int>(type: "integer", nullable: true),
                     interval_days = table.Column<int>(type: "integer", nullable: false),
-                    next_generation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    last_generated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    next_generation_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    last_generated_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1330,10 +1487,10 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     chat_room_id = table.Column<int>(type: "integer", nullable: false),
                     user_id = table.Column<int>(type: "integer", nullable: false),
-                    joined_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    joined_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1363,9 +1520,9 @@ namespace QBEngineer.Data.Migrations
                     module_id = table.Column<int>(type: "integer", nullable: false),
                     position = table.Column<int>(type: "integer", nullable: false),
                     is_required = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1396,15 +1553,15 @@ namespace QBEngineer.Data.Migrations
                     status = table.Column<int>(type: "integer", nullable: false),
                     quiz_score = table.Column<int>(type: "integer", nullable: true),
                     quiz_attempts = table.Column<int>(type: "integer", nullable: true),
-                    started_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     time_spent_seconds = table.Column<int>(type: "integer", nullable: false),
                     quiz_answers_json = table.Column<string>(type: "jsonb", nullable: true),
                     quiz_session_json = table.Column<string>(type: "text", nullable: true),
                     walkthrough_step_reached = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1437,17 +1594,17 @@ namespace QBEngineer.Data.Migrations
                     billing_address_id = table.Column<int>(type: "integer", nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
                     credit_terms = table.Column<int>(type: "integer", nullable: true),
-                    confirmed_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    requested_delivery_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    confirmed_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    requested_delivery_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     customer_po = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     tax_rate = table.Column<decimal>(type: "numeric(8,6)", precision: 8, scale: 6, nullable: false),
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     external_ref = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1491,14 +1648,14 @@ namespace QBEngineer.Data.Migrations
                     status = table.Column<int>(type: "integer", nullable: false),
                     carrier = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     tracking_number = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    shipped_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    delivered_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    shipped_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    delivered_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     shipping_cost = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: true),
                     weight = table.Column<decimal>(type: "numeric(12,4)", precision: 12, scale: 4, nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1529,18 +1686,18 @@ namespace QBEngineer.Data.Migrations
                     sales_order_id = table.Column<int>(type: "integer", nullable: true),
                     shipment_id = table.Column<int>(type: "integer", nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
-                    invoice_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    due_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    invoice_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    due_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     credit_terms = table.Column<int>(type: "integer", nullable: true),
                     tax_rate = table.Column<decimal>(type: "numeric(8,6)", precision: 8, scale: 6, nullable: false),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     external_ref = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    last_synced_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    last_synced_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1641,9 +1798,9 @@ namespace QBEngineer.Data.Migrations
                     current_shot_count = table.Column<int>(type: "integer", nullable: false),
                     source_job_id = table.Column<int>(type: "integer", nullable: true),
                     source_part_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1659,15 +1816,15 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     asset_id = table.Column<int>(type: "integer", nullable: false),
                     reported_by_id = table.Column<int>(type: "integer", nullable: true),
-                    started_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ended_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     resolution = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     is_planned = table.Column<bool>(type: "boolean", nullable: false),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1701,11 +1858,14 @@ namespace QBEngineer.Data.Migrations
                     preferred_vendor_id = table.Column<int>(type: "integer", nullable: true),
                     min_stock_threshold = table.Column<decimal>(type: "numeric", nullable: true),
                     reorder_point = table.Column<decimal>(type: "numeric", nullable: true),
+                    reorder_quantity = table.Column<decimal>(type: "numeric", nullable: true),
+                    lead_time_days = table.Column<int>(type: "integer", nullable: true),
+                    safety_stock_days = table.Column<int>(type: "integer", nullable: true),
                     custom_field_values = table.Column<string>(type: "jsonb", nullable: true),
                     tooling_asset_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1739,9 +1899,9 @@ namespace QBEngineer.Data.Migrations
                     source_type = table.Column<int>(type: "integer", nullable: false),
                     lead_time_days = table.Column<int>(type: "integer", nullable: true),
                     notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1792,6 +1952,72 @@ namespace QBEngineer.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "operations",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    part_id = table.Column<int>(type: "integer", nullable: false),
+                    step_number = table.Column<int>(type: "integer", nullable: false),
+                    title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    instructions = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    work_center_id = table.Column<int>(type: "integer", nullable: true),
+                    estimated_minutes = table.Column<int>(type: "integer", nullable: true),
+                    is_qc_checkpoint = table.Column<bool>(type: "boolean", nullable: false),
+                    qc_criteria = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    referenced_operation_id = table.Column<int>(type: "integer", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_operations", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_operations__parts_part_id",
+                        column: x => x.part_id,
+                        principalTable: "parts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_operations_assets_work_center_id",
+                        column: x => x.work_center_id,
+                        principalTable: "assets",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_operations_operations_referenced_operation_id",
+                        column: x => x.referenced_operation_id,
+                        principalTable: "operations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "part_prices",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    part_id = table.Column<int>(type: "integer", nullable: false),
+                    unit_price = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    effective_from = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    effective_to = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_part_prices", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_part_prices_parts_part_id",
+                        column: x => x.part_id,
+                        principalTable: "parts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "part_revisions",
                 columns: table => new
                 {
@@ -1801,11 +2027,11 @@ namespace QBEngineer.Data.Migrations
                     revision = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     change_description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     change_reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    effective_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    effective_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     is_current = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -1848,42 +2074,6 @@ namespace QBEngineer.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "process_steps",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    part_id = table.Column<int>(type: "integer", nullable: false),
-                    step_number = table.Column<int>(type: "integer", nullable: false),
-                    title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    instructions = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
-                    work_center_id = table.Column<int>(type: "integer", nullable: true),
-                    estimated_minutes = table.Column<int>(type: "integer", nullable: true),
-                    is_qc_checkpoint = table.Column<bool>(type: "boolean", nullable: false),
-                    qc_criteria = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    deleted_by = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_process_steps", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_process_steps_assets_work_center_id",
-                        column: x => x.work_center_id,
-                        principalTable: "assets",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "fk_process_steps_parts_part_id",
-                        column: x => x.part_id,
-                        principalTable: "parts",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "qc_checklist_templates",
                 columns: table => new
                 {
@@ -1893,9 +2083,9 @@ namespace QBEngineer.Data.Migrations
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     part_id = table.Column<int>(type: "integer", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2003,6 +2193,38 @@ namespace QBEngineer.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "operation_materials",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    operation_id = table.Column<int>(type: "integer", nullable: false),
+                    bom_entry_id = table.Column<int>(type: "integer", nullable: false),
+                    quantity = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_operation_materials", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_operation_materials_bomentries_bom_entry_id",
+                        column: x => x.bom_entry_id,
+                        principalTable: "bomentries",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_operation_materials_operations_operation_id",
+                        column: x => x.operation_id,
+                        principalTable: "operations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "file_attachments",
                 columns: table => new
                 {
@@ -2017,13 +2239,13 @@ namespace QBEngineer.Data.Migrations
                     entity_id = table.Column<int>(type: "integer", nullable: false),
                     uploaded_by_id = table.Column<int>(type: "integer", nullable: false),
                     document_type = table.Column<string>(type: "text", nullable: true),
-                    expiration_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    expiration_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     part_revision_id = table.Column<int>(type: "integer", nullable: true),
                     required_role = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     sensitivity = table.Column<string>(type: "text", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2105,14 +2327,14 @@ namespace QBEngineer.Data.Migrations
                     recipient_id = table.Column<int>(type: "integer", nullable: false),
                     content = table.Column<string>(type: "text", nullable: false),
                     is_read = table.Column<bool>(type: "boolean", nullable: false),
-                    read_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    read_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     chat_room_id = table.Column<int>(type: "integer", nullable: true),
                     file_attachment_id = table.Column<int>(type: "integer", nullable: true),
                     linked_entity_type = table.Column<string>(type: "text", nullable: true),
                     linked_entity_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2159,15 +2381,15 @@ namespace QBEngineer.Data.Migrations
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     requires_identity_docs = table.Column<bool>(type: "boolean", nullable: false),
                     docu_seal_template_id = table.Column<int>(type: "integer", nullable: true),
-                    last_synced_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    last_synced_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     manual_override_file_id = table.Column<int>(type: "integer", nullable: true),
                     blocks_job_assignment = table.Column<bool>(type: "boolean", nullable: false),
                     profile_completion_key = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     acro_field_map_json = table.Column<string>(type: "jsonb", nullable: true),
                     filled_pdf_template_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2196,13 +2418,13 @@ namespace QBEngineer.Data.Migrations
                     user_id = table.Column<int>(type: "integer", nullable: false),
                     document_type = table.Column<int>(type: "integer", nullable: false),
                     file_attachment_id = table.Column<int>(type: "integer", nullable: false),
-                    verified_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    verified_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     verified_by_id = table.Column<int>(type: "integer", nullable: true),
-                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2230,9 +2452,9 @@ namespace QBEngineer.Data.Migrations
                     assignee_id = table.Column<int>(type: "integer", nullable: true),
                     priority = table.Column<int>(type: "integer", nullable: false),
                     customer_id = table.Column<int>(type: "integer", nullable: true),
-                    due_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    start_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    completed_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    due_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    start_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    completed_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_archived = table.Column<bool>(type: "boolean", nullable: false),
                     board_position = table.Column<int>(type: "integer", nullable: false),
                     part_id = table.Column<int>(type: "integer", nullable: true),
@@ -2247,12 +2469,12 @@ namespace QBEngineer.Data.Migrations
                     internal_project_type_id = table.Column<int>(type: "integer", nullable: true),
                     disposition = table.Column<int>(type: "integer", nullable: true),
                     disposition_notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    disposition_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    disposition_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     custom_field_values = table.Column<string>(type: "jsonb", nullable: true),
                     cover_photo_file_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2309,9 +2531,9 @@ namespace QBEngineer.Data.Migrations
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_id = table.Column<int>(type: "integer", nullable: false),
-                    pay_period_start = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    pay_period_end = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    pay_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    pay_period_start = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    pay_period_end = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    pay_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     gross_pay = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     net_pay = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     total_deductions = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
@@ -2319,9 +2541,9 @@ namespace QBEngineer.Data.Migrations
                     file_attachment_id = table.Column<int>(type: "integer", nullable: true),
                     source = table.Column<int>(type: "integer", nullable: false),
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2348,9 +2570,9 @@ namespace QBEngineer.Data.Migrations
                     file_attachment_id = table.Column<int>(type: "integer", nullable: true),
                     source = table.Column<int>(type: "integer", nullable: false),
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2375,18 +2597,18 @@ namespace QBEngineer.Data.Migrations
                     form_definition_json = table.Column<string>(type: "jsonb", nullable: false),
                     source_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     sha256_hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
-                    effective_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    expiration_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    effective_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    expiration_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     revision = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    extracted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    extracted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     field_count = table.Column<int>(type: "integer", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     visual_comparison_json = table.Column<string>(type: "jsonb", nullable: true),
                     visual_similarity_score = table.Column<double>(type: "double precision", nullable: true),
                     visual_comparison_passed = table.Column<bool>(type: "boolean", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2415,8 +2637,8 @@ namespace QBEngineer.Data.Migrations
                     job_id = table.Column<int>(type: "integer", nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
                     placed_by = table.Column<int>(type: "integer", nullable: false),
-                    placed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    removed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    placed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    removed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     removed_by = table.Column<int>(type: "integer", nullable: true),
                     notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     reserved_quantity = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false)
@@ -2451,13 +2673,13 @@ namespace QBEngineer.Data.Migrations
                     reason = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
-                    return_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    return_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     inspected_by_id = table.Column<int>(type: "integer", nullable: true),
-                    inspected_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    inspected_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     inspection_notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2502,10 +2724,10 @@ namespace QBEngineer.Data.Migrations
                     external_id = table.Column<string>(type: "text", nullable: true),
                     external_ref = table.Column<string>(type: "text", nullable: true),
                     provider = table.Column<string>(type: "text", nullable: true),
-                    expense_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    expense_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2532,7 +2754,7 @@ namespace QBEngineer.Data.Migrations
                     old_value = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     new_value = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -2554,7 +2776,7 @@ namespace QBEngineer.Data.Migrations
                     source_job_id = table.Column<int>(type: "integer", nullable: false),
                     target_job_id = table.Column<int>(type: "integer", nullable: false),
                     link_type = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -2571,6 +2793,37 @@ namespace QBEngineer.Data.Migrations
                         principalTable: "jobs",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "job_notes",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    job_id = table.Column<int>(type: "integer", nullable: false),
+                    text = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
+                    created_by = table.Column<int>(type: "integer", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_job_notes", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_job_notes__asp_net_users_created_by",
+                        column: x => x.created_by,
+                        principalTable: "asp_net_users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_job_notes_jobs_job_id",
+                        column: x => x.job_id,
+                        principalTable: "jobs",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -2618,11 +2871,11 @@ namespace QBEngineer.Data.Migrations
                     is_completed = table.Column<bool>(type: "boolean", nullable: false),
                     assignee_id = table.Column<int>(type: "integer", nullable: true),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
-                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     completed_by_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2647,13 +2900,13 @@ namespace QBEngineer.Data.Migrations
                     description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     interval_days = table.Column<int>(type: "integer", nullable: false),
                     interval_hours = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                    last_performed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    next_due_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    last_performed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    next_due_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     maintenance_job_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2681,8 +2934,8 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     planning_cycle_id = table.Column<int>(type: "integer", nullable: false),
                     job_id = table.Column<int>(type: "integer", nullable: false),
-                    committed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    committed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_rolled_over = table.Column<bool>(type: "boolean", nullable: false),
                     sort_order = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -2717,14 +2970,14 @@ namespace QBEngineer.Data.Migrations
                     completed_quantity = table.Column<int>(type: "integer", nullable: false),
                     scrap_quantity = table.Column<int>(type: "integer", nullable: false),
                     status = table.Column<int>(type: "integer", nullable: false),
-                    started_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     setup_time_minutes = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     run_time_minutes = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2754,17 +3007,17 @@ namespace QBEngineer.Data.Migrations
                     vendor_id = table.Column<int>(type: "integer", nullable: false),
                     job_id = table.Column<int>(type: "integer", nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
-                    submitted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    acknowledged_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    expected_delivery_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    received_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    submitted_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    acknowledged_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    expected_delivery_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    received_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     external_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     external_ref = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2796,14 +3049,14 @@ namespace QBEngineer.Data.Migrations
                     duration_minutes = table.Column<int>(type: "integer", nullable: false),
                     category = table.Column<string>(type: "text", nullable: true),
                     notes = table.Column<string>(type: "text", nullable: true),
-                    timer_start = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    timer_stop = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    timer_start = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    timer_stop = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_manual = table.Column<bool>(type: "boolean", nullable: false),
                     is_locked = table.Column<bool>(type: "boolean", nullable: false),
                     accounting_time_activity_id = table.Column<string>(type: "text", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2849,22 +3102,22 @@ namespace QBEngineer.Data.Migrations
                     user_id = table.Column<int>(type: "integer", nullable: false),
                     docu_seal_submission_id = table.Column<int>(type: "integer", nullable: true),
                     status = table.Column<int>(type: "integer", nullable: false),
-                    signed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    signed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     signed_pdf_file_id = table.Column<int>(type: "integer", nullable: true),
                     docu_seal_submit_url = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     form_data_json = table.Column<string>(type: "jsonb", nullable: true),
                     form_definition_version_id = table.Column<int>(type: "integer", nullable: true),
                     filled_pdf_file_id = table.Column<int>(type: "integer", nullable: true),
-                    i9_section1_signed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    i9_section2_signed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    i9_section1_signed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    i9_section2_signed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     i9_employer_user_id = table.Column<int>(type: "integer", nullable: true),
                     i9_document_list_type = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: true),
                     i9_document_data_json = table.Column<string>(type: "jsonb", nullable: true),
-                    i9_section2_overdue_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    i9_reverification_due_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    i9_section2_overdue_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    i9_reverification_due_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2939,9 +3192,9 @@ namespace QBEngineer.Data.Migrations
                     sales_order_line_id = table.Column<int>(type: "integer", nullable: true),
                     quantity = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
                     notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -2981,7 +3234,7 @@ namespace QBEngineer.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     maintenance_schedule_id = table.Column<int>(type: "integer", nullable: false),
                     performed_by_id = table.Column<int>(type: "integer", nullable: false),
-                    performed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    performed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     hours_at_service = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true)
@@ -3010,10 +3263,10 @@ namespace QBEngineer.Data.Migrations
                     lot_number = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -3055,9 +3308,9 @@ namespace QBEngineer.Data.Migrations
                     purchase_order_id = table.Column<int>(type: "integer", nullable: true),
                     asset_id = table.Column<int>(type: "integer", nullable: true),
                     storage_location_id = table.Column<int>(type: "integer", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -3139,6 +3392,89 @@ namespace QBEngineer.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "reorder_suggestions",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    part_id = table.Column<int>(type: "integer", nullable: false),
+                    vendor_id = table.Column<int>(type: "integer", nullable: true),
+                    current_stock = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    available_stock = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    burn_rate_daily_avg = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: false),
+                    burn_rate_window_days = table.Column<int>(type: "integer", nullable: false),
+                    days_of_stock_remaining = table.Column<int>(type: "integer", nullable: true),
+                    projected_stockout_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    incoming_po_quantity = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    earliest_po_arrival = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    suggested_quantity = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                    status = table.Column<int>(type: "integer", nullable: false),
+                    approved_by_user_id = table.Column<int>(type: "integer", nullable: true),
+                    approved_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    resulting_purchase_order_id = table.Column<int>(type: "integer", nullable: true),
+                    dismissed_by_user_id = table.Column<int>(type: "integer", nullable: true),
+                    dismissed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    dismiss_reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_reorder_suggestions", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_reorder_suggestions__vendors_vendor_id",
+                        column: x => x.vendor_id,
+                        principalTable: "vendors",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_reorder_suggestions_parts_part_id",
+                        column: x => x.part_id,
+                        principalTable: "parts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_reorder_suggestions_purchase_orders_resulting_purchase_orde~",
+                        column: x => x.resulting_purchase_order_id,
+                        principalTable: "purchase_orders",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "time_correction_logs",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    time_entry_id = table.Column<int>(type: "integer", nullable: false),
+                    corrected_by_user_id = table.Column<int>(type: "integer", nullable: false),
+                    reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    original_job_id = table.Column<int>(type: "integer", nullable: true),
+                    original_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    original_duration_minutes = table.Column<int>(type: "integer", nullable: false),
+                    original_category = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    original_notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_by = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_time_correction_logs", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_time_correction_logs__time_entries_time_entry_id",
+                        column: x => x.time_entry_id,
+                        principalTable: "time_entries",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "qc_inspection_results",
                 columns: table => new
                 {
@@ -3180,12 +3516,12 @@ namespace QBEngineer.Data.Migrations
                     production_run_id = table.Column<int>(type: "integer", nullable: true),
                     purchase_order_line_id = table.Column<int>(type: "integer", nullable: true),
                     quantity = table.Column<int>(type: "integer", nullable: false),
-                    expiration_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    expiration_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     supplier_lot_number = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -3228,9 +3564,9 @@ namespace QBEngineer.Data.Migrations
                     received_by = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     storage_location_id = table.Column<int>(type: "integer", nullable: true),
                     notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -3476,6 +3812,11 @@ namespace QBEngineer.Data.Migrations
                 column: "created_by_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_clock_events_event_type_code",
+                table: "clock_events",
+                column: "event_type_code");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_clock_events_user_id_timestamp",
                 table: "clock_events",
                 columns: new[] { "user_id", "timestamp" });
@@ -3553,6 +3894,16 @@ namespace QBEngineer.Data.Migrations
                 column: "manual_override_file_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_contact_interactions_contact_id",
+                table: "contact_interactions",
+                column: "contact_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_contact_interactions_user_id",
+                table: "contact_interactions",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_contacts_customer_id",
                 table: "contacts",
                 column: "customer_id");
@@ -3628,6 +3979,37 @@ namespace QBEngineer.Data.Migrations
                 table: "employee_profiles",
                 column: "user_id",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_entity_notes_created_by",
+                table: "entity_notes",
+                column: "created_by");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_entity_notes_entity_type_entity_id",
+                table: "entity_notes",
+                columns: new[] { "entity_type", "entity_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_event_attendees_event_id_user_id",
+                table: "event_attendees",
+                columns: new[] { "event_id", "user_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_event_attendees_user_id",
+                table: "event_attendees",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_events_created_by_user_id",
+                table: "events",
+                column: "created_by_user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_events_start_time",
+                table: "events",
+                column: "start_time");
 
             migrationBuilder.CreateIndex(
                 name: "ix_expenses_job_id",
@@ -3740,6 +4122,16 @@ namespace QBEngineer.Data.Migrations
                 name: "ix_job_links_target_job_id",
                 table: "job_links",
                 column: "target_job_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_job_notes_created_by",
+                table: "job_notes",
+                column: "created_by");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_job_notes_job_id",
+                table: "job_notes",
+                column: "job_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_job_parts_job_id_part_id",
@@ -3902,6 +4294,41 @@ namespace QBEngineer.Data.Migrations
                 columns: new[] { "user_id", "is_dismissed", "created_at" });
 
             migrationBuilder.CreateIndex(
+                name: "ix_operation_materials_bom_entry_id",
+                table: "operation_materials",
+                column: "bom_entry_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_operation_materials_operation_id",
+                table: "operation_materials",
+                column: "operation_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_operations_part_id",
+                table: "operations",
+                column: "part_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_operations_referenced_operation_id",
+                table: "operations",
+                column: "referenced_operation_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_operations_work_center_id",
+                table: "operations",
+                column: "work_center_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_part_prices_part_id",
+                table: "part_prices",
+                column: "part_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_part_prices_part_id_effective_to",
+                table: "part_prices",
+                columns: new[] { "part_id", "effective_to" });
+
+            migrationBuilder.CreateIndex(
                 name: "ix_part_revisions_part_id",
                 table: "part_revisions",
                 column: "part_id");
@@ -4014,16 +4441,6 @@ namespace QBEngineer.Data.Migrations
                 column: "customer_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_process_steps_part_id",
-                table: "process_steps",
-                column: "part_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_process_steps_work_center_id",
-                table: "process_steps",
-                column: "work_center_id");
-
-            migrationBuilder.CreateIndex(
                 name: "ix_production_runs_job_id",
                 table: "production_runs",
                 column: "job_id");
@@ -4126,6 +4543,11 @@ namespace QBEngineer.Data.Migrations
                 column: "quote_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_quotes_assigned_to_id",
+                table: "quotes",
+                column: "assigned_to_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_quotes_customer_id",
                 table: "quotes",
                 column: "customer_id");
@@ -4134,7 +4556,8 @@ namespace QBEngineer.Data.Migrations
                 name: "ix_quotes_quote_number",
                 table: "quotes",
                 column: "quote_number",
-                unique: true);
+                unique: true,
+                filter: "quote_number IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "ix_quotes_shipping_address_id",
@@ -4142,9 +4565,20 @@ namespace QBEngineer.Data.Migrations
                 column: "shipping_address_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_quotes_source_estimate_id",
+                table: "quotes",
+                column: "source_estimate_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_quotes_status",
                 table: "quotes",
                 column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quotes_type",
+                table: "quotes",
+                column: "type");
 
             migrationBuilder.CreateIndex(
                 name: "ix_receiving_records_purchase_order_line_id",
@@ -4213,6 +4647,31 @@ namespace QBEngineer.Data.Migrations
                 column: "parent_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_reorder_suggestions_part_id",
+                table: "reorder_suggestions",
+                column: "part_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_reorder_suggestions_part_id_status",
+                table: "reorder_suggestions",
+                columns: new[] { "part_id", "status" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_reorder_suggestions_resulting_purchase_order_id",
+                table: "reorder_suggestions",
+                column: "resulting_purchase_order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_reorder_suggestions_status",
+                table: "reorder_suggestions",
+                column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_reorder_suggestions_vendor_id",
+                table: "reorder_suggestions",
+                column: "vendor_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_reservations_bin_content_id",
                 table: "reservations",
                 column: "bin_content_id");
@@ -4279,6 +4738,16 @@ namespace QBEngineer.Data.Migrations
                 table: "sales_tax_rates",
                 column: "code",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_sales_tax_rates_state_code",
+                table: "sales_tax_rates",
+                column: "state_code");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_sales_tax_rates_state_code_effective_to",
+                table: "sales_tax_rates",
+                columns: new[] { "state_code", "effective_to" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_saved_reports_is_shared",
@@ -4423,6 +4892,16 @@ namespace QBEngineer.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_time_correction_logs_corrected_by_user_id",
+                table: "time_correction_logs",
+                column: "corrected_by_user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_time_correction_logs_time_entry_id",
+                table: "time_correction_logs",
+                column: "time_entry_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_time_entries_job_id",
                 table: "time_entries",
                 column: "job_id");
@@ -4518,6 +4997,18 @@ namespace QBEngineer.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_user_integrations_user_id",
+                table: "user_integrations",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_integrations_user_id_provider_id",
+                table: "user_integrations",
+                columns: new[] { "user_id", "provider_id" },
+                unique: true,
+                filter: "deleted_at IS NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_user_preferences_user_id_key",
                 table: "user_preferences",
                 columns: new[] { "user_id", "key" },
@@ -4561,6 +5052,10 @@ namespace QBEngineer.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
+                name: "fk_quotes__asp_net_users_assigned_to_id",
+                table: "quotes");
+
+            migrationBuilder.DropForeignKey(
                 name: "fk_assets__jobs_source_job_id",
                 table: "assets");
 
@@ -4599,9 +5094,6 @@ namespace QBEngineer.Data.Migrations
                 name: "bin_movements");
 
             migrationBuilder.DropTable(
-                name: "bomentries");
-
-            migrationBuilder.DropTable(
                 name: "chat_messages");
 
             migrationBuilder.DropTable(
@@ -4614,7 +5106,7 @@ namespace QBEngineer.Data.Migrations
                 name: "compliance_form_submissions");
 
             migrationBuilder.DropTable(
-                name: "contacts");
+                name: "contact_interactions");
 
             migrationBuilder.DropTable(
                 name: "customer_returns");
@@ -4635,6 +5127,12 @@ namespace QBEngineer.Data.Migrations
                 name: "employee_profiles");
 
             migrationBuilder.DropTable(
+                name: "entity_notes");
+
+            migrationBuilder.DropTable(
+                name: "event_attendees");
+
+            migrationBuilder.DropTable(
                 name: "expenses");
 
             migrationBuilder.DropTable(
@@ -4648,6 +5146,9 @@ namespace QBEngineer.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "job_links");
+
+            migrationBuilder.DropTable(
+                name: "job_notes");
 
             migrationBuilder.DropTable(
                 name: "job_parts");
@@ -4671,6 +5172,12 @@ namespace QBEngineer.Data.Migrations
                 name: "notifications");
 
             migrationBuilder.DropTable(
+                name: "operation_materials");
+
+            migrationBuilder.DropTable(
+                name: "part_prices");
+
+            migrationBuilder.DropTable(
                 name: "pay_stub_deductions");
 
             migrationBuilder.DropTable(
@@ -4681,9 +5188,6 @@ namespace QBEngineer.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "price_list_entries");
-
-            migrationBuilder.DropTable(
-                name: "process_steps");
 
             migrationBuilder.DropTable(
                 name: "qc_inspection_results");
@@ -4699,6 +5203,9 @@ namespace QBEngineer.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "recurring_order_lines");
+
+            migrationBuilder.DropTable(
+                name: "reorder_suggestions");
 
             migrationBuilder.DropTable(
                 name: "reservations");
@@ -4734,7 +5241,7 @@ namespace QBEngineer.Data.Migrations
                 name: "terminology_entries");
 
             migrationBuilder.DropTable(
-                name: "time_entries");
+                name: "time_correction_logs");
 
             migrationBuilder.DropTable(
                 name: "training_path_enrollments");
@@ -4744,6 +5251,9 @@ namespace QBEngineer.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "training_progress");
+
+            migrationBuilder.DropTable(
+                name: "user_integrations");
 
             migrationBuilder.DropTable(
                 name: "user_preferences");
@@ -4761,13 +5271,25 @@ namespace QBEngineer.Data.Migrations
                 name: "form_definition_versions");
 
             migrationBuilder.DropTable(
+                name: "contacts");
+
+            migrationBuilder.DropTable(
                 name: "cycle_counts");
+
+            migrationBuilder.DropTable(
+                name: "events");
 
             migrationBuilder.DropTable(
                 name: "teams");
 
             migrationBuilder.DropTable(
                 name: "maintenance_schedules");
+
+            migrationBuilder.DropTable(
+                name: "bomentries");
+
+            migrationBuilder.DropTable(
+                name: "operations");
 
             migrationBuilder.DropTable(
                 name: "pay_stubs");
@@ -4801,6 +5323,9 @@ namespace QBEngineer.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "reference_data");
+
+            migrationBuilder.DropTable(
+                name: "time_entries");
 
             migrationBuilder.DropTable(
                 name: "training_paths");
