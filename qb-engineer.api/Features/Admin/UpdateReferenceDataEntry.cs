@@ -11,6 +11,10 @@ public record UpdateReferenceDataCommand(
     string? Label,
     int? SortOrder,
     bool? IsActive,
+    DateTimeOffset? EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
+    bool ClearEffectiveFrom,
+    bool ClearEffectiveTo,
     string? Metadata) : IRequest<ReferenceDataResponseModel>;
 
 public class UpdateReferenceDataValidator : AbstractValidator<UpdateReferenceDataCommand>
@@ -34,11 +38,16 @@ public class UpdateReferenceDataHandler(AppDbContext db)
         if (request.Label is not null) entry.Label = request.Label;
         if (request.SortOrder.HasValue) entry.SortOrder = request.SortOrder.Value;
         if (request.IsActive.HasValue) entry.IsActive = request.IsActive.Value;
+        if (request.EffectiveFrom.HasValue) entry.EffectiveFrom = request.EffectiveFrom;
+        if (request.ClearEffectiveFrom) entry.EffectiveFrom = null;
+        if (request.EffectiveTo.HasValue) entry.EffectiveTo = request.EffectiveTo;
+        if (request.ClearEffectiveTo) entry.EffectiveTo = null;
         if (request.Metadata is not null) entry.Metadata = request.Metadata;
 
         await db.SaveChangesAsync(cancellationToken);
 
         return new ReferenceDataResponseModel(
-            entry.Id, entry.Code, entry.Label, entry.SortOrder, entry.IsActive, entry.IsSeedData, entry.Metadata);
+            entry.Id, entry.Code, entry.Label, entry.SortOrder, entry.IsActive, entry.IsSeedData,
+            entry.EffectiveFrom, entry.EffectiveTo, entry.Metadata);
     }
 }

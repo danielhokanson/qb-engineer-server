@@ -8,6 +8,8 @@ public class ReferenceData : BaseEntity
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsSeedData { get; set; }
+    public DateTimeOffset? EffectiveFrom { get; set; }
+    public DateTimeOffset? EffectiveTo { get; set; }
     public int? ParentId { get; set; }
     public string? Metadata { get; set; }
 

@@ -12,6 +12,8 @@ public record CreateReferenceDataCommand(
     string Code,
     string Label,
     int SortOrder,
+    DateTimeOffset? EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
     string? Metadata) : IRequest<ReferenceDataResponseModel>;
 
 public class CreateReferenceDataValidator : AbstractValidator<CreateReferenceDataCommand>
@@ -42,6 +44,8 @@ public class CreateReferenceDataHandler(AppDbContext db)
             Code = request.Code,
             Label = request.Label,
             SortOrder = request.SortOrder,
+            EffectiveFrom = request.EffectiveFrom,
+            EffectiveTo = request.EffectiveTo,
             Metadata = request.Metadata,
         };
 
@@ -49,6 +53,7 @@ public class CreateReferenceDataHandler(AppDbContext db)
         await db.SaveChangesAsync(cancellationToken);
 
         return new ReferenceDataResponseModel(
-            entry.Id, entry.Code, entry.Label, entry.SortOrder, entry.IsActive, entry.IsSeedData, entry.Metadata);
+            entry.Id, entry.Code, entry.Label, entry.SortOrder, entry.IsActive, entry.IsSeedData,
+            entry.EffectiveFrom, entry.EffectiveTo, entry.Metadata);
     }
 }

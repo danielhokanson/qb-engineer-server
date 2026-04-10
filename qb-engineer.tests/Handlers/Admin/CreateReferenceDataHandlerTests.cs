@@ -23,7 +23,7 @@ public class CreateReferenceDataHandlerTests
     {
         var code = _faker.Random.AlphaNumeric(8);
         var label = _faker.Commerce.ProductName();
-        var command = new CreateReferenceDataCommand("test_group", code, label, 1, null);
+        var command = new CreateReferenceDataCommand("test_group", code, label, 1, null, null, null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -42,7 +42,7 @@ public class CreateReferenceDataHandlerTests
         _db.ReferenceData.Add(new ReferenceData { GroupCode = groupCode, Code = code, Label = "Existing", SortOrder = 1 });
         await _db.SaveChangesAsync();
 
-        var command = new CreateReferenceDataCommand(groupCode, code, "New Label", 2, null);
+        var command = new CreateReferenceDataCommand(groupCode, code, "New Label", 2, null, null, null);
 
         var act = () => _handler.Handle(command, CancellationToken.None);
 

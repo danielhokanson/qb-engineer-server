@@ -19,18 +19,24 @@ public class ReferenceDataRepository(AppDbContext db) : IReferenceDataRepository
             .Select(g => new ReferenceDataGroupResponseModel(
                 g.Key,
                 g.Select(r => new ReferenceDataResponseModel(
-                    r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData, r.Metadata))
+                    r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData,
+                    r.EffectiveFrom, r.EffectiveTo, r.Metadata))
                 .ToList()))
             .ToList();
     }
 
     public async Task<List<ReferenceDataResponseModel>> GetByGroupAsync(string groupCode, CancellationToken ct)
     {
+        var now = DateTimeOffset.UtcNow;
+
         return await db.ReferenceData
-            .Where(r => r.GroupCode == groupCode)
+            .Where(r => r.GroupCode == groupCode && r.IsActive)
+            .Where(r => r.EffectiveFrom == null || r.EffectiveFrom <= now)
+            .Where(r => r.EffectiveTo == null || r.EffectiveTo > now)
             .OrderBy(r => r.SortOrder)
             .Select(r => new ReferenceDataResponseModel(
-                r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData, r.Metadata))
+                r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData,
+                r.EffectiveFrom, r.EffectiveTo, r.Metadata))
             .ToListAsync(ct);
     }
 }

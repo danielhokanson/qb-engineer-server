@@ -7,4 +7,6 @@ public record ReferenceDataResponseModel(
     int SortOrder,
     bool IsActive,
     bool IsSeedData,
+    DateTimeOffset? EffectiveFrom,
+    DateTimeOffset? EffectiveTo,
     string? Metadata);

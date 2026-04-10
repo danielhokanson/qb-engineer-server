@@ -15,6 +15,16 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin")]
 public class AdminController(IMediator mediator) : ControllerBase
 {
+    // ── Roles ──
+
+    [HttpGet("roles")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<RoleItem>>> GetRoles()
+    {
+        var result = await mediator.Send(new GetRolesQuery());
+        return Ok(result);
+    }
+
     // ── Users ──
 
     [HttpGet("users")]
