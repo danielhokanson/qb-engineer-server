@@ -5,5 +5,7 @@ public enum ClockEventType
     ClockIn,
     ClockOut,
     BreakStart,
-    BreakEnd
+    BreakEnd,
+    LunchStart,
+    LunchEnd
 }

@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -12,9 +13,12 @@ public record CreateClockEventCommand(CreateClockEventRequestModel Data) : IRequ
 
 public class CreateClockEventValidator : AbstractValidator<CreateClockEventCommand>
 {
-    public CreateClockEventValidator()
+    public CreateClockEventValidator(IClockEventTypeService clockEventTypeService)
     {
-        RuleFor(x => x.Data.EventType).IsInEnum();
+        RuleFor(x => x.Data.EventTypeCode)
+            .NotEmpty()
+            .MustAsync(async (code, ct) => await clockEventTypeService.GetByCodeAsync(code, ct) is not null)
+            .WithMessage("EventTypeCode must be a valid clock event type code");
         RuleFor(x => x.Data.Reason).MaximumLength(500).When(x => x.Data.Reason is not null);
         RuleFor(x => x.Data.ScanMethod).MaximumLength(50).When(x => x.Data.ScanMethod is not null);
         RuleFor(x => x.Data.Source).MaximumLength(50).When(x => x.Data.Source is not null);
@@ -28,10 +32,15 @@ public class CreateClockEventHandler(ITimeTrackingRepository repo, IHttpContextA
         var userId = int.Parse(httpContext.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var data = request.Data;
 
+        // Keep legacy enum for backward compat during migration
+        var eventType = Enum.TryParse<ClockEventType>(data.EventTypeCode, out var parsed)
+            ? parsed : ClockEventType.ClockIn;
+
         var clockEvent = new ClockEvent
         {
             UserId = userId,
-            EventType = data.EventType,
+            EventType = eventType,
+            EventTypeCode = data.EventTypeCode,
             Reason = data.Reason?.Trim(),
             ScanMethod = data.ScanMethod?.Trim(),
             Timestamp = DateTimeOffset.UtcNow,
@@ -45,7 +54,7 @@ public class CreateClockEventHandler(ITimeTrackingRepository repo, IHttpContextA
         var userName = user.FindFirstValue(ClaimTypes.GivenName) + " " + user.FindFirstValue(ClaimTypes.Surname);
 
         return new ClockEventResponseModel(
-            clockEvent.Id, userId, userName.Trim(), clockEvent.EventType,
+            clockEvent.Id, userId, userName.Trim(), clockEvent.EventTypeCode,
             clockEvent.Reason, clockEvent.ScanMethod, clockEvent.Timestamp, clockEvent.Source);
     }
 }

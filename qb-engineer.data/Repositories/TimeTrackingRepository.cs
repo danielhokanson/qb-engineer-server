@@ -98,7 +98,7 @@ public class TimeTrackingRepository(AppDbContext db) : ITimeTrackingRepository
             var userName = users.TryGetValue(c.UserId, out var user)
                 ? $"{user.FirstName} {user.LastName}" : "Unknown";
             return new ClockEventResponseModel(
-                c.Id, c.UserId, userName, c.EventType,
+                c.Id, c.UserId, userName, c.EventTypeCode,
                 c.Reason, c.ScanMethod, c.Timestamp, c.Source);
         }).ToList();
     }

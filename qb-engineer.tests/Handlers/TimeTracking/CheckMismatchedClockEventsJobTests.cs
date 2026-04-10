@@ -5,6 +5,7 @@ using Moq;
 using QBEngineer.Api.Jobs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 using QBEngineer.Tests.Helpers;
 
@@ -19,7 +20,20 @@ public class CheckMismatchedClockEventsJobTests
     {
         _db = TestDbContextFactory.Create();
         var logger = new Mock<ILogger<CheckMismatchedClockEventsJob>>();
-        _job = new CheckMismatchedClockEventsJob(_db, logger.Object);
+
+        var clockEventTypeService = new Mock<IClockEventTypeService>();
+        clockEventTypeService.Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ClockEventTypeDefinition>
+            {
+                new("ClockIn", "Clock In", "In", "ClockOut", "work", true, true, "login", "#22c55e"),
+                new("ClockOut", "Clock Out", "Out", "ClockIn", "work", false, false, "logout", "#ef4444"),
+                new("BreakStart", "Start Break", "OnBreak", "BreakEnd", "break", true, true, "free_breakfast", "#f59e0b"),
+                new("BreakEnd", "End Break", "In", "BreakStart", "break", true, false, "play_arrow", "#22c55e"),
+                new("LunchStart", "Start Lunch", "OnLunch", "LunchEnd", "lunch", true, true, "restaurant", "#f59e0b"),
+                new("LunchEnd", "End Lunch", "In", "LunchStart", "lunch", true, false, "play_arrow", "#22c55e"),
+            });
+
+        _job = new CheckMismatchedClockEventsJob(_db, clockEventTypeService.Object, logger.Object);
     }
 
     private async Task<ApplicationUser> SeedUser(string first, string last)
@@ -51,8 +65,8 @@ public class CheckMismatchedClockEventsJobTests
         var yesterday = DateTime.UtcNow.AddDays(-1);
 
         _db.ClockEvents.AddRange(
-            new ClockEvent { UserId = user.Id, EventType = ClockEventType.ClockIn, Timestamp = new DateTimeOffset(yesterday.Date.AddHours(8), TimeSpan.Zero) },
-            new ClockEvent { UserId = user.Id, EventType = ClockEventType.ClockOut, Timestamp = new DateTimeOffset(yesterday.Date.AddHours(17), TimeSpan.Zero) });
+            new ClockEvent { UserId = user.Id, EventType = ClockEventType.ClockIn, EventTypeCode = "ClockIn", Timestamp = new DateTimeOffset(yesterday.Date.AddHours(8), TimeSpan.Zero) },
+            new ClockEvent { UserId = user.Id, EventType = ClockEventType.ClockOut, EventTypeCode = "ClockOut", Timestamp = new DateTimeOffset(yesterday.Date.AddHours(17), TimeSpan.Zero) });
         await _db.SaveChangesAsync();
 
         await _job.CheckMismatchedEventsAsync();
@@ -71,6 +85,7 @@ public class CheckMismatchedClockEventsJobTests
         {
             UserId = worker.Id,
             EventType = ClockEventType.ClockIn,
+            EventTypeCode = "ClockIn",
             Timestamp = new DateTimeOffset(yesterday.Date.AddHours(8), TimeSpan.Zero),
         });
         await _db.SaveChangesAsync();
@@ -97,6 +112,7 @@ public class CheckMismatchedClockEventsJobTests
         {
             UserId = worker.Id,
             EventType = ClockEventType.ClockIn,
+            EventTypeCode = "ClockIn",
             Timestamp = new DateTimeOffset(yesterday.Date.AddHours(8), TimeSpan.Zero),
         });
 

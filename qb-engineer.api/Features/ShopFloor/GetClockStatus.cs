@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -29,7 +29,7 @@ public record ClockWorkerModel(
 
 public record GetClockStatusQuery(int? TeamId = null) : IRequest<List<ClockWorkerModel>>;
 
-public class GetClockStatusHandler(AppDbContext db, UserManager<ApplicationUser> userManager)
+public class GetClockStatusHandler(AppDbContext db, UserManager<ApplicationUser> userManager, IClockEventTypeService clockEventTypeService)
     : IRequestHandler<GetClockStatusQuery, List<ClockWorkerModel>>
 {
     public async Task<List<ClockWorkerModel>> Handle(GetClockStatusQuery request, CancellationToken ct)
@@ -128,33 +128,36 @@ public class GetClockStatusHandler(AppDbContext db, UserManager<ApplicationUser>
             }
         }
 
+        // Load clock event type definitions from reference data
+        var eventTypeDefs = await clockEventTypeService.GetAllAsync(ct);
+        var eventTypeMap = eventTypeDefs.ToDictionary(d => d.Code);
+
         return users.Select(u =>
         {
             var hasEvent = eventMap.TryGetValue(u.Id, out var evt);
-            var isClockedIn = hasEvent && evt!.EventType is ClockEventType.ClockIn or ClockEventType.BreakEnd;
-            var isOnBreak = hasEvent && evt!.EventType == ClockEventType.BreakStart;
+            var typeCode = hasEvent ? evt!.EventTypeCode : null;
+            var typeDef = typeCode is not null && eventTypeMap.TryGetValue(typeCode, out var def) ? def : null;
 
-            string status;
-            if (isOnBreak) status = "OnBreak";
-            else if (isClockedIn) status = "In";
-            else status = "Out";
+            var status = typeDef?.StatusMapping ?? "Out";
+            var countsAsActive = typeDef?.CountsAsActive ?? false;
 
             timersByUser.TryGetValue(u.Id, out var timer);
-            var clockInTime = isClockedIn && hasEvent ? evt!.Timestamp : (DateTimeOffset?)null;
+            var isWorking = status == "In";
+            var clockInTime = isWorking && hasEvent ? evt!.Timestamp : (DateTimeOffset?)null;
 
             DateTimeOffset? statusSince = null;
             var timeOnTask = "";
-            if (isClockedIn && timer?.TimerStart != null)
+            if (isWorking && timer?.TimerStart != null)
             {
                 statusSince = timer.TimerStart.Value;
                 timeOnTask = FormatDuration(now - statusSince.Value);
             }
-            else if (isClockedIn && clockInTime.HasValue)
+            else if (isWorking && clockInTime.HasValue)
             {
                 statusSince = clockInTime.Value;
                 timeOnTask = FormatDuration(now - statusSince.Value);
             }
-            else if (isOnBreak && hasEvent)
+            else if (countsAsActive && !isWorking && hasEvent)
             {
                 statusSince = evt!.Timestamp;
                 timeOnTask = FormatDuration(now - statusSince.Value);
@@ -168,7 +171,7 @@ public class GetClockStatusHandler(AppDbContext db, UserManager<ApplicationUser>
                 u.Email ?? "",
                 u.Initials ?? "??",
                 u.AvatarColor ?? "#94a3b8",
-                isClockedIn || isOnBreak,
+                countsAsActive,
                 clockInTime,
                 status,
                 timer?.Job?.Title,

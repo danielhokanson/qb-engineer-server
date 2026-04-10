@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
-using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
@@ -12,6 +12,7 @@ namespace QBEngineer.Api.Jobs;
 /// </summary>
 public class CheckMismatchedClockEventsJob(
     AppDbContext db,
+    IClockEventTypeService clockEventTypeService,
     ILogger<CheckMismatchedClockEventsJob> logger)
 {
     public async Task CheckMismatchedEventsAsync()
@@ -31,13 +32,20 @@ public class CheckMismatchedClockEventsJob(
             return;
         }
 
-        // Group by user, check if their last event of the day is a ClockIn (no matching ClockOut)
+        // Load mismatchable event type codes from reference data
+        var eventTypeDefs = await clockEventTypeService.GetAllAsync();
+        var mismatchableCodes = eventTypeDefs
+            .Where(d => d.IsMismatchable)
+            .Select(d => d.Code)
+            .ToHashSet();
+
+        // Group by user, check if their last event of the day is a mismatchable type
         var mismatchedUserIds = events
             .GroupBy(e => e.UserId)
             .Where(g =>
             {
                 var last = g.OrderByDescending(e => e.Timestamp).First();
-                return last.EventType == ClockEventType.ClockIn;
+                return mismatchableCodes.Contains(last.EventTypeCode);
             })
             .Select(g => g.Key)
             .ToList();

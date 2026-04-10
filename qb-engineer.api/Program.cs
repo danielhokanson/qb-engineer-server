@@ -253,6 +253,9 @@ try
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddSingleton<IImageService, ImageService>();
     builder.Services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
+    builder.Services.AddMemoryCache();
+    builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
+    builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)
@@ -375,6 +378,31 @@ try
 
     // Accounting provider factory — resolves active provider from system settings
     builder.Services.AddScoped<IAccountingProviderFactory, AccountingProviderFactory>();
+
+    // User integration providers (calendar, messaging, cloud storage, GitHub)
+    if (useMocks)
+    {
+        builder.Services.AddSingleton<ICalendarIntegrationService, MockCalendarIntegrationService>();
+        builder.Services.AddSingleton<IMessagingIntegrationService, MockMessagingIntegrationService>();
+        builder.Services.AddSingleton<ICloudStorageIntegrationService, MockCloudStorageIntegrationService>();
+    }
+    else
+    {
+        // Calendar providers
+        builder.Services.AddScoped<ICalendarIntegrationService, GoogleCalendarService>();
+        builder.Services.AddScoped<ICalendarIntegrationService, OutlookCalendarService>();
+        builder.Services.AddScoped<ICalendarIntegrationService, IcsCalendarFeedService>();
+
+        // Messaging providers (webhook-based)
+        builder.Services.AddScoped<IMessagingIntegrationService, SlackMessagingService>();
+        builder.Services.AddScoped<IMessagingIntegrationService, TeamsMessagingService>();
+        builder.Services.AddScoped<IMessagingIntegrationService, DiscordMessagingService>();
+        builder.Services.AddScoped<IMessagingIntegrationService, GoogleChatMessagingService>();
+
+        // Cloud storage providers
+        builder.Services.AddScoped<ICloudStorageIntegrationService, MockCloudStorageIntegrationService>();
+    }
+    builder.Services.AddScoped<IGitHubIssueService, GitHubIssueService>();
 
     // Resilient HTTP clients
     builder.Services.AddResilientHttpClients();
