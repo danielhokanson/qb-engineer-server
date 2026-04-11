@@ -65,7 +65,7 @@ public class PdfSharpFormFillService(ILogger<PdfSharpFormFillService> logger) : 
     public Task<IReadOnlyList<string>> GetFieldNamesAsync(byte[] pdfBytes, CancellationToken ct)
     {
         using var inputStream = new MemoryStream(pdfBytes);
-        using var document = PdfReader.Open(inputStream, PdfDocumentOpenMode.ReadOnly);
+        using var document = PdfReader.Open(inputStream, PdfDocumentOpenMode.Import);
 
         var form = document.AcroForm;
         if (form is null)

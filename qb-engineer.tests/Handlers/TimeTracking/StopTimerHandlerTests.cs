@@ -29,7 +29,7 @@ public class StopTimerHandlerTests
         SetupHubMock();
         var userManagerMock = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(),
-            null, null, null, null, null, null, null, null);
+            null!, null!, null!, null!, null!, null!, null!, null!);
 
         _handler = new StopTimerHandler(
             _repo.Object,

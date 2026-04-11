@@ -18,7 +18,7 @@ public class GetTeamMembersHandler(AppDbContext db) : IRequestHandler<GetTeamMem
             .Where(u => u.TeamId == request.TeamId)
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)
-            .Select(u => new TeamMemberModel(u.Id, u.FirstName, u.LastName, u.Initials, u.AvatarColor, u.Email, u.IsActive))
+            .Select(u => new TeamMemberModel(u.Id, u.FirstName, u.LastName, u.Initials, u.AvatarColor, u.Email ?? string.Empty, u.IsActive))
             .ToListAsync(ct);
     }
 }

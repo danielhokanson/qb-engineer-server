@@ -22,7 +22,7 @@ public class GeneratePackingSlipPdfHandler(
                 .ThenInclude(so => so.Customer)
             .Include(s => s.ShippingAddress)
             .Include(s => s.Lines)
-                .ThenInclude(l => l.SalesOrderLine)
+                .ThenInclude(l => l.SalesOrderLine!)
                     .ThenInclude(sol => sol.Part)
             .FirstOrDefaultAsync(s => s.Id == request.Id, ct)
             ?? throw new KeyNotFoundException($"Shipment {request.Id} not found");

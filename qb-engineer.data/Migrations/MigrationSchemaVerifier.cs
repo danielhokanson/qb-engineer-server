@@ -61,7 +61,7 @@ public static class MigrationSchemaVerifier
                 DropTableOperation dto => !await TableExists(conn, dto.Name, dto.Schema),
                 AddColumnOperation aco => await ColumnExists(conn, aco.Table, aco.Name, aco.Schema),
                 DropColumnOperation dco => !await ColumnExists(conn, dco.Table, dco.Name, dco.Schema),
-                RenameTableOperation rto => await TableExists(conn, rto.NewName, rto.Schema),
+                RenameTableOperation rto => await TableExists(conn, rto.NewName ?? rto.Name, rto.Schema),
                 RenameIndexOperation rio => await IndexExists(conn, rio.NewName),
                 CreateIndexOperation cio => await IndexExists(conn, cio.Name),
                 DropIndexOperation dio => !await IndexExists(conn, dio.Name),

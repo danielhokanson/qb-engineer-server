@@ -400,7 +400,7 @@ public static partial class SeedData
                         ReturnNumber = sr.ReturnNumber,
                         CustomerId = custId,
                         OriginalJobId = jobNums[sr.JobRef],
-                        Reason = sr.Reason,
+                        Reason = sr.Reason ?? string.Empty,
                         Status = Enum.Parse<CustomerReturnStatus>(sr.Status),
                         ReturnDate = D(sr.ReturnDate),
                         InspectedById = userIdMap[sr.InspectedByRef],

@@ -1,9 +1,7 @@
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -29,8 +27,7 @@ public class AdminCorrectTimeEntryValidator : AbstractValidator<AdminCorrectTime
 public class AdminCorrectTimeEntryHandler(
     AppDbContext db,
     ITimeTrackingRepository repo,
-    IMediator mediator,
-    IHubContext<NotificationHub> notificationHub) : IRequestHandler<AdminCorrectTimeEntryCommand, TimeEntryResponseModel>
+    IMediator mediator) : IRequestHandler<AdminCorrectTimeEntryCommand, TimeEntryResponseModel>
 {
     public async Task<TimeEntryResponseModel> Handle(AdminCorrectTimeEntryCommand request, CancellationToken cancellationToken)
     {

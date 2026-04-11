@@ -25,7 +25,6 @@ public class ExtractFormDefinitionHandler(
     IPdfJsExtractorService pdfJsExtractor,
     IFormDefinitionParser formParser,
     IFormDefinitionBuilderFactory builderFactory,
-    IFormDefinitionVerifier formVerifier,
     IStorageService storageService,
     IHttpClientFactory httpClientFactory,
     IServiceScopeFactory scopeFactory,

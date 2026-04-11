@@ -111,7 +111,7 @@ public class SkiaImageComparisonService(ILogger<SkiaImageComparisonService> logg
         }
 
         var info = new SKImageInfo(targetWidth, targetHeight, source.ColorType, source.AlphaType);
-        return source.Resize(info, SKFilterQuality.High);
+        return source.Resize(info, SKSamplingOptions.Default);
     }
 
     private static double ComputeContentDensity(SKBitmap grayscale)
