@@ -271,6 +271,9 @@ namespace QBEngineer.Data.Migrations
                     b.HasIndex("CreatedAt")
                         .HasDatabaseName("ix_activity_logs_created_at");
 
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_activity_logs_user_id");
+
                     b.HasIndex("EntityType", "EntityId")
                         .HasDatabaseName("ix_activity_logs_entity_type_entity_id");
 
