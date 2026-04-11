@@ -45,6 +45,8 @@ public class GetTimeCorrectionsHandler(AppDbContext db)
                     : null,
                 c.OriginalDate,
                 c.OriginalDurationMinutes,
+                c.OriginalStartTime,
+                c.OriginalEndTime,
                 c.OriginalCategory,
                 c.OriginalNotes,
                 c.CreatedAt))

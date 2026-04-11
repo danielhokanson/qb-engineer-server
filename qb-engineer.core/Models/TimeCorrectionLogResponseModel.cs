@@ -10,6 +10,8 @@ public record TimeCorrectionLogResponseModel(
     string? OriginalJobNumber,
     DateOnly OriginalDate,
     int OriginalDurationMinutes,
+    DateTimeOffset? OriginalStartTime,
+    DateTimeOffset? OriginalEndTime,
     string? OriginalCategory,
     string? OriginalNotes,
     DateTimeOffset CreatedAt);

@@ -8,6 +8,8 @@ public class TimeCorrectionLog : BaseAuditableEntity
     public int? OriginalJobId { get; set; }
     public DateOnly OriginalDate { get; set; }
     public int OriginalDurationMinutes { get; set; }
+    public DateTimeOffset? OriginalStartTime { get; set; }
+    public DateTimeOffset? OriginalEndTime { get; set; }
     public string? OriginalCategory { get; set; }
     public string? OriginalNotes { get; set; }
 

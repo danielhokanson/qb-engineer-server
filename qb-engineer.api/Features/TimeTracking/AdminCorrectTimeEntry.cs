@@ -19,6 +19,9 @@ public class AdminCorrectTimeEntryValidator : AbstractValidator<AdminCorrectTime
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.Data.Reason).NotEmpty().MaximumLength(500);
         RuleFor(x => x.Data.DurationMinutes).InclusiveBetween(1, 1440).When(x => x.Data.DurationMinutes.HasValue);
+        RuleFor(x => x.Data.StartTime).LessThan(x => x.Data.EndTime)
+            .When(x => x.Data.StartTime.HasValue && x.Data.EndTime.HasValue)
+            .WithMessage("Start time must be before end time.");
         RuleFor(x => x.Data.Category).MaximumLength(100).When(x => x.Data.Category is not null);
         RuleFor(x => x.Data.Notes).MaximumLength(1000).When(x => x.Data.Notes is not null);
     }
@@ -43,6 +46,8 @@ public class AdminCorrectTimeEntryHandler(
             OriginalJobId = entry.JobId,
             OriginalDate = entry.Date,
             OriginalDurationMinutes = entry.DurationMinutes,
+            OriginalStartTime = entry.TimerStart,
+            OriginalEndTime = entry.TimerStop,
             OriginalCategory = entry.Category,
             OriginalNotes = entry.Notes,
         };
@@ -52,7 +57,13 @@ public class AdminCorrectTimeEntryHandler(
         var data = request.Data;
         if (data.JobId.HasValue) entry.JobId = data.JobId;
         if (data.Date.HasValue) entry.Date = data.Date.Value;
-        if (data.DurationMinutes.HasValue) entry.DurationMinutes = data.DurationMinutes.Value;
+        if (data.StartTime.HasValue) entry.TimerStart = data.StartTime.Value;
+        if (data.EndTime.HasValue) entry.TimerStop = data.EndTime.Value;
+        // Auto-calculate duration from start/end if both are provided
+        if (data.StartTime.HasValue && data.EndTime.HasValue)
+            entry.DurationMinutes = (int)Math.Round((data.EndTime.Value - data.StartTime.Value).TotalMinutes);
+        else if (data.DurationMinutes.HasValue)
+            entry.DurationMinutes = data.DurationMinutes.Value;
         if (data.Category is not null) entry.Category = data.Category.Trim();
         if (data.Notes is not null) entry.Notes = data.Notes.Trim();
 
