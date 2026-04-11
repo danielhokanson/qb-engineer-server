@@ -15,7 +15,7 @@ public class CheckMismatchedClockEventsJob(
     IClockEventTypeService clockEventTypeService,
     ILogger<CheckMismatchedClockEventsJob> logger)
 {
-    public async Task CheckMismatchedEventsAsync()
+    public async Task CheckMismatchedEventsAsync(CancellationToken ct = default)
     {
         var yesterday = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
         var dayStart = yesterday.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
@@ -24,7 +24,7 @@ public class CheckMismatchedClockEventsJob(
         var events = await db.ClockEvents
             .Where(e => e.Timestamp >= dayStart && e.Timestamp <= dayEnd)
             .OrderBy(e => e.Timestamp)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (events.Count == 0)
         {
@@ -33,7 +33,7 @@ public class CheckMismatchedClockEventsJob(
         }
 
         // Load mismatchable event type codes from reference data
-        var eventTypeDefs = await clockEventTypeService.GetAllAsync();
+        var eventTypeDefs = await clockEventTypeService.GetAllAsync(ct);
         var mismatchableCodes = eventTypeDefs
             .Where(d => d.IsMismatchable)
             .Select(d => d.Code)
@@ -66,7 +66,7 @@ public class CheckMismatchedClockEventsJob(
                 && mismatchedUserIds.Contains(n.UserId)
                 && n.CreatedAt >= dayStart && n.CreatedAt <= DateTimeOffset.UtcNow)
             .Select(n => n.UserId)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var newUserIds = mismatchedUserIds.Except(existingNotifications).ToList();
         if (newUserIds.Count == 0)
@@ -81,11 +81,11 @@ public class CheckMismatchedClockEventsJob(
             .Where(x => x.Name == "Admin" || x.Name == "Manager")
             .Select(x => x.UserId)
             .Distinct()
-            .ToListAsync();
+            .ToListAsync(ct);
 
         foreach (var userId in newUserIds)
         {
-            var employee = await db.Users.FindAsync(userId);
+            var employee = await db.Users.FindAsync([userId], ct);
             if (employee is null) continue;
 
             var employeeName = $"{employee.LastName}, {employee.FirstName}";
@@ -120,7 +120,7 @@ public class CheckMismatchedClockEventsJob(
             }
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
         logger.LogInformation(
             "[MismatchedClockJob] Sent notifications for {Count} user(s) with unmatched clock events",
             newUserIds.Count);

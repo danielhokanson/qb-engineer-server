@@ -9,12 +9,12 @@ public class OverdueInvoiceJob(
     AppDbContext db,
     ILogger<OverdueInvoiceJob> logger)
 {
-    public async Task MarkOverdueInvoicesAsync()
+    public async Task MarkOverdueInvoicesAsync(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var overdueInvoices = await db.Invoices
             .Where(i => i.Status == InvoiceStatus.Sent && i.DueDate < now)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (overdueInvoices.Count == 0)
         {
@@ -27,7 +27,7 @@ public class OverdueInvoiceJob(
             invoice.Status = InvoiceStatus.Overdue;
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
         logger.LogInformation("Marked {Count} invoices as overdue", overdueInvoices.Count);
     }
 }

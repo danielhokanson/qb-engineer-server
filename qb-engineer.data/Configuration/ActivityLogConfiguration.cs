@@ -10,6 +10,7 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
     {
         builder.HasIndex(e => new { e.EntityType, e.EntityId });
         builder.HasIndex(e => e.CreatedAt);
+        builder.HasIndex(e => e.UserId);
 
         builder.Property(e => e.EntityType).HasMaxLength(50);
         builder.Property(e => e.Action).HasMaxLength(50);

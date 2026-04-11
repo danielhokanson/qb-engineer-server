@@ -104,10 +104,10 @@ public class TrackTypeRepository(AppDbContext db) : ITrackTypeRepository
             .MaxAsync(t => (int?)t.SortOrder, ct) ?? 0;
     }
 
-    public async Task AddAsync(TrackType trackType, CancellationToken ct)
+    public Task AddAsync(TrackType trackType, CancellationToken ct)
     {
         db.TrackTypes.Add(trackType);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public async Task SaveChangesAsync(CancellationToken ct)

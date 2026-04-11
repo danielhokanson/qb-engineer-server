@@ -11,22 +11,24 @@ public class DailyDigestJob(
     ISystemSettingRepository settings,
     ILogger<DailyDigestJob> logger)
 {
-    public async Task SendDailyDigestAsync()
+    public async Task SendDailyDigestAsync(CancellationToken ct = default)
     {
-        var companySetting = await settings.FindByKeyAsync("company_name", CancellationToken.None);
+        var companySetting = await settings.FindByKeyAsync("company_name", ct);
         var companyName = companySetting?.Value ?? "QB Engineer";
 
         // Get users with email digest enabled
         var users = await db.Users
             .Where(u => u.IsActive && u.Email != null)
             .Select(u => new { u.Id, u.Email, u.FirstName })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var now = DateTimeOffset.UtcNow;
         var yesterday = now.AddDays(-1);
 
         foreach (var user in users)
         {
+            ct.ThrowIfCancellationRequested();
+
             try
             {
                 // Jobs assigned to user due in next 3 days
@@ -37,7 +39,7 @@ public class DailyDigestJob(
                     .OrderBy(j => j.DueDate)
                     .Select(j => new { j.JobNumber, j.Title, j.DueDate })
                     .Take(10)
-                    .ToListAsync();
+                    .ToListAsync(ct);
 
                 // Overdue jobs
                 var overdueJobs = await db.Jobs
@@ -46,13 +48,13 @@ public class DailyDigestJob(
                         && j.CompletedDate == null)
                     .Select(j => new { j.JobNumber, j.Title, j.DueDate })
                     .Take(10)
-                    .ToListAsync();
+                    .ToListAsync(ct);
 
                 // Jobs completed yesterday
                 var completedYesterday = await db.Jobs
                     .Where(j => j.AssigneeId == user.Id
                         && j.CompletedDate.HasValue && j.CompletedDate.Value >= yesterday)
-                    .CountAsync();
+                    .CountAsync(ct);
 
                 if (upcomingJobs.Count == 0 && overdueJobs.Count == 0 && completedYesterday == 0)
                     continue;
@@ -70,6 +72,10 @@ public class DailyDigestJob(
                     html));
 
                 logger.LogInformation("Daily digest sent to {Email}", user.Email);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

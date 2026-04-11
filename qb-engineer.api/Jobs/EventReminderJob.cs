@@ -13,7 +13,7 @@ public class EventReminderJob(
     AppDbContext db,
     ILogger<EventReminderJob> logger)
 {
-    public async Task SendRemindersAsync()
+    public async Task SendRemindersAsync(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var reminderWindow = now.AddMinutes(30);
@@ -24,7 +24,7 @@ public class EventReminderJob(
                 && e.ReminderSentAt == null
                 && e.StartTime > now
                 && e.StartTime <= reminderWindow)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (upcomingEvents.Count == 0)
         {
@@ -56,6 +56,6 @@ public class EventReminderJob(
                 evt.Id, evt.Title, evt.Attendees.Count(a => a.Status != AttendeeStatus.Declined));
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
     }
 }

@@ -14,7 +14,7 @@ public class CheckI9OverdueJob(
     AppDbContext db,
     ILogger<CheckI9OverdueJob> logger)
 {
-    public async Task CheckOverdueSection2Async()
+    public async Task CheckOverdueSection2Async(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -26,7 +26,7 @@ public class CheckI9OverdueJob(
                 && s.I9Section2SignedAt == null
                 && s.I9Section2OverdueAt != null
                 && s.I9Section2OverdueAt <= now)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (overdue.Count == 0)
         {
@@ -43,11 +43,11 @@ public class CheckI9OverdueJob(
             .Where(x => x.Name == "Admin" || x.Name == "Manager" || x.Name == "OfficeManager")
             .Select(x => x.UserId)
             .Distinct()
-            .ToListAsync();
+            .ToListAsync(ct);
 
         foreach (var submission in overdue)
         {
-            var employee = await db.Users.FindAsync(submission.UserId);
+            var employee = await db.Users.FindAsync([submission.UserId], ct);
             if (employee is null) continue;
 
             var employeeName = $"{employee.LastName}, {employee.FirstName}";
@@ -69,7 +69,7 @@ public class CheckI9OverdueJob(
             }
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
         logger.LogInformation("[I9OverdueJob] Sent overdue notifications for {Count} submission(s)", overdue.Count);
     }
 }

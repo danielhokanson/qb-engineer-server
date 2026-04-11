@@ -30,30 +30,45 @@ public class GetQcInspectionsHandler(AppDbContext db)
         if (!string.IsNullOrWhiteSpace(request.LotNumber))
             query = query.Where(i => i.LotNumber != null && i.LotNumber.Contains(request.LotNumber));
 
-        return await query
+        // Pre-load inspector names to avoid N+1 subquery inside Select projection
+        var inspections = await query
             .OrderByDescending(i => i.CreatedAt)
-            .Select(i => new QcInspectionResponseModel(
-                i.Id,
-                i.JobId,
-                i.Job != null ? i.Job.JobNumber : null,
-                i.ProductionRunId,
-                i.TemplateId,
-                i.Template != null ? i.Template.Name : null,
-                i.InspectorId,
-                db.Users.Where(u => u.Id == i.InspectorId).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault() ?? "",
-                i.LotNumber,
-                i.Status,
-                i.Notes,
-                i.CompletedAt,
-                i.Results.Select(r => new QcInspectionResultModel(
-                    r.Id,
-                    r.ChecklistItemId,
-                    r.Description,
-                    r.Passed,
-                    r.MeasuredValue,
-                    r.Notes
-                )).ToList(),
-                i.CreatedAt))
             .ToListAsync(cancellationToken);
+
+        var inspectorIds = inspections
+            .Select(i => i.InspectorId)
+            .Distinct()
+            .ToList();
+
+        var inspectorNames = inspectorIds.Count > 0
+            ? await db.Users
+                .Where(u => inspectorIds.Contains(u.Id))
+                .Select(u => new { u.Id, Name = u.FirstName + " " + u.LastName })
+                .ToDictionaryAsync(u => u.Id, u => u.Name, cancellationToken)
+            : new Dictionary<int, string>();
+
+        return inspections.Select(i => new QcInspectionResponseModel(
+            i.Id,
+            i.JobId,
+            i.Job != null ? i.Job.JobNumber : null,
+            i.ProductionRunId,
+            i.TemplateId,
+            i.Template != null ? i.Template.Name : null,
+            i.InspectorId,
+            inspectorNames.TryGetValue(i.InspectorId, out var name) ? name : "",
+            i.LotNumber,
+            i.Status,
+            i.Notes,
+            i.CompletedAt,
+            i.Results.Select(r => new QcInspectionResultModel(
+                r.Id,
+                r.ChecklistItemId,
+                r.Description,
+                r.Passed,
+                r.MeasuredValue,
+                r.Notes
+            )).ToList(),
+            i.CreatedAt))
+        .ToList();
     }
 }

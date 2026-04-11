@@ -16,16 +16,16 @@ public class SyncQueueProcessorJob(
 {
     private const int BatchSize = 10;
 
-    public async Task ProcessQueueAsync()
+    public async Task ProcessQueueAsync(CancellationToken ct = default)
     {
-        var accountingService = await providerFactory.GetActiveProviderAsync(CancellationToken.None);
+        var accountingService = await providerFactory.GetActiveProviderAsync(ct);
         if (accountingService is null)
         {
             logger.LogInformation("No accounting provider configured — skipping sync queue processing");
             return;
         }
 
-        var pending = await syncQueue.GetPendingAsync(BatchSize, CancellationToken.None);
+        var pending = await syncQueue.GetPendingAsync(BatchSize, ct);
 
         if (pending.Count == 0)
         {
@@ -37,20 +37,26 @@ public class SyncQueueProcessorJob(
 
         foreach (var entry in pending)
         {
-            await syncQueue.MarkProcessingAsync(entry.Id, CancellationToken.None);
+            ct.ThrowIfCancellationRequested();
+
+            await syncQueue.MarkProcessingAsync(entry.Id, ct);
 
             try
             {
-                await ProcessEntryAsync(accountingService, entry.Id, entry.EntityType, entry.EntityId, entry.Operation, entry.Payload);
-                await syncQueue.MarkCompletedAsync(entry.Id, CancellationToken.None);
+                await ProcessEntryAsync(accountingService, entry.Id, entry.EntityType, entry.EntityId, entry.Operation, entry.Payload, ct);
+                await syncQueue.MarkCompletedAsync(entry.Id, ct);
 
                 logger.LogInformation(
                     "Sync queue entry {Id} completed: {Operation} for {EntityType} {EntityId}",
                     entry.Id, entry.Operation, entry.EntityType, entry.EntityId);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
-                await syncQueue.MarkFailedAsync(entry.Id, ex.Message, CancellationToken.None);
+                await syncQueue.MarkFailedAsync(entry.Id, ex.Message, ct);
 
                 logger.LogError(ex,
                     "Sync queue entry {Id} failed: {Operation} for {EntityType} {EntityId}",
@@ -59,24 +65,24 @@ public class SyncQueueProcessorJob(
         }
     }
 
-    private async Task ProcessEntryAsync(IAccountingService accountingService, int entryId, string entityType, int entityId, string operation, string? payload)
+    private async Task ProcessEntryAsync(IAccountingService accountingService, int entryId, string entityType, int entityId, string operation, string? payload, CancellationToken ct)
     {
         switch (operation)
         {
             case "CreateCustomer":
             {
                 var customer = Deserialize<AccountingCustomer>(payload, entryId, operation);
-                var externalId = await accountingService.CreateCustomerAsync(customer, CancellationToken.None);
+                var externalId = await accountingService.CreateCustomerAsync(customer, ct);
                 logger.LogInformation(
                     "Created customer in accounting provider — ExternalId: {ExternalId}", externalId);
 
                 // Update local customer with external ID
-                var localCustomer = await db.Customers.FindAsync([entityId], CancellationToken.None);
+                var localCustomer = await db.Customers.FindAsync([entityId], ct);
                 if (localCustomer is not null)
                 {
                     localCustomer.ExternalId = externalId;
                     localCustomer.Provider = accountingService.ProviderId;
-                    await db.SaveChangesAsync(CancellationToken.None);
+                    await db.SaveChangesAsync(ct);
                 }
                 break;
             }
@@ -84,46 +90,46 @@ public class SyncQueueProcessorJob(
             case "CreateEstimate":
             {
                 var document = Deserialize<AccountingDocument>(payload, entryId, operation);
-                var externalId = await accountingService.CreateEstimateAsync(document, CancellationToken.None);
+                var externalId = await accountingService.CreateEstimateAsync(document, ct);
                 logger.LogInformation(
                     "Created estimate in accounting provider — ExternalId: {ExternalId}", externalId);
-                await UpdateJobExternalRef(accountingService, entityId, externalId);
+                await UpdateJobExternalRef(accountingService, entityId, externalId, ct);
                 break;
             }
 
             case "CreateInvoice":
             {
                 var document = Deserialize<AccountingDocument>(payload, entryId, operation);
-                var externalId = await accountingService.CreateInvoiceAsync(document, CancellationToken.None);
+                var externalId = await accountingService.CreateInvoiceAsync(document, ct);
                 logger.LogInformation(
                     "Created invoice in accounting provider — ExternalId: {ExternalId}", externalId);
-                await UpdateJobExternalRef(accountingService, entityId, externalId);
+                await UpdateJobExternalRef(accountingService, entityId, externalId, ct);
                 break;
             }
 
             case "CreatePurchaseOrder":
             {
                 var document = Deserialize<AccountingDocument>(payload, entryId, operation);
-                var externalId = await accountingService.CreatePurchaseOrderAsync(document, CancellationToken.None);
+                var externalId = await accountingService.CreatePurchaseOrderAsync(document, ct);
                 logger.LogInformation(
                     "Created purchase order in accounting provider — ExternalId: {ExternalId}", externalId);
-                await UpdateJobExternalRef(accountingService, entityId, externalId);
+                await UpdateJobExternalRef(accountingService, entityId, externalId, ct);
                 break;
             }
 
             case "CreateTimeActivity":
             {
                 var activity = Deserialize<AccountingTimeActivity>(payload, entryId, operation);
-                var externalId = await accountingService.CreateTimeActivityAsync(activity, CancellationToken.None);
+                var externalId = await accountingService.CreateTimeActivityAsync(activity, ct);
                 logger.LogInformation(
                     "Created time activity in accounting provider — ExternalId: {ExternalId}", externalId);
 
                 // Update local time entry with accounting reference
-                var timeEntry = await db.TimeEntries.FindAsync([entityId], CancellationToken.None);
+                var timeEntry = await db.TimeEntries.FindAsync([entityId], ct);
                 if (timeEntry is not null)
                 {
                     timeEntry.AccountingTimeActivityId = externalId;
-                    await db.SaveChangesAsync(CancellationToken.None);
+                    await db.SaveChangesAsync(ct);
                 }
                 break;
             }
@@ -131,18 +137,18 @@ public class SyncQueueProcessorJob(
             case "CreateItem":
             {
                 var item = Deserialize<AccountingItem>(payload, entryId, operation);
-                var externalId = await accountingService.CreateItemAsync(item, CancellationToken.None);
+                var externalId = await accountingService.CreateItemAsync(item, ct);
                 logger.LogInformation(
                     "Created item in accounting provider — ExternalId: {ExternalId}", externalId);
 
                 // Update local part with external ID
-                var part = await db.Parts.FindAsync([entityId], CancellationToken.None);
+                var part = await db.Parts.FindAsync([entityId], ct);
                 if (part is not null)
                 {
                     part.ExternalId = externalId;
                     part.ExternalRef = item.Name;
                     part.Provider = accountingService.ProviderId;
-                    await db.SaveChangesAsync(CancellationToken.None);
+                    await db.SaveChangesAsync(ct);
                 }
                 break;
             }
@@ -153,7 +159,7 @@ public class SyncQueueProcessorJob(
                 if (item.ExternalId is null)
                     throw new InvalidOperationException($"UpdateItem requires ExternalId on entry {entryId}");
 
-                await accountingService.UpdateItemAsync(item.ExternalId, item, CancellationToken.None);
+                await accountingService.UpdateItemAsync(item.ExternalId, item, ct);
                 logger.LogInformation(
                     "Updated item in accounting provider — ExternalId: {ExternalId}", item.ExternalId);
                 break;
@@ -162,17 +168,17 @@ public class SyncQueueProcessorJob(
             case "CreateExpense":
             {
                 var expense = Deserialize<AccountingExpense>(payload, entryId, operation);
-                var externalId = await accountingService.CreateExpenseAsync(expense, CancellationToken.None);
+                var externalId = await accountingService.CreateExpenseAsync(expense, ct);
                 logger.LogInformation(
                     "Created expense in accounting provider — ExternalId: {ExternalId}", externalId);
 
                 // Update local expense with external ID
-                var localExpense = await db.Expenses.FindAsync([entityId], CancellationToken.None);
+                var localExpense = await db.Expenses.FindAsync([entityId], ct);
                 if (localExpense is not null)
                 {
                     localExpense.ExternalId = externalId;
                     localExpense.Provider = accountingService.ProviderId;
-                    await db.SaveChangesAsync(CancellationToken.None);
+                    await db.SaveChangesAsync(ct);
                 }
                 break;
             }
@@ -183,14 +189,14 @@ public class SyncQueueProcessorJob(
         }
     }
 
-    private async Task UpdateJobExternalRef(IAccountingService accountingService, int jobId, string externalId)
+    private async Task UpdateJobExternalRef(IAccountingService accountingService, int jobId, string externalId, CancellationToken ct)
     {
-        var job = await db.Jobs.FindAsync([jobId], CancellationToken.None);
+        var job = await db.Jobs.FindAsync([jobId], ct);
         if (job is not null)
         {
             job.ExternalRef = externalId;
             job.Provider = accountingService.ProviderId;
-            await db.SaveChangesAsync(CancellationToken.None);
+            await db.SaveChangesAsync(ct);
         }
     }
 

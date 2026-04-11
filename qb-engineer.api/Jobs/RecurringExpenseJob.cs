@@ -9,13 +9,13 @@ public class RecurringExpenseJob(
     AppDbContext db,
     ILogger<RecurringExpenseJob> logger)
 {
-    public async Task GenerateDueExpensesAsync()
+    public async Task GenerateDueExpensesAsync(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var dueExpenses = await db.RecurringExpenses
             .Where(r => r.IsActive && r.NextOccurrenceDate <= now)
             .Where(r => r.EndDate == null || r.EndDate > now)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (dueExpenses.Count == 0)
         {
@@ -45,7 +45,7 @@ public class RecurringExpenseJob(
                 recurring.Description, recurring.Id, recurring.UserId);
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
         logger.LogInformation("Generated {Count} expenses from recurring templates", dueExpenses.Count);
     }
 

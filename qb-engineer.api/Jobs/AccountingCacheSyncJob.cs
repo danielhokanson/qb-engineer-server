@@ -7,9 +7,9 @@ public class AccountingCacheSyncJob(
     ISystemSettingRepository systemSettings,
     ILogger<AccountingCacheSyncJob> logger)
 {
-    public async Task RefreshCacheAsync()
+    public async Task RefreshCacheAsync(CancellationToken ct = default)
     {
-        var accountingService = await providerFactory.GetActiveProviderAsync(CancellationToken.None);
+        var accountingService = await providerFactory.GetActiveProviderAsync(ct);
         if (accountingService is null)
         {
             logger.LogInformation("No accounting provider configured — skipping cache refresh");
@@ -18,7 +18,7 @@ public class AccountingCacheSyncJob(
 
         logger.LogInformation("Starting accounting cache refresh via {Provider}", accountingService.ProviderName);
 
-        var syncStatus = await accountingService.GetSyncStatusAsync(CancellationToken.None);
+        var syncStatus = await accountingService.GetSyncStatusAsync(ct);
 
         if (!syncStatus.Connected)
         {
@@ -26,7 +26,7 @@ public class AccountingCacheSyncJob(
             return;
         }
 
-        var customers = await accountingService.GetCustomersAsync(CancellationToken.None);
+        var customers = await accountingService.GetCustomersAsync(ct);
         var count = customers.Count;
         var now = DateTimeOffset.UtcNow.ToString("O");
 
@@ -34,13 +34,13 @@ public class AccountingCacheSyncJob(
             "accounting_last_sync",
             now,
             "Timestamp of the last successful accounting cache sync",
-            CancellationToken.None);
+            ct);
 
         await systemSettings.UpsertAsync(
             "accounting_cached_customers",
             count.ToString(),
             "Number of customers retrieved from the accounting provider in the last cache sync",
-            CancellationToken.None);
+            ct);
 
         logger.LogInformation("Accounting cache refreshed: {Count} customers", count);
     }

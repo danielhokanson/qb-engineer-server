@@ -16,7 +16,7 @@ public class CheckI9ReverificationJob(
 {
     private static readonly TimeSpan WarningWindow = TimeSpan.FromDays(90);
 
-    public async Task CheckReverificationDueAsync()
+    public async Task CheckReverificationDueAsync(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var warningCutoff = now.Add(WarningWindow);
@@ -29,7 +29,7 @@ public class CheckI9ReverificationJob(
                 && s.I9Section2SignedAt != null
                 && s.I9ReverificationDueAt != null
                 && s.I9ReverificationDueAt <= warningCutoff)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (due.Count == 0)
         {
@@ -46,11 +46,11 @@ public class CheckI9ReverificationJob(
             .Where(x => x.Name == "Admin" || x.Name == "Manager" || x.Name == "OfficeManager")
             .Select(x => x.UserId)
             .Distinct()
-            .ToListAsync();
+            .ToListAsync(ct);
 
         foreach (var submission in due)
         {
-            var employee = await db.Users.FindAsync(submission.UserId);
+            var employee = await db.Users.FindAsync([submission.UserId], ct);
             if (employee is null) continue;
 
             var employeeName = $"{employee.LastName}, {employee.FirstName}";
@@ -71,7 +71,7 @@ public class CheckI9ReverificationJob(
                         && n.EntityType == "compliance_submissions"
                         && n.EntityId == submission.Id
                         && n.Type == "i9_reverification_due"
-                        && n.CreatedAt >= now.AddDays(-7));
+                        && n.CreatedAt >= now.AddDays(-7), ct);
 
                 if (existing) continue;
 
@@ -90,7 +90,7 @@ public class CheckI9ReverificationJob(
             }
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
         logger.LogInformation(
             "[I9ReverificationJob] Processed reverification notifications for {Count} submission(s)", due.Count);
     }

@@ -890,93 +890,93 @@ try
     app.MapHangfireDashboard("/hangfire");
     RecurringJob.AddOrUpdate<RecurringOrderJob>(
         "generate-recurring-orders",
-        job => job.GenerateDueOrdersAsync(),
+        job => job.GenerateDueOrdersAsync(CancellationToken.None),
         Cron.Daily(6)); // 6 AM UTC daily
     RecurringJob.AddOrUpdate<RecurringExpenseJob>(
         "generate-recurring-expenses",
-        job => job.GenerateDueExpensesAsync(),
+        job => job.GenerateDueExpensesAsync(CancellationToken.None),
         Cron.Daily(5)); // 5 AM UTC daily
     RecurringJob.AddOrUpdate<OverdueInvoiceJob>(
         "mark-overdue-invoices",
-        job => job.MarkOverdueInvoicesAsync(),
+        job => job.MarkOverdueInvoicesAsync(CancellationToken.None),
         Cron.Daily(1)); // 1 AM UTC daily
     RecurringJob.AddOrUpdate<UninvoicedJobNudgeJob>(
         "nudge-uninvoiced-jobs",
-        job => job.NudgeUninvoicedJobsAsync(),
+        job => job.NudgeUninvoicedJobsAsync(CancellationToken.None),
         Cron.Daily(8)); // 8 AM UTC daily
     RecurringJob.AddOrUpdate<ScheduledTaskJob>(
         "run-scheduled-tasks",
-        job => job.RunDueTasksAsync(),
+        job => job.RunDueTasksAsync(CancellationToken.None),
         "*/15 * * * *"); // Every 15 minutes
     RecurringJob.AddOrUpdate<DailyDigestJob>(
         "send-daily-digest",
-        job => job.SendDailyDigestAsync(),
+        job => job.SendDailyDigestAsync(CancellationToken.None),
         Cron.Daily(7)); // 7 AM UTC daily
     RecurringJob.AddOrUpdate<OverdueMaintenanceJob>(
         "check-overdue-maintenance",
-        job => job.CheckOverdueMaintenanceAsync(),
+        job => job.CheckOverdueMaintenanceAsync(CancellationToken.None),
         Cron.Daily(2)); // 2 AM UTC daily
     RecurringJob.AddOrUpdate<DatabaseBackupJob>(
         "database-backup",
-        job => job.RunBackupAsync(),
+        job => job.RunBackupAsync(CancellationToken.None),
         Cron.Daily(3)); // 3 AM UTC daily
 
     // Accounting sync jobs
     RecurringJob.AddOrUpdate<SyncQueueProcessorJob>(
         "sync-queue-processor",
-        job => job.ProcessQueueAsync(),
+        job => job.ProcessQueueAsync(CancellationToken.None),
         "*/2 * * * *"); // Every 2 minutes
     RecurringJob.AddOrUpdate<CustomerSyncJob>(
         "customer-sync",
-        job => job.SyncCustomersAsync(),
+        job => job.SyncCustomersAsync(CancellationToken.None),
         "0 */4 * * *"); // Every 4 hours
     RecurringJob.AddOrUpdate<AccountingCacheSyncJob>(
         "accounting-cache-sync",
-        job => job.RefreshCacheAsync(),
+        job => job.RefreshCacheAsync(CancellationToken.None),
         "0 */6 * * *"); // Every 6 hours
     RecurringJob.AddOrUpdate<OrphanDetectionJob>(
         "orphan-detection",
-        job => job.DetectOrphansAsync(),
+        job => job.DetectOrphansAsync(CancellationToken.None),
         "0 3 * * *"); // Daily at 3 AM
     RecurringJob.AddOrUpdate<ItemSyncJob>(
         "item-sync",
-        job => job.SyncItemsAsync(),
+        job => job.SyncItemsAsync(CancellationToken.None),
         "0 */4 * * *"); // Every 4 hours
     RecurringJob.AddOrUpdate<DocumentIndexJob>(
         "document-index",
-        job => job.IndexRecentlyUpdatedAsync(),
+        job => job.IndexRecentlyUpdatedAsync(CancellationToken.None),
         "*/30 * * * *"); // Every 30 minutes
     RecurringJob.AddOrUpdate<DocumentIndexJob>(
         "documentation-index",
-        job => job.IndexDocumentationAsync(),
+        job => job.IndexDocumentationAsync(CancellationToken.None),
         Cron.Daily(3)); // Daily at 3 AM — docs change rarely; startup job handles initial index
 
     // Index documentation once on startup (AI may not be ready immediately — Hangfire retries)
-    BackgroundJob.Enqueue<DocumentIndexJob>(job => job.IndexDocumentationAsync());
+    BackgroundJob.Enqueue<DocumentIndexJob>(job => job.IndexDocumentationAsync(CancellationToken.None));
 
     RecurringJob.AddOrUpdate<ComplianceFormSyncJob>(
         "compliance-form-sync",
-        job => job.SyncFederalFormsAsync(),
+        job => job.SyncFederalFormsAsync(CancellationToken.None),
         Cron.Weekly(DayOfWeek.Sunday, 4)); // Sunday 4 AM UTC
     RecurringJob.AddOrUpdate<CheckI9OverdueJob>(
         "check-i9-section2-overdue",
-        job => job.CheckOverdueSection2Async(),
+        job => job.CheckOverdueSection2Async(CancellationToken.None),
         Cron.Daily(9)); // 9 AM UTC daily
     RecurringJob.AddOrUpdate<CheckI9ReverificationJob>(
         "check-i9-reverification",
-        job => job.CheckReverificationDueAsync(),
+        job => job.CheckReverificationDueAsync(CancellationToken.None),
         Cron.Weekly(DayOfWeek.Monday, 9)); // Monday 9 AM UTC weekly
     RecurringJob.AddOrUpdate<CheckMismatchedClockEventsJob>(
         "check-mismatched-clock-events",
-        job => job.CheckMismatchedEventsAsync(),
+        job => job.CheckMismatchedEventsAsync(CancellationToken.None),
         Cron.Daily(22)); // 10 PM UTC daily
     RecurringJob.AddOrUpdate<ReorderAnalysisJob>(
         "reorder-analysis",
-        job => job.RunAnalysisAsync(),
+        job => job.RunAnalysisAsync(CancellationToken.None),
         Cron.Daily(2)); // 2 AM UTC daily
     RecurringJob.AddOrUpdate<EventReminderJob>(
         "event-reminders",
-        job => job.SendRemindersAsync(),
+        job => job.SendRemindersAsync(CancellationToken.None),
         "*/15 * * * *"); // Every 15 minutes
 
     // SignalR Hubs

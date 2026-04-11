@@ -218,10 +218,10 @@ public class JobRepository(AppDbContext db) : IJobRepository
             .ToListAsync(ct);
     }
 
-    public async Task AddAsync(Job job, CancellationToken ct)
+    public Task AddAsync(Job job, CancellationToken ct)
     {
         db.Jobs.Add(job);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public async Task SaveChangesAsync(CancellationToken ct)

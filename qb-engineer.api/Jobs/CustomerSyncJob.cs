@@ -12,9 +12,9 @@ public class CustomerSyncJob(
     AppDbContext db,
     ILogger<CustomerSyncJob> logger)
 {
-    public async Task SyncCustomersAsync()
+    public async Task SyncCustomersAsync(CancellationToken ct = default)
     {
-        var accountingService = await providerFactory.GetActiveProviderAsync(CancellationToken.None);
+        var accountingService = await providerFactory.GetActiveProviderAsync(ct);
         if (accountingService is null)
         {
             logger.LogInformation("No accounting provider configured — skipping customer sync");
@@ -23,7 +23,7 @@ public class CustomerSyncJob(
 
         logger.LogInformation("Starting {Provider} → local customer sync", accountingService.ProviderName);
 
-        var qbCustomers = await accountingService.GetCustomersAsync(CancellationToken.None);
+        var qbCustomers = await accountingService.GetCustomersAsync(ct);
 
         if (qbCustomers.Count == 0)
         {
@@ -36,10 +36,12 @@ public class CustomerSyncJob(
 
         foreach (var qbCustomer in qbCustomers)
         {
+            ct.ThrowIfCancellationRequested();
+
             var local = await db.Customers
                 .FirstOrDefaultAsync(
                     c => c.ExternalId == qbCustomer.ExternalId && c.Provider == accountingService.ProviderId,
-                    CancellationToken.None);
+                    ct);
 
             if (local is not null)
             {
@@ -90,7 +92,7 @@ public class CustomerSyncJob(
                     IsActive = true
                 };
 
-                await customerRepository.AddAsync(newCustomer, CancellationToken.None);
+                await customerRepository.AddAsync(newCustomer, ct);
                 createdCount++;
 
                 logger.LogDebug(
@@ -99,7 +101,7 @@ public class CustomerSyncJob(
             }
         }
 
-        await customerRepository.SaveChangesAsync(CancellationToken.None);
+        await customerRepository.SaveChangesAsync(ct);
 
         logger.LogInformation(
             "Synced {Total} customers from QuickBooks — {Created} created, {Updated} updated",

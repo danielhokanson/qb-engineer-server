@@ -42,10 +42,10 @@ public class SubtaskRepository(AppDbContext db) : ISubtaskRepository
             .MaxAsync(s => (int?)s.SortOrder, ct) ?? 0;
     }
 
-    public async Task AddAsync(JobSubtask subtask, CancellationToken ct)
+    public Task AddAsync(JobSubtask subtask, CancellationToken ct)
     {
         db.JobSubtasks.Add(subtask);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public async Task SaveChangesAsync(CancellationToken ct)

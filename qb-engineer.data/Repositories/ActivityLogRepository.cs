@@ -83,16 +83,16 @@ public class ActivityLogRepository(AppDbContext db) : IActivityLogRepository
         return await db.Jobs.AnyAsync(j => j.Id == jobId, ct);
     }
 
-    public async Task AddAsync(JobActivityLog log, CancellationToken ct)
+    public Task AddAsync(JobActivityLog log, CancellationToken ct)
     {
         db.JobActivityLogs.Add(log);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
-    public async Task AddAsync(ActivityLog log, CancellationToken ct)
+    public Task AddAsync(ActivityLog log, CancellationToken ct)
     {
         db.ActivityLogs.Add(log);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public async Task SaveChangesAsync(CancellationToken ct)

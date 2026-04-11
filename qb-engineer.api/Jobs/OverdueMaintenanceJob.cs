@@ -16,14 +16,14 @@ public class OverdueMaintenanceJob(
     ISender mediator,
     ILogger<OverdueMaintenanceJob> logger)
 {
-    public async Task CheckOverdueMaintenanceAsync()
+    public async Task CheckOverdueMaintenanceAsync(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
 
         var overdueSchedules = await db.MaintenanceSchedules
             .Include(s => s.Asset)
             .Where(s => s.NextDueAt < now && s.IsActive && s.DeletedAt == null)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (overdueSchedules.Count == 0)
         {
@@ -44,7 +44,7 @@ public class OverdueMaintenanceJob(
                 .AnyAsync(n => n.EntityType == "Asset"
                     && n.EntityId == schedule.AssetId
                     && n.Source == "maintenance-overdue"
-                    && n.CreatedAt > schedule.NextDueAt);
+                    && n.CreatedAt > schedule.NextDueAt, ct);
 
             if (alreadyNotified) continue;
 
@@ -76,7 +76,7 @@ public class OverdueMaintenanceJob(
                         Message: $"Maintenance on {schedule.Asset?.Name ?? "Asset"} is overdue. Scheduled for {schedule.NextDueAt:MMM dd, yyyy}.",
                         EntityType: "Asset",
                         EntityId: schedule.AssetId,
-                        SenderId: null)));
+                        SenderId: null)), ct);
                     notifiedCount++;
                 }
                 catch (Exception ex)

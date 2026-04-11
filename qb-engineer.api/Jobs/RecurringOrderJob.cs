@@ -9,13 +9,13 @@ public class RecurringOrderJob(
     AppDbContext db,
     ILogger<RecurringOrderJob> logger)
 {
-    public async Task GenerateDueOrdersAsync()
+    public async Task GenerateDueOrdersAsync(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var dueOrders = await db.RecurringOrders
             .Include(ro => ro.Lines)
             .Where(ro => ro.IsActive && ro.NextGenerationDate <= now)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (dueOrders.Count == 0)
         {
@@ -52,7 +52,7 @@ public class RecurringOrderJob(
                 recurring.Name, recurring.Id, recurring.CustomerId);
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
         logger.LogInformation("Generated {Count} sales orders from recurring orders", dueOrders.Count);
     }
 }

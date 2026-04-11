@@ -15,9 +15,9 @@ public class DocumentIndexJob(
 {
     private static readonly string[] SupportedEntityTypes = ["Job", "Part", "Customer", "Asset"];
 
-    public async Task IndexDocumentationAsync()
+    public async Task IndexDocumentationAsync(CancellationToken ct = default)
     {
-        var available = await aiService.IsAvailableAsync(CancellationToken.None);
+        var available = await aiService.IsAvailableAsync(ct);
         if (!available)
         {
             logger.LogInformation("AI service unavailable — skipping documentation indexing");
@@ -26,7 +26,7 @@ public class DocumentIndexJob(
 
         try
         {
-            var chunksIndexed = await mediator.Send(new IndexDocumentationCommand(), CancellationToken.None);
+            var chunksIndexed = await mediator.Send(new IndexDocumentationCommand(), ct);
             if (chunksIndexed > 0)
                 logger.LogInformation("Documentation indexing complete: {ChunkCount} chunks", chunksIndexed);
         }
@@ -36,9 +36,9 @@ public class DocumentIndexJob(
         }
     }
 
-    public async Task IndexRecentlyUpdatedAsync()
+    public async Task IndexRecentlyUpdatedAsync(CancellationToken ct = default)
     {
-        var available = await aiService.IsAvailableAsync(CancellationToken.None);
+        var available = await aiService.IsAvailableAsync(ct);
         if (!available)
         {
             logger.LogInformation("AI service unavailable — skipping document indexing");
@@ -50,9 +50,11 @@ public class DocumentIndexJob(
 
         foreach (var entityType in SupportedEntityTypes)
         {
+            ct.ThrowIfCancellationRequested();
+
             try
             {
-                var updatedIds = await GetRecentlyUpdatedIdsAsync(entityType, since);
+                var updatedIds = await GetRecentlyUpdatedIdsAsync(entityType, since, ct);
 
                 if (updatedIds.Count == 0)
                     continue;
@@ -63,11 +65,12 @@ public class DocumentIndexJob(
 
                 foreach (var entityId in updatedIds)
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     try
                     {
                         var chunkCount = await mediator.Send(
-                            new IndexDocumentCommand(entityType, entityId),
-                            CancellationToken.None);
+                            new IndexDocumentCommand(entityType, entityId), ct);
                         totalIndexed += chunkCount;
                     }
                     catch (Exception ex)
@@ -75,6 +78,10 @@ public class DocumentIndexJob(
                         logger.LogWarning(ex, "Failed to index {EntityType} #{EntityId}", entityType, entityId);
                     }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -88,26 +95,26 @@ public class DocumentIndexJob(
         }
     }
 
-    private async Task<List<int>> GetRecentlyUpdatedIdsAsync(string entityType, DateTimeOffset since)
+    private async Task<List<int>> GetRecentlyUpdatedIdsAsync(string entityType, DateTimeOffset since, CancellationToken ct)
     {
         return entityType switch
         {
             "Job" => await db.Jobs
                 .Where(j => j.UpdatedAt >= since)
                 .Select(j => j.Id)
-                .ToListAsync(),
+                .ToListAsync(ct),
             "Part" => await db.Parts
                 .Where(p => p.UpdatedAt >= since)
                 .Select(p => p.Id)
-                .ToListAsync(),
+                .ToListAsync(ct),
             "Customer" => await db.Customers
                 .Where(c => c.UpdatedAt >= since)
                 .Select(c => c.Id)
-                .ToListAsync(),
+                .ToListAsync(ct),
             "Asset" => await db.Assets
                 .Where(a => a.UpdatedAt >= since)
                 .Select(a => a.Id)
-                .ToListAsync(),
+                .ToListAsync(ct),
             _ => [],
         };
     }

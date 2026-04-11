@@ -13,9 +13,9 @@ public class ComplianceFormSyncJob(
     IHttpClientFactory httpClientFactory,
     ILogger<ComplianceFormSyncJob> logger)
 {
-    public async Task SyncFederalFormsAsync()
+    public async Task SyncFederalFormsAsync(CancellationToken ct = default)
     {
-        var available = await signingService.IsAvailableAsync(CancellationToken.None);
+        var available = await signingService.IsAvailableAsync(ct);
         if (!available)
         {
             logger.LogInformation("Document signing service unavailable — skipping compliance form sync");
@@ -25,7 +25,7 @@ public class ComplianceFormSyncJob(
         var templates = await db.ComplianceFormTemplates
             .Where(t => t.IsAutoSync && t.SourceUrl != null && t.ManualOverrideFileId == null && t.IsActive)
             .Where(t => t.DeletedAt == null)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         if (templates.Count == 0)
         {
@@ -40,7 +40,7 @@ public class ComplianceFormSyncJob(
         {
             try
             {
-                var pdfBytes = await httpClient.GetByteArrayAsync(template.SourceUrl);
+                var pdfBytes = await httpClient.GetByteArrayAsync(template.SourceUrl, ct);
                 var hash = Convert.ToHexStringLower(SHA256.HashData(pdfBytes));
 
                 if (hash == template.Sha256Hash)
@@ -50,7 +50,7 @@ public class ComplianceFormSyncJob(
                 }
 
                 var docuSealTemplateId = await signingService.CreateTemplateFromPdfAsync(
-                    template.Name, pdfBytes, CancellationToken.None);
+                    template.Name, pdfBytes, ct);
 
                 // Delete old DocuSeal template if one existed
                 if (template.DocuSealTemplateId.HasValue)
@@ -58,7 +58,7 @@ public class ComplianceFormSyncJob(
                     try
                     {
                         await signingService.DeleteTemplateAsync(
-                            template.DocuSealTemplateId.Value, CancellationToken.None);
+                            template.DocuSealTemplateId.Value, ct);
                     }
                     catch (Exception ex)
                     {
@@ -80,7 +80,7 @@ public class ComplianceFormSyncJob(
         }
 
         if (synced > 0)
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Compliance form sync complete: {Synced}/{Total} templates updated", synced, templates.Count);
     }

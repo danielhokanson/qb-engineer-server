@@ -8,7 +8,7 @@ public class DatabaseBackupJob(
     IConfiguration config,
     ILogger<DatabaseBackupJob> logger)
 {
-    public async Task RunBackupAsync()
+    public async Task RunBackupAsync(CancellationToken ct = default)
     {
         var connectionString = config.GetConnectionString("DefaultConnection") ?? string.Empty;
         var backupOptions = config.GetSection("Backup").Get<DatabaseBackupOptions>() ?? new DatabaseBackupOptions();
@@ -40,13 +40,13 @@ public class DatabaseBackupJob(
                 ?? throw new InvalidOperationException("Failed to start pg_dump process");
 
             await using var fileStream = File.Create(filePath);
-            await process.StandardOutput.BaseStream.CopyToAsync(fileStream);
+            await process.StandardOutput.BaseStream.CopyToAsync(fileStream, ct);
 
-            await process.WaitForExitAsync();
+            await process.WaitForExitAsync(ct);
 
             if (process.ExitCode != 0)
             {
-                var error = await process.StandardError.ReadToEndAsync();
+                var error = await process.StandardError.ReadToEndAsync(ct);
                 logger.LogError("pg_dump failed with exit code {ExitCode}: {Error}", process.ExitCode, error);
                 throw new InvalidOperationException($"pg_dump failed: {error}");
             }

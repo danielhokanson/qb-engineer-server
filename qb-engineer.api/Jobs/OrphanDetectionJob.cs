@@ -10,9 +10,9 @@ public class OrphanDetectionJob(
     AppDbContext db,
     ILogger<OrphanDetectionJob> logger)
 {
-    public async Task DetectOrphansAsync()
+    public async Task DetectOrphansAsync(CancellationToken ct = default)
     {
-        var accountingService = await providerFactory.GetActiveProviderAsync(CancellationToken.None);
+        var accountingService = await providerFactory.GetActiveProviderAsync(ct);
         if (accountingService is null)
         {
             logger.LogInformation("No accounting provider configured — skipping orphan detection");
@@ -24,7 +24,7 @@ public class OrphanDetectionJob(
         var localLinked = await db.Customers
             .Where(c => c.ExternalId != null && c.Provider == accountingService.ProviderId)
             .Select(c => new { c.Id, c.ExternalId })
-            .ToListAsync(CancellationToken.None);
+            .ToListAsync(ct);
 
         if (localLinked.Count == 0)
         {
@@ -32,7 +32,7 @@ public class OrphanDetectionJob(
             return;
         }
 
-        var qbCustomers = await accountingService.GetCustomersAsync(CancellationToken.None);
+        var qbCustomers = await accountingService.GetCustomersAsync(ct);
         var qbExternalIds = qbCustomers
             .Select(c => c.ExternalId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);

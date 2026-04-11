@@ -15,7 +15,7 @@ public class UninvoicedJobNudgeJob(
     IMediator mediator,
     ILogger<UninvoicedJobNudgeJob> logger)
 {
-    public async Task NudgeUninvoicedJobsAsync()
+    public async Task NudgeUninvoicedJobsAsync(CancellationToken ct = default)
     {
         var cutoff = DateTimeOffset.UtcNow.AddDays(-3);
 
@@ -25,7 +25,7 @@ public class UninvoicedJobNudgeJob(
             .Where(j =>
                 j.SalesOrderLineId == null ||
                 !j.SalesOrderLine!.SalesOrder.Invoices.Any(i => i.DeletedAt == null))
-            .CountAsync();
+            .CountAsync(ct);
 
         if (uninvoicedCount == 0)
         {
@@ -67,7 +67,7 @@ public class UninvoicedJobNudgeJob(
                 Message: message,
                 EntityType: null,
                 EntityId: null,
-                SenderId: null)));
+                SenderId: null)), ct);
         }
 
         logger.LogInformation(

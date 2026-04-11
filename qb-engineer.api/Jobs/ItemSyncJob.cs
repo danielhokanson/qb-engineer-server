@@ -11,9 +11,9 @@ public class ItemSyncJob(
     AppDbContext db,
     ILogger<ItemSyncJob> logger)
 {
-    public async Task SyncItemsAsync()
+    public async Task SyncItemsAsync(CancellationToken ct = default)
     {
-        var accountingService = await providerFactory.GetActiveProviderAsync(CancellationToken.None);
+        var accountingService = await providerFactory.GetActiveProviderAsync(ct);
         if (accountingService is null)
         {
             logger.LogInformation("No accounting provider configured — skipping item sync");
@@ -25,7 +25,7 @@ public class ItemSyncJob(
         AccountingSyncStatus syncStatus;
         try
         {
-            syncStatus = await accountingService.GetSyncStatusAsync(CancellationToken.None);
+            syncStatus = await accountingService.GetSyncStatusAsync(ct);
         }
         catch (Exception ex)
         {
@@ -40,7 +40,7 @@ public class ItemSyncJob(
         }
 
         // Pull all items from accounting provider
-        var qbItems = await accountingService.GetItemsAsync(CancellationToken.None);
+        var qbItems = await accountingService.GetItemsAsync(ct);
         if (qbItems.Count == 0)
         {
             logger.LogInformation("No items found in accounting provider");
@@ -53,7 +53,7 @@ public class ItemSyncJob(
         // Get all local parts that are linked to QB
         var linkedParts = await db.Parts
             .Where(p => p.ExternalId != null && p.Provider == accountingService.ProviderId)
-            .ToListAsync(CancellationToken.None);
+            .ToListAsync(ct);
 
         var updatedCount = 0;
         var orphanCount = 0;
@@ -102,7 +102,7 @@ public class ItemSyncJob(
 
         if (updatedCount > 0)
         {
-            await db.SaveChangesAsync(CancellationToken.None);
+            await db.SaveChangesAsync(ct);
         }
 
         logger.LogInformation(

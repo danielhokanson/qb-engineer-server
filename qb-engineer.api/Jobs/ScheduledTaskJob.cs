@@ -7,12 +7,12 @@ namespace QBEngineer.Api.Jobs;
 
 public class ScheduledTaskJob(AppDbContext db, IMediator mediator, ILogger<ScheduledTaskJob> logger)
 {
-    public async Task RunDueTasksAsync()
+    public async Task RunDueTasksAsync(CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
         var dueTasks = await db.ScheduledTasks
             .Where(t => t.IsActive && t.DeletedAt == null && t.NextRunAt <= now)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         logger.LogInformation("Found {Count} scheduled tasks due for execution", dueTasks.Count);
 
@@ -20,7 +20,7 @@ public class ScheduledTaskJob(AppDbContext db, IMediator mediator, ILogger<Sched
         {
             try
             {
-                var jobId = await mediator.Send(new RunScheduledTaskCommand(task.Id));
+                var jobId = await mediator.Send(new RunScheduledTaskCommand(task.Id), ct);
                 logger.LogInformation("Scheduled task {TaskId} ({Name}) created job {JobId}", task.Id, task.Name, jobId);
             }
             catch (Exception ex)
