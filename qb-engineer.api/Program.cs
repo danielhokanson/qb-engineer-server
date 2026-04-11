@@ -139,15 +139,19 @@ try
             OnTokenValidated = async context =>
             {
                 // Check session store — rejects tokens from previous container instances
+                // Tokens without a JTI are pre-session-validation and must be rejected
                 var jti = context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
-                if (jti != null)
+                if (string.IsNullOrEmpty(jti))
                 {
-                    var sessionStore = context.HttpContext.RequestServices.GetRequiredService<ISessionStore>();
-                    if (!await sessionStore.ValidateSessionAsync(jti))
-                    {
-                        context.Fail("Session is no longer valid.");
-                        return;
-                    }
+                    context.Fail("Token missing session identifier.");
+                    return;
+                }
+
+                var sessionStore = context.HttpContext.RequestServices.GetRequiredService<ISessionStore>();
+                if (!await sessionStore.ValidateSessionAsync(jti))
+                {
+                    context.Fail("Session is no longer valid.");
+                    return;
                 }
 
                 var userManager = context.HttpContext.RequestServices
