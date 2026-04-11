@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 using MediatR;
@@ -106,6 +107,26 @@ public class AuthController(IMediator mediator) : ControllerBase
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var result = await mediator.Send(command with { UserId = userId });
+        return Ok(result);
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        var jti = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+        await mediator.Send(new LogoutCommand(jti));
+        return NoContent();
+    }
+
+    [HttpPost("refresh")]
+    [Authorize]
+    public async Task<ActionResult<LoginResponse>> Refresh()
+    {
+        var jti = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value
+            ?? throw new UnauthorizedAccessException("Missing token identifier");
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var result = await mediator.Send(new RefreshTokenCommand(jti, userId));
         return Ok(result);
     }
 

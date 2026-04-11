@@ -1,13 +1,9 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
+
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Auth;
@@ -25,7 +21,9 @@ public class KioskLoginValidator : AbstractValidator<KioskLoginCommand>
 
 public class KioskLoginHandler(
     UserManager<ApplicationUser> userManager,
-    IConfiguration config) : IRequestHandler<KioskLoginCommand, LoginResponse>
+    ITokenService tokenService,
+    ISessionStore sessionStore,
+    IHttpContextAccessor httpContext) : IRequestHandler<KioskLoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(KioskLoginCommand request, CancellationToken cancellationToken)
     {
@@ -39,34 +37,22 @@ public class KioskLoginHandler(
             throw new InvalidOperationException("Invalid barcode or PIN");
 
         var roles = await userManager.GetRolesAsync(user);
-        var token = GenerateJwt(user, roles);
+        var result = tokenService.GenerateToken(
+            user.Id, user.Email!, user.FirstName, user.LastName,
+            user.Initials, user.AvatarColor, roles,
+            TimeSpan.FromHours(8));
+
+        await sessionStore.CreateSessionAsync(user.Id, result.Jti, result.ExpiresAt,
+            "kiosk",
+            httpContext.HttpContext?.Connection.RemoteIpAddress?.ToString(),
+            httpContext.HttpContext?.Request.Headers.UserAgent.ToString(),
+            cancellationToken);
 
         return new LoginResponse(
-            token,
-            DateTimeOffset.UtcNow.AddHours(8),
+            result.Token,
+            result.ExpiresAt,
             new AuthUserResponseModel(
                 user.Id, user.Email!, user.FirstName, user.LastName,
                 user.Initials, user.AvatarColor, roles.ToArray(), false));
-    }
-
-    private string GenerateJwt(ApplicationUser user, IList<string> roles)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email!),
-            new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-        };
-        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
-
-        var token = new JwtSecurityToken(
-            issuer: config["Jwt:Issuer"],
-            audience: config["Jwt:Audience"],
-            claims: claims,
-            expires: DateTimeOffset.UtcNow.AddHours(8).UtcDateTime,
-            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

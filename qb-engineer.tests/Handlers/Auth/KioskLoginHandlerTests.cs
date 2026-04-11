@@ -2,12 +2,13 @@ using System.Linq.Expressions;
 
 using Bogus;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using QBEngineer.Api.Features.Auth;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Tests.Handlers.Auth;
@@ -15,7 +16,9 @@ namespace QBEngineer.Tests.Handlers.Auth;
 public class KioskLoginHandlerTests
 {
     private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-    private readonly IConfiguration _config;
+    private readonly Mock<ITokenService> _tokenServiceMock;
+    private readonly Mock<ISessionStore> _sessionStoreMock;
+    private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
     private readonly KioskLoginHandler _handler;
     private readonly Faker _faker = new();
 
@@ -24,16 +27,13 @@ public class KioskLoginHandlerTests
         _userManagerMock = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(), null!, null!, null!, null!, null!, null!, null!, null!);
 
-        _config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Jwt:Key"] = "test-secret-key-that-is-at-least-32-characters-long!!",
-                ["Jwt:Issuer"] = "qb-engineer-test",
-                ["Jwt:Audience"] = "qb-engineer-ui-test",
-            })
-            .Build();
+        _tokenServiceMock = new Mock<ITokenService>();
+        _sessionStoreMock = new Mock<ISessionStore>();
+        _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
-        _handler = new KioskLoginHandler(_userManagerMock.Object, _config);
+        _handler = new KioskLoginHandler(
+            _userManagerMock.Object, _tokenServiceMock.Object,
+            _sessionStoreMock.Object, _httpContextAccessorMock.Object);
     }
 
     [Fact]
@@ -51,9 +51,6 @@ public class KioskLoginHandlerTests
             IsActive = true,
         };
 
-        // KioskLoginHandler uses FirstOrDefaultAsync on userManager.Users,
-        // which requires an IAsyncEnumerable-compatible queryable.
-        // We mock it by providing an in-memory list wrapped with a test AsyncQueryable.
         var users = new List<ApplicationUser> { user };
         _userManagerMock.Setup(x => x.Users)
             .Returns(new TestAsyncEnumerableQueryable<ApplicationUser>(users));
@@ -61,16 +58,28 @@ public class KioskLoginHandlerTests
         _userManagerMock.Setup(x => x.GetRolesAsync(user))
             .ReturnsAsync(new List<string> { "ProductionWorker" });
 
+        var tokenResult = new TokenResult("test-jwt-token", "test-jti", DateTimeOffset.UtcNow.AddHours(8));
+        _tokenServiceMock.Setup(x => x.GenerateToken(
+                user.Id, user.Email!, user.FirstName, user.LastName,
+                user.Initials, user.AvatarColor,
+                It.IsAny<IList<string>>(), TimeSpan.FromHours(8), null))
+            .Returns(tokenResult);
+
         var command = new KioskLoginCommand("EMP-001", "5678");
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
-        result.Token.Should().NotBeNullOrEmpty();
+        result.Token.Should().Be("test-jwt-token");
         result.User.Id.Should().Be(user.Id);
         result.User.Email.Should().Be(user.Email);
         result.User.Roles.Should().Contain("ProductionWorker");
         result.ExpiresAt.Should().BeCloseTo(DateTimeOffset.UtcNow.AddHours(8), TimeSpan.FromMinutes(1));
+
+        _sessionStoreMock.Verify(x => x.CreateSessionAsync(
+            user.Id, "test-jti", It.IsAny<DateTimeOffset>(),
+            "kiosk", It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

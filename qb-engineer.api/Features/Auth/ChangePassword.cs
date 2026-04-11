@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Auth;
@@ -24,7 +25,9 @@ public class ChangePasswordValidator : AbstractValidator<ChangePasswordCommand>
     }
 }
 
-public class ChangePasswordHandler(UserManager<ApplicationUser> userManager)
+public class ChangePasswordHandler(
+    UserManager<ApplicationUser> userManager,
+    ISessionStore sessionStore)
     : IRequestHandler<ChangePasswordCommand>
 {
     public async Task Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -47,5 +50,8 @@ public class ChangePasswordHandler(UserManager<ApplicationUser> userManager)
 
         user.UpdatedAt = DateTimeOffset.UtcNow;
         await userManager.UpdateAsync(user);
+
+        // Revoke all existing sessions — user must re-authenticate with new password
+        await sessionStore.RevokeAllUserSessionsAsync(request.UserId, cancellationToken);
     }
 }

@@ -2,13 +2,14 @@ using MediatR;
 
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Admin;
 
 public record DeactivateUserCommand(int UserId) : IRequest;
 
-public class DeactivateUserHandler(AppDbContext db)
+public class DeactivateUserHandler(AppDbContext db, ISessionStore sessionStore)
     : IRequestHandler<DeactivateUserCommand>
 {
     public async Task Handle(DeactivateUserCommand request, CancellationToken ct)
@@ -29,5 +30,8 @@ public class DeactivateUserHandler(AppDbContext db)
         }
 
         await db.SaveChangesAsync(ct);
+
+        // Revoke all sessions — force immediate logout
+        await sessionStore.RevokeAllUserSessionsAsync(request.UserId, ct);
     }
 }

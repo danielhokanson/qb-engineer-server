@@ -1,12 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Auth;
@@ -15,7 +11,9 @@ public record SsoCallbackCommand(string Provider, string ExternalId, string Emai
 
 public class SsoCallbackHandler(
     UserManager<ApplicationUser> userManager,
-    IConfiguration config) : IRequestHandler<SsoCallbackCommand, LoginResponse>
+    ITokenService tokenService,
+    ISessionStore sessionStore,
+    IHttpContextAccessor httpContext) : IRequestHandler<SsoCallbackCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(SsoCallbackCommand request, CancellationToken cancellationToken)
     {
@@ -55,46 +53,21 @@ public class SsoCallbackHandler(
         }
 
         var roles = await userManager.GetRolesAsync(user);
-        var token = GenerateJwt(user, roles);
+        var result = tokenService.GenerateToken(
+            user.Id, user.Email!, user.FirstName, user.LastName,
+            user.Initials, user.AvatarColor, roles);
+
+        await sessionStore.CreateSessionAsync(user.Id, result.Jti, result.ExpiresAt,
+            $"sso:{request.Provider}",
+            httpContext.HttpContext?.Connection.RemoteIpAddress?.ToString(),
+            httpContext.HttpContext?.Request.Headers.UserAgent.ToString(),
+            cancellationToken);
 
         return new LoginResponse(
-            token,
-            DateTimeOffset.UtcNow.AddHours(24),
+            result.Token,
+            result.ExpiresAt,
             new AuthUserResponseModel(
                 user.Id, user.Email!, user.FirstName, user.LastName,
                 user.Initials, user.AvatarColor, roles.ToArray(), false));
-    }
-
-    private string GenerateJwt(ApplicationUser user, IList<string> roles)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email!),
-            new(ClaimTypes.GivenName, user.FirstName),
-            new(ClaimTypes.Surname, user.LastName),
-        };
-
-        if (user.Initials is not null)
-            claims.Add(new Claim("initials", user.Initials));
-
-        if (user.AvatarColor is not null)
-            claims.Add(new Claim("avatarColor", user.AvatarColor));
-
-        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(config["Jwt:Key"] ?? "dev-secret-key-change-in-production-min-32-chars!!"));
-
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: config["Jwt:Issuer"] ?? "qb-engineer",
-            audience: config["Jwt:Audience"] ?? "qb-engineer-ui",
-            claims: claims,
-            expires: DateTimeOffset.UtcNow.AddHours(24).UtcDateTime,
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

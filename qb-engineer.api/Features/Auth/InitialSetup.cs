@@ -1,13 +1,11 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+
 using QBEngineer.Api.Data;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Auth;
@@ -55,7 +53,9 @@ public class InitialSetupHandler(
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole<int>> roleManager,
     AppDbContext db,
-    IConfiguration config)
+    ITokenService tokenService,
+    ISessionStore sessionStore,
+    IHttpContextAccessor httpContext)
     : IRequestHandler<InitialSetupCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(InitialSetupCommand request, CancellationToken cancellationToken)
@@ -84,10 +84,10 @@ public class InitialSetupHandler(
             EmailConfirmed = true,
         };
 
-        var result = await userManager.CreateAsync(user, request.Password);
-        if (!result.Succeeded)
+        var createResult = await userManager.CreateAsync(user, request.Password);
+        if (!createResult.Succeeded)
         {
-            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
             throw new InvalidOperationException($"Failed to create account: {errors}");
         }
 
@@ -148,47 +148,20 @@ public class InitialSetupHandler(
 
         // Generate JWT
         var userRoles = await userManager.GetRolesAsync(user);
-        var token = GenerateJwtToken(user, userRoles);
-        var expiresAt = DateTimeOffset.UtcNow.AddHours(24);
+        var result = tokenService.GenerateToken(
+            user.Id, user.Email!, user.FirstName, user.LastName,
+            user.Initials, user.AvatarColor, userRoles);
+
+        await sessionStore.CreateSessionAsync(user.Id, result.Jti, result.ExpiresAt,
+            "setup",
+            httpContext.HttpContext?.Connection.RemoteIpAddress?.ToString(),
+            httpContext.HttpContext?.Request.Headers.UserAgent.ToString(),
+            cancellationToken);
 
         var userResponse = new AuthUserResponseModel(
             user.Id, user.Email!, user.FirstName, user.LastName,
             user.Initials, user.AvatarColor, userRoles.ToArray(), false);
 
-        return new LoginResponse(token, expiresAt, userResponse);
-    }
-
-    private string GenerateJwtToken(ApplicationUser user, IList<string> roles)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email!),
-            new(ClaimTypes.GivenName, user.FirstName),
-            new(ClaimTypes.Surname, user.LastName),
-        };
-
-        if (user.Initials is not null)
-            claims.Add(new Claim("initials", user.Initials));
-
-        if (user.AvatarColor is not null)
-            claims.Add(new Claim("avatarColor", user.AvatarColor));
-
-        foreach (var role in roles)
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(config["Jwt:Key"] ?? "dev-secret-key-change-in-production-min-32-chars!!"));
-
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: config["Jwt:Issuer"] ?? "qb-engineer",
-            audience: config["Jwt:Audience"] ?? "qb-engineer-ui",
-            claims: claims,
-            expires: DateTimeOffset.UtcNow.AddHours(24).UtcDateTime,
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return new LoginResponse(result.Token, result.ExpiresAt, userResponse);
     }
 }

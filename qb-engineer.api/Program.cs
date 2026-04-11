@@ -138,6 +138,18 @@ try
             },
             OnTokenValidated = async context =>
             {
+                // Check session store — rejects tokens from previous container instances
+                var jti = context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+                if (jti != null)
+                {
+                    var sessionStore = context.HttpContext.RequestServices.GetRequiredService<ISessionStore>();
+                    if (!await sessionStore.ValidateSessionAsync(jti))
+                    {
+                        context.Fail("Session is no longer valid.");
+                        return;
+                    }
+                }
+
                 var userManager = context.HttpContext.RequestServices
                     .GetRequiredService<UserManager<ApplicationUser>>();
                 var userId = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -253,6 +265,8 @@ try
     builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
     builder.Services.AddSingleton<IImageService, ImageService>();
     builder.Services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
+    builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+    builder.Services.AddSingleton<ISessionStore, SessionStore>();
     builder.Services.AddMemoryCache();
     builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
     builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();

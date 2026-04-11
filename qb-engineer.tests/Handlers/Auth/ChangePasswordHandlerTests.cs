@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using QBEngineer.Api.Features.Auth;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Tests.Handlers.Auth;
@@ -10,6 +11,7 @@ namespace QBEngineer.Tests.Handlers.Auth;
 public class ChangePasswordHandlerTests
 {
     private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
+    private readonly Mock<ISessionStore> _sessionStoreMock;
     private readonly ChangePasswordHandler _handler;
     private readonly Faker _faker = new();
 
@@ -18,11 +20,13 @@ public class ChangePasswordHandlerTests
         _userManagerMock = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(), null!, null!, null!, null!, null!, null!, null!, null!);
 
-        _handler = new ChangePasswordHandler(_userManagerMock.Object);
+        _sessionStoreMock = new Mock<ISessionStore>();
+
+        _handler = new ChangePasswordHandler(_userManagerMock.Object, _sessionStoreMock.Object);
     }
 
     [Fact]
-    public async Task Handle_ValidCurrentPassword_ChangesPassword()
+    public async Task Handle_ValidCurrentPassword_ChangesPasswordAndRevokesAllSessions()
     {
         var user = new ApplicationUser
         {
@@ -49,6 +53,7 @@ public class ChangePasswordHandlerTests
 
         _userManagerMock.Verify(x => x.ChangePasswordAsync(user, "OldPassword1!", "NewPassword1!"), Times.Once);
         _userManagerMock.Verify(x => x.UpdateAsync(user), Times.Once);
+        _sessionStoreMock.Verify(x => x.RevokeAllUserSessionsAsync(1, It.IsAny<CancellationToken>()), Times.Once);
         user.UpdatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
     }
 
@@ -74,5 +79,7 @@ public class ChangePasswordHandlerTests
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
             .WithMessage("Current password is incorrect");
+
+        _sessionStoreMock.Verify(x => x.RevokeAllUserSessionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
