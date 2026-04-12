@@ -60,4 +60,23 @@ public class VendorsController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteVendorCommand(id));
         return NoContent();
     }
+
+    [HttpGet("{id:int}/scorecard")]
+    public async Task<ActionResult<VendorScorecardResponseModel>> GetVendorScorecard(
+        int id,
+        [FromQuery] DateOnly? dateFrom,
+        [FromQuery] DateOnly? dateTo)
+    {
+        var result = await mediator.Send(new GetVendorScorecardQuery(id, dateFrom, dateTo));
+        return Ok(result);
+    }
+
+    [HttpGet("performance-report")]
+    public async Task<ActionResult<List<VendorComparisonRowModel>>> GetPerformanceReport(
+        [FromQuery] DateOnly? dateFrom,
+        [FromQuery] DateOnly? dateTo)
+    {
+        var result = await mediator.Send(new GetVendorPerformanceReportQuery(dateFrom, dateTo));
+        return Ok(result);
+    }
 }

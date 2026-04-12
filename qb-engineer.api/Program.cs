@@ -283,6 +283,7 @@ try
     builder.Services.AddScoped<INcrCapaService, NcrCapaService>();
     builder.Services.AddScoped<IUomService, UomService>();
     builder.Services.AddScoped<IApprovalService, ApprovalService>();
+    builder.Services.AddScoped<IVendorScorecardService, VendorScorecardService>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)
@@ -1032,6 +1033,10 @@ try
         "check-credit-reviews-due",
         job => job.ExecuteAsync(CancellationToken.None),
         Cron.Daily(6)); // 6 AM UTC daily
+    RecurringJob.AddOrUpdate<RecalculateVendorScorecardsJob>(
+        "recalculate-vendor-scorecards",
+        job => job.RecalculateAsync(CancellationToken.None),
+        Cron.Monthly(1, 4)); // 1st of each month at 4 AM UTC
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");
