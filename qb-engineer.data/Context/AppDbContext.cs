@@ -143,6 +143,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
 
     // Report Builder
     public DbSet<SavedReport> SavedReports => Set<SavedReport>();
+    public DbSet<ReportSchedule> ReportSchedules => Set<ReportSchedule>();
+
+    // Document Approval Workflow
+    public DbSet<ControlledDocument> ControlledDocuments => Set<ControlledDocument>();
+    public DbSet<DocumentRevision> DocumentRevisions => Set<DocumentRevision>();
+
+    // Outbound Webhooks
+    public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
+    public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
 
     // Teams & Kiosk Terminals
     public DbSet<Team> Teams => Set<Team>();

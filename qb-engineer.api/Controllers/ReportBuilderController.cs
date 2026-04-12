@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Features.Reports;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -94,5 +95,44 @@ public class ReportBuilderController(IMediator mediator) : ControllerBase
             request.PageSize));
 
         return Ok(result);
+    }
+
+    [HttpGet("{id:int}/export")]
+    public async Task<IActionResult> ExportReport(int id, [FromQuery] ReportExportFormat format = ReportExportFormat.Csv)
+    {
+        var result = await mediator.Send(new ExportReportQuery(id, format));
+        return File(result.Content, result.ContentType, result.FileName);
+    }
+
+    // --- Report Schedules ---
+
+    [HttpGet("schedules")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<ReportScheduleResponseModel>>> GetSchedules()
+    {
+        var result = await mediator.Send(new GetReportSchedulesQuery());
+        return Ok(result);
+    }
+
+    [HttpPost("schedules")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<ReportScheduleResponseModel>> CreateSchedule([FromBody] CreateReportScheduleRequestModel request)
+    {
+        var result = await mediator.Send(new CreateReportScheduleCommand(
+            request.SavedReportId,
+            request.CronExpression,
+            request.RecipientEmailsJson,
+            request.Format,
+            request.SubjectTemplate));
+
+        return CreatedAtAction(nameof(GetSchedules), new { }, result);
+    }
+
+    [HttpDelete("schedules/{id:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> DeleteSchedule(int id)
+    {
+        await mediator.Send(new DeleteReportScheduleCommand(id));
+        return NoContent();
     }
 }
