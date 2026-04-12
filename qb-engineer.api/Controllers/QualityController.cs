@@ -122,4 +122,63 @@ public class QualityController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteEcoAffectedItemCommand(id, itemId));
         return NoContent();
     }
+
+    // ── Gages ──
+
+    [HttpGet("gages")]
+    public async Task<ActionResult<List<GageResponseModel>>> GetGages(
+        [FromQuery] GageStatus? status, [FromQuery] string? search)
+    {
+        var result = await mediator.Send(new GetGagesQuery(status, search));
+        return Ok(result);
+    }
+
+    [HttpGet("gages/{id:int}")]
+    public async Task<ActionResult<GageResponseModel>> GetGageById(int id)
+    {
+        var result = await mediator.Send(new GetGageByIdQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("gages")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<GageResponseModel>> CreateGage(
+        [FromBody] CreateGageRequestModel request)
+    {
+        var result = await mediator.Send(new CreateGageCommand(request));
+        return Created($"/api/v1/quality/gages/{result.Id}", result);
+    }
+
+    [HttpPatch("gages/{id:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<GageResponseModel>> UpdateGage(
+        int id, [FromBody] UpdateGageRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateGageCommand(id, request));
+        return Ok(result);
+    }
+
+    [HttpGet("gages/due")]
+    public async Task<ActionResult<List<GageResponseModel>>> GetGagesDue(
+        [FromQuery] int daysAhead = 30)
+    {
+        var result = await mediator.Send(new GetGagesDueQuery(daysAhead));
+        return Ok(result);
+    }
+
+    [HttpGet("gages/{id:int}/calibrations")]
+    public async Task<ActionResult<List<CalibrationRecordResponseModel>>> GetGageCalibrations(int id)
+    {
+        var result = await mediator.Send(new GetGageCalibrationsQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("gages/{id:int}/calibrations")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<CalibrationRecordResponseModel>> CreateCalibration(
+        int id, [FromBody] CreateCalibrationRecordRequestModel request)
+    {
+        var result = await mediator.Send(new CreateCalibrationRecordCommand(id, request));
+        return Created($"/api/v1/quality/gages/{id}/calibrations/{result.Id}", result);
+    }
 }

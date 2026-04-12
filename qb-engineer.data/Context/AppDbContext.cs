@@ -254,6 +254,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<SerialNumber> SerialNumbers => Set<SerialNumber>();
     public DbSet<SerialHistory> SerialHistories => Set<SerialHistory>();
 
+    // Gage / Calibration
+    public DbSet<Gage> Gages => Set<Gage>();
+    public DbSet<CalibrationRecord> CalibrationRecords => Set<CalibrationRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
