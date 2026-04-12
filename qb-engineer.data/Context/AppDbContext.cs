@@ -177,6 +177,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<DemandForecast> DemandForecasts => Set<DemandForecast>();
     public DbSet<ForecastOverride> ForecastOverrides => Set<ForecastOverride>();
 
+    // Scheduling
+    public DbSet<WorkCenter> WorkCenters => Set<WorkCenter>();
+    public DbSet<WorkCenterCalendar> WorkCenterCalendars => Set<WorkCenterCalendar>();
+    public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<WorkCenterShift> WorkCenterShifts => Set<WorkCenterShift>();
+    public DbSet<ScheduledOperation> ScheduledOperations => Set<ScheduledOperation>();
+    public DbSet<ScheduleRun> ScheduleRuns => Set<ScheduleRun>();
+
     // Training
     public DbSet<TrainingModule> TrainingModules => Set<TrainingModule>();
     public DbSet<TrainingPath> TrainingPaths => Set<TrainingPath>();
