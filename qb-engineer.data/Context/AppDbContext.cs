@@ -54,6 +54,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
     public DbSet<ReceivingRecord> ReceivingRecords => Set<ReceivingRecord>();
+
+    // RFQ (Request for Quote)
+    public DbSet<RequestForQuote> RequestForQuotes => Set<RequestForQuote>();
+    public DbSet<RfqVendorResponse> RfqVendorResponses => Set<RfqVendorResponse>();
     public DbSet<JobPart> JobParts => Set<JobPart>();
     public DbSet<JobNote> JobNotes => Set<JobNote>();
     public DbSet<EntityNote> EntityNotes => Set<EntityNote>();
