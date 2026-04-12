@@ -279,6 +279,7 @@ try
     builder.Services.AddScoped<ISchedulingService, SchedulingService>();
     builder.Services.AddScoped<IJobCostService, JobCostService>();
     builder.Services.AddScoped<ISpcService, SpcService>();
+    builder.Services.AddScoped<INcrCapaService, NcrCapaService>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)

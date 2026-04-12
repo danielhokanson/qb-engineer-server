@@ -187,6 +187,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<SpcControlLimit> SpcControlLimits => Set<SpcControlLimit>();
     public DbSet<SpcOocEvent> SpcOocEvents => Set<SpcOocEvent>();
 
+    // CAPA / NCR
+    public DbSet<NonConformance> NonConformances => Set<NonConformance>();
+    public DbSet<CorrectiveAction> CorrectiveActions => Set<CorrectiveAction>();
+    public DbSet<CapaTask> CapaTasks => Set<CapaTask>();
+
     // Scheduling
     public DbSet<WorkCenter> WorkCenters => Set<WorkCenter>();
     public DbSet<WorkCenterCalendar> WorkCenterCalendars => Set<WorkCenterCalendar>();
