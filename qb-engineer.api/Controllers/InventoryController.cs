@@ -248,4 +248,21 @@ public class InventoryController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new ConvertQuantityQuery(fromUomId, toUomId, quantity, partId));
         return Ok(result);
     }
+
+    // ── ATP (Available-to-Promise) ──────────────────────────────────────
+
+    [HttpGet("atp/{partId:int}")]
+    public async Task<ActionResult<AtpResult>> GetAtp(int partId, [FromQuery] decimal quantity = 1)
+    {
+        var result = await mediator.Send(new GetAtpForPartQuery(partId, quantity));
+        return Ok(result);
+    }
+
+    [HttpGet("atp/{partId:int}/timeline")]
+    public async Task<ActionResult<List<AtpBucket>>> GetAtpTimeline(
+        int partId, [FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
+    {
+        var result = await mediator.Send(new GetAtpTimelineQuery(partId, from, to));
+        return Ok(result);
+    }
 }

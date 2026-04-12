@@ -276,6 +276,7 @@ try
     builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
     builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();
     builder.Services.AddScoped<IMrpService, MrpService>();
+    builder.Services.AddScoped<IAtpService, AtpService>();
     builder.Services.AddScoped<IForecastService, ForecastService>();
     builder.Services.AddScoped<ISchedulingService, SchedulingService>();
     builder.Services.AddScoped<IJobCostService, JobCostService>();
