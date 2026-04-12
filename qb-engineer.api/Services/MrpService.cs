@@ -90,6 +90,22 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
                 })
                 .ToListAsync(cancellationToken);
 
+            // Step 2b: Gather MPS demand (active master schedule lines)
+            var mpsDemand = await db.MasterScheduleLines
+                .AsNoTracking()
+                .Include(l => l.MasterSchedule)
+                .Where(l => l.MasterSchedule!.Status == MasterScheduleStatus.Active
+                    && l.DueDate <= horizonEnd
+                    && partIds.Contains(l.PartId))
+                .Select(l => new
+                {
+                    l.Id,
+                    l.PartId,
+                    l.Quantity,
+                    RequiredDate = l.DueDate,
+                })
+                .ToListAsync(cancellationToken);
+
             // Step 3: Gather existing supply
             // 3a: On-hand inventory (BinContents aggregated by part)
             var onHandByPart = await db.BinContents
@@ -186,6 +202,22 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
                     SourceEntityId = so.Id,
                     Quantity = so.Quantity,
                     RequiredDate = so.RequiredDate,
+                    IsDependent = false,
+                    BomLevel = 0,
+                });
+            }
+
+            // Add MPS demand records
+            foreach (var mps in mpsDemand)
+            {
+                demandRecords.Add(new MrpDemand
+                {
+                    MrpRunId = mrpRun.Id,
+                    PartId = mps.PartId,
+                    Source = MrpDemandSource.MasterSchedule,
+                    SourceEntityId = mps.Id,
+                    Quantity = mps.Quantity,
+                    RequiredDate = mps.RequiredDate,
                     IsDependent = false,
                     BomLevel = 0,
                 });

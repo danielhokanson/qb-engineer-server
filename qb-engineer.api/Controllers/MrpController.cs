@@ -115,6 +115,66 @@ public class MrpController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    // === Master Schedules ===
+
+    [HttpGet("master-schedules")]
+    public async Task<ActionResult<List<MasterScheduleResponseModel>>> GetMasterSchedules(
+        [FromQuery] MasterScheduleStatus? status)
+    {
+        var result = await mediator.Send(new GetMasterSchedulesQuery(status));
+        return Ok(result);
+    }
+
+    [HttpGet("master-schedules/{id:int}")]
+    public async Task<ActionResult<MasterScheduleDetailResponseModel>> GetMasterSchedule(int id)
+    {
+        var result = await mediator.Send(new GetMasterScheduleDetailQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("master-schedules")]
+    public async Task<ActionResult<MasterScheduleDetailResponseModel>> CreateMasterSchedule([FromBody] CreateMasterScheduleRequest request)
+    {
+        var userId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : 0;
+        var result = await mediator.Send(new CreateMasterScheduleCommand(
+            request.Name,
+            request.Description,
+            request.PeriodStart,
+            request.PeriodEnd,
+            userId,
+            request.Lines
+        ));
+        return CreatedAtAction(nameof(GetMasterSchedule), new { id = result.Id }, result);
+    }
+
+    [HttpPut("master-schedules/{id:int}")]
+    public async Task<ActionResult<MasterScheduleDetailResponseModel>> UpdateMasterSchedule(int id, [FromBody] UpdateMasterScheduleRequest request)
+    {
+        var result = await mediator.Send(new UpdateMasterScheduleCommand(
+            id,
+            request.Name,
+            request.Description,
+            request.PeriodStart,
+            request.PeriodEnd,
+            request.Lines
+        ));
+        return Ok(result);
+    }
+
+    [HttpPost("master-schedules/{id:int}/activate")]
+    public async Task<ActionResult<MasterScheduleResponseModel>> ActivateMasterSchedule(int id)
+    {
+        var result = await mediator.Send(new ActivateMasterScheduleCommand(id));
+        return Ok(result);
+    }
+
+    [HttpGet("master-schedules/{id:int}/vs-actual")]
+    public async Task<ActionResult<List<MpsVsActualResponseModel>>> GetMpsVsActual(int id)
+    {
+        var result = await mediator.Send(new GetMpsVsActualQuery(id));
+        return Ok(result);
+    }
+
     // === Part Plan & Pegging ===
 
     [HttpGet("runs/{runId:int}/parts/{partId:int}/plan")]
@@ -142,3 +202,19 @@ public record ExecuteMrpRunRequest(
 public record UpdatePlannedOrderRequest(bool? IsFirmed, string? Notes);
 public record BulkReleaseRequest(List<int> Ids);
 public record ResolveExceptionRequest(string? ResolutionNotes);
+
+public record CreateMasterScheduleRequest(
+    string Name,
+    string? Description,
+    DateTimeOffset PeriodStart,
+    DateTimeOffset PeriodEnd,
+    List<CreateMasterScheduleLineModel> Lines
+);
+
+public record UpdateMasterScheduleRequest(
+    string Name,
+    string? Description,
+    DateTimeOffset PeriodStart,
+    DateTimeOffset PeriodEnd,
+    List<UpdateMasterScheduleLineModel> Lines
+);
