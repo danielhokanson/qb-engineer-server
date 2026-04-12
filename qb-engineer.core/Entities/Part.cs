@@ -28,6 +28,15 @@ public class Part : BaseAuditableEntity
     public int? LeadTimeDays { get; set; }
     public int? SafetyStockDays { get; set; }
 
+    // MRP planning
+    public LotSizingRule? LotSizingRule { get; set; }
+    public decimal? FixedOrderQuantity { get; set; }
+    public decimal? MinimumOrderQuantity { get; set; }
+    public decimal? OrderMultiple { get; set; }
+    public int? PlanningFenceDays { get; set; }
+    public int? DemandFenceDays { get; set; }
+    public bool IsMrpPlanned { get; set; }
+
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 

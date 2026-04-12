@@ -166,6 +166,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Replenishment
     public DbSet<ReorderSuggestion> ReorderSuggestions => Set<ReorderSuggestion>();
 
+    // MRP
+    public DbSet<MrpRun> MrpRuns => Set<MrpRun>();
+    public DbSet<MrpDemand> MrpDemands => Set<MrpDemand>();
+    public DbSet<MrpSupply> MrpSupplies => Set<MrpSupply>();
+    public DbSet<MrpPlannedOrder> MrpPlannedOrders => Set<MrpPlannedOrder>();
+    public DbSet<MrpException> MrpExceptions => Set<MrpException>();
+
     // Training
     public DbSet<TrainingModule> TrainingModules => Set<TrainingModule>();
     public DbSet<TrainingPath> TrainingPaths => Set<TrainingPath>();

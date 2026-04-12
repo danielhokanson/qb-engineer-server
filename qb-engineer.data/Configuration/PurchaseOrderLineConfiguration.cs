@@ -26,5 +26,11 @@ public class PurchaseOrderLineConfiguration : IEntityTypeConfiguration<PurchaseO
             .WithOne(r => r.PurchaseOrderLine)
             .HasForeignKey(r => r.PurchaseOrderLineId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => e.MrpPlannedOrderId);
+        builder.HasOne(e => e.MrpPlannedOrder)
+            .WithMany()
+            .HasForeignKey(e => e.MrpPlannedOrderId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -20,6 +20,7 @@ public class Job : BaseAuditableEntity
     public int? PartId { get; set; }
     public int? ParentJobId { get; set; }
     public int? SalesOrderLineId { get; set; }
+    public int? MrpPlannedOrderId { get; set; }
 
     // Accounting integration
     public string? ExternalId { get; set; }
@@ -59,5 +60,6 @@ public class Job : BaseAuditableEntity
     public SalesOrderLine? SalesOrderLine { get; set; }
     public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
     public ICollection<JobPart> JobParts { get; set; } = [];
+    public MrpPlannedOrder? MrpPlannedOrder { get; set; }
     public ICollection<JobNote> Notes { get; set; } = [];
 }

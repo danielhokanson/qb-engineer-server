@@ -56,5 +56,11 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
             .WithMany()
             .HasForeignKey(e => e.CoverPhotoFileId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(e => e.MrpPlannedOrderId);
+        builder.HasOne(e => e.MrpPlannedOrder)
+            .WithMany()
+            .HasForeignKey(e => e.MrpPlannedOrderId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
