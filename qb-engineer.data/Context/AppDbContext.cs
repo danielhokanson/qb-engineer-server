@@ -292,6 +292,21 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<TranslatedLabel> TranslatedLabels => Set<TranslatedLabel>();
     public DbSet<SupportedLanguage> SupportedLanguages => Set<SupportedLanguage>();
 
+    // IoT / Machine Integration
+    public DbSet<MachineConnection> MachineConnections => Set<MachineConnection>();
+    public DbSet<MachineTag> MachineTags => Set<MachineTag>();
+    public DbSet<MachineDataPoint> MachineDataPoints => Set<MachineDataPoint>();
+
+    // E-Commerce
+    public DbSet<ECommerceIntegration> ECommerceIntegrations => Set<ECommerceIntegration>();
+    public DbSet<ECommerceOrderSync> ECommerceOrderSyncs => Set<ECommerceOrderSync>();
+
+    // Andon Board
+    public DbSet<AndonAlert> AndonAlerts => Set<AndonAlert>();
+
+    // BI API Keys
+    public DbSet<BiApiKey> BiApiKeys => Set<BiApiKey>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

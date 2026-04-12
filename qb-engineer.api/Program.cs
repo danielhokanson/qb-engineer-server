@@ -352,6 +352,9 @@ try
         builder.Services.AddSingleton<ICurrencyService, MockCurrencyService>();
         builder.Services.AddSingleton<ILocalizationService, MockLocalizationService>();
         builder.Services.AddScoped<IPlantContextService, MockPlantContextService>();
+        builder.Services.AddSingleton<IMachineDataService, MockMachineDataService>();
+        builder.Services.AddSingleton<IECommerceService, MockECommerceService>();
+        builder.Services.AddSingleton<IBiService, MockBiService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -412,6 +415,10 @@ try
         builder.Services.AddSingleton<ICurrencyService, MockCurrencyService>();
         builder.Services.AddSingleton<ILocalizationService, MockLocalizationService>();
         builder.Services.AddScoped<IPlantContextService, MockPlantContextService>();
+        // IoT, E-Commerce, BI — mock for now until real integrations built
+        builder.Services.AddSingleton<IMachineDataService, MockMachineDataService>();
+        builder.Services.AddSingleton<IECommerceService, MockECommerceService>();
+        builder.Services.AddSingleton<IBiService, MockBiService>();
     }
 
     // MFA service (always real — no mock needed)
