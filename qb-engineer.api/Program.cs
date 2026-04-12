@@ -997,6 +997,10 @@ try
         "event-reminders",
         job => job.SendRemindersAsync(CancellationToken.None),
         "*/15 * * * *"); // Every 15 minutes
+    RecurringJob.AddOrUpdate<MrpRunJob>(
+        "mrp-nightly-run",
+        job => job.ExecuteNightlyRunAsync(CancellationToken.None),
+        Cron.Daily(3)); // 3 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");
