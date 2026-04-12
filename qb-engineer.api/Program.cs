@@ -348,6 +348,10 @@ try
         builder.Services.AddSingleton<IPdfFormFillService, MockPdfFormFillService>();
         builder.Services.AddSingleton<IEdiService, MockEdiService>();
         builder.Services.AddSingleton<IEdiTransportService, MockEdiTransportService>();
+        builder.Services.AddSingleton<ICpqService, MockCpqService>();
+        builder.Services.AddSingleton<ICurrencyService, MockCurrencyService>();
+        builder.Services.AddSingleton<ILocalizationService, MockLocalizationService>();
+        builder.Services.AddScoped<IPlantContextService, MockPlantContextService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -403,6 +407,11 @@ try
         // EDI: mock for now — real providers (AS2/SFTP) can be added per trading partner
         builder.Services.AddSingleton<IEdiService, MockEdiService>();
         builder.Services.AddSingleton<IEdiTransportService, MockEdiTransportService>();
+        // CPQ, Currency, Localization, Plant — mock for now until real engines built
+        builder.Services.AddSingleton<ICpqService, MockCpqService>();
+        builder.Services.AddSingleton<ICurrencyService, MockCurrencyService>();
+        builder.Services.AddSingleton<ILocalizationService, MockLocalizationService>();
+        builder.Services.AddScoped<IPlantContextService, MockPlantContextService>();
     }
 
     // MFA service (always real — no mock needed)

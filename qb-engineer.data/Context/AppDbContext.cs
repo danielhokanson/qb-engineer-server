@@ -274,6 +274,24 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Gage> Gages => Set<Gage>();
     public DbSet<CalibrationRecord> CalibrationRecords => Set<CalibrationRecord>();
 
+    // CPQ (Configure, Price, Quote)
+    public DbSet<ProductConfigurator> ProductConfigurators => Set<ProductConfigurator>();
+    public DbSet<ConfiguratorOption> ConfiguratorOptions => Set<ConfiguratorOption>();
+    public DbSet<ProductConfiguration> ProductConfigurations => Set<ProductConfiguration>();
+
+    // Multi-Plant
+    public DbSet<Plant> Plants => Set<Plant>();
+    public DbSet<InterPlantTransfer> InterPlantTransfers => Set<InterPlantTransfer>();
+    public DbSet<InterPlantTransferLine> InterPlantTransferLines => Set<InterPlantTransferLine>();
+
+    // Multi-Currency
+    public DbSet<Currency> Currencies => Set<Currency>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
+
+    // Multi-Language
+    public DbSet<TranslatedLabel> TranslatedLabels => Set<TranslatedLabel>();
+    public DbSet<SupportedLanguage> SupportedLanguages => Set<SupportedLanguage>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
