@@ -231,6 +231,16 @@ public class ReportsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // ─── Operation Time Reports ───
+
+    [HttpGet("time-by-operation")]
+    public async Task<ActionResult<List<TimeByOperationReportRow>>> GetTimeByOperation(
+        [FromQuery] int? partId, [FromQuery] DateOnly? dateFrom, [FromQuery] DateOnly? dateTo, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetTimeByOperationReportQuery(partId, dateFrom, dateTo), ct);
+        return Ok(result);
+    }
+
     // ─── Job Costing Reports ───
 
     [HttpGet("job-profitability")]

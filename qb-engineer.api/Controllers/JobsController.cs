@@ -8,6 +8,7 @@ using QBEngineer.Api.Features.Jobs.Links;
 using QBEngineer.Api.Features.Jobs.Parts;
 using QBEngineer.Api.Features.Jobs.ProductionRuns;
 using QBEngineer.Api.Features.Jobs.Subtasks;
+using QBEngineer.Api.Features.TimeTracking;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -350,6 +351,23 @@ public class JobsController(IMediator mediator) : ControllerBase
     {
         await mediator.Send(new RecalculateJobCostsCommand(id), ct);
         return NoContent();
+    }
+
+    // ─── Operation Time Tracking ───
+
+    [HttpGet("{id:int}/operation-time-summary")]
+    public async Task<ActionResult<List<OperationTimeAnalysisModel>>> GetOperationTimeSummary(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetJobOperationTimeSummaryQuery(id), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:int}/operations/{operationId:int}/time-entries")]
+    public async Task<ActionResult<List<TimeEntryResponseModel>>> GetOperationTimeEntries(
+        int id, int operationId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetOperationTimeEntriesQuery(id, operationId), ct);
+        return Ok(result);
     }
 }
 

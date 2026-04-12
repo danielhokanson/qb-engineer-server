@@ -36,6 +36,8 @@ public class CreateTimeEntryHandler(ITimeTrackingRepository repo, IHttpContextAc
             Category = data.Category?.Trim(),
             Notes = data.Notes?.Trim(),
             IsManual = true,
+            OperationId = data.OperationId,
+            EntryType = data.EntryType,
         };
 
         await repo.AddTimeEntryAsync(entry, cancellationToken);

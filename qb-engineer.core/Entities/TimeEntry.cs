@@ -1,3 +1,5 @@
+using QBEngineer.Core.Enums;
+
 namespace QBEngineer.Core.Entities;
 
 public class TimeEntry : BaseAuditableEntity
@@ -14,8 +16,11 @@ public class TimeEntry : BaseAuditableEntity
     public bool IsLocked { get; set; }
     public string? AccountingTimeActivityId { get; set; }
 
-    // Costing
+    // Operation-level tracking
     public int? OperationId { get; set; }
+    public TimeEntryType EntryType { get; set; } = TimeEntryType.Run;
+
+    // Costing
     public decimal LaborCost { get; set; }
     public decimal BurdenCost { get; set; }
 

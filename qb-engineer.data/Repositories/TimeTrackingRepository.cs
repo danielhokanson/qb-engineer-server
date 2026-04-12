@@ -122,10 +122,26 @@ public class TimeTrackingRepository(AppDbContext db) : ITimeTrackingRepository
     {
         var userName = users.TryGetValue(t.UserId, out var user)
             ? $"{user.FirstName} {user.LastName}" : "Unknown";
-        return new TimeEntryResponseModel(
-            t.Id, t.JobId, t.Job?.JobNumber,
-            t.UserId, userName, t.Date, t.DurationMinutes,
-            t.Category, t.Notes, t.TimerStart, t.TimerStop,
-            t.IsManual, t.IsLocked, t.CreatedAt);
+        return new TimeEntryResponseModel
+        {
+            Id = t.Id,
+            JobId = t.JobId,
+            JobNumber = t.Job?.JobNumber,
+            UserId = t.UserId,
+            UserName = userName,
+            Date = t.Date,
+            DurationMinutes = t.DurationMinutes,
+            Category = t.Category,
+            Notes = t.Notes,
+            TimerStart = t.TimerStart,
+            TimerStop = t.TimerStop,
+            IsManual = t.IsManual,
+            IsLocked = t.IsLocked,
+            CreatedAt = t.CreatedAt,
+            OperationId = t.OperationId,
+            EntryType = t.EntryType.ToString(),
+            LaborCost = t.LaborCost,
+            BurdenCost = t.BurdenCost,
+        };
     }
 }

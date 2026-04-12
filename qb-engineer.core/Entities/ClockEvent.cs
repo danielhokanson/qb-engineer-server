@@ -13,6 +13,7 @@ public class ClockEvent : BaseEntity
     /// </summary>
     public string EventTypeCode { get; set; } = string.Empty;
 
+    public int? OperationId { get; set; }
     public string? Reason { get; set; }
     public string? ScanMethod { get; set; }
     public DateTimeOffset Timestamp { get; set; }

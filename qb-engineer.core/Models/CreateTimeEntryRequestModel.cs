@@ -1,3 +1,5 @@
+using QBEngineer.Core.Enums;
+
 namespace QBEngineer.Core.Models;
 
 public record CreateTimeEntryRequestModel(
@@ -5,4 +7,6 @@ public record CreateTimeEntryRequestModel(
     DateOnly Date,
     int DurationMinutes,
     string? Category,
-    string? Notes);
+    string? Notes,
+    int? OperationId = null,
+    TimeEntryType EntryType = TimeEntryType.Run);

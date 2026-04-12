@@ -15,5 +15,11 @@ public class ClockEventConfiguration : IEntityTypeConfiguration<ClockEvent>
 
         builder.HasIndex(c => new { c.UserId, c.Timestamp });
         builder.HasIndex(c => c.EventTypeCode);
+        builder.HasIndex(c => c.OperationId);
+
+        builder.HasOne<Operation>()
+            .WithMany()
+            .HasForeignKey(c => c.OperationId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

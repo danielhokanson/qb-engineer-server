@@ -36,6 +36,8 @@ public class StartTimerHandler(
             Notes = request.Data.Notes?.Trim(),
             TimerStart = now,
             IsManual = false,
+            OperationId = request.Data.OperationId,
+            EntryType = request.Data.EntryType,
         };
 
         await repo.AddTimeEntryAsync(entry, cancellationToken);

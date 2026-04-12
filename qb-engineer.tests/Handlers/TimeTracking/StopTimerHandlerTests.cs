@@ -79,10 +79,13 @@ public class StopTimerHandlerTests
         _repo.Setup(r => r.GetActiveTimerAsync(TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(activeEntry);
 
-        var expectedResult = new TimeEntryResponseModel(
-            10, 5, "JOB-0001", TestUserId, "John Doe",
-            DateOnly.FromDateTime(timerStart), 45, null, null,
-            timerStart, DateTime.UtcNow, false, false, DateTime.UtcNow);
+        var expectedResult = new TimeEntryResponseModel
+        {
+            Id = 10, JobId = 5, JobNumber = "JOB-0001", UserId = TestUserId, UserName = "John Doe",
+            Date = DateOnly.FromDateTime(timerStart), DurationMinutes = 45, Category = null,
+            Notes = null, TimerStart = timerStart, TimerStop = DateTime.UtcNow,
+            IsManual = false, IsLocked = false, CreatedAt = DateTime.UtcNow,
+        };
 
         _repo.Setup(r => r.GetTimeEntryByIdAsync(10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -138,10 +141,13 @@ public class StopTimerHandlerTests
         _repo.Setup(r => r.GetActiveTimerAsync(TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(activeEntry);
 
-        var expectedResult = new TimeEntryResponseModel(
-            10, null, null, TestUserId, "John Doe",
-            DateOnly.FromDateTime(timerStart), 10, null, "Updated notes",
-            timerStart, DateTime.UtcNow, false, false, DateTime.UtcNow);
+        var expectedResult = new TimeEntryResponseModel
+        {
+            Id = 10, JobId = null, JobNumber = null, UserId = TestUserId, UserName = "John Doe",
+            Date = DateOnly.FromDateTime(timerStart), DurationMinutes = 10, Category = null,
+            Notes = "Updated notes", TimerStart = timerStart, TimerStop = DateTime.UtcNow,
+            IsManual = false, IsLocked = false, CreatedAt = DateTime.UtcNow,
+        };
 
         _repo.Setup(r => r.GetTimeEntryByIdAsync(10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -172,10 +178,13 @@ public class StopTimerHandlerTests
         _repo.Setup(r => r.GetActiveTimerAsync(TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(activeEntry);
 
-        var expectedResult = new TimeEntryResponseModel(
-            10, null, null, TestUserId, "John Doe",
-            DateOnly.FromDateTime(timerStart), 10, null, "Original notes",
-            timerStart, DateTime.UtcNow, false, false, DateTime.UtcNow);
+        var expectedResult = new TimeEntryResponseModel
+        {
+            Id = 10, JobId = null, JobNumber = null, UserId = TestUserId, UserName = "John Doe",
+            Date = DateOnly.FromDateTime(timerStart), DurationMinutes = 10, Category = null,
+            Notes = "Original notes", TimerStart = timerStart, TimerStop = DateTime.UtcNow,
+            IsManual = false, IsLocked = false, CreatedAt = DateTime.UtcNow,
+        };
 
         _repo.Setup(r => r.GetTimeEntryByIdAsync(10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -205,10 +214,13 @@ public class StopTimerHandlerTests
         _repo.Setup(r => r.GetActiveTimerAsync(TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(activeEntry);
 
-        var expectedResult = new TimeEntryResponseModel(
-            10, null, null, TestUserId, "John Doe",
-            DateOnly.FromDateTime(timerStart), 30, null, null,
-            timerStart, DateTime.UtcNow, false, false, DateTime.UtcNow);
+        var expectedResult = new TimeEntryResponseModel
+        {
+            Id = 10, JobId = null, JobNumber = null, UserId = TestUserId, UserName = "John Doe",
+            Date = DateOnly.FromDateTime(timerStart), DurationMinutes = 30, Category = null,
+            Notes = null, TimerStart = timerStart, TimerStop = DateTime.UtcNow,
+            IsManual = false, IsLocked = false, CreatedAt = DateTime.UtcNow,
+        };
 
         _repo.Setup(r => r.GetTimeEntryByIdAsync(10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
@@ -246,10 +258,13 @@ public class StopTimerHandlerTests
         _repo.Setup(r => r.GetActiveTimerAsync(TestUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(activeEntry);
 
-        var expectedResult = new TimeEntryResponseModel(
-            10, null, null, TestUserId, "John Doe",
-            DateOnly.FromDateTime(timerStart), 0, null, null,
-            timerStart, DateTime.UtcNow, false, false, DateTime.UtcNow);
+        var expectedResult = new TimeEntryResponseModel
+        {
+            Id = 10, JobId = null, JobNumber = null, UserId = TestUserId, UserName = "John Doe",
+            Date = DateOnly.FromDateTime(timerStart), DurationMinutes = 0, Category = null,
+            Notes = null, TimerStart = timerStart, TimerStop = DateTime.UtcNow,
+            IsManual = false, IsLocked = false, CreatedAt = DateTime.UtcNow,
+        };
 
         _repo.Setup(r => r.GetTimeEntryByIdAsync(10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
