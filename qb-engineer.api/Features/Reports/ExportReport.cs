@@ -1,5 +1,11 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+
+using ClosedXML.Excel;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -21,7 +27,6 @@ public class ExportReportHandler(
             .FirstOrDefaultAsync(r => r.Id == request.ReportId, cancellationToken)
             ?? throw new KeyNotFoundException($"Saved report {request.ReportId} not found.");
 
-        // Run the report to get the data
         var runResult = await mediator.Send(new RunReportCommand(
             report.EntitySource,
             System.Text.Json.JsonSerializer.Deserialize<string[]>(report.ColumnsJson) ?? [],
@@ -63,20 +68,75 @@ public class ExportReportHandler(
 
     private static ExportReportResult ExportToXlsx(RunReportResponseModel result, string reportName)
     {
-        // TODO: Implement using ClosedXML once package is added
-        // using var workbook = new ClosedXML.Excel.XLWorkbook();
-        // var worksheet = workbook.Worksheets.Add(reportName);
-        // ... populate worksheet rows ...
-        // using var stream = new System.IO.MemoryStream();
-        // workbook.SaveAs(stream);
-        // return new ExportReportResult(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{reportName}.xlsx");
+        using var workbook = new XLWorkbook();
+        var sheetName = reportName.Length > 31 ? reportName[..31] : reportName;
+        var worksheet = workbook.Worksheets.Add(sheetName);
 
-        throw new NotImplementedException("XLSX export requires ClosedXML NuGet package. Add <PackageReference Include=\"ClosedXML\" Version=\"0.104.1\" /> to qb-engineer.api.csproj.");
+        if (result.Rows.Count > 0)
+        {
+            var headers = result.Columns;
+
+            for (var c = 0; c < headers.Length; c++)
+            {
+                var cell = worksheet.Cell(1, c + 1);
+                cell.Value = headers[c];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.BackgroundColor = XLColor.FromArgb(0, 120, 120);
+                cell.Style.Font.FontColor = XLColor.White;
+            }
+
+            for (var r = 0; r < result.Rows.Count; r++)
+            {
+                var row = result.Rows[r];
+                for (var c = 0; c < headers.Length; c++)
+                {
+                    var value = row.TryGetValue(headers[c], out var v) ? v : null;
+                    var cell = worksheet.Cell(r + 2, c + 1);
+
+                    if (value is null)
+                        cell.Value = "";
+                    else if (value is int intVal)
+                        cell.Value = intVal;
+                    else if (value is long longVal)
+                        cell.Value = longVal;
+                    else if (value is decimal decVal)
+                        cell.Value = (double)decVal;
+                    else if (value is double dblVal)
+                        cell.Value = dblVal;
+                    else if (value is bool boolVal)
+                        cell.Value = boolVal;
+                    else if (value is DateTime dtVal)
+                    {
+                        cell.Value = dtVal;
+                        cell.Style.DateFormat.Format = "yyyy-MM-dd";
+                    }
+                    else if (value is DateTimeOffset dtoVal)
+                    {
+                        cell.Value = dtoVal.DateTime;
+                        cell.Style.DateFormat.Format = "yyyy-MM-dd";
+                    }
+                    else
+                        cell.Value = value.ToString();
+                }
+            }
+
+            worksheet.Columns().AdjustToContents(1, 100);
+        }
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return new ExportReportResult(
+            stream.ToArray(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"{reportName}.xlsx");
     }
 
     private static ExportReportResult ExportToPdf(RunReportResponseModel result, string reportName)
     {
-        // TODO: Implement using QuestPDF
-        throw new NotImplementedException("PDF export not yet implemented for report builder. Use QuestPDF to generate a table-based PDF.");
+        var document = new ReportPdfDocument(result, reportName);
+        return new ExportReportResult(
+            document.GeneratePdf(),
+            "application/pdf",
+            $"{reportName}.pdf");
     }
 }

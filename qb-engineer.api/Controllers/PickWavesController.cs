@@ -70,4 +70,11 @@ public class PickWavesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new PrintPickListQuery(id));
         return Ok(result);
     }
+
+    [HttpGet("{id:int}/pdf")]
+    public async Task<IActionResult> GetPickListPdf(int id)
+    {
+        var pdf = await mediator.Send(new GeneratePickListPdfQuery(id));
+        return File(pdf, "application/pdf", $"pick-list-{id}.pdf");
+    }
 }

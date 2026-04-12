@@ -61,6 +61,13 @@ public class ShipmentsController(IMediator mediator) : ControllerBase
         return File(pdf, "application/pdf", $"packing-slip-{id}.pdf");
     }
 
+    [HttpGet("{id:int}/bill-of-lading")]
+    public async Task<IActionResult> GetBillOfLading(int id)
+    {
+        var pdf = await mediator.Send(new GenerateBillOfLadingPdfQuery(id));
+        return File(pdf, "application/pdf", $"bill-of-lading-{id}.pdf");
+    }
+
     [HttpPost("{id:int}/deliver")]
     public async Task<IActionResult> DeliverShipment(int id)
     {
