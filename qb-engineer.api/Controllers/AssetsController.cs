@@ -130,6 +130,13 @@ public class AssetsController(IMediator mediator) : ControllerBase
         return Created($"/api/v1/assets/{id}/downtime/{result.Id}", result);
     }
 
+    [HttpPatch("downtime/{id:int}/end")]
+    public async Task<ActionResult<DowntimeLogResponseModel>> EndDowntimeLog(int id)
+    {
+        var result = await mediator.Send(new EndDowntimeLogCommand(id));
+        return Ok(result);
+    }
+
     // ─── Maintenance Job Linking ───
 
     [HttpPost("maintenance/{scheduleId:int}/create-job")]

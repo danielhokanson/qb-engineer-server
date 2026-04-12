@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using QBEngineer.Api.Features.Jobs;
+using QBEngineer.Api.Features.Reports;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -30,6 +31,21 @@ public class SubcontractController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<List<SubcontractOrderResponseModel>>> GetSubcontractOrders(int jobId)
     {
         var result = await mediator.Send(new GetSubcontractOrdersQuery(jobId));
+        return Ok(result);
+    }
+
+    [HttpGet("shop-floor/pending-subcontracts")]
+    public async Task<ActionResult<List<PendingSubcontractResponseModel>>> GetPendingSubcontracts()
+    {
+        var result = await mediator.Send(new GetPendingSubcontractsQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("reports/subcontract-spending")]
+    public async Task<ActionResult<List<SubcontractSpendingRow>>> GetSubcontractSpending(
+        [FromQuery] DateOnly? dateFrom, [FromQuery] DateOnly? dateTo)
+    {
+        var result = await mediator.Send(new GetSubcontractSpendingQuery(dateFrom, dateTo));
         return Ok(result);
     }
 }

@@ -341,6 +341,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<MlModel> MlModels => Set<MlModel>();
     public DbSet<PredictionFeedback> PredictionFeedbacks => Set<PredictionFeedback>();
 
+    // Receiving Inspection
+    public DbSet<ReceivingInspection> ReceivingInspections => Set<ReceivingInspection>();
+
+    // Credit Hold Audit Trail
+    public DbSet<CreditHold> CreditHolds => Set<CreditHold>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

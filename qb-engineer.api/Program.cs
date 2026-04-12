@@ -284,6 +284,7 @@ try
     builder.Services.AddScoped<INcrCapaService, NcrCapaService>();
     builder.Services.AddScoped<IUomService, UomService>();
     builder.Services.AddScoped<IApprovalService, ApprovalService>();
+    builder.Services.AddScoped<ICreditManagementService, CreditManagementService>();
     builder.Services.AddScoped<IVendorScorecardService, VendorScorecardService>();
     builder.Services.AddScoped<IRfqService, RfqService>();
     builder.Services.AddScoped<IOvertimeService, OvertimeService>();
