@@ -282,6 +282,7 @@ try
     builder.Services.AddScoped<ISpcService, SpcService>();
     builder.Services.AddScoped<INcrCapaService, NcrCapaService>();
     builder.Services.AddScoped<IUomService, UomService>();
+    builder.Services.AddScoped<IApprovalService, ApprovalService>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)
@@ -1023,6 +1024,10 @@ try
         "edi-inbound-poll",
         job => job.PollAllPartnersAsync(CancellationToken.None),
         "*/30 * * * *"); // Every 30 minutes
+    RecurringJob.AddOrUpdate<CheckApprovalEscalationsJob>(
+        "approval-escalations",
+        job => job.ExecuteAsync(CancellationToken.None),
+        Cron.Hourly); // Every hour
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");
