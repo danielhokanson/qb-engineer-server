@@ -21,6 +21,7 @@ using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 using QBEngineer.Data.Repositories;
+using QBEngineer.Data.Services;
 using QBEngineer.Integrations;
 using QBEngineer.Integrations.Builders;
 using System.Threading.RateLimiting;
@@ -397,6 +398,9 @@ try
         builder.Services.AddSingleton<IEdiService, MockEdiService>();
         builder.Services.AddSingleton<IEdiTransportService, MockEdiTransportService>();
     }
+
+    // MFA service (always real — no mock needed)
+    builder.Services.AddScoped<IMfaService, MfaService>();
 
     // Form definition builders — hardcoded definitions for known government forms
     // (registered outside mock/real block since builders work with extraction data, not external APIs)

@@ -340,6 +340,22 @@ public class AdminController(IMediator mediator) : ControllerBase
             request.DoubletimeRatePerHour, request.EffectiveFrom, request.Notes), ct);
         return Created($"/api/v1/admin/labor-rates/{result.UserId}", result);
     }
+
+    // ── MFA Policy ──────────────────────────────────────
+
+    [HttpGet("mfa/compliance")]
+    public async Task<IActionResult> GetMfaCompliance(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetMfaPolicyStatusQuery(), ct);
+        return Ok(result);
+    }
+
+    [HttpPut("mfa/policy")]
+    public async Task<IActionResult> SetMfaPolicy([FromBody] MfaPolicyRequestModel request, CancellationToken ct)
+    {
+        await mediator.Send(new SetMfaPolicyCommand(request.RequiredRoles), ct);
+        return NoContent();
+    }
 }
 
 public record CreateLaborRateRequest(

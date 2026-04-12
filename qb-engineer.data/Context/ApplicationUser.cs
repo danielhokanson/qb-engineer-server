@@ -38,4 +38,10 @@ public class ApplicationUser : IdentityUser<int>
     public string? MicrosoftId { get; set; }
     public string? OidcSubjectId { get; set; }
     public string? OidcProvider { get; set; }
+
+    // MFA
+    public bool MfaEnabled { get; set; }
+    public bool MfaEnforcedByPolicy { get; set; }
+    public DateTimeOffset? MfaEnabledAt { get; set; }
+    public int MfaRecoveryCodesRemaining { get; set; }
 }

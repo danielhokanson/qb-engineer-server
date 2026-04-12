@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using QBEngineer.Api.Features.Auth;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
 
@@ -214,6 +215,85 @@ public class AuthController(IMediator mediator) : ControllerBase
         return Ok(await mediator.Send(new GetLinkedSsoProvidersQuery(userId)));
     }
 
+    // ── MFA Setup (authenticated user) ──────────────────────
+
+    [HttpPost("mfa/setup")]
+    [Authorize]
+    public async Task<ActionResult<MfaSetupResponseModel>> BeginMfaSetup([FromBody] BeginMfaSetupRequest? request)
+    {
+        var result = await mediator.Send(new BeginMfaSetupCommand(User, request?.DeviceName));
+        return Ok(result);
+    }
+
+    [HttpPost("mfa/verify-setup")]
+    [Authorize]
+    public async Task<IActionResult> VerifyMfaSetup([FromBody] MfaVerifySetupRequestModel request)
+    {
+        var result = await mediator.Send(new VerifyMfaSetupCommand(User, request.DeviceId, request.Code));
+        if (!result) return BadRequest(new { message = "Invalid verification code" });
+        return Ok(new { verified = true });
+    }
+
+    [HttpDelete("mfa/disable")]
+    [Authorize]
+    public async Task<IActionResult> DisableMfa()
+    {
+        await mediator.Send(new DisableMfaCommand(User));
+        return NoContent();
+    }
+
+    [HttpDelete("mfa/devices/{deviceId:int}")]
+    [Authorize]
+    public async Task<IActionResult> RemoveMfaDevice(int deviceId)
+    {
+        await mediator.Send(new RemoveMfaDeviceCommand(User, deviceId));
+        return NoContent();
+    }
+
+    [HttpGet("mfa/status")]
+    [Authorize]
+    public async Task<ActionResult<MfaStatusResponseModel>> GetMfaStatus()
+    {
+        var result = await mediator.Send(new GetMfaStatusQuery(User));
+        return Ok(result);
+    }
+
+    // ── MFA Login Flow (partially authenticated) ──────────
+
+    [HttpPost("mfa/challenge")]
+    [AllowAnonymous]
+    public async Task<ActionResult<MfaChallengeResponseModel>> CreateMfaChallenge([FromBody] MfaChallengeRequest request)
+    {
+        var result = await mediator.Send(new CreateMfaChallengeCommand(request.UserId));
+        return Ok(result);
+    }
+
+    [HttpPost("mfa/validate")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ValidateMfaChallenge([FromBody] MfaValidateRequestModel request)
+    {
+        var result = await mediator.Send(new ValidateMfaChallengeCommand(request.ChallengeToken, request.Code, request.RememberDevice));
+        if (result is null) return Unauthorized(new { message = "Invalid MFA code" });
+        return Ok(result);
+    }
+
+    [HttpPost("mfa/recovery")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ValidateMfaRecovery([FromBody] MfaRecoveryLoginRequestModel request)
+    {
+        var result = await mediator.Send(new ValidateMfaRecoveryCommand(request.ChallengeToken, request.RecoveryCode));
+        if (result is null) return Unauthorized(new { message = "Invalid recovery code" });
+        return Ok(result);
+    }
+
+    [HttpPost("mfa/recovery-codes")]
+    [Authorize]
+    public async Task<ActionResult<MfaRecoveryCodesResponseModel>> GenerateRecoveryCodes()
+    {
+        var result = await mediator.Send(new GenerateRecoveryCodesCommand(User));
+        return Ok(result);
+    }
+
     private static string ResolveScheme(string provider) => provider switch
     {
         "google" => GoogleDefaults.AuthenticationScheme,
@@ -222,3 +302,6 @@ public class AuthController(IMediator mediator) : ControllerBase
         _ => throw new InvalidOperationException($"Unknown SSO provider: {provider}")
     };
 }
+
+public record BeginMfaSetupRequest(string? DeviceName);
+public record MfaChallengeRequest(int UserId);

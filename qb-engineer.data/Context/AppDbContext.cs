@@ -215,6 +215,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<EdiTransaction> EdiTransactions => Set<EdiTransaction>();
     public DbSet<EdiMapping> EdiMappings => Set<EdiMapping>();
 
+    // MFA
+    public DbSet<UserMfaDevice> UserMfaDevices => Set<UserMfaDevice>();
+    public DbSet<MfaRecoveryCode> MfaRecoveryCodes => Set<MfaRecoveryCode>();
+
     // User Integrations
     public DbSet<UserIntegration> UserIntegrations => Set<UserIntegration>();
 

@@ -24,7 +24,7 @@ public record AuthUserResponseModel(
 
 public record LoginCommand(string Email, string Password) : IRequest<LoginResponse>;
 
-public record LoginResponse(string Token, DateTimeOffset ExpiresAt, AuthUserResponseModel User);
+public record LoginResponse(string Token, DateTimeOffset ExpiresAt, AuthUserResponseModel User, bool MfaRequired = false, int? MfaUserId = null);
 
 public class LoginValidator : AbstractValidator<LoginCommand>
 {
@@ -58,6 +58,17 @@ public class LoginHandler(
 
         if (!passwordValid)
             throw new UnauthorizedAccessException("Invalid credentials");
+
+        // Check if MFA is required
+        if (user.MfaEnabled)
+        {
+            return new LoginResponse(
+                Token: string.Empty,
+                ExpiresAt: DateTimeOffset.MinValue,
+                User: null!,
+                MfaRequired: true,
+                MfaUserId: user.Id);
+        }
 
         var roles = await userManager.GetRolesAsync(user);
 
