@@ -13,6 +13,12 @@ public record PurchaseOrderDetailResponseModel(
     DateTimeOffset? ExpectedDeliveryDate,
     DateTimeOffset? ReceivedDate,
     string? Notes,
+    bool IsBlanket,
+    decimal? BlanketTotalQuantity,
+    decimal? BlanketReleasedQuantity,
+    decimal? BlanketRemainingQuantity,
+    DateTimeOffset? BlanketExpirationDate,
+    decimal? AgreedUnitPrice,
     List<PurchaseOrderLineResponseModel> Lines,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

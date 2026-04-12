@@ -41,6 +41,7 @@ public class PurchaseOrderRepository(AppDbContext db) : IPurchaseOrderRepository
                 po.Lines.Sum(l => l.OrderedQuantity),
                 po.Lines.Sum(l => l.ReceivedQuantity),
                 po.ExpectedDeliveryDate,
+                po.IsBlanket,
                 po.CreatedAt))
             .ToListAsync(ct);
     }

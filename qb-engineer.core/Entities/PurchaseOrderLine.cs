@@ -19,4 +19,5 @@ public class PurchaseOrderLine : BaseEntity
     public MrpPlannedOrder? MrpPlannedOrder { get; set; }
     public UnitOfMeasure? Uom { get; set; }
     public ICollection<ReceivingRecord> ReceivingRecords { get; set; } = [];
+    public ICollection<PurchaseOrderRelease> Releases { get; set; } = [];
 }

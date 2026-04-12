@@ -43,6 +43,7 @@ public class GetVendorByIdHandler(IVendorRepository repo)
                 po.Lines.Sum(l => l.OrderedQuantity),
                 po.Lines.Sum(l => l.ReceivedQuantity),
                 po.ExpectedDeliveryDate,
+                po.IsBlanket,
                 po.CreatedAt)).ToList());
     }
 }

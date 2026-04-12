@@ -94,4 +94,29 @@ public class PurchaseOrdersController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeletePurchaseOrderCommand(id));
         return NoContent();
     }
+
+    // ── Blanket PO Releases ──────────────────────────────────────────────
+
+    [HttpGet("{id:int}/releases")]
+    public async Task<ActionResult<List<PurchaseOrderReleaseResponseModel>>> GetReleases(int id)
+    {
+        var result = await mediator.Send(new GetPurchaseOrderReleasesQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/releases")]
+    public async Task<ActionResult<PurchaseOrderReleaseResponseModel>> CreateRelease(
+        int id, [FromBody] CreatePurchaseOrderReleaseRequestModel request)
+    {
+        var result = await mediator.Send(new CreatePurchaseOrderReleaseCommand(id, request));
+        return Created($"/api/v1/purchase-orders/{id}/releases/{result.ReleaseNumber}", result);
+    }
+
+    [HttpPatch("{id:int}/releases/{releaseNum:int}")]
+    public async Task<IActionResult> UpdateRelease(
+        int id, int releaseNum, [FromBody] UpdatePurchaseOrderReleaseRequestModel request)
+    {
+        await mediator.Send(new UpdatePurchaseOrderReleaseCommand(id, releaseNum, request));
+        return NoContent();
+    }
 }

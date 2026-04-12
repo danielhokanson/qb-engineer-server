@@ -53,6 +53,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Vendor> Vendors => Set<Vendor>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
+    public DbSet<PurchaseOrderRelease> PurchaseOrderReleases => Set<PurchaseOrderRelease>();
     public DbSet<ReceivingRecord> ReceivingRecords => Set<ReceivingRecord>();
 
     // RFQ (Request for Quote)

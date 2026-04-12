@@ -12,4 +12,5 @@ public record PurchaseOrderListItemModel(
     int TotalOrdered,
     int TotalReceived,
     DateTimeOffset? ExpectedDeliveryDate,
+    bool IsBlanket,
     DateTimeOffset CreatedAt);

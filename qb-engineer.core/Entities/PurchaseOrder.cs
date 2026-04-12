@@ -14,6 +14,14 @@ public class PurchaseOrder : BaseAuditableEntity
     public DateTimeOffset? ReceivedDate { get; set; }
     public string? Notes { get; set; }
 
+    // Blanket PO fields
+    public bool IsBlanket { get; set; }
+    public decimal? BlanketTotalQuantity { get; set; }
+    public decimal? BlanketReleasedQuantity { get; set; }
+    public decimal? BlanketRemainingQuantity => BlanketTotalQuantity - BlanketReleasedQuantity;
+    public DateTimeOffset? BlanketExpirationDate { get; set; }
+    public decimal? AgreedUnitPrice { get; set; }
+
     // Accounting integration
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }
@@ -22,4 +30,5 @@ public class PurchaseOrder : BaseAuditableEntity
     public Vendor Vendor { get; set; } = null!;
     public Job? Job { get; set; }
     public ICollection<PurchaseOrderLine> Lines { get; set; } = [];
+    public ICollection<PurchaseOrderRelease> Releases { get; set; } = [];
 }

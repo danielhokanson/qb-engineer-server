@@ -9,9 +9,13 @@ public class PurchaseOrderConfiguration : IEntityTypeConfiguration<PurchaseOrder
     public void Configure(EntityTypeBuilder<PurchaseOrder> builder)
     {
         builder.Ignore(e => e.IsDeleted);
+        builder.Ignore(e => e.BlanketRemainingQuantity);
 
         builder.Property(e => e.PONumber).HasMaxLength(20);
         builder.Property(e => e.Notes).HasMaxLength(2000);
+        builder.Property(e => e.BlanketTotalQuantity).HasPrecision(18, 4);
+        builder.Property(e => e.BlanketReleasedQuantity).HasPrecision(18, 4);
+        builder.Property(e => e.AgreedUnitPrice).HasPrecision(18, 4);
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);

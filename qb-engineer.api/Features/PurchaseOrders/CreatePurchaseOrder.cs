@@ -72,6 +72,6 @@ public class CreatePurchaseOrderHandler(IPurchaseOrderRepository poRepo, IVendor
             po.JobId, null, po.Status.ToString(),
             po.Lines.Count,
             po.Lines.Sum(l => l.OrderedQuantity),
-            0, null, po.CreatedAt);
+            0, null, po.IsBlanket, po.CreatedAt);
     }
 }
