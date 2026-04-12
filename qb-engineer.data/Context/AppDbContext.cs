@@ -307,6 +307,18 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // BI API Keys
     public DbSet<BiApiKey> BiApiKeys => Set<BiApiKey>();
 
+    // Consignment Inventory
+    public DbSet<ConsignmentAgreement> ConsignmentAgreements => Set<ConsignmentAgreement>();
+    public DbSet<ConsignmentTransaction> ConsignmentTransactions => Set<ConsignmentTransaction>();
+
+    // ABC Classification
+    public DbSet<AbcClassificationRun> AbcClassificationRuns => Set<AbcClassificationRun>();
+    public DbSet<AbcClassification> AbcClassifications => Set<AbcClassification>();
+
+    // Wave Planning / Pick Lists
+    public DbSet<PickWave> PickWaves => Set<PickWave>();
+    public DbSet<PickLine> PickLines => Set<PickLine>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

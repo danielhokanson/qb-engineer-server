@@ -355,6 +355,10 @@ try
         builder.Services.AddSingleton<IMachineDataService, MockMachineDataService>();
         builder.Services.AddSingleton<IECommerceService, MockECommerceService>();
         builder.Services.AddSingleton<IBiService, MockBiService>();
+        builder.Services.AddSingleton<IConsignmentService, MockConsignmentService>();
+        builder.Services.AddSingleton<IAbcClassificationService, MockAbcClassificationService>();
+        builder.Services.AddSingleton<IPickWaveService, MockPickWaveService>();
+        builder.Services.AddSingleton<IDropShipService, MockDropShipService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -419,6 +423,11 @@ try
         builder.Services.AddSingleton<IMachineDataService, MockMachineDataService>();
         builder.Services.AddSingleton<IECommerceService, MockECommerceService>();
         builder.Services.AddSingleton<IBiService, MockBiService>();
+        // Consignment, ABC, Pick Wave, Drop Ship — mock for now until real engines built
+        builder.Services.AddSingleton<IConsignmentService, MockConsignmentService>();
+        builder.Services.AddSingleton<IAbcClassificationService, MockAbcClassificationService>();
+        builder.Services.AddSingleton<IPickWaveService, MockPickWaveService>();
+        builder.Services.AddSingleton<IDropShipService, MockDropShipService>();
     }
 
     // MFA service (always real — no mock needed)

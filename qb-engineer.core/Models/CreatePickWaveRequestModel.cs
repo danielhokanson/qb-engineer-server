@@ -1,0 +1,11 @@
+using QBEngineer.Core.Enums;
+
+namespace QBEngineer.Core.Models;
+
+public record CreatePickWaveRequestModel
+{
+    public List<int> ShipmentLineIds { get; init; } = [];
+    public PickWaveStrategy Strategy { get; init; } = PickWaveStrategy.Zone;
+    public int? AssignedToId { get; init; }
+    public string? Notes { get; init; }
+}
