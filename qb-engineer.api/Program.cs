@@ -1028,6 +1028,10 @@ try
         "approval-escalations",
         job => job.ExecuteAsync(CancellationToken.None),
         Cron.Hourly); // Every hour
+    RecurringJob.AddOrUpdate<CheckCreditReviewsDueJob>(
+        "check-credit-reviews-due",
+        job => job.ExecuteAsync(CancellationToken.None),
+        Cron.Daily(6)); // 6 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

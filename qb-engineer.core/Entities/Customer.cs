@@ -8,6 +8,15 @@ public class Customer : BaseAuditableEntity
     public string? Phone { get; set; }
     public bool IsActive { get; set; } = true;
 
+    // Credit management
+    public decimal? CreditLimit { get; set; }
+    public bool IsOnCreditHold { get; set; }
+    public string? CreditHoldReason { get; set; }
+    public DateTimeOffset? CreditHoldAt { get; set; }
+    public int? CreditHoldById { get; set; }
+    public DateTimeOffset? LastCreditReviewDate { get; set; }
+    public int? CreditReviewFrequencyDays { get; set; }
+
     // Accounting integration
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }

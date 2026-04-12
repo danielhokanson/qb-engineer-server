@@ -17,5 +17,10 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
+
+        // Credit management
+        builder.Property(e => e.CreditLimit).HasPrecision(18, 2);
+        builder.Property(e => e.CreditHoldReason).HasMaxLength(500);
+        builder.HasIndex(e => e.CreditHoldById);
     }
 }

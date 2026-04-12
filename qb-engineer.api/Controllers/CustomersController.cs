@@ -138,4 +138,34 @@ public class CustomersController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetCustomerSummaryQuery(id), ct);
         return Ok(result);
     }
+
+    // ─── Credit Management ───
+
+    [HttpGet("{id:int}/credit-status")]
+    public async Task<ActionResult<CreditStatusResponseModel>> GetCreditStatus(int id, CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetCreditStatusQuery(id), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/credit-hold")]
+    public async Task<IActionResult> PlaceCreditHold(int id, [FromBody] PlaceCreditHoldRequestModel request)
+    {
+        await mediator.Send(new PlaceCreditHoldCommand(id, request.Reason));
+        return NoContent();
+    }
+
+    [HttpPost("{id:int}/credit-release")]
+    public async Task<IActionResult> ReleaseCreditHold(int id)
+    {
+        await mediator.Send(new ReleaseCreditHoldCommand(id));
+        return NoContent();
+    }
+
+    [HttpGet("credit-risk-report")]
+    public async Task<ActionResult<List<CreditStatusResponseModel>>> GetCreditRiskReport(CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetCreditRiskReportQuery(), ct);
+        return Ok(result);
+    }
 }
