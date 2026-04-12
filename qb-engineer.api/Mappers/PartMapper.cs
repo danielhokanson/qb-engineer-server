@@ -37,6 +37,7 @@ public static partial class PartMapper
             ReorderQuantity: part.ReorderQuantity,
             LeadTimeDays: part.LeadTimeDays,
             SafetyStockDays: part.SafetyStockDays,
+            IsSerialTracked: part.IsSerialTracked,
             ToolingAssetId: part.ToolingAssetId,
             ToolingAssetName: part.ToolingAsset?.Name,
             BomEntries: bomEntries ?? [],

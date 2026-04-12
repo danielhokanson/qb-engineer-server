@@ -250,6 +250,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<EngineeringChangeOrder> EngineeringChangeOrders => Set<EngineeringChangeOrder>();
     public DbSet<EcoAffectedItem> EcoAffectedItems => Set<EcoAffectedItem>();
 
+    // Serial Number Tracking
+    public DbSet<SerialNumber> SerialNumbers => Set<SerialNumber>();
+    public DbSet<SerialHistory> SerialHistories => Set<SerialHistory>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

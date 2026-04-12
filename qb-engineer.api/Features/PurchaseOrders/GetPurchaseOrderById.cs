@@ -27,6 +27,12 @@ public class GetPurchaseOrderByIdHandler(IPurchaseOrderRepository repo)
             po.ExpectedDeliveryDate,
             po.ReceivedDate,
             po.Notes,
+            po.IsBlanket,
+            po.BlanketTotalQuantity,
+            po.BlanketReleasedQuantity,
+            po.BlanketRemainingQuantity,
+            po.BlanketExpirationDate,
+            po.AgreedUnitPrice,
             po.Lines.Select(l => new PurchaseOrderLineResponseModel(
                 l.Id,
                 l.PartId,

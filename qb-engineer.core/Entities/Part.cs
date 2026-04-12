@@ -43,6 +43,9 @@ public class Part : BaseAuditableEntity
     public ReceivingInspectionFrequency InspectionFrequency { get; set; } = ReceivingInspectionFrequency.Every;
     public int? InspectionSkipAfterN { get; set; }
 
+    // Serial tracking
+    public bool IsSerialTracked { get; set; }
+
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 
@@ -64,4 +67,5 @@ public class Part : BaseAuditableEntity
     public ICollection<Operation> Operations { get; set; } = [];
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];
     public ICollection<PartAlternate> Alternates { get; set; } = [];
+    public ICollection<SerialNumber> SerialNumbers { get; set; } = [];
 }

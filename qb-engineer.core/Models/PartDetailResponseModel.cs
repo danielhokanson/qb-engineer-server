@@ -22,6 +22,7 @@ public record PartDetailResponseModel(
     decimal? ReorderQuantity,
     int? LeadTimeDays,
     int? SafetyStockDays,
+    bool IsSerialTracked,
     int? ToolingAssetId,
     string? ToolingAssetName,
     List<BOMEntryResponseModel> BomEntries,

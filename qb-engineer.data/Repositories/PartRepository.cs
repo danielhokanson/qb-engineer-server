@@ -117,6 +117,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.ReorderQuantity,
             part.LeadTimeDays,
             part.SafetyStockDays,
+            part.IsSerialTracked,
             part.ToolingAssetId,
             part.ToolingAsset?.Name,
             bomEntries,
