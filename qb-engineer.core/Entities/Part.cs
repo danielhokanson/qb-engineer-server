@@ -37,6 +37,12 @@ public class Part : BaseAuditableEntity
     public int? DemandFenceDays { get; set; }
     public bool IsMrpPlanned { get; set; }
 
+    // Receiving inspection
+    public bool RequiresReceivingInspection { get; set; }
+    public int? ReceivingInspectionTemplateId { get; set; }
+    public ReceivingInspectionFrequency InspectionFrequency { get; set; } = ReceivingInspectionFrequency.Every;
+    public int? InspectionSkipAfterN { get; set; }
+
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 

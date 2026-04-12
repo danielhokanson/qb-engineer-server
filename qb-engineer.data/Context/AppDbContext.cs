@@ -187,6 +187,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<SpcControlLimit> SpcControlLimits => Set<SpcControlLimit>();
     public DbSet<SpcOocEvent> SpcOocEvents => Set<SpcOocEvent>();
 
+    // Subcontracting
+    public DbSet<SubcontractOrder> SubcontractOrders => Set<SubcontractOrder>();
+
     // CAPA / NCR
     public DbSet<NonConformance> NonConformances => Set<NonConformance>();
     public DbSet<CorrectiveAction> CorrectiveActions => Set<CorrectiveAction>();

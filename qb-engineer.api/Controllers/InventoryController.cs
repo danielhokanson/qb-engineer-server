@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 using QBEngineer.Api.Features.Inventory;
 using QBEngineer.Core.Models;
 
@@ -172,6 +173,30 @@ public class InventoryController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> ReleaseReservation(int id)
     {
         await mediator.Send(new ReleaseReservationCommand(id));
+        return NoContent();
+    }
+
+    // ── Inspection ──
+
+    [HttpGet("pending-inspection")]
+    public async Task<ActionResult<List<PendingInspectionItem>>> GetPendingInspections()
+    {
+        var result = await mediator.Send(new GetPendingInspectionsQuery());
+        return Ok(result);
+    }
+
+    [HttpPost("inspect/{receivingRecordId:int}")]
+    public async Task<IActionResult> RecordInspectionResult(int receivingRecordId, [FromBody] InspectionResultRequestModel data)
+    {
+        await mediator.Send(new RecordInspectionResultCommand(receivingRecordId, data));
+        return NoContent();
+    }
+
+    [HttpPost("inspect/{receivingRecordId:int}/waive")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> WaiveInspection(int receivingRecordId)
+    {
+        await mediator.Send(new WaiveInspectionCommand(receivingRecordId));
         return NoContent();
     }
 }

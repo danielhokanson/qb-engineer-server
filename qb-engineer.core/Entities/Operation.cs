@@ -22,6 +22,8 @@ public class Operation : BaseAuditableEntity
     public bool IsSubcontract { get; set; }
     public int? SubcontractVendorId { get; set; }
     public decimal? SubcontractCost { get; set; }
+    public int? SubcontractLeadTimeDays { get; set; }
+    public string? SubcontractInstructions { get; set; }
 
     // Costing fields
     public decimal LaborRate { get; set; }
