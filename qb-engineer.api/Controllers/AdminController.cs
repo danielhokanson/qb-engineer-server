@@ -5,6 +5,7 @@ using QBEngineer.Api.Features.Admin;
 using QBEngineer.Api.Features.CompanyLocations;
 using QBEngineer.Api.Features.EmployeeProfile;
 using QBEngineer.Api.Features.ReferenceData;
+using QBEngineer.Api.Features.ShiftAssignments;
 using QBEngineer.Api.Features.TrackTypes;
 using QBEngineer.Core.Models;
 
@@ -339,6 +340,29 @@ public class AdminController(IMediator mediator) : ControllerBase
             request.UserId, request.StandardRatePerHour, request.OvertimeRatePerHour,
             request.DoubletimeRatePerHour, request.EffectiveFrom, request.Notes), ct);
         return Created($"/api/v1/admin/labor-rates/{result.UserId}", result);
+    }
+
+    // ── Shift Assignments ──
+
+    [HttpGet("shift-assignments")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<ShiftAssignmentResponseModel>>> GetShiftAssignments(
+        [FromQuery] int? userId, CancellationToken ct)
+        => Ok(await mediator.Send(new GetShiftAssignmentsQuery(userId), ct));
+
+    [HttpPost("shift-assignments")]
+    public async Task<ActionResult<ShiftAssignmentResponseModel>> CreateShiftAssignment(
+        [FromBody] CreateShiftAssignmentRequestModel request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CreateShiftAssignmentCommand(request), ct);
+        return Created($"/api/v1/admin/shift-assignments/{result.Id}", result);
+    }
+
+    [HttpDelete("shift-assignments/{id:int}")]
+    public async Task<IActionResult> DeleteShiftAssignment(int id, CancellationToken ct)
+    {
+        await mediator.Send(new DeleteShiftAssignmentCommand(id), ct);
+        return NoContent();
     }
 
     // ── MFA Policy ──────────────────────────────────────

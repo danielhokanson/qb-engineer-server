@@ -121,4 +121,26 @@ public class TimeTrackingController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetTimeCorrectionsQuery(userId, from, to));
         return Ok(result);
     }
+
+    // ─── Overtime ───
+
+    [HttpGet("overtime/{userId:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<OvertimeBreakdownResponseModel>> GetOvertimeBreakdown(
+        int userId, [FromQuery] DateOnly weekOf, CancellationToken ct)
+        => Ok(await mediator.Send(new GetOvertimeBreakdownQuery(userId, weekOf), ct));
+
+    [HttpGet("overtime-rules")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<OvertimeRuleResponseModel>>> GetOvertimeRules(CancellationToken ct)
+        => Ok(await mediator.Send(new GetOvertimeRulesQuery(), ct));
+
+    [HttpPost("overtime-rules")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<OvertimeRuleResponseModel>> CreateOvertimeRule(
+        [FromBody] CreateOvertimeRuleRequestModel request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CreateOvertimeRuleCommand(request), ct);
+        return Created($"/api/v1/time-tracking/overtime-rules/{result.Id}", result);
+    }
 }

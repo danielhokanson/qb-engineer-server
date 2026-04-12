@@ -286,6 +286,7 @@ try
     builder.Services.AddScoped<IApprovalService, ApprovalService>();
     builder.Services.AddScoped<IVendorScorecardService, VendorScorecardService>();
     builder.Services.AddScoped<IRfqService, RfqService>();
+    builder.Services.AddScoped<IOvertimeService, OvertimeService>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)
