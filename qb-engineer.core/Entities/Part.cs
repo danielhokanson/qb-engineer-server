@@ -63,4 +63,5 @@ public class Part : BaseAuditableEntity
     public ICollection<BOMEntry> UsedInBOM { get; set; } = [];
     public ICollection<Operation> Operations { get; set; } = [];
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];
+    public ICollection<PartAlternate> Alternates { get; set; } = [];
 }

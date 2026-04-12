@@ -242,6 +242,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Vendor Scorecards
     public DbSet<VendorScorecard> VendorScorecards => Set<VendorScorecard>();
 
+    // Part Alternates
+    public DbSet<PartAlternate> PartAlternates => Set<PartAlternate>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

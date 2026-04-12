@@ -177,4 +177,36 @@ public class PartsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new AddPartPriceCommand(id, model.UnitPrice, model.EffectiveFrom, model.Notes));
         return CreatedAtAction(nameof(GetPrices), new { id }, result);
     }
+
+    // ── Alternates ───────────────────────────────────────────────────────────
+
+    [HttpGet("{id:int}/alternates")]
+    public async Task<ActionResult<List<PartAlternateResponseModel>>> GetAlternates(int id)
+    {
+        var result = await mediator.Send(new GetPartAlternatesQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/alternates")]
+    public async Task<ActionResult<PartAlternateResponseModel>> CreateAlternate(
+        int id, [FromBody] CreatePartAlternateRequestModel request)
+    {
+        var result = await mediator.Send(new CreatePartAlternateCommand(id, request));
+        return Created($"/api/v1/parts/{id}/alternates/{result.Id}", result);
+    }
+
+    [HttpPatch("{id:int}/alternates/{alternateId:int}")]
+    public async Task<ActionResult<PartAlternateResponseModel>> UpdateAlternate(
+        int id, int alternateId, [FromBody] UpdatePartAlternateRequestModel request)
+    {
+        var result = await mediator.Send(new UpdatePartAlternateCommand(id, alternateId, request));
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}/alternates/{alternateId:int}")]
+    public async Task<IActionResult> DeleteAlternate(int id, int alternateId)
+    {
+        await mediator.Send(new DeletePartAlternateCommand(id, alternateId));
+        return NoContent();
+    }
 }
