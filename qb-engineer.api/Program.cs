@@ -275,6 +275,7 @@ try
     builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
     builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();
     builder.Services.AddScoped<IMrpService, MrpService>();
+    builder.Services.AddScoped<IForecastService, ForecastService>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)

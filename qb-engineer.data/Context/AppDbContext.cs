@@ -174,6 +174,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<MrpException> MrpExceptions => Set<MrpException>();
     public DbSet<MasterSchedule> MasterSchedules => Set<MasterSchedule>();
     public DbSet<MasterScheduleLine> MasterScheduleLines => Set<MasterScheduleLine>();
+    public DbSet<DemandForecast> DemandForecasts => Set<DemandForecast>();
+    public DbSet<ForecastOverride> ForecastOverrides => Set<ForecastOverride>();
 
     // Training
     public DbSet<TrainingModule> TrainingModules => Set<TrainingModule>();

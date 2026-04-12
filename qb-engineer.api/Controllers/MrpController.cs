@@ -175,6 +175,59 @@ public class MrpController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // === Demand Forecasts ===
+
+    [HttpGet("forecasts")]
+    public async Task<ActionResult<List<DemandForecastResponseModel>>> GetForecasts([FromQuery] int? partId)
+    {
+        var result = await mediator.Send(new GetDemandForecastsQuery(partId));
+        return Ok(result);
+    }
+
+    [HttpPost("forecasts")]
+    public async Task<ActionResult<DemandForecastResponseModel>> GenerateForecast([FromBody] GenerateForecastRequest request)
+    {
+        var userId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (int?)null;
+        var result = await mediator.Send(new GenerateDemandForecastCommand(
+            request.PartId,
+            request.Name,
+            request.Method,
+            request.HistoricalPeriods,
+            request.ForecastPeriods,
+            request.SmoothingFactor,
+            userId
+        ));
+        return CreatedAtAction(nameof(GetForecasts), null, result);
+    }
+
+    [HttpPost("forecasts/{id:int}/approve")]
+    public async Task<IActionResult> ApproveForecast(int id)
+    {
+        await mediator.Send(new ApproveDemandForecastCommand(id));
+        return NoContent();
+    }
+
+    [HttpPost("forecasts/{id:int}/apply")]
+    public async Task<IActionResult> ApplyForecastToMps(int id, [FromBody] ApplyForecastRequest request)
+    {
+        await mediator.Send(new ApplyForecastToMpsCommand(id, request.MasterScheduleId));
+        return NoContent();
+    }
+
+    [HttpPost("forecasts/{forecastId:int}/overrides")]
+    public async Task<ActionResult<ForecastOverrideResponseModel>> CreateOverride(int forecastId, [FromBody] CreateOverrideRequest request)
+    {
+        var userId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : (int?)null;
+        var result = await mediator.Send(new CreateForecastOverrideCommand(
+            forecastId,
+            request.PeriodStart,
+            request.OverrideQuantity,
+            request.Reason,
+            userId
+        ));
+        return Created($"api/v1/mrp/forecasts/{forecastId}/overrides/{result.Id}", result);
+    }
+
     // === Part Plan & Pegging ===
 
     [HttpGet("runs/{runId:int}/parts/{partId:int}/plan")]
@@ -209,6 +262,23 @@ public record CreateMasterScheduleRequest(
     DateTimeOffset PeriodStart,
     DateTimeOffset PeriodEnd,
     List<CreateMasterScheduleLineModel> Lines
+);
+
+public record GenerateForecastRequest(
+    int PartId,
+    string Name,
+    ForecastMethod Method = ForecastMethod.MovingAverage,
+    int HistoricalPeriods = 12,
+    int ForecastPeriods = 6,
+    double? SmoothingFactor = null
+);
+
+public record ApplyForecastRequest(int MasterScheduleId);
+
+public record CreateOverrideRequest(
+    DateTimeOffset PeriodStart,
+    decimal OverrideQuantity,
+    string? Reason
 );
 
 public record UpdateMasterScheduleRequest(
