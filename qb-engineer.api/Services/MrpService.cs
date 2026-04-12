@@ -80,12 +80,12 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
                     && l.SalesOrder!.Status != SalesOrderStatus.Completed
                     && l.PartId.HasValue
                     && partIds.Contains(l.PartId!.Value)
-                    && l.RemainingQuantity > 0)
+                    && (l.Quantity - l.ShippedQuantity) > 0)
                 .Select(l => new
                 {
                     l.Id,
                     PartId = l.PartId!.Value,
-                    Quantity = (decimal)l.RemainingQuantity,
+                    Quantity = (decimal)(l.Quantity - l.ShippedQuantity),
                     RequiredDate = l.SalesOrder!.RequestedDeliveryDate ?? l.SalesOrder.ConfirmedDate ?? l.SalesOrder.CreatedAt.AddDays(30),
                 })
                 .ToListAsync(cancellationToken);
@@ -126,12 +126,12 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
                 .Where(l => l.PurchaseOrder!.Status != PurchaseOrderStatus.Cancelled
                     && l.PurchaseOrder!.Status != PurchaseOrderStatus.Closed
                     && partIds.Contains(l.PartId)
-                    && l.RemainingQuantity > 0)
+                    && (l.OrderedQuantity - l.ReceivedQuantity) > 0)
                 .Select(l => new
                 {
                     l.Id,
                     l.PartId,
-                    Quantity = (decimal)l.RemainingQuantity,
+                    Quantity = (decimal)(l.OrderedQuantity - l.ReceivedQuantity),
                     AvailableDate = l.PurchaseOrder!.ExpectedDeliveryDate != null
                         ? l.PurchaseOrder.ExpectedDeliveryDate.Value
                         : l.PurchaseOrder.SubmittedDate != null
