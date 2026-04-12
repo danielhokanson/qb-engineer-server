@@ -177,6 +177,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<DemandForecast> DemandForecasts => Set<DemandForecast>();
     public DbSet<ForecastOverride> ForecastOverrides => Set<ForecastOverride>();
 
+    // Job Costing
+    public DbSet<LaborRate> LaborRates => Set<LaborRate>();
+    public DbSet<MaterialIssue> MaterialIssues => Set<MaterialIssue>();
+
     // Scheduling
     public DbSet<WorkCenter> WorkCenters => Set<WorkCenter>();
     public DbSet<WorkCenterCalendar> WorkCenterCalendars => Set<WorkCenterCalendar>();

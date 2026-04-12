@@ -230,4 +230,16 @@ public class ReportsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetRdReportQuery(start, end));
         return Ok(result);
     }
+
+    // ─── Job Costing Reports ───
+
+    [HttpGet("job-profitability")]
+    public async Task<ActionResult<List<JobProfitabilityReportRow>>> GetJobProfitability(
+        [FromQuery] DateOnly? dateFrom, [FromQuery] DateOnly? dateTo,
+        [FromQuery] int? customerId, [FromQuery] decimal? minMargin, CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new GetJobProfitabilityReportQuery(dateFrom, dateTo, customerId, minMargin), ct);
+        return Ok(result);
+    }
 }

@@ -23,6 +23,12 @@ public class Operation : BaseAuditableEntity
     public int? SubcontractVendorId { get; set; }
     public decimal? SubcontractCost { get; set; }
 
+    // Costing fields
+    public decimal LaborRate { get; set; }
+    public decimal BurdenRate { get; set; }
+    public decimal EstimatedLaborCost { get; set; }
+    public decimal EstimatedBurdenCost { get; set; }
+
     public Part Part { get; set; } = null!;
     public WorkCenter? WorkCenter { get; set; }
     public Asset? Asset { get; set; }

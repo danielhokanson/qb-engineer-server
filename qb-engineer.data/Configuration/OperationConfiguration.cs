@@ -20,6 +20,10 @@ public class OperationConfiguration : IEntityTypeConfiguration<Operation>
         builder.Property(e => e.OverlapPercent).HasPrecision(5, 2);
         builder.Property(e => e.ScrapFactor).HasPrecision(5, 4);
         builder.Property(e => e.SubcontractCost).HasPrecision(18, 4);
+        builder.Property(e => e.LaborRate).HasPrecision(18, 4);
+        builder.Property(e => e.BurdenRate).HasPrecision(18, 4);
+        builder.Property(e => e.EstimatedLaborCost).HasPrecision(18, 4);
+        builder.Property(e => e.EstimatedBurdenCost).HasPrecision(18, 4);
 
         builder.HasIndex(e => e.PartId);
         builder.HasIndex(e => e.WorkCenterId);

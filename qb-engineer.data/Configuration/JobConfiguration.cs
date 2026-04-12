@@ -24,6 +24,15 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Property(e => e.DispositionNotes).HasMaxLength(2000);
         builder.Property(e => e.CustomFieldValues).HasColumnType("jsonb");
 
+        // Job Costing
+        builder.Ignore(e => e.EstimatedTotalCost);
+        builder.Ignore(e => e.EstimatedMarginPercent);
+        builder.Property(e => e.EstimatedMaterialCost).HasPrecision(18, 4);
+        builder.Property(e => e.EstimatedLaborCost).HasPrecision(18, 4);
+        builder.Property(e => e.EstimatedBurdenCost).HasPrecision(18, 4);
+        builder.Property(e => e.EstimatedSubcontractCost).HasPrecision(18, 4);
+        builder.Property(e => e.QuotedPrice).HasPrecision(18, 4);
+
         builder.HasOne(e => e.TrackType)
             .WithMany(t => t.Jobs)
             .HasForeignKey(e => e.TrackTypeId)

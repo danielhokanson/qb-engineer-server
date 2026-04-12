@@ -325,4 +325,27 @@ public class AdminController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // ── Labor Rates ──
+
+    [HttpGet("labor-rates/{userId:int}")]
+    public async Task<ActionResult<List<LaborRateResponseModel>>> GetLaborRates(int userId, CancellationToken ct)
+        => Ok(await mediator.Send(new GetLaborRatesQuery(userId), ct));
+
+    [HttpPost("labor-rates")]
+    public async Task<ActionResult<LaborRateResponseModel>> CreateLaborRate(
+        [FromBody] CreateLaborRateRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CreateLaborRateCommand(
+            request.UserId, request.StandardRatePerHour, request.OvertimeRatePerHour,
+            request.DoubletimeRatePerHour, request.EffectiveFrom, request.Notes), ct);
+        return Created($"/api/v1/admin/labor-rates/{result.UserId}", result);
+    }
 }
+
+public record CreateLaborRateRequest(
+    int UserId,
+    decimal StandardRatePerHour,
+    decimal OvertimeRatePerHour,
+    decimal? DoubletimeRatePerHour,
+    DateOnly EffectiveFrom,
+    string? Notes);

@@ -35,6 +35,15 @@ public class Job : BaseAuditableEntity
     public bool IsInternal { get; set; }
     public int? InternalProjectTypeId { get; set; }
 
+    // Job Costing — Estimated
+    public decimal EstimatedMaterialCost { get; set; }
+    public decimal EstimatedLaborCost { get; set; }
+    public decimal EstimatedBurdenCost { get; set; }
+    public decimal EstimatedSubcontractCost { get; set; }
+    public decimal EstimatedTotalCost => EstimatedMaterialCost + EstimatedLaborCost + EstimatedBurdenCost + EstimatedSubcontractCost;
+    public decimal QuotedPrice { get; set; }
+    public decimal EstimatedMarginPercent => QuotedPrice > 0 ? (QuotedPrice - EstimatedTotalCost) / QuotedPrice * 100 : 0;
+
     // Disposition
     public JobDisposition? Disposition { get; set; }
     public string? DispositionNotes { get; set; }
@@ -62,4 +71,5 @@ public class Job : BaseAuditableEntity
     public ICollection<JobPart> JobParts { get; set; } = [];
     public MrpPlannedOrder? MrpPlannedOrder { get; set; }
     public ICollection<JobNote> Notes { get; set; } = [];
+    public ICollection<MaterialIssue> MaterialIssues { get; set; } = [];
 }

@@ -14,6 +14,12 @@ public class TimeEntry : BaseAuditableEntity
     public bool IsLocked { get; set; }
     public string? AccountingTimeActivityId { get; set; }
 
+    // Costing
+    public int? OperationId { get; set; }
+    public decimal LaborCost { get; set; }
+    public decimal BurdenCost { get; set; }
+
     // Navigation
     public Job? Job { get; set; }
+    public Operation? Operation { get; set; }
 }

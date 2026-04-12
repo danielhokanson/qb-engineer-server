@@ -312,6 +312,55 @@ public class JobsController(IMediator mediator) : ControllerBase
     [HttpGet("{id:int}/history")]
     public async Task<ActionResult<List<ActivityResponseModel>>> GetHistory(int id, CancellationToken ct)
         => Ok(await mediator.Send(new GetJobHistoryQuery(id), ct));
+
+    // Job Costing
+    [HttpGet("{id:int}/cost-summary")]
+    public async Task<ActionResult<JobCostSummaryModel>> GetCostSummary(int id, CancellationToken ct)
+        => Ok(await mediator.Send(new GetJobCostSummaryQuery(id), ct));
+
+    [HttpGet("{id:int}/material-issues")]
+    public async Task<ActionResult<List<MaterialIssueResponseModel>>> GetMaterialIssues(
+        int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default)
+        => Ok(await mediator.Send(new GetJobMaterialIssuesQuery(id, page, pageSize), ct));
+
+    [HttpPost("{id:int}/material-issues")]
+    public async Task<ActionResult<MaterialIssueResponseModel>> CreateMaterialIssue(
+        int id, [FromBody] MaterialIssueRequest req, CancellationToken ct)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await mediator.Send(new CreateMaterialIssueCommand(
+            id, req.PartId, req.OperationId, req.Quantity,
+            req.BinContentId, req.StorageLocationId, req.LotNumber,
+            req.IssueType, req.Notes, userId), ct);
+        return Created($"/api/v1/jobs/{id}/material-issues/{result.Id}", result);
+    }
+
+    [HttpPost("{id:int}/material-issues/{issueId:int}/return")]
+    public async Task<ActionResult<MaterialIssueResponseModel>> ReturnMaterialIssue(
+        int id, int issueId, CancellationToken ct)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await mediator.Send(new ReturnMaterialIssueCommand(id, issueId, userId), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/recalculate-costs")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult> RecalculateCosts(int id, CancellationToken ct)
+    {
+        await mediator.Send(new RecalculateJobCostsCommand(id), ct);
+        return NoContent();
+    }
 }
 
 public record CreateNoteRequest(string Text, int[]? MentionedUserIds = null);
+
+public record MaterialIssueRequest(
+    int PartId,
+    int? OperationId,
+    decimal Quantity,
+    int? BinContentId,
+    int? StorageLocationId,
+    string? LotNumber,
+    Core.Enums.MaterialIssueType IssueType = Core.Enums.MaterialIssueType.Issue,
+    string? Notes = null);

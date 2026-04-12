@@ -15,5 +15,14 @@ public class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
 
         builder.HasIndex(t => new { t.UserId, t.Date });
         builder.HasIndex(t => t.JobId);
+        builder.HasIndex(t => t.OperationId);
+
+        builder.Property(t => t.LaborCost).HasPrecision(18, 4);
+        builder.Property(t => t.BurdenCost).HasPrecision(18, 4);
+
+        builder.HasOne(t => t.Operation)
+            .WithMany()
+            .HasForeignKey(t => t.OperationId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
