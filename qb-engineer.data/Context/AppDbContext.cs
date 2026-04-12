@@ -225,6 +225,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // User Integrations
     public DbSet<UserIntegration> UserIntegrations => Set<UserIntegration>();
 
+    // Units of Measure
+    public DbSet<UnitOfMeasure> UnitsOfMeasure => Set<UnitOfMeasure>();
+    public DbSet<UomConversion> UomConversions => Set<UomConversion>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

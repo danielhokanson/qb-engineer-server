@@ -13,6 +13,9 @@ public class BOMEntry : BaseAuditableEntity
     public int? LeadTimeDays { get; set; }
     public string? Notes { get; set; }
 
+    public int? UomId { get; set; }
+
+    public UnitOfMeasure? Uom { get; set; }
     public Part ParentPart { get; set; } = null!;
     public Part ChildPart { get; set; } = null!;
 }

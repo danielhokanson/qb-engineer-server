@@ -10,6 +10,7 @@ public class SalesOrderLine : BaseEntity
     public int LineNumber { get; set; }
     public int ShippedQuantity { get; set; }
     public string? Notes { get; set; }
+    public int? UomId { get; set; }
 
     public decimal LineTotal => Quantity * UnitPrice;
     public int RemainingQuantity => Quantity - ShippedQuantity;
@@ -17,6 +18,7 @@ public class SalesOrderLine : BaseEntity
 
     public SalesOrder SalesOrder { get; set; } = null!;
     public Part? Part { get; set; }
+    public UnitOfMeasure? Uom { get; set; }
     public ICollection<Job> Jobs { get; set; } = [];
     public ICollection<ShipmentLine> ShipmentLines { get; set; } = [];
 }

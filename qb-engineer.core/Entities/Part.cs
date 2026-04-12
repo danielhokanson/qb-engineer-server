@@ -46,6 +46,14 @@ public class Part : BaseAuditableEntity
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 
+    // Units of measure
+    public int? StockUomId { get; set; }
+    public int? PurchaseUomId { get; set; }
+    public int? SalesUomId { get; set; }
+    public UnitOfMeasure? StockUom { get; set; }
+    public UnitOfMeasure? PurchaseUom { get; set; }
+    public UnitOfMeasure? SalesUom { get; set; }
+
     // Tooling association
     public int? ToolingAssetId { get; set; }
     public Asset? ToolingAsset { get; set; }

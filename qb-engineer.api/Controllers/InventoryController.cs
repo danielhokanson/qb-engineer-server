@@ -199,4 +199,53 @@ public class InventoryController(IMediator mediator) : ControllerBase
         await mediator.Send(new WaiveInspectionCommand(receivingRecordId));
         return NoContent();
     }
+
+    // ── Units of Measure ──
+
+    [HttpGet("uom")]
+    public async Task<ActionResult<List<UomResponseModel>>> GetUnitsOfMeasure([FromQuery] string? category)
+    {
+        var result = await mediator.Send(new GetUnitsOfMeasureQuery(category));
+        return Ok(result);
+    }
+
+    [HttpPost("uom")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<UomResponseModel>> CreateUnitOfMeasure([FromBody] CreateUomRequestModel data)
+    {
+        var result = await mediator.Send(new CreateUnitOfMeasureCommand(data));
+        return Created($"/api/v1/inventory/uom/{result.Id}", result);
+    }
+
+    [HttpPut("uom/{id:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<UomResponseModel>> UpdateUnitOfMeasure(int id, [FromBody] CreateUomRequestModel data)
+    {
+        var result = await mediator.Send(new UpdateUnitOfMeasureCommand(id, data));
+        return Ok(result);
+    }
+
+    [HttpGet("uom/conversions")]
+    public async Task<ActionResult<List<UomConversionResponseModel>>> GetUomConversions([FromQuery] int? partId)
+    {
+        var result = await mediator.Send(new GetUomConversionsQuery(partId));
+        return Ok(result);
+    }
+
+    [HttpPost("uom/conversions")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<UomConversionResponseModel>> CreateUomConversion([FromBody] CreateUomConversionRequestModel data)
+    {
+        var result = await mediator.Send(new CreateUomConversionCommand(data));
+        return Created($"/api/v1/inventory/uom/conversions/{result.Id}", result);
+    }
+
+    [HttpGet("uom/convert")]
+    public async Task<ActionResult<ConvertQuantityResult>> ConvertQuantity(
+        [FromQuery] int fromUomId, [FromQuery] int toUomId,
+        [FromQuery] decimal quantity, [FromQuery] int? partId)
+    {
+        var result = await mediator.Send(new ConvertQuantityQuery(fromUomId, toUomId, quantity, partId));
+        return Ok(result);
+    }
 }

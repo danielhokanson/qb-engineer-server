@@ -16,10 +16,12 @@ public class BinContent : BaseEntity
     public DateTimeOffset? RemovedAt { get; set; }
     public int? RemovedBy { get; set; }
     public string? Notes { get; set; }
+    public int? UomId { get; set; }
 
     public decimal ReservedQuantity { get; set; }
 
     public StorageLocation Location { get; set; } = null!;
     public Job? Job { get; set; }
+    public UnitOfMeasure? Uom { get; set; }
     public ICollection<Reservation> Reservations { get; set; } = [];
 }
