@@ -362,6 +362,8 @@ try
         builder.Services.AddSingleton<IBackToBackService, MockBackToBackService>();
         builder.Services.AddSingleton<IKanbanReplenishmentService, MockKanbanReplenishmentService>();
         builder.Services.AddSingleton<IProjectAccountingService, MockProjectAccountingService>();
+        builder.Services.AddSingleton<ICopqService, MockCopqService>();
+        builder.Services.AddSingleton<IPredictiveMaintenanceService, MockPredictiveMaintenanceService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -435,6 +437,9 @@ try
         builder.Services.AddSingleton<IBackToBackService, MockBackToBackService>();
         builder.Services.AddSingleton<IKanbanReplenishmentService, MockKanbanReplenishmentService>();
         builder.Services.AddSingleton<IProjectAccountingService, MockProjectAccountingService>();
+        // COPQ and Predictive Maintenance — mock for now until real engines built
+        builder.Services.AddSingleton<ICopqService, MockCopqService>();
+        builder.Services.AddSingleton<IPredictiveMaintenanceService, MockPredictiveMaintenanceService>();
     }
 
     // MFA service (always real — no mock needed)

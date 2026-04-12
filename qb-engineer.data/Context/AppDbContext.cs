@@ -328,6 +328,19 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<WbsElement> WbsElements => Set<WbsElement>();
     public DbSet<WbsCostEntry> WbsCostEntries => Set<WbsCostEntry>();
 
+    // PPAP
+    public DbSet<PpapSubmission> PpapSubmissions => Set<PpapSubmission>();
+    public DbSet<PpapElement> PpapElements => Set<PpapElement>();
+
+    // FMEA
+    public DbSet<FmeaAnalysis> FmeaAnalyses => Set<FmeaAnalysis>();
+    public DbSet<FmeaItem> FmeaItems => Set<FmeaItem>();
+
+    // Predictive Maintenance
+    public DbSet<MaintenancePrediction> MaintenancePredictions => Set<MaintenancePrediction>();
+    public DbSet<MlModel> MlModels => Set<MlModel>();
+    public DbSet<PredictionFeedback> PredictionFeedbacks => Set<PredictionFeedback>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
