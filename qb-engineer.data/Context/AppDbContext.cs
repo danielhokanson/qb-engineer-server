@@ -210,6 +210,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventAttendee> EventAttendees => Set<EventAttendee>();
 
+    // EDI
+    public DbSet<EdiTradingPartner> EdiTradingPartners => Set<EdiTradingPartner>();
+    public DbSet<EdiTransaction> EdiTransactions => Set<EdiTransaction>();
+    public DbSet<EdiMapping> EdiMappings => Set<EdiMapping>();
+
     // User Integrations
     public DbSet<UserIntegration> UserIntegrations => Set<UserIntegration>();
 

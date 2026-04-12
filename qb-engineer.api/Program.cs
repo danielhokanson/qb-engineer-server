@@ -339,6 +339,8 @@ try
         builder.Services.AddSingleton<IImageComparisonService, MockImageComparisonService>();
         builder.Services.AddSingleton<IWalkthroughGeneratorService, MockWalkthroughGeneratorService>();
         builder.Services.AddSingleton<IPdfFormFillService, MockPdfFormFillService>();
+        builder.Services.AddSingleton<IEdiService, MockEdiService>();
+        builder.Services.AddSingleton<IEdiTransportService, MockEdiTransportService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -391,6 +393,9 @@ try
         builder.Services.AddSingleton<IImageComparisonService, SkiaImageComparisonService>();
         builder.Services.AddSingleton<IWalkthroughGeneratorService, PuppeteerWalkthroughGeneratorService>();
         builder.Services.AddSingleton<IPdfFormFillService, PdfSharpFormFillService>();
+        // EDI: mock for now — real providers (AS2/SFTP) can be added per trading partner
+        builder.Services.AddSingleton<IEdiService, MockEdiService>();
+        builder.Services.AddSingleton<IEdiTransportService, MockEdiTransportService>();
     }
 
     // Form definition builders — hardcoded definitions for known government forms
@@ -1006,6 +1011,10 @@ try
         "mrp-nightly-run",
         job => job.ExecuteNightlyRunAsync(CancellationToken.None),
         Cron.Daily(3)); // 3 AM UTC daily
+    RecurringJob.AddOrUpdate<PollEdiInboundJob>(
+        "edi-inbound-poll",
+        job => job.PollAllPartnersAsync(CancellationToken.None),
+        "*/30 * * * *"); // Every 30 minutes
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");
