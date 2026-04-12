@@ -2,16 +2,18 @@ using QBEngineer.Core.Enums;
 
 namespace QBEngineer.Core.Models;
 
-public record CreateDowntimeLogRequestModel(
+public record DowntimeEventResponseModel(
+    int Id,
     int AssetId,
     int? WorkCenterId,
+    string WorkCenterName,
     DateTimeOffset StartedAt,
     DateTimeOffset? EndedAt,
+    decimal? DurationMinutes,
     DowntimeCategory? Category,
-    int? DowntimeReasonId,
-    string Reason,
-    string? Resolution,
+    string? ReasonName,
     string? Description,
     bool IsPlanned,
     int? JobId,
-    string? Notes);
+    string? JobNumber,
+    string? ReportedByName);

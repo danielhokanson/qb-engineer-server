@@ -402,6 +402,9 @@ try
     // MFA service (always real — no mock needed)
     builder.Services.AddScoped<IMfaService, MfaService>();
 
+    // OEE service
+    builder.Services.AddScoped<IOeeService, OeeService>();
+
     // Form definition builders — hardcoded definitions for known government forms
     // (registered outside mock/real block since builders work with extraction data, not external APIs)
     builder.Services.AddSingleton<IFormDefinitionBuilder, W4FormDefinitionBuilder>();

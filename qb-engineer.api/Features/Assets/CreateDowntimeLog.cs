@@ -40,12 +40,17 @@ public class CreateDowntimeLogHandler(
         var log = new DowntimeLog
         {
             AssetId = request.Data.AssetId,
+            WorkCenterId = request.Data.WorkCenterId,
             ReportedById = userId,
             StartedAt = request.Data.StartedAt,
             EndedAt = request.Data.EndedAt,
+            Category = request.Data.Category,
+            DowntimeReasonId = request.Data.DowntimeReasonId,
             Reason = request.Data.Reason.Trim(),
             Resolution = request.Data.Resolution?.Trim(),
+            Description = request.Data.Description?.Trim(),
             IsPlanned = request.Data.IsPlanned,
+            JobId = request.Data.JobId,
             Notes = request.Data.Notes?.Trim(),
         };
 

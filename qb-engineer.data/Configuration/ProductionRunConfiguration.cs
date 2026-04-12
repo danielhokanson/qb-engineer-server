@@ -27,5 +27,14 @@ public class ProductionRunConfiguration : IEntityTypeConfiguration<ProductionRun
         builder.Property(pr => pr.Notes).HasMaxLength(2000);
         builder.Property(pr => pr.SetupTimeMinutes).HasPrecision(10, 2);
         builder.Property(pr => pr.RunTimeMinutes).HasPrecision(10, 2);
+        builder.Property(pr => pr.IdealCycleTimeSeconds).HasPrecision(10, 2);
+        builder.Property(pr => pr.ActualCycleTimeSeconds).HasPrecision(10, 2);
+
+        builder.HasIndex(pr => pr.WorkCenterId);
+
+        builder.HasOne(pr => pr.WorkCenter)
+            .WithMany()
+            .HasForeignKey(pr => pr.WorkCenterId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

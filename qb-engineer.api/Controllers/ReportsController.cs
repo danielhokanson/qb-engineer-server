@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Features.Reports;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -250,6 +251,41 @@ public class ReportsController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(
             new GetJobProfitabilityReportQuery(dateFrom, dateTo, customerId, minMargin), ct);
+        return Ok(result);
+    }
+
+    // ─── OEE Reports ───
+
+    [HttpGet("oee")]
+    public async Task<ActionResult<IReadOnlyList<OeeCalculationModel>>> GetOeeReport(
+        [FromQuery] DateOnly dateFrom, [FromQuery] DateOnly dateTo, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetOeeReportQuery(dateFrom, dateTo), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("oee/{workCenterId:int}")]
+    public async Task<ActionResult<OeeCalculationModel>> GetOeeByWorkCenter(
+        int workCenterId, [FromQuery] DateOnly dateFrom, [FromQuery] DateOnly dateTo, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetOeeByWorkCenterQuery(workCenterId, dateFrom, dateTo), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("oee/{workCenterId:int}/trend")]
+    public async Task<ActionResult<IReadOnlyList<OeeTrendPointModel>>> GetOeeTrend(
+        int workCenterId, [FromQuery] DateOnly dateFrom, [FromQuery] DateOnly dateTo,
+        [FromQuery] OeeTrendGranularity granularity = OeeTrendGranularity.Daily, CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetOeeTrendQuery(workCenterId, dateFrom, dateTo, granularity), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("oee/{workCenterId:int}/losses")]
+    public async Task<ActionResult<SixBigLossesModel>> GetSixBigLosses(
+        int workCenterId, [FromQuery] DateOnly dateFrom, [FromQuery] DateOnly dateTo, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetSixBigLossesQuery(workCenterId, dateFrom, dateTo), ct);
         return Ok(result);
     }
 }
