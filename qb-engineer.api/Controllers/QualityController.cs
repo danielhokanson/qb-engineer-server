@@ -2,7 +2,9 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Features.Eco;
 using QBEngineer.Api.Features.Quality;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -52,5 +54,72 @@ public class QualityController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new UpdateQcInspectionCommand(id, request));
         return Ok(result);
+    }
+
+    // ── ECOs ──────────────────────────────────────────────────────────────────
+
+    [HttpGet("ecos")]
+    [Authorize(Roles = "Admin,Manager,Engineer")]
+    public async Task<ActionResult<List<EcoResponseModel>>> GetEcos([FromQuery] EcoStatus? status)
+    {
+        var result = await mediator.Send(new GetEcosQuery(status));
+        return Ok(result);
+    }
+
+    [HttpGet("ecos/{id:int}")]
+    [Authorize(Roles = "Admin,Manager,Engineer")]
+    public async Task<ActionResult<EcoResponseModel>> GetEcoById(int id)
+    {
+        var result = await mediator.Send(new GetEcoByIdQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("ecos")]
+    [Authorize(Roles = "Admin,Manager,Engineer")]
+    public async Task<ActionResult<EcoResponseModel>> CreateEco([FromBody] CreateEcoRequestModel request)
+    {
+        var result = await mediator.Send(new CreateEcoCommand(request));
+        return Created($"/api/v1/quality/ecos/{result.Id}", result);
+    }
+
+    [HttpPatch("ecos/{id:int}")]
+    [Authorize(Roles = "Admin,Manager,Engineer")]
+    public async Task<ActionResult<EcoResponseModel>> UpdateEco(int id, [FromBody] UpdateEcoRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateEcoCommand(id, request));
+        return Ok(result);
+    }
+
+    [HttpPost("ecos/{id:int}/approve")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> ApproveEco(int id)
+    {
+        await mediator.Send(new ApproveEcoCommand(id));
+        return NoContent();
+    }
+
+    [HttpPost("ecos/{id:int}/implement")]
+    [Authorize(Roles = "Admin,Manager,Engineer")]
+    public async Task<IActionResult> ImplementEco(int id)
+    {
+        await mediator.Send(new ImplementEcoCommand(id));
+        return NoContent();
+    }
+
+    [HttpPost("ecos/{id:int}/affected-items")]
+    [Authorize(Roles = "Admin,Manager,Engineer")]
+    public async Task<ActionResult<EcoAffectedItemResponseModel>> AddAffectedItem(
+        int id, [FromBody] CreateEcoAffectedItemRequestModel request)
+    {
+        var result = await mediator.Send(new AddEcoAffectedItemCommand(id, request));
+        return Created($"/api/v1/quality/ecos/{id}", result);
+    }
+
+    [HttpDelete("ecos/{id:int}/affected-items/{itemId:int}")]
+    [Authorize(Roles = "Admin,Manager,Engineer")]
+    public async Task<IActionResult> DeleteAffectedItem(int id, int itemId)
+    {
+        await mediator.Send(new DeleteEcoAffectedItemCommand(id, itemId));
+        return NoContent();
     }
 }

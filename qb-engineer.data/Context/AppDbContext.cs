@@ -245,6 +245,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Part Alternates
     public DbSet<PartAlternate> PartAlternates => Set<PartAlternate>();
 
+    // Engineering Change Orders
+    public DbSet<EngineeringChangeOrder> EngineeringChangeOrders => Set<EngineeringChangeOrder>();
+    public DbSet<EcoAffectedItem> EcoAffectedItems => Set<EcoAffectedItem>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
