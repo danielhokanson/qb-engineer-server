@@ -278,6 +278,7 @@ try
     builder.Services.AddScoped<IForecastService, ForecastService>();
     builder.Services.AddScoped<ISchedulingService, SchedulingService>();
     builder.Services.AddScoped<IJobCostService, JobCostService>();
+    builder.Services.AddScoped<ISpcService, SpcService>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)

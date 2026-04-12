@@ -181,6 +181,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<LaborRate> LaborRates => Set<LaborRate>();
     public DbSet<MaterialIssue> MaterialIssues => Set<MaterialIssue>();
 
+    // SPC
+    public DbSet<SpcCharacteristic> SpcCharacteristics => Set<SpcCharacteristic>();
+    public DbSet<SpcMeasurement> SpcMeasurements => Set<SpcMeasurement>();
+    public DbSet<SpcControlLimit> SpcControlLimits => Set<SpcControlLimit>();
+    public DbSet<SpcOocEvent> SpcOocEvents => Set<SpcOocEvent>();
+
     // Scheduling
     public DbSet<WorkCenter> WorkCenters => Set<WorkCenter>();
     public DbSet<WorkCenterCalendar> WorkCenterCalendars => Set<WorkCenterCalendar>();
