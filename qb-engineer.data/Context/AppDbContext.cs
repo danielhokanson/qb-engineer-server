@@ -319,6 +319,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<PickWave> PickWaves => Set<PickWave>();
     public DbSet<PickLine> PickLines => Set<PickLine>();
 
+    // Kanban Replenishment
+    public DbSet<KanbanCard> KanbanCards => Set<KanbanCard>();
+    public DbSet<KanbanTriggerLog> KanbanTriggerLogs => Set<KanbanTriggerLog>();
+
+    // Project Accounting / WBS
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<WbsElement> WbsElements => Set<WbsElement>();
+    public DbSet<WbsCostEntry> WbsCostEntries => Set<WbsCostEntry>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

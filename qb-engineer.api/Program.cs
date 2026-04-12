@@ -359,6 +359,9 @@ try
         builder.Services.AddSingleton<IAbcClassificationService, MockAbcClassificationService>();
         builder.Services.AddSingleton<IPickWaveService, MockPickWaveService>();
         builder.Services.AddSingleton<IDropShipService, MockDropShipService>();
+        builder.Services.AddSingleton<IBackToBackService, MockBackToBackService>();
+        builder.Services.AddSingleton<IKanbanReplenishmentService, MockKanbanReplenishmentService>();
+        builder.Services.AddSingleton<IProjectAccountingService, MockProjectAccountingService>();
         Log.Information("MockIntegrations=true — using in-memory storage and mock services");
     }
     else
@@ -428,6 +431,10 @@ try
         builder.Services.AddSingleton<IAbcClassificationService, MockAbcClassificationService>();
         builder.Services.AddSingleton<IPickWaveService, MockPickWaveService>();
         builder.Services.AddSingleton<IDropShipService, MockDropShipService>();
+        // Back-to-back, Kanban Replenishment, Project Accounting — mock for now until real engines built
+        builder.Services.AddSingleton<IBackToBackService, MockBackToBackService>();
+        builder.Services.AddSingleton<IKanbanReplenishmentService, MockKanbanReplenishmentService>();
+        builder.Services.AddSingleton<IProjectAccountingService, MockProjectAccountingService>();
     }
 
     // MFA service (always real — no mock needed)
