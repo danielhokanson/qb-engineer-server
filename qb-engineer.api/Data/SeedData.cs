@@ -672,6 +672,25 @@ public static partial class SeedData
         await SeedHistoricalDataAsync(db, admin.Id, akim.Id, dhart.Id, jsilva.Id, mreyes.Id,
             pmorris.Id, lwilson.Id, cthompson.Id, bkelly.Id);
 
+        // ── Job Number Sequence ───────────────────────────────────────────
+        // Create the job_number_seq sequence used by JobRepository.GenerateNextJobNumberAsync.
+        // Start value is derived from the highest existing J-XXXX job number + 1.
+        var maxJobNum = await db.Jobs
+            .Where(j => j.JobNumber != null && j.JobNumber.StartsWith("J-"))
+            .Select(j => j.JobNumber)
+            .ToListAsync();
+        var maxNum = maxJobNum
+            .Select(jn => int.TryParse(jn.Replace("J-", ""), out var n) ? n : 0)
+            .DefaultIfEmpty(0)
+            .Max();
+        var startWith = maxNum + 1;
+        // DDL doesn't support parameterized queries — value is a safe integer from our own MAX()
+#pragma warning disable EF1002
+        await db.Database.ExecuteSqlRawAsync(
+            $"CREATE SEQUENCE IF NOT EXISTS job_number_seq START WITH {startWith}");
+#pragma warning restore EF1002
+        Log.Information("Ensured job_number_seq (next value: {NextVal})", maxNum + 1);
+
         Log.Information("Database seeding complete");
     }
 
