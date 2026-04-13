@@ -74,6 +74,41 @@ public static partial class SeedData
         var bkelly = await EnsureUserAsync(userManager, "bkelly@qbengineer.local",
             "B.", "Kelly", "BK", "#0f766e", seedPassword, "ProductionWorker");
 
+        // ── 4b. Stress-test users ─────────────────────────────────────────
+        // Alpha team — production workers (Production track)
+        var alpha1 = await EnsureUserAsync(userManager, "alpha1@qbengineer.local",
+            "R.", "Garcia", "RG", "#0284c7", seedPassword, "ProductionWorker");
+        var alpha2 = await EnsureUserAsync(userManager, "alpha2@qbengineer.local",
+            "T.", "Nguyen", "TN", "#0891b2", seedPassword, "ProductionWorker");
+        var alpha3 = await EnsureUserAsync(userManager, "alpha3@qbengineer.local",
+            "J.", "Patel", "JP", "#0d9488", seedPassword, "ProductionWorker");
+        var alpha4 = await EnsureUserAsync(userManager, "alpha4@qbengineer.local",
+            "M.", "Davis", "MD", "#059669", seedPassword, "ProductionWorker");
+        var alpha5 = await EnsureUserAsync(userManager, "alpha5@qbengineer.local",
+            "K.", "Martinez", "KM", "#16a34a", seedPassword, "ProductionWorker");
+        var alpha6 = await EnsureUserAsync(userManager, "alpha6@qbengineer.local",
+            "S.", "Lee", "SL", "#65a30d", seedPassword, "ProductionWorker");
+
+        // Bravo team — production workers (Maintenance track)
+        var bravo1 = await EnsureUserAsync(userManager, "bravo1@qbengineer.local",
+            "D.", "Brown", "DB", "#ca8a04", seedPassword, "ProductionWorker");
+        var bravo2 = await EnsureUserAsync(userManager, "bravo2@qbengineer.local",
+            "A.", "Taylor", "AT", "#d97706", seedPassword, "ProductionWorker");
+        var bravo3 = await EnsureUserAsync(userManager, "bravo3@qbengineer.local",
+            "C.", "Anderson", "CA", "#ea580c", seedPassword, "ProductionWorker");
+        var bravo4 = await EnsureUserAsync(userManager, "bravo4@qbengineer.local",
+            "W.", "Thomas", "WT", "#dc2626", seedPassword, "ProductionWorker");
+        var bravo5 = await EnsureUserAsync(userManager, "bravo5@qbengineer.local",
+            "E.", "Jackson", "EJ", "#e11d48", seedPassword, "ProductionWorker");
+        var bravo6 = await EnsureUserAsync(userManager, "bravo6@qbengineer.local",
+            "L.", "White", "LW2", "#c026d3", seedPassword, "ProductionWorker");
+        var bravo7 = await EnsureUserAsync(userManager, "bravo7@qbengineer.local",
+            "N.", "Harris", "NH", "#9333ea", seedPassword, "ProductionWorker");
+
+        // Second manager for stress test
+        var rchavez = await EnsureUserAsync(userManager, "rchavez@qbengineer.local",
+            "R.", "Chavez", "RC", "#4f46e5", seedPassword, "Manager");
+
         await db.SaveChangesAsync();
 
         // ── 5. Customers ──────────────────────────────────────────────────
