@@ -497,6 +497,7 @@ try
         .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            options.JsonSerializerOptions.Converters.Add(new QBEngineer.Api.Converters.FlexibleDateOnlyConverter());
         });
     builder.Services.AddOpenApi();
 

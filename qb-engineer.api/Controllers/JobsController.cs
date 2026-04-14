@@ -15,7 +15,7 @@ namespace QBEngineer.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/jobs")]
-[Authorize(Roles = "Admin,Manager,PM,Engineer")]
+[Authorize(Roles = "Admin,Manager,PM,Engineer,ProductionWorker,OfficeManager")]
 public class JobsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
