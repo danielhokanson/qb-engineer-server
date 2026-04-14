@@ -51,6 +51,14 @@ public class TimeTrackingController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("clock-status")]
+    public async Task<ActionResult<UserClockStatusResponseModel>> GetClockStatus(CancellationToken ct)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await mediator.Send(new GetUserClockStatusQuery(userId), ct);
+        return Ok(result);
+    }
+
     [HttpGet("clock-events")]
     public async Task<ActionResult<List<ClockEventResponseModel>>> GetClockEvents(
         [FromQuery] int? userId,
