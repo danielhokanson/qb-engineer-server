@@ -12,12 +12,16 @@ public static class AssigneeComplianceCheck
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.UserId == userId, ct);
 
+        // Allow assignment if the user has bypassed onboarding (e.g., skipped on mobile)
+        var onboardingBypassed = profile?.OnboardingBypassedAt is not null;
+
         var canBeAssigned = profile is not null &&
-            profile.W4CompletedAt is not null &&
-            profile.I9CompletedAt is not null &&
-            profile.StateWithholdingCompletedAt is not null &&
-            !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
-            !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone);
+            (onboardingBypassed || (
+                profile.W4CompletedAt is not null &&
+                profile.I9CompletedAt is not null &&
+                profile.StateWithholdingCompletedAt is not null &&
+                !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
+                !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone)));
 
         if (!canBeAssigned)
         {
