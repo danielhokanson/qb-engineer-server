@@ -249,6 +249,7 @@ try
     builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
     builder.Services.AddScoped<ITerminologyRepository, TerminologyRepository>();
     builder.Services.AddScoped<IReportRepository, ReportRepository>();
+    builder.Services.AddScoped<ISankeyReportRepository, SankeyReportRepository>();
     builder.Services.AddScoped<ISearchRepository, SearchRepository>();
     builder.Services.AddScoped<IPlanningCycleRepository, PlanningCycleRepository>();
     builder.Services.AddScoped<IVendorRepository, VendorRepository>();
