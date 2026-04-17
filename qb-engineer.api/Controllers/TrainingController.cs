@@ -87,6 +87,17 @@ public class TrainingController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("modules/{moduleId:int}/walkthrough-steps")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<TrainingModuleDetailResponseModel>> UpdateWalkthroughSteps(
+        int moduleId,
+        [FromBody] UpdateWalkthroughStepsRequestModel model,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new UpdateWalkthroughStepsCommand(moduleId, model.Steps), ct);
+        return Ok(result);
+    }
+
     /// <summary>
     /// Navigates to the module's target page in a headless browser (authenticated as the
     /// calling admin), extracts the live DOM, sends it to Ollama, and saves generated

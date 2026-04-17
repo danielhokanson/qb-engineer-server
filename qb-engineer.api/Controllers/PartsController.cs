@@ -209,4 +209,13 @@ public class PartsController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeletePartAlternateCommand(id, alternateId));
         return NoContent();
     }
+
+    // ── Inventory Summary ────────────────────────────────────────────────────
+
+    [HttpGet("{id:int}/inventory-summary")]
+    public async Task<ActionResult<PartInventorySummaryResponseModel>> GetInventorySummary(int id)
+    {
+        var result = await mediator.Send(new GetPartInventorySummaryQuery(id));
+        return Ok(result);
+    }
 }
