@@ -12,6 +12,7 @@ public class GetChatRoomsHandler(AppDbContext db) : IRequestHandler<GetChatRooms
     public async Task<List<ChatRoomResponseModel>> Handle(GetChatRoomsQuery request, CancellationToken ct)
     {
         var rooms = await db.Set<Core.Entities.ChatRoom>()
+            .AsNoTracking()
             .Include(r => r.Members)
             .Where(r => r.Members.Any(m => m.UserId == request.UserId))
             .OrderByDescending(r => r.CreatedAt)
@@ -35,7 +36,14 @@ public class GetChatRoomsHandler(AppDbContext db) : IRequestHandler<GetChatRooms
                     m.UserId,
                     u != null ? (u.FirstName + " " + u.LastName).Trim() : "Unknown",
                     u?.Initials ?? "??",
-                    u?.AvatarColor ?? "#94a3b8");
-            }).ToList())).ToList();
+                    u?.AvatarColor ?? "#94a3b8",
+                    m.Role,
+                    m.MutedUntil.HasValue && m.MutedUntil > DateTimeOffset.UtcNow);
+            }).ToList(),
+            r.ChannelType,
+            r.Description,
+            r.TeamId,
+            r.IsReadOnly,
+            r.IconName)).ToList();
     }
 }

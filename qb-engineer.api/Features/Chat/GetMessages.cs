@@ -13,21 +13,37 @@ public class GetMessagesHandler(AppDbContext db)
     public async Task<List<ChatMessageResponseModel>> Handle(GetMessagesQuery request, CancellationToken ct)
     {
         var messages = await db.ChatMessages
+            .AsNoTracking()
             .Where(m => (m.SenderId == request.UserId && m.RecipientId == request.OtherUserId)
                 || (m.SenderId == request.OtherUserId && m.RecipientId == request.UserId))
             .OrderByDescending(m => m.CreatedAt)
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Join(db.Users, m => m.SenderId, u => u.Id, (m, u) => new ChatMessageResponseModel(
-                m.Id,
-                m.SenderId,
-                (u.FirstName + " " + u.LastName).Trim(),
-                u.Initials ?? "??",
-                u.AvatarColor ?? "#94a3b8",
-                m.RecipientId,
-                m.Content,
-                m.IsRead,
-                m.CreatedAt))
+            .Join(db.Users, m => m.SenderId, u => u.Id, (m, u) => new { m, u })
+            .Select(x => new ChatMessageResponseModel(
+                x.m.Id,
+                x.m.SenderId,
+                (x.u.FirstName + " " + x.u.LastName).Trim(),
+                x.u.Initials ?? "??",
+                x.u.AvatarColor ?? "#94a3b8",
+                x.m.RecipientId,
+                x.m.Content,
+                x.m.IsRead,
+                x.m.CreatedAt,
+                x.m.ParentMessageId,
+                x.m.ThreadReplyCount,
+                x.m.ThreadLastReplyAt,
+                x.m.Mentions.Select(mm => new ChatMessageMentionResponseModel(
+                    mm.EntityType, mm.EntityId, mm.DisplayText)).ToList(),
+                x.m.FileAttachment != null
+                    ? new ChatFileAttachmentResponseModel(
+                        x.m.FileAttachment.Id,
+                        x.m.FileAttachment.FileName,
+                        x.m.FileAttachment.ContentType,
+                        x.m.FileAttachment.Size)
+                    : null,
+                x.m.LinkedEntityType,
+                x.m.LinkedEntityId))
             .ToListAsync(ct);
 
         // Mark unread messages as read

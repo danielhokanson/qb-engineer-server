@@ -668,6 +668,9 @@ public static partial class SeedData
         // ── Sales Tax Rates ────────────────────────────────────────────────
         await SeedSalesTaxRatesAsync(db);
 
+        // ── Default Chat Channels ────────────────────────────────────────────
+        await SeedDefaultChannelsAsync(db, admin.Id);
+
         // ── Historical Data ────────────────────────────────────────────────
         await SeedHistoricalDataAsync(db, admin.Id, akim.Id, dhart.Id, jsilva.Id, mreyes.Id,
             pmorris.Id, lwilson.Id, cthompson.Id, bkelly.Id);
@@ -728,6 +731,100 @@ public static partial class SeedData
         }
 
         return user;
+    }
+
+    private static async Task SeedDefaultChannelsAsync(AppDbContext db, int adminId)
+    {
+        if (await db.Set<ChatRoom>().AnyAsync(r => r.ChannelType == ChannelType.System))
+            return;
+
+        var allUserIds = await db.Users
+            .Where(u => u.IsActive)
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        // General channel — company-wide, everyone auto-joined
+        var general = new ChatRoom
+        {
+            Name = "General",
+            IsGroup = true,
+            CreatedById = adminId,
+            ChannelType = ChannelType.System,
+            Description = "Company-wide general discussion",
+            IconName = "forum",
+            CreatedBySystem = true,
+        };
+        foreach (var userId in allUserIds)
+        {
+            general.Members.Add(new ChatRoomMember
+            {
+                UserId = userId,
+                JoinedAt = DateTimeOffset.UtcNow,
+                Role = userId == adminId ? ChannelMemberRole.Owner : ChannelMemberRole.Member,
+            });
+        }
+
+        // Announcements channel — read-only broadcast
+        var announcements = new ChatRoom
+        {
+            Name = "Announcements",
+            IsGroup = true,
+            CreatedById = adminId,
+            ChannelType = ChannelType.Broadcast,
+            Description = "Official company announcements (read-only)",
+            IconName = "campaign",
+            IsReadOnly = true,
+            CreatedBySystem = true,
+        };
+        foreach (var userId in allUserIds)
+        {
+            announcements.Members.Add(new ChatRoomMember
+            {
+                UserId = userId,
+                JoinedAt = DateTimeOffset.UtcNow,
+                Role = userId == adminId ? ChannelMemberRole.Owner : ChannelMemberRole.Member,
+            });
+        }
+
+        db.Set<ChatRoom>().AddRange(general, announcements);
+
+        // Auto-create team channels
+        var teams = await db.Set<Team>()
+            .Where(t => t.IsActive)
+            .ToListAsync();
+
+        foreach (var team in teams)
+        {
+            var existingTeamChannel = await db.Set<ChatRoom>()
+                .AnyAsync(r => r.TeamId == team.Id && r.ChannelType == ChannelType.TeamAuto);
+
+            if (existingTeamChannel) continue;
+
+            var teamChannel = new ChatRoom
+            {
+                Name = team.Name,
+                IsGroup = true,
+                CreatedById = adminId,
+                ChannelType = ChannelType.TeamAuto,
+                Description = $"Auto-created channel for {team.Name} team",
+                IconName = "group",
+                TeamId = team.Id,
+                CreatedBySystem = true,
+            };
+
+            // Add admin as owner — team members will be synced separately
+            teamChannel.Members.Add(new ChatRoomMember
+            {
+                UserId = adminId,
+                JoinedAt = DateTimeOffset.UtcNow,
+                Role = ChannelMemberRole.Owner,
+            });
+
+            db.Set<ChatRoom>().Add(teamChannel);
+        }
+
+        await db.SaveChangesAsync();
+        Log.Information("Seeded default chat channels (General, Announcements, {TeamCount} team channels)", teams.Count);
     }
 }
 

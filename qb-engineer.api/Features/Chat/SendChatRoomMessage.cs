@@ -54,7 +54,18 @@ public class SendChatRoomMessageHandler(AppDbContext db, IHubContext<ChatHub> ch
         db.ChatMessages.Add(message);
         await db.SaveChangesAsync(ct);
 
+        // Parse and save mentions
+        var mentions = MentionParser.ParseMentions(request.Content, message.Id);
+        if (mentions.Count > 0)
+        {
+            db.ChatMessageMentions.AddRange(mentions);
+            await db.SaveChangesAsync(ct);
+        }
+
         var senderName = (sender.FirstName + " " + sender.LastName).Trim();
+        var mentionModels = mentions.Select(m =>
+            new ChatMessageMentionResponseModel(m.EntityType, m.EntityId, m.DisplayText)).ToList();
+
         var response = new ChatMessageResponseModel(
             message.Id,
             message.SenderId,
@@ -64,7 +75,8 @@ public class SendChatRoomMessageHandler(AppDbContext db, IHubContext<ChatHub> ch
             0,
             message.Content,
             false,
-            message.CreatedAt);
+            message.CreatedAt,
+            Mentions: mentionModels);
 
         // Broadcast to all room members via SignalR
         var memberIds = await db.Set<ChatRoomMember>()

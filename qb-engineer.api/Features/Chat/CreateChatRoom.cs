@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -27,9 +28,9 @@ public class CreateChatRoomHandler(AppDbContext db) : IRequestHandler<CreateChat
             Name = request.Name,
             IsGroup = true,
             CreatedById = request.CreatedById,
+            ChannelType = ChannelType.Group,
         };
 
-        // Add creator as member
         var allMemberIds = request.MemberIds.Distinct().ToList();
         if (!allMemberIds.Contains(request.CreatedById))
             allMemberIds.Add(request.CreatedById);
@@ -40,6 +41,7 @@ public class CreateChatRoomHandler(AppDbContext db) : IRequestHandler<CreateChat
             {
                 UserId = memberId,
                 JoinedAt = DateTimeOffset.UtcNow,
+                Role = memberId == request.CreatedById ? ChannelMemberRole.Owner : ChannelMemberRole.Member,
             });
         }
 
@@ -60,6 +62,9 @@ public class CreateChatRoomHandler(AppDbContext db) : IRequestHandler<CreateChat
                 u.Id,
                 (u.FirstName + " " + u.LastName).Trim(),
                 u.Initials ?? "??",
-                u.AvatarColor ?? "#94a3b8")).ToList());
+                u.AvatarColor ?? "#94a3b8",
+                u.Id == request.CreatedById ? ChannelMemberRole.Owner : ChannelMemberRole.Member,
+                false)).ToList(),
+            room.ChannelType);
     }
 }

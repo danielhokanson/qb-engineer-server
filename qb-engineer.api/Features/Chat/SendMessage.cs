@@ -8,7 +8,13 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Chat;
 
-public record SendMessageCommand(int SenderId, int RecipientId, string Content) : IRequest<ChatMessageResponseModel>;
+public record SendMessageCommand(
+    int SenderId,
+    int RecipientId,
+    string Content,
+    int? FileAttachmentId = null,
+    string? LinkedEntityType = null,
+    int? LinkedEntityId = null) : IRequest<ChatMessageResponseModel>;
 
 public class SendMessageValidator : AbstractValidator<SendMessageCommand>
 {
@@ -35,12 +41,25 @@ public class SendMessageHandler(AppDbContext db, IHubContext<ChatHub> chatHub)
             SenderId = request.SenderId,
             RecipientId = request.RecipientId,
             Content = request.Content,
+            FileAttachmentId = request.FileAttachmentId,
+            LinkedEntityType = request.LinkedEntityType,
+            LinkedEntityId = request.LinkedEntityId,
         };
 
         db.ChatMessages.Add(message);
         await db.SaveChangesAsync(ct);
 
+        // Parse and save mentions
+        var mentions = MentionParser.ParseMentions(request.Content, message.Id);
+        if (mentions.Count > 0)
+        {
+            db.ChatMessageMentions.AddRange(mentions);
+            await db.SaveChangesAsync(ct);
+        }
+
         var senderName = (sender.FirstName + " " + sender.LastName).Trim();
+        var mentionModels = mentions.Select(m =>
+            new ChatMessageMentionResponseModel(m.EntityType, m.EntityId, m.DisplayText)).ToList();
 
         var response = new ChatMessageResponseModel(
             message.Id,
@@ -51,7 +70,8 @@ public class SendMessageHandler(AppDbContext db, IHubContext<ChatHub> chatHub)
             message.RecipientId,
             message.Content,
             false,
-            message.CreatedAt);
+            message.CreatedAt,
+            Mentions: mentionModels);
 
         // Push to recipient via SignalR
         await chatHub.Clients.Group($"user:{request.RecipientId}")

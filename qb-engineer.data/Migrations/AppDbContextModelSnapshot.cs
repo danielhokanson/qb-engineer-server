@@ -585,6 +585,216 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("andon_alerts");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Announcement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("department_id");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsSystemGenerated")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_system_generated");
+
+                    b.Property<bool>("RequiresAcknowledgment")
+                        .HasColumnType("boolean")
+                        .HasColumnName("requires_acknowledgment");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("scope");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("severity");
+
+                    b.Property<string>("SystemSource")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("system_source");
+
+                    b.Property<int?>("TemplateId")
+                        .HasColumnType("integer")
+                        .HasColumnName("template_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_announcements");
+
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_announcements_created_by_id");
+
+                    b.HasIndex("DepartmentId")
+                        .HasDatabaseName("ix_announcements_department_id")
+                        .HasFilter("department_id IS NOT NULL");
+
+                    b.HasIndex("TemplateId")
+                        .HasDatabaseName("ix_announcements_template_id");
+
+                    b.HasIndex("Severity", "Scope")
+                        .HasDatabaseName("ix_announcements_severity_scope")
+                        .HasFilter("deleted_at IS NULL");
+
+                    b.ToTable("announcements");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.AnnouncementAcknowledgment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("acknowledged_at");
+
+                    b.Property<int>("AnnouncementId")
+                        .HasColumnType("integer")
+                        .HasColumnName("announcement_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_announcement_acknowledgments");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_announcement_acknowledgments_user_id");
+
+                    b.HasIndex("AnnouncementId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_announcement_acknowledgments_announcement_id_user_id");
+
+                    b.ToTable("announcement_acknowledgments");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.AnnouncementTeam", b =>
+                {
+                    b.Property<int>("AnnouncementId")
+                        .HasColumnType("integer")
+                        .HasColumnName("announcement_id");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("integer")
+                        .HasColumnName("team_id");
+
+                    b.HasKey("AnnouncementId", "TeamId")
+                        .HasName("pk_announcement_teams");
+
+                    b.HasIndex("TeamId")
+                        .HasDatabaseName("ix_announcement_teams_team_id");
+
+                    b.ToTable("announcement_teams");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.AnnouncementTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("DefaultRequiresAcknowledgment")
+                        .HasColumnType("boolean")
+                        .HasColumnName("default_requires_acknowledgment");
+
+                    b.Property<string>("DefaultScope")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("default_scope");
+
+                    b.Property<string>("DefaultSeverity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("default_severity");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_announcement_templates");
+
+                    b.ToTable("announcement_templates");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.ApprovalDecision", b =>
                 {
                     b.Property<int>("Id")
@@ -1631,6 +1841,10 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("linked_entity_type");
 
+                    b.Property<int?>("ParentMessageId")
+                        .HasColumnType("integer")
+                        .HasColumnName("parent_message_id");
+
                     b.Property<DateTimeOffset?>("ReadAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("read_at");
@@ -1642,6 +1856,14 @@ namespace QBEngineer.Data.Migrations
                     b.Property<int>("SenderId")
                         .HasColumnType("integer")
                         .HasColumnName("sender_id");
+
+                    b.Property<DateTimeOffset?>("ThreadLastReplyAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("thread_last_reply_at");
+
+                    b.Property<int>("ThreadReplyCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("thread_reply_count");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1656,6 +1878,10 @@ namespace QBEngineer.Data.Migrations
                     b.HasIndex("FileAttachmentId")
                         .HasDatabaseName("ix_chat_messages_file_attachment_id");
 
+                    b.HasIndex("ParentMessageId")
+                        .HasDatabaseName("ix_chat_messages_parent_message_id")
+                        .HasFilter("parent_message_id IS NOT NULL");
+
                     b.HasIndex("RecipientId")
                         .HasDatabaseName("ix_chat_messages_recipient_id");
 
@@ -1668,6 +1894,47 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("chat_messages");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.ChatMessageMention", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChatMessageId")
+                        .HasColumnType("integer")
+                        .HasColumnName("chat_message_id");
+
+                    b.Property<string>("DisplayText")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("display_text");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("entity_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_chat_message_mentions");
+
+                    b.HasIndex("ChatMessageId")
+                        .HasDatabaseName("ix_chat_message_mentions_chat_message_id");
+
+                    b.HasIndex("EntityType", "EntityId")
+                        .HasDatabaseName("ix_chat_message_mentions_entity_type_entity_id");
+
+                    b.ToTable("chat_message_mentions");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.ChatRoom", b =>
                 {
                     b.Property<int>("Id")
@@ -1677,6 +1944,12 @@ namespace QBEngineer.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ChannelType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("channel_type");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1684,6 +1957,10 @@ namespace QBEngineer.Data.Migrations
                     b.Property<int>("CreatedById")
                         .HasColumnType("integer")
                         .HasColumnName("created_by_id");
+
+                    b.Property<bool>("CreatedBySystem")
+                        .HasColumnType("boolean")
+                        .HasColumnName("created_by_system");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1693,15 +1970,33 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("deleted_by");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("IconName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("icon_name");
+
                     b.Property<bool>("IsGroup")
                         .HasColumnType("boolean")
                         .HasColumnName("is_group");
+
+                    b.Property<bool>("IsReadOnly")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_read_only");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
+
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("integer")
+                        .HasColumnName("team_id");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1710,8 +2005,15 @@ namespace QBEngineer.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_chat_rooms");
 
+                    b.HasIndex("ChannelType")
+                        .HasDatabaseName("ix_chat_rooms_channel_type");
+
                     b.HasIndex("CreatedById")
                         .HasDatabaseName("ix_chat_rooms_created_by_id");
+
+                    b.HasIndex("TeamId")
+                        .HasDatabaseName("ix_chat_rooms_team_id")
+                        .HasFilter("team_id IS NOT NULL");
 
                     b.ToTable("chat_rooms");
                 });
@@ -1745,6 +2047,20 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("joined_at");
 
+                    b.Property<int?>("LastReadMessageId")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_read_message_id");
+
+                    b.Property<DateTimeOffset?>("MutedUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("muted_until");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("role");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -1758,6 +2074,9 @@ namespace QBEngineer.Data.Migrations
 
                     b.HasIndex("ChatRoomId")
                         .HasDatabaseName("ix_chat_room_members_chat_room_id");
+
+                    b.HasIndex("LastReadMessageId")
+                        .HasDatabaseName("ix_chat_room_members_last_read_message_id");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_chat_room_members_user_id");
@@ -16634,6 +16953,64 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("WorkCenter");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Announcement", b =>
+                {
+                    b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_announcements__asp_net_users_created_by_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.AnnouncementTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_announcements__announcement_templates_template_id");
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.AnnouncementAcknowledgment", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.Announcement", "Announcement")
+                        .WithMany("Acknowledgments")
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_announcement_acknowledgments_announcements_announcement_id");
+
+                    b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_announcement_acknowledgments__asp_net_users_user_id");
+
+                    b.Navigation("Announcement");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.AnnouncementTeam", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.Announcement", "Announcement")
+                        .WithMany("TargetTeams")
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_announcement_teams_announcements_announcement_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_announcement_teams__teams_team_id");
+
+                    b.Navigation("Announcement");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.ApprovalDecision", b =>
                 {
                     b.HasOne("QBEngineer.Core.Entities.ApprovalRequest", "Request")
@@ -16877,6 +17254,12 @@ namespace QBEngineer.Data.Migrations
                         .HasForeignKey("FileAttachmentId")
                         .HasConstraintName("fk_chat_messages__file_attachments_file_attachment_id");
 
+                    b.HasOne("QBEngineer.Core.Entities.ChatMessage", "ParentMessage")
+                        .WithMany()
+                        .HasForeignKey("ParentMessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_chat_messages_chat_messages_parent_message_id");
+
                     b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("RecipientId")
@@ -16894,6 +17277,20 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("ChatRoom");
 
                     b.Navigation("FileAttachment");
+
+                    b.Navigation("ParentMessage");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.ChatMessageMention", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.ChatMessage", "ChatMessage")
+                        .WithMany("Mentions")
+                        .HasForeignKey("ChatMessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_chat_message_mentions_chat_messages_chat_message_id");
+
+                    b.Navigation("ChatMessage");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.ChatRoom", b =>
@@ -16904,6 +17301,14 @@ namespace QBEngineer.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_chat_rooms__asp_net_users_created_by_id");
+
+                    b.HasOne("QBEngineer.Core.Entities.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_chat_rooms__teams_team_id");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.ChatRoomMember", b =>
@@ -16915,6 +17320,12 @@ namespace QBEngineer.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_chat_room_members_chat_rooms_chat_room_id");
 
+                    b.HasOne("QBEngineer.Core.Entities.ChatMessage", "LastReadMessage")
+                        .WithMany()
+                        .HasForeignKey("LastReadMessageId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_chat_room_members_chat_messages_last_read_message_id");
+
                     b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -16923,6 +17334,8 @@ namespace QBEngineer.Data.Migrations
                         .HasConstraintName("fk_chat_room_members__asp_net_users_user_id");
 
                     b.Navigation("ChatRoom");
+
+                    b.Navigation("LastReadMessage");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.ClockEvent", b =>
@@ -19868,6 +20281,13 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("Classifications");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Announcement", b =>
+                {
+                    b.Navigation("Acknowledgments");
+
+                    b.Navigation("TargetTeams");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.ApprovalRequest", b =>
                 {
                     b.Navigation("Decisions");
@@ -19883,6 +20303,11 @@ namespace QBEngineer.Data.Migrations
             modelBuilder.Entity("QBEngineer.Core.Entities.BinContent", b =>
                 {
                     b.Navigation("Reservations");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.ChatMessage", b =>
+                {
+                    b.Navigation("Mentions");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.ChatRoom", b =>

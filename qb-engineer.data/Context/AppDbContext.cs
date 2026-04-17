@@ -87,6 +87,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
     public DbSet<ChatRoomMember> ChatRoomMembers => Set<ChatRoomMember>();
+    public DbSet<ChatMessageMention> ChatMessageMentions => Set<ChatMessageMention>();
 
     // Asset Maintenance
     public DbSet<MaintenanceSchedule> MaintenanceSchedules => Set<MaintenanceSchedule>();
@@ -346,6 +347,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
 
     // Credit Hold Audit Trail
     public DbSet<CreditHold> CreditHolds => Set<CreditHold>();
+
+    // Announcements
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<AnnouncementAcknowledgment> AnnouncementAcknowledgments => Set<AnnouncementAcknowledgment>();
+    public DbSet<AnnouncementTeam> AnnouncementTeams => Set<AnnouncementTeam>();
+    public DbSet<AnnouncementTemplate> AnnouncementTemplates => Set<AnnouncementTemplate>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

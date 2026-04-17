@@ -14,6 +14,8 @@ public class ChatController(IMediator mediator) : ControllerBase
 {
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    // ── Direct Message Conversations ──
+
     [HttpGet("conversations")]
     public async Task<ActionResult<List<ChatConversationResponseModel>>> GetConversations()
     {
@@ -31,7 +33,8 @@ public class ChatController(IMediator mediator) : ControllerBase
     [HttpPost("messages")]
     public async Task<ActionResult<ChatMessageResponseModel>> SendMessage([FromBody] SendChatMessageRequestModel model)
     {
-        var result = await mediator.Send(new SendMessageCommand(GetUserId(), model.RecipientId, model.Content));
+        var result = await mediator.Send(new SendMessageCommand(
+            GetUserId(), model.RecipientId, model.Content, model.FileAttachmentId, model.LinkedEntityType, model.LinkedEntityId));
         return CreatedAtAction(nameof(GetMessages), new { otherUserId = model.RecipientId }, result);
     }
 
@@ -42,7 +45,83 @@ public class ChatController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    // ── Chat Rooms (Group Chat) ──
+    // ── Channels (Group Chat, Teams, Custom, System) ──
+
+    [HttpGet("channels")]
+    public async Task<ActionResult<List<ChatRoomResponseModel>>> GetChannels()
+    {
+        var result = await mediator.Send(new GetChannelsQuery(GetUserId()));
+        return Ok(result);
+    }
+
+    [HttpPost("channels")]
+    public async Task<ActionResult<ChatRoomResponseModel>> CreateChannel([FromBody] CreateChannelRequestModel model)
+    {
+        var result = await mediator.Send(new CreateChannelCommand(
+            GetUserId(), model.Name, model.ChannelType, model.Description, model.IconName, model.MemberIds));
+        return CreatedAtAction(nameof(GetChannels), result);
+    }
+
+    [HttpPatch("channels/{channelId:int}")]
+    public async Task<IActionResult> UpdateChannel(int channelId, [FromBody] UpdateChannelRequestModel model)
+    {
+        await mediator.Send(new UpdateChannelCommand(GetUserId(), channelId, model.Name, model.Description, model.IconName));
+        return NoContent();
+    }
+
+    [HttpPost("channels/{channelId:int}/join")]
+    public async Task<IActionResult> JoinChannel(int channelId)
+    {
+        await mediator.Send(new JoinChannelCommand(GetUserId(), channelId));
+        return NoContent();
+    }
+
+    [HttpPost("channels/{channelId:int}/leave")]
+    public async Task<IActionResult> LeaveChannel(int channelId)
+    {
+        await mediator.Send(new LeaveChannelCommand(GetUserId(), channelId));
+        return NoContent();
+    }
+
+    [HttpPost("channels/{channelId:int}/mute")]
+    public async Task<IActionResult> MuteChannel(int channelId, [FromQuery] bool mute = true)
+    {
+        await mediator.Send(new MuteChannelCommand(GetUserId(), channelId, mute));
+        return NoContent();
+    }
+
+    [HttpPost("channels/{channelId:int}/read")]
+    public async Task<IActionResult> MarkChannelRead(int channelId)
+    {
+        await mediator.Send(new MarkChannelReadCommand(GetUserId(), channelId));
+        return NoContent();
+    }
+
+    [HttpGet("channels/discover")]
+    public async Task<ActionResult<List<ChatRoomResponseModel>>> DiscoverChannels([FromQuery] string? search)
+    {
+        var result = await mediator.Send(new DiscoverChannelsQuery(GetUserId(), search));
+        return Ok(result);
+    }
+
+    // ── Threads ──
+
+    [HttpGet("messages/{messageId:int}/thread")]
+    public async Task<ActionResult<List<ChatMessageResponseModel>>> GetThread(int messageId)
+    {
+        var result = await mediator.Send(new GetThreadQuery(GetUserId(), messageId));
+        return Ok(result);
+    }
+
+    [HttpPost("messages/{messageId:int}/reply")]
+    public async Task<ActionResult<ChatMessageResponseModel>> ReplyInThread(
+        int messageId, [FromBody] ThreadReplyRequestModel model)
+    {
+        var result = await mediator.Send(new ReplyInThreadCommand(GetUserId(), messageId, model.Content));
+        return CreatedAtAction(nameof(GetThread), new { messageId }, result);
+    }
+
+    // ── Legacy Chat Rooms (kept for backward compatibility) ──
 
     [HttpGet("rooms")]
     public async Task<ActionResult<List<ChatRoomResponseModel>>> GetRooms()
@@ -71,7 +150,7 @@ public class ChatController(IMediator mediator) : ControllerBase
         int roomId, [FromBody] SendChatMessageRequestModel model)
     {
         var result = await mediator.Send(new SendChatRoomMessageCommand(
-            GetUserId(), roomId, model.Content));
+            GetUserId(), roomId, model.Content, model.FileAttachmentId, model.LinkedEntityType, model.LinkedEntityId));
         return CreatedAtAction(nameof(GetRoomMessages), new { roomId }, result);
     }
 

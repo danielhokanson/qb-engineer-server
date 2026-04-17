@@ -19,4 +19,13 @@ public class ChatMessage : BaseAuditableEntity
     // Entity link sharing
     public string? LinkedEntityType { get; set; }
     public int? LinkedEntityId { get; set; }
+
+    // Thread support
+    public int? ParentMessageId { get; set; }
+    public ChatMessage? ParentMessage { get; set; }
+    public int ThreadReplyCount { get; set; }
+    public DateTimeOffset? ThreadLastReplyAt { get; set; }
+
+    // Mentions
+    public ICollection<ChatMessageMention> Mentions { get; set; } = new List<ChatMessageMention>();
 }

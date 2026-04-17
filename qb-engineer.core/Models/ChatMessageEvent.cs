@@ -8,4 +8,6 @@ public record ChatMessageEvent(
     string SenderColor,
     int RecipientId,
     string Content,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    int? ParentMessageId = null,
+    int ThreadReplyCount = 0);
