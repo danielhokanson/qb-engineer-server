@@ -1,8 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -27,7 +29,9 @@ public class AddHoldCommandValidator : AbstractValidator<AddHoldCommand>
 
 public class AddHoldHandler(
     AppDbContext db,
-    IStatusEntryRepository repository)
+    IStatusEntryRepository repository,
+    IActivityLogRepository activityRepo,
+    IHttpContextAccessor httpContext)
     : IRequestHandler<AddHoldCommand, StatusEntryResponseModel>
 {
     public async Task<StatusEntryResponseModel> Handle(
@@ -66,6 +70,41 @@ public class AddHoldHandler(
         };
 
         await db.StatusEntries.AddAsync(statusEntry, cancellationToken);
+
+        // Create activity log entry for the hold
+        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
+
+        var description = $"Hold added: {label}.";
+
+        if (string.Equals(request.EntityType, "job", System.StringComparison.OrdinalIgnoreCase))
+        {
+            await activityRepo.AddAsync(new JobActivityLog
+            {
+                JobId = request.EntityId,
+                UserId = currentUserId,
+                Action = ActivityAction.StatusChanged,
+                FieldName = "Hold",
+                OldValue = null,
+                NewValue = label,
+                Description = description,
+            }, cancellationToken);
+        }
+        else
+        {
+            await activityRepo.AddAsync(new ActivityLog
+            {
+                EntityType = request.EntityType,
+                EntityId = request.EntityId,
+                UserId = currentUserId,
+                Action = ActivityAction.StatusChanged.ToString(),
+                FieldName = "Hold",
+                OldValue = null,
+                NewValue = label,
+                Description = description,
+            }, cancellationToken);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         // Reload to return with SetBy info

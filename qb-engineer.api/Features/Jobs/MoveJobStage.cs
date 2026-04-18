@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
@@ -23,6 +24,7 @@ public class MoveJobStageHandler(
     ISyncQueueRepository syncQueue,
     IMediator mediator,
     IHubContext<BoardHub> boardHub,
+    IHttpContextAccessor httpContext,
     ILogger<MoveJobStageHandler> logger) : IRequestHandler<MoveJobStageCommand, JobDetailResponseModel>
 {
     public async Task<JobDetailResponseModel> Handle(MoveJobStageCommand request, CancellationToken cancellationToken)
@@ -69,9 +71,13 @@ public class MoveJobStageHandler(
         var maxPosition = await jobRepo.GetMaxBoardPositionAsync(request.StageId, cancellationToken);
         job.BoardPosition = maxPosition + 1;
 
+        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
+
         var log = new JobActivityLog
         {
             JobId = job.Id,
+            UserId = currentUserId,
             Action = ActivityAction.StageMoved,
             FieldName = "CurrentStageId",
             OldValue = previousStageName,

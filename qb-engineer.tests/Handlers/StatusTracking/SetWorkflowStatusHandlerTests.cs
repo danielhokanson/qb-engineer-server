@@ -22,7 +22,11 @@ public class SetWorkflowStatusHandlerTests
     public SetWorkflowStatusHandlerTests()
     {
         _dbContext = TestDbContextFactory.Create();
-        _handler = new SetWorkflowStatusHandler(_dbContext, _statusRepo.Object);
+        _handler = new SetWorkflowStatusHandler(
+            _dbContext,
+            _statusRepo.Object,
+            Mock.Of<IActivityLogRepository>(),
+            Mock.Of<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
     }
 
     [Fact]

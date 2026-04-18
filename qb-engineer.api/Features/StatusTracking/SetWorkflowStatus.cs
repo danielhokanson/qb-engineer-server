@@ -1,8 +1,10 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -27,7 +29,9 @@ public class SetWorkflowStatusCommandValidator : AbstractValidator<SetWorkflowSt
 
 public class SetWorkflowStatusHandler(
     AppDbContext db,
-    IStatusEntryRepository repository)
+    IStatusEntryRepository repository,
+    IActivityLogRepository activityRepo,
+    IHttpContextAccessor httpContext)
     : IRequestHandler<SetWorkflowStatusCommand, StatusEntryResponseModel>
 {
     public async Task<StatusEntryResponseModel> Handle(
@@ -42,6 +46,8 @@ public class SetWorkflowStatusHandler(
                         && s.Category == "workflow"
                         && s.EndedAt == null)
             .ToListAsync(cancellationToken);
+
+        var previousLabel = currentWorkflow.FirstOrDefault()?.StatusLabel;
 
         foreach (var entry in currentWorkflow)
         {
@@ -67,6 +73,43 @@ public class SetWorkflowStatusHandler(
         };
 
         await db.StatusEntries.AddAsync(statusEntry, cancellationToken);
+
+        // Create activity log entry for the status change
+        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
+
+        var description = previousLabel is not null
+            ? $"Status changed from {previousLabel} to {label}."
+            : $"Status set to {label}.";
+
+        if (string.Equals(request.EntityType, "job", System.StringComparison.OrdinalIgnoreCase))
+        {
+            await activityRepo.AddAsync(new JobActivityLog
+            {
+                JobId = request.EntityId,
+                UserId = currentUserId,
+                Action = ActivityAction.StatusChanged,
+                FieldName = "WorkflowStatus",
+                OldValue = previousLabel,
+                NewValue = label,
+                Description = description,
+            }, cancellationToken);
+        }
+        else
+        {
+            await activityRepo.AddAsync(new ActivityLog
+            {
+                EntityType = request.EntityType,
+                EntityId = request.EntityId,
+                UserId = currentUserId,
+                Action = ActivityAction.StatusChanged.ToString(),
+                FieldName = "WorkflowStatus",
+                OldValue = previousLabel,
+                NewValue = label,
+                Description = description,
+            }, cancellationToken);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         // Reload to return with SetBy info

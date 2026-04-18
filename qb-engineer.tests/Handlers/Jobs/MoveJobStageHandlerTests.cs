@@ -40,6 +40,7 @@ public class MoveJobStageHandlerTests
             Mock.Of<ISyncQueueRepository>(),
             _mediator.Object,
             _boardHub.Object,
+            Mock.Of<Microsoft.AspNetCore.Http.IHttpContextAccessor>(),
             Mock.Of<ILogger<MoveJobStageHandler>>());
     }
 

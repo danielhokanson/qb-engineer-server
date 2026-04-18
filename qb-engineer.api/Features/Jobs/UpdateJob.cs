@@ -1,7 +1,11 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+
 using QBEngineer.Api.Hubs;
+using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -32,8 +36,10 @@ public class UpdateJobCommandValidator : AbstractValidator<UpdateJobCommand>
 
 public class UpdateJobHandler(
     IJobRepository repo,
+    IActivityLogRepository actRepo,
     IMediator mediator,
     IHubContext<BoardHub> boardHub,
+    IHttpContextAccessor httpContext,
     AppDbContext db) : IRequestHandler<UpdateJobCommand, JobDetailResponseModel>
 {
     public async Task<JobDetailResponseModel> Handle(UpdateJobCommand request, CancellationToken cancellationToken)
@@ -44,29 +50,124 @@ public class UpdateJobHandler(
         if (request.AssigneeId.HasValue)
             await AssigneeComplianceCheck.EnsureCanBeAssigned(db, request.AssigneeId.Value, cancellationToken);
 
-        if (request.Title is not null)
+        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
+
+        var changes = new List<JobActivityLog>();
+
+        if (request.Title is not null && request.Title != job.Title)
+        {
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId, Action = ActivityAction.FieldChanged,
+                FieldName = "Title", OldValue = job.Title, NewValue = request.Title,
+                Description = $"Title changed from \"{job.Title}\" to \"{request.Title}\".",
+            });
             job.Title = request.Title;
+        }
 
-        if (request.Description is not null)
+        if (request.Description is not null && request.Description != job.Description)
+        {
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId, Action = ActivityAction.FieldChanged,
+                FieldName = "Description", OldValue = null, NewValue = null,
+                Description = "Description updated.",
+            });
             job.Description = request.Description;
+        }
 
-        if (request.AssigneeId.HasValue)
+        if (request.AssigneeId.HasValue && request.AssigneeId.Value != job.AssigneeId)
+        {
+            var oldAssigneeName = job.AssigneeId.HasValue
+                ? await db.Users.Where(u => u.Id == job.AssigneeId.Value)
+                    .Select(u => u.LastName + ", " + u.FirstName).FirstOrDefaultAsync(cancellationToken)
+                : null;
+            var newAssigneeName = await db.Users.Where(u => u.Id == request.AssigneeId.Value)
+                .Select(u => u.LastName + ", " + u.FirstName).FirstOrDefaultAsync(cancellationToken);
+
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId,
+                Action = oldAssigneeName is null ? ActivityAction.Assigned : ActivityAction.FieldChanged,
+                FieldName = "Assignee", OldValue = oldAssigneeName, NewValue = newAssigneeName,
+                Description = oldAssigneeName is null
+                    ? $"Assigned to {newAssigneeName}."
+                    : $"Assignee changed from {oldAssigneeName} to {newAssigneeName}.",
+            });
             job.AssigneeId = request.AssigneeId.Value;
+        }
 
-        if (request.CustomerId.HasValue)
+        if (request.CustomerId.HasValue && request.CustomerId.Value != job.CustomerId)
+        {
+            var oldCustomerName = job.CustomerId.HasValue
+                ? await db.Customers.Where(c => c.Id == job.CustomerId.Value)
+                    .Select(c => c.Name).FirstOrDefaultAsync(cancellationToken)
+                : null;
+            var newCustomerName = await db.Customers.Where(c => c.Id == request.CustomerId.Value)
+                .Select(c => c.Name).FirstOrDefaultAsync(cancellationToken);
+
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId, Action = ActivityAction.FieldChanged,
+                FieldName = "Customer", OldValue = oldCustomerName, NewValue = newCustomerName,
+                Description = oldCustomerName is null
+                    ? $"Customer set to {newCustomerName}."
+                    : $"Customer changed from {oldCustomerName} to {newCustomerName}.",
+            });
             job.CustomerId = request.CustomerId.Value;
+        }
 
-        if (request.Priority.HasValue)
+        if (request.Priority.HasValue && request.Priority.Value != job.Priority)
+        {
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId, Action = ActivityAction.FieldChanged,
+                FieldName = "Priority", OldValue = job.Priority.ToString(), NewValue = request.Priority.Value.ToString(),
+                Description = $"Priority changed from {job.Priority} to {request.Priority.Value}.",
+            });
             job.Priority = request.Priority.Value;
+        }
 
-        if (request.DueDate.HasValue)
+        if (request.DueDate.HasValue && request.DueDate.Value != job.DueDate)
+        {
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId, Action = ActivityAction.FieldChanged,
+                FieldName = "DueDate",
+                OldValue = job.DueDate?.ToString("MM/dd/yyyy"),
+                NewValue = request.DueDate.Value.ToString("MM/dd/yyyy"),
+                Description = job.DueDate.HasValue
+                    ? $"Due date changed from {job.DueDate.Value:MM/dd/yyyy} to {request.DueDate.Value:MM/dd/yyyy}."
+                    : $"Due date set to {request.DueDate.Value:MM/dd/yyyy}.",
+            });
             job.DueDate = request.DueDate.Value;
+        }
 
-        if (request.IterationCount.HasValue)
+        if (request.IterationCount.HasValue && request.IterationCount.Value != job.IterationCount)
+        {
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId, Action = ActivityAction.FieldChanged,
+                FieldName = "IterationCount", OldValue = job.IterationCount.ToString(), NewValue = request.IterationCount.Value.ToString(),
+                Description = $"Iteration count changed from {job.IterationCount} to {request.IterationCount.Value}.",
+            });
             job.IterationCount = request.IterationCount.Value;
+        }
 
-        if (request.IterationNotes is not null)
+        if (request.IterationNotes is not null && request.IterationNotes != job.IterationNotes)
+        {
+            changes.Add(new JobActivityLog
+            {
+                JobId = job.Id, UserId = currentUserId, Action = ActivityAction.FieldChanged,
+                FieldName = "IterationNotes", OldValue = null, NewValue = null,
+                Description = "Iteration notes updated.",
+            });
             job.IterationNotes = request.IterationNotes;
+        }
+
+        foreach (var log in changes)
+            await actRepo.AddAsync(log, cancellationToken);
 
         await repo.SaveChangesAsync(cancellationToken);
 

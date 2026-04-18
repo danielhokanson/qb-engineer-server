@@ -30,7 +30,13 @@ public class UpdateJobHandlerTests
         mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(mockClientProxy.Object);
         _boardHub.Setup(h => h.Clients).Returns(mockClients.Object);
 
-        _handler = new UpdateJobHandler(_jobRepo.Object, _mediator.Object, _boardHub.Object, TestDbContextFactory.Create());
+        _handler = new UpdateJobHandler(
+            _jobRepo.Object,
+            Mock.Of<IActivityLogRepository>(),
+            _mediator.Object,
+            _boardHub.Object,
+            Mock.Of<Microsoft.AspNetCore.Http.IHttpContextAccessor>(),
+            TestDbContextFactory.Create());
     }
 
     private Job CreateExistingJob(int id = 1)

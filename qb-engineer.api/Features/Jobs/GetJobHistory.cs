@@ -13,7 +13,9 @@ public class GetJobHistoryHandler(AppDbContext db) : IRequestHandler<GetJobHisto
     private static readonly HashSet<ActivityAction> HistoryActions =
     [
         ActivityAction.Created,
+        ActivityAction.FieldChanged,
         ActivityAction.StageMoved,
+        ActivityAction.StatusChanged,
         ActivityAction.Assigned,
         ActivityAction.Unassigned,
         ActivityAction.Archived,
