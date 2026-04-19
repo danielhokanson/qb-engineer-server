@@ -229,6 +229,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<WorkCenterShift> WorkCenterShifts => Set<WorkCenterShift>();
     public DbSet<ScheduledOperation> ScheduledOperations => Set<ScheduledOperation>();
     public DbSet<ScheduleRun> ScheduleRuns => Set<ScheduleRun>();
+    public DbSet<ScheduleMilestone> ScheduleMilestones => Set<ScheduleMilestone>();
     public DbSet<ShiftAssignment> ShiftAssignments => Set<ShiftAssignment>();
     public DbSet<OvertimeRule> OvertimeRules => Set<OvertimeRule>();
     public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
