@@ -14,6 +14,8 @@ public class Event : BaseAuditableEntity
     public int CreatedByUserId { get; set; }
     public bool IsCancelled { get; set; }
     public DateTimeOffset? ReminderSentAt { get; set; }
+    public bool IsAllDay { get; set; }
+    public bool IsSystemGenerated { get; set; }
 
     // Navigation
     public ICollection<EventAttendee> Attendees { get; set; } = new List<EventAttendee>();

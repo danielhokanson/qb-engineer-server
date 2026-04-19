@@ -1,6 +1,9 @@
+using System.Security.Claims;
+
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
@@ -38,6 +41,7 @@ public class CreateJobHandler(
     IMediator mediator,
     IHubContext<BoardHub> boardHub,
     IBarcodeService barcodeService,
+    IHttpContextAccessor httpContextAccessor,
     AppDbContext db) : IRequestHandler<CreateJobCommand, JobDetailResponseModel>
 {
     public async Task<JobDetailResponseModel> Handle(CreateJobCommand request, CancellationToken cancellationToken)
@@ -84,6 +88,11 @@ public class CreateJobHandler(
             .SendAsync("jobCreated", new BoardJobCreatedEvent(
                 job.Id, job.JobNumber, job.Title, request.TrackTypeId,
                 firstStage.Id, firstStage.Name, job.BoardPosition), cancellationToken);
+
+        // Publish domain event for calendar integration
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        if (userId > 0)
+            await mediator.Publish(new JobCreatedEvent(job.Id, userId), cancellationToken);
 
         return result;
     }

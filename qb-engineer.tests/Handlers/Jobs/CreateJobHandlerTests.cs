@@ -35,7 +35,7 @@ public class CreateJobHandlerTests
 
         _db = TestDbContextFactory.Create();
 
-        _handler = new CreateJobHandler(_jobRepo.Object, _trackRepo.Object, _mediator.Object, _boardHub.Object, Mock.Of<IBarcodeService>(), _db);
+        _handler = new CreateJobHandler(_jobRepo.Object, _trackRepo.Object, _mediator.Object, _boardHub.Object, Mock.Of<IBarcodeService>(), Mock.Of<Microsoft.AspNetCore.Http.IHttpContextAccessor>(), _db);
     }
 
     [Fact]

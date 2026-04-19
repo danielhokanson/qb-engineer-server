@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 
 namespace QBEngineer.Data.Configuration;
 
@@ -13,8 +14,14 @@ public class FollowUpTaskConfiguration : IEntityTypeConfiguration<FollowUpTask>
         builder.Property(e => e.Description).HasMaxLength(2000);
         builder.Property(e => e.SourceEntityType).HasMaxLength(100);
 
+        builder.HasOne<Context.ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(e => e.AssignedToUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(e => e.AssignedToUserId);
-        builder.HasIndex(e => e.Status);
+        builder.HasIndex(e => e.Status)
+            .HasFilter("status = 'Open'");
         builder.HasIndex(e => e.DueDate);
         builder.HasIndex(e => new { e.SourceEntityType, e.SourceEntityId });
         builder.HasIndex(e => e.TriggerType);

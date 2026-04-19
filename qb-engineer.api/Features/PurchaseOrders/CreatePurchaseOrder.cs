@@ -1,5 +1,8 @@
+using System.Security.Claims;
+
 using FluentValidation;
 using MediatR;
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -28,7 +31,13 @@ public class CreatePurchaseOrderValidator : AbstractValidator<CreatePurchaseOrde
     }
 }
 
-public class CreatePurchaseOrderHandler(IPurchaseOrderRepository poRepo, IVendorRepository vendorRepo, IPartRepository partRepo, IBarcodeService barcodeService)
+public class CreatePurchaseOrderHandler(
+    IPurchaseOrderRepository poRepo,
+    IVendorRepository vendorRepo,
+    IPartRepository partRepo,
+    IBarcodeService barcodeService,
+    IMediator mediator,
+    IHttpContextAccessor httpContextAccessor)
     : IRequestHandler<CreatePurchaseOrderCommand, PurchaseOrderListItemModel>
 {
     public async Task<PurchaseOrderListItemModel> Handle(CreatePurchaseOrderCommand request, CancellationToken cancellationToken)
@@ -66,6 +75,11 @@ public class CreatePurchaseOrderHandler(IPurchaseOrderRepository poRepo, IVendor
 
         await barcodeService.CreateBarcodeAsync(
             BarcodeEntityType.PurchaseOrder, po.Id, po.PONumber, cancellationToken);
+
+        // Publish domain event for calendar integration
+        var userId = int.Parse(httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        if (userId > 0)
+            await mediator.Publish(new PurchaseOrderCreatedEvent(po.Id, userId), cancellationToken);
 
         return new PurchaseOrderListItemModel(
             po.Id, po.PONumber, po.VendorId, vendor.CompanyName,

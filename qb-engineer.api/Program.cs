@@ -501,7 +501,8 @@ try
 
     // Domain Events — dead letter queue + backward scheduling
     builder.Services.AddScoped<QBEngineer.Api.Features.DomainEvents.DomainEventFailureService>();
-    builder.Services.AddScoped<IBackwardSchedulingService, QBEngineer.Api.Services.BackwardSchedulingService>();
+    builder.Services.AddScoped<QBEngineer.Api.Services.BackwardSchedulingService>();
+    builder.Services.AddScoped<IBackwardSchedulingService>(sp => sp.GetRequiredService<QBEngineer.Api.Services.BackwardSchedulingService>());
 
     // Controllers + OpenAPI
     builder.Services.AddControllers()

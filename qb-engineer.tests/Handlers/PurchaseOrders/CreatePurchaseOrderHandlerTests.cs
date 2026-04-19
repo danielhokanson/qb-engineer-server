@@ -19,7 +19,7 @@ public class CreatePurchaseOrderHandlerTests
 
     public CreatePurchaseOrderHandlerTests()
     {
-        _handler = new CreatePurchaseOrderHandler(_poRepo.Object, _vendorRepo.Object, _partRepo.Object, Mock.Of<IBarcodeService>());
+        _handler = new CreatePurchaseOrderHandler(_poRepo.Object, _vendorRepo.Object, _partRepo.Object, Mock.Of<IBarcodeService>(), Mock.Of<MediatR.IMediator>(), Mock.Of<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
     }
 
     [Fact]
