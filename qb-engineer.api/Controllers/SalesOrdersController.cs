@@ -68,4 +68,11 @@ public class SalesOrdersController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteSalesOrderCommand(id));
         return NoContent();
     }
+
+    [HttpGet("{id:int}/schedule")]
+    public async Task<ActionResult<List<ScheduleMilestoneModel>>> GetSchedule(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetSalesOrderScheduleQuery(id), ct);
+        return Ok(result);
+    }
 }
