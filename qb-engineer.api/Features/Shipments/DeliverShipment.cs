@@ -1,4 +1,8 @@
+using System.Security.Claims;
+
 using MediatR;
+
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 
@@ -6,7 +10,7 @@ namespace QBEngineer.Api.Features.Shipments;
 
 public record DeliverShipmentCommand(int Id) : IRequest;
 
-public class DeliverShipmentHandler(IShipmentRepository repo)
+public class DeliverShipmentHandler(IShipmentRepository repo, IMediator mediator, IHttpContextAccessor httpContext)
     : IRequestHandler<DeliverShipmentCommand>
 {
     public async Task Handle(DeliverShipmentCommand request, CancellationToken cancellationToken)
@@ -21,5 +25,9 @@ public class DeliverShipmentHandler(IShipmentRepository repo)
         shipment.DeliveredDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
+
+        var userId = int.Parse(httpContext.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Publish(
+            new ShipmentDeliveredEvent(shipment.Id, shipment.SalesOrderId, userId), cancellationToken);
     }
 }

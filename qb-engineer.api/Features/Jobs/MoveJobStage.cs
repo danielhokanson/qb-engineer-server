@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
@@ -87,6 +88,9 @@ public class MoveJobStageHandler(
         await actRepo.AddAsync(log, cancellationToken);
 
         await jobRepo.SaveChangesAsync(cancellationToken);
+
+        if (currentUserId.HasValue)
+            await mediator.Publish(new JobStageChangedEvent(job.Id, previousStageId, request.StageId, currentUserId.Value), cancellationToken);
 
         // Accounting document creation: enqueue if the target stage triggers a document
         if (targetStage.AccountingDocumentType.HasValue)

@@ -1,7 +1,9 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -27,7 +29,7 @@ public class UpdateQcInspectionCommandValidator : AbstractValidator<UpdateQcInsp
     }
 }
 
-public class UpdateQcInspectionHandler(AppDbContext db)
+public class UpdateQcInspectionHandler(AppDbContext db, IMediator mediator, IHttpContextAccessor httpContext)
     : IRequestHandler<UpdateQcInspectionCommand, QcInspectionResponseModel>
 {
     public async Task<QcInspectionResponseModel> Handle(
@@ -67,6 +69,12 @@ public class UpdateQcInspectionHandler(AppDbContext db)
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        if (data.Status == "Failed" && inspection.JobId.HasValue)
+        {
+            var userId = int.Parse(httpContext.HttpContext!.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            await mediator.Publish(new QcInspectionFailedEvent(inspection.Id, inspection.JobId.Value, userId), cancellationToken);
+        }
 
         return await db.QcInspections
             .AsNoTracking()

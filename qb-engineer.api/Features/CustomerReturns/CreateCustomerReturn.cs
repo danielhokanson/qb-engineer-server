@@ -1,7 +1,9 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -28,7 +30,7 @@ public class CreateCustomerReturnValidator : AbstractValidator<CreateCustomerRet
     }
 }
 
-public class CreateCustomerReturnHandler(AppDbContext db)
+public class CreateCustomerReturnHandler(AppDbContext db, IMediator mediator, IHttpContextAccessor httpContext)
     : IRequestHandler<CreateCustomerReturnCommand, CustomerReturnListItemModel>
 {
     public async Task<CustomerReturnListItemModel> Handle(CreateCustomerReturnCommand request, CancellationToken ct)
@@ -108,6 +110,9 @@ public class CreateCustomerReturnHandler(AppDbContext db)
 
         db.CustomerReturns.Add(customerReturn);
         await db.SaveChangesAsync(ct);
+
+        var userId = int.Parse(httpContext.HttpContext!.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Publish(new CustomerReturnReceivedEvent(customerReturn.Id, customerReturn.OriginalJobId, userId), ct);
 
         return new CustomerReturnListItemModel(
             customerReturn.Id, customerReturn.ReturnNumber,

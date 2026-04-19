@@ -1,4 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Http;
+
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 
@@ -6,7 +9,7 @@ namespace QBEngineer.Api.Features.SalesOrders;
 
 public record ConfirmSalesOrderCommand(int Id) : IRequest;
 
-public class ConfirmSalesOrderHandler(ISalesOrderRepository repo)
+public class ConfirmSalesOrderHandler(ISalesOrderRepository repo, IMediator mediator, IHttpContextAccessor httpContext)
     : IRequestHandler<ConfirmSalesOrderCommand>
 {
     public async Task Handle(ConfirmSalesOrderCommand request, CancellationToken cancellationToken)
@@ -21,5 +24,8 @@ public class ConfirmSalesOrderHandler(ISalesOrderRepository repo)
         order.ConfirmedDate = DateTimeOffset.UtcNow;
 
         await repo.SaveChangesAsync(cancellationToken);
+
+        var userId = int.Parse(httpContext.HttpContext!.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Publish(new SalesOrderConfirmedEvent(request.Id, userId), cancellationToken);
     }
 }

@@ -1,6 +1,9 @@
 using Bogus;
 using FluentAssertions;
+using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using QBEngineer.Api.Features.CustomerReturns;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
@@ -11,6 +14,18 @@ namespace QBEngineer.Tests.Handlers.CustomerReturns;
 public class CreateCustomerReturnHandlerTests
 {
     private readonly Faker _faker = new();
+    private readonly Mock<IMediator> _mediator = new();
+    private readonly IHttpContextAccessor _httpContext;
+
+    public CreateCustomerReturnHandlerTests()
+    {
+        var claims = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+            [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "1")]));
+        var httpContext = new DefaultHttpContext { User = claims };
+        var mock = new Mock<IHttpContextAccessor>();
+        mock.Setup(x => x.HttpContext).Returns(httpContext);
+        _httpContext = mock.Object;
+    }
 
     private async Task<(Customer customer, Job job, Data.Context.AppDbContext db)> SeedTestDataAsync()
     {
@@ -55,7 +70,7 @@ public class CreateCustomerReturnHandlerTests
         var (customer, job, db) = await SeedTestDataAsync();
         using var _ = db;
 
-        var handler = new CreateCustomerReturnHandler(db);
+        var handler = new CreateCustomerReturnHandler(db, _mediator.Object, _httpContext);
         var returnDate = DateTime.UtcNow;
 
         var command = new CreateCustomerReturnCommand(
@@ -84,7 +99,7 @@ public class CreateCustomerReturnHandlerTests
         var (customer, job, db) = await SeedTestDataAsync();
         using var _ = db;
 
-        var handler = new CreateCustomerReturnHandler(db);
+        var handler = new CreateCustomerReturnHandler(db, _mediator.Object, _httpContext);
 
         var command = new CreateCustomerReturnCommand(
             customer.Id, job.Id, "Wrong dimensions", null, DateTime.UtcNow, true);
@@ -119,7 +134,7 @@ public class CreateCustomerReturnHandlerTests
         var (_, job, db) = await SeedTestDataAsync();
         using var _ = db;
 
-        var handler = new CreateCustomerReturnHandler(db);
+        var handler = new CreateCustomerReturnHandler(db, _mediator.Object, _httpContext);
         var nonExistentCustomerId = 9999;
 
         var command = new CreateCustomerReturnCommand(
@@ -140,7 +155,7 @@ public class CreateCustomerReturnHandlerTests
         var (customer, _, db) = await SeedTestDataAsync();
         using var _ = db;
 
-        var handler = new CreateCustomerReturnHandler(db);
+        var handler = new CreateCustomerReturnHandler(db, _mediator.Object, _httpContext);
         var nonExistentJobId = 9999;
 
         var command = new CreateCustomerReturnCommand(
@@ -161,7 +176,7 @@ public class CreateCustomerReturnHandlerTests
         var (customer, job, db) = await SeedTestDataAsync();
         using var _ = db;
 
-        var handler = new CreateCustomerReturnHandler(db);
+        var handler = new CreateCustomerReturnHandler(db, _mediator.Object, _httpContext);
 
         // Create first return
         var command1 = new CreateCustomerReturnCommand(

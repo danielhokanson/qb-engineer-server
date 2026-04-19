@@ -1107,6 +1107,14 @@ try
         "quote-expiring-check",
         job => job.Execute(CancellationToken.None),
         Cron.Daily(7)); // 7 AM UTC daily
+    RecurringJob.AddOrUpdate<CheckInventoryLevelsJob>(
+        "check-inventory-levels",
+        job => job.Execute(CancellationToken.None),
+        Cron.Daily(4)); // 4 AM UTC daily
+    RecurringJob.AddOrUpdate<CheckJobCostOverrunJob>(
+        "check-job-cost-overrun",
+        job => job.Execute(CancellationToken.None),
+        Cron.Daily(5)); // 5 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

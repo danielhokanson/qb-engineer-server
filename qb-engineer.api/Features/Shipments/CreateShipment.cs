@@ -1,5 +1,8 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -34,7 +37,7 @@ public class CreateShipmentValidator : AbstractValidator<CreateShipmentCommand>
     }
 }
 
-public class CreateShipmentHandler(IShipmentRepository shipmentRepo, ISalesOrderRepository orderRepo)
+public class CreateShipmentHandler(IShipmentRepository shipmentRepo, ISalesOrderRepository orderRepo, IMediator mediator, IHttpContextAccessor httpContext)
     : IRequestHandler<CreateShipmentCommand, ShipmentListItemModel>
 {
     public async Task<ShipmentListItemModel> Handle(CreateShipmentCommand request, CancellationToken cancellationToken)
@@ -100,6 +103,9 @@ public class CreateShipmentHandler(IShipmentRepository shipmentRepo, ISalesOrder
 
         await shipmentRepo.AddAsync(shipment, cancellationToken);
         await shipmentRepo.SaveChangesAsync(cancellationToken);
+
+        var userId = int.Parse(httpContext.HttpContext!.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Publish(new ShipmentCreatedEvent(shipment.Id, request.SalesOrderId, userId), cancellationToken);
 
         return new ShipmentListItemModel(
             shipment.Id, shipment.ShipmentNumber, shipment.SalesOrderId,

@@ -1,5 +1,7 @@
 using Bogus;
 using FluentAssertions;
+using MediatR;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using QBEngineer.Api.Features.Shipments;
 using QBEngineer.Core.Entities;
@@ -13,13 +15,20 @@ public class CreateShipmentHandlerTests
 {
     private readonly Mock<IShipmentRepository> _shipmentRepo = new();
     private readonly Mock<ISalesOrderRepository> _orderRepo = new();
+    private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IHttpContextAccessor> _httpContext = new();
     private readonly CreateShipmentHandler _handler;
 
     private readonly Faker _faker = new();
 
     public CreateShipmentHandlerTests()
     {
-        _handler = new CreateShipmentHandler(_shipmentRepo.Object, _orderRepo.Object);
+        var claims = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+            [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "1")]));
+        var httpContext = new DefaultHttpContext { User = claims };
+        _httpContext.Setup(x => x.HttpContext).Returns(httpContext);
+
+        _handler = new CreateShipmentHandler(_shipmentRepo.Object, _orderRepo.Object, _mediator.Object, _httpContext.Object);
     }
 
     private SalesOrder CreateConfirmedOrder(int id, int lineId, int quantity, int shippedQuantity = 0)

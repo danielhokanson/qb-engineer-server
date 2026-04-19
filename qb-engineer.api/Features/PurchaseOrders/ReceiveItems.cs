@@ -1,4 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Http;
+
+using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -8,7 +11,7 @@ namespace QBEngineer.Api.Features.PurchaseOrders;
 
 public record ReceiveItemsCommand(int PurchaseOrderId, List<ReceiveLineModel> Lines) : IRequest;
 
-public class ReceiveItemsHandler(IPurchaseOrderRepository repo)
+public class ReceiveItemsHandler(IPurchaseOrderRepository repo, IMediator mediator, IHttpContextAccessor httpContext)
     : IRequestHandler<ReceiveItemsCommand>
 {
     public async Task Handle(ReceiveItemsCommand request, CancellationToken cancellationToken)
@@ -55,5 +58,8 @@ public class ReceiveItemsHandler(IPurchaseOrderRepository repo)
         }
 
         await repo.SaveChangesAsync(cancellationToken);
+
+        var userId = int.Parse(httpContext.HttpContext!.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Publish(new PurchaseOrderReceivedEvent(request.PurchaseOrderId, 0, userId), cancellationToken);
     }
 }
