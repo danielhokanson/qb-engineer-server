@@ -20,5 +20,7 @@ public record SalesOrderDetailResponseModel(
     decimal TaxAmount,
     decimal Total,
     List<SalesOrderLineResponseModel> Lines,
+    List<SalesOrderShipmentModel> Shipments,
+    List<SalesOrderReturnModel> Returns,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

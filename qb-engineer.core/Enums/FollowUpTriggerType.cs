@@ -10,5 +10,9 @@ public enum FollowUpTriggerType
     CertExpiring,
     MaintenanceDue,
     QcFailure,
-    ReturnReceived
+    ReturnReceived,
+    SalesOrderConfirmed,
+    ShipReady,
+    MaterialsReady,
+    ShipmentDelivered
 }

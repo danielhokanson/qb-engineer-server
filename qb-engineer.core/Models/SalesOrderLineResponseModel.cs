@@ -12,4 +12,5 @@ public record SalesOrderLineResponseModel(
     int ShippedQuantity,
     int RemainingQuantity,
     bool IsFullyShipped,
-    string? Notes);
+    string? Notes,
+    List<SalesOrderLineJobModel> Jobs);

@@ -27,6 +27,7 @@ using QBEngineer.Integrations.Builders;
 using System.Threading.RateLimiting;
 using Hangfire;
 using Hangfire.PostgreSql;
+using QBEngineer.Api.Features.AutoPo;
 using QBEngineer.Api.Jobs;
 using QuestPDF.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -289,6 +290,7 @@ try
     builder.Services.AddScoped<IVendorScorecardService, VendorScorecardService>();
     builder.Services.AddScoped<IRfqService, RfqService>();
     builder.Services.AddScoped<IOvertimeService, OvertimeService>();
+    builder.Services.AddScoped<PurchaseOrderGenerator>();
     builder.Services.AddHttpContextAccessor();
 
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)
@@ -489,9 +491,17 @@ try
     builder.Services.AddResilientHttpClients();
 
     // MediatR
-    builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
+    builder.Services.AddMediatR(cfg =>
+    {
+        cfg.RegisterServicesFromAssemblyContaining<Program>();
+        cfg.NotificationPublisherType = typeof(QBEngineer.Api.Behaviors.ResilientNotificationPublisher);
+    });
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+    // Domain Events — dead letter queue + backward scheduling
+    builder.Services.AddScoped<QBEngineer.Api.Features.DomainEvents.DomainEventFailureService>();
+    builder.Services.AddScoped<QBEngineer.Api.Services.BackwardSchedulingService>();
 
     // Controllers + OpenAPI
     builder.Services.AddControllers()
@@ -1080,6 +1090,22 @@ try
         "recalculate-vendor-scorecards",
         job => job.RecalculateAsync(CancellationToken.None),
         Cron.Monthly(1, 4)); // 1st of each month at 4 AM UTC
+
+    // Auto-PO demand projection
+    RecurringJob.AddOrUpdate<AutoPurchaseOrderJob>(
+        "auto-purchase-order",
+        job => job.Execute(CancellationToken.None),
+        Cron.Daily(6, 0)); // 6 AM UTC daily
+
+    // Domain event scheduled checks
+    RecurringJob.AddOrUpdate<InvoicePastDueCheckJob>(
+        "invoice-past-due-check",
+        job => job.Execute(CancellationToken.None),
+        Cron.Daily(7)); // 7 AM UTC daily
+    RecurringJob.AddOrUpdate<QuoteExpiringCheckJob>(
+        "quote-expiring-check",
+        job => job.Execute(CancellationToken.None),
+        Cron.Daily(7)); // 7 AM UTC daily
 
     // SignalR Hubs
     app.MapHub<BoardHub>("/hubs/board");

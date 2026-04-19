@@ -53,6 +53,14 @@ public class SalesOrderRepository(AppDbContext db) : ISalesOrderRepository
                 .ThenInclude(l => l.Part)
             .Include(so => so.Lines)
                 .ThenInclude(l => l.ShipmentLines)
+            .Include(so => so.Lines)
+                .ThenInclude(l => l.Jobs)
+                    .ThenInclude(j => j.CurrentStage)
+            .Include(so => so.Shipments)
+                .ThenInclude(s => s.Lines)
+                    .ThenInclude(sl => sl.Part)
+            .Include(so => so.Shipments)
+                .ThenInclude(s => s.Packages)
             .FirstOrDefaultAsync(so => so.Id == id, ct);
     }
 
