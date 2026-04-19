@@ -75,4 +75,18 @@ public class SalesOrdersController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetSalesOrderScheduleQuery(id), ct);
         return Ok(result);
     }
+
+    [HttpGet("{id:int}/documents")]
+    public async Task<ActionResult<List<FileAttachmentResponseModel>>> GetDocuments(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetSalesOrderDocumentsQuery(id), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:int}/invoices")]
+    public async Task<ActionResult<List<SalesOrderInvoiceModel>>> GetInvoices(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetSalesOrderInvoicesQuery(id), ct);
+        return Ok(result);
+    }
 }

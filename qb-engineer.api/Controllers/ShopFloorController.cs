@@ -157,6 +157,24 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new SetupKioskTerminalCommand(model.Name, model.DeviceToken, model.TeamId, userId));
         return Ok(result);
     }
+
+    // ─── Training Log ───
+    [HttpPost("training-log")]
+    public async Task<IActionResult> LogTrainingAction([FromBody] TrainingScanLogRequestModel request, CancellationToken ct)
+    {
+        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        await mediator.Send(new LogTrainingActionCommand(userId, request), ct);
+        return Created("/api/v1/display/shop-floor/training-log", null);
+    }
+
+    [HttpGet("training-log")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<TrainingScanLogResponseModel>>> GetTrainingLog(
+        [FromQuery] int? userId, [FromQuery] DateOnly? date, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetTrainingLogQuery(userId, date), ct);
+        return Ok(result);
+    }
 }
 
 public record SetupTerminalRequestModel(string Name, string DeviceToken, int TeamId);

@@ -97,6 +97,15 @@ public class ChatController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("channels/{channelId:int}/upload")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<ActionResult<FileAttachmentResponseModel>> UploadChatFile(
+        int channelId, IFormFile file, CancellationToken ct)
+    {
+        var result = await mediator.Send(new UploadChatFileCommand(channelId, file), ct);
+        return Created($"/api/v1/files/{result.Id}", result);
+    }
+
     [HttpGet("channels/discover")]
     public async Task<ActionResult<List<ChatRoomResponseModel>>> DiscoverChannels([FromQuery] string? search)
     {

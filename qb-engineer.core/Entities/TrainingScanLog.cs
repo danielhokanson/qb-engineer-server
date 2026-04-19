@@ -14,4 +14,6 @@ public class TrainingScanLog : BaseEntity
     public int? PurchaseOrderId { get; set; }
     public int? ShipmentId { get; set; }
     public DateTimeOffset ScannedAt { get; set; }
+    public bool WasSuccessful { get; set; }
+    public string? ErrorMessage { get; set; }
 }

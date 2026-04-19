@@ -19,6 +19,8 @@ public class TrainingScanLogConfiguration : IEntityTypeConfiguration<TrainingSca
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(e => new { e.UserId, e.ScannedAt });
+        builder.Property(e => e.ErrorMessage).HasMaxLength(500);
+
         builder.HasIndex(e => e.PartId).HasFilter("part_id IS NOT NULL");
         builder.HasIndex(e => e.JobId).HasFilter("job_id IS NOT NULL");
     }
