@@ -1,7 +1,9 @@
 using MediatR;
 
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -12,6 +14,7 @@ namespace QBEngineer.Api.Features.DomainEvents.Handlers;
 public class OnJobStageChanged_CheckShipReady(
     AppDbContext db,
     IClock clock,
+    IHubContext<NotificationHub> notificationHub,
     ILogger<OnJobStageChanged_CheckShipReady> logger)
     : INotificationHandler<JobStageChangedEvent>
 {
@@ -68,26 +71,46 @@ public class OnJobStageChanged_CheckShipReady(
 
         if (existingFollowUp) return;
 
-        // Find a shipping-responsible user (Office Manager or Manager)
-        var shippingUserId = await db.UserRoles
+        // Find all shipping-responsible users (OfficeManager role)
+        var shippingUserIds = await db.UserRoles
             .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Name })
             .Where(x => x.Name == "OfficeManager" || x.Name == "Manager" || x.Name == "Admin")
             .Select(x => x.UserId)
-            .FirstOrDefaultAsync(ct);
+            .Distinct()
+            .ToListAsync(ct);
 
-        if (shippingUserId == 0) return;
+        if (shippingUserIds.Count == 0) return;
+
+        var primaryAssigneeId = shippingUserIds[0];
 
         db.FollowUpTasks.Add(new FollowUpTask
         {
             Title = $"SO line ready to ship — SO-{soLine.SalesOrder.OrderNumber}",
             Description = $"All production jobs for line {soLine.LineNumber} are complete. Ready to create shipment.",
-            AssignedToUserId = shippingUserId,
+            AssignedToUserId = primaryAssigneeId,
             DueDate = clock.UtcNow.AddDays(1),
             SourceEntityType = "SalesOrderLine",
             SourceEntityId = soLine.Id,
             TriggerType = FollowUpTriggerType.ShipReady,
             Status = FollowUpStatus.Open,
         });
+
+        // Create notifications for all shipping coordinators
+        foreach (var userId in shippingUserIds)
+        {
+            db.Notifications.Add(new Notification
+            {
+                UserId = userId,
+                Type = "ship_ready",
+                Severity = "info",
+                Source = "sales_orders",
+                Title = "Ready to Ship",
+                Message = $"All jobs for SO-{soLine.SalesOrder.OrderNumber} line {soLine.LineNumber} are complete. Ready to create shipment.",
+                EntityType = "SalesOrder",
+                EntityId = soLine.SalesOrderId,
+                SenderId = notification.UserId,
+            });
+        }
 
         db.ActivityLogs.Add(new ActivityLog
         {
@@ -99,6 +122,15 @@ public class OnJobStageChanged_CheckShipReady(
         });
 
         await db.SaveChangesAsync(ct);
-        logger.LogInformation("SO line {LineId} for SO {OrderNumber} is ready to ship", soLine.Id, soLine.SalesOrder.OrderNumber);
+
+        // Push via SignalR
+        foreach (var userId in shippingUserIds)
+        {
+            await notificationHub.Clients.Group($"user:{userId}")
+                .SendAsync("notificationReceived", new { type = "ship_ready", salesOrderId = soLine.SalesOrderId }, ct);
+        }
+
+        logger.LogInformation("SO line {LineId} for SO {OrderNumber} is ready to ship — notified {Count} user(s)",
+            soLine.Id, soLine.SalesOrder.OrderNumber, shippingUserIds.Count);
     }
 }
