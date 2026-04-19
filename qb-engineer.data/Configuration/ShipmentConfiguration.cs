@@ -16,6 +16,10 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
         builder.Property(e => e.Notes).HasMaxLength(2000);
         builder.Property(e => e.ShippingCost).HasPrecision(18, 4);
         builder.Property(e => e.Weight).HasPrecision(12, 4);
+        builder.Property(e => e.ServiceType).HasMaxLength(200);
+        builder.Property(e => e.FreightClass).HasMaxLength(50);
+        builder.Property(e => e.InsuredValue).HasPrecision(18, 4);
+        builder.Property(e => e.BillOfLadingNumber).HasMaxLength(200);
 
         builder.HasIndex(e => e.ShipmentNumber).IsUnique();
         builder.HasIndex(e => e.SalesOrderId);

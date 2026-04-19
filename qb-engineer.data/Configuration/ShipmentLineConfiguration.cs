@@ -9,6 +9,13 @@ public class ShipmentLineConfiguration : IEntityTypeConfiguration<ShipmentLine>
     public void Configure(EntityTypeBuilder<ShipmentLine> builder)
     {
         builder.Property(e => e.Notes).HasMaxLength(1000);
+        builder.Property(e => e.Description).HasMaxLength(500);
+        builder.Property(e => e.Weight).HasPrecision(12, 4);
+        builder.Property(e => e.Length).HasPrecision(12, 4);
+        builder.Property(e => e.Width).HasPrecision(12, 4);
+        builder.Property(e => e.Height).HasPrecision(12, 4);
+        builder.Property(e => e.HandlingInstructions).HasMaxLength(1000);
+        builder.Property(e => e.SerialNumbers).HasMaxLength(2000);
 
         builder.HasIndex(e => e.ShipmentId);
         builder.HasIndex(e => e.SalesOrderLineId);

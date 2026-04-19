@@ -11,5 +11,7 @@ public enum BinMovementReason
     Adjustment,
     Return,
     Transfer,
-    CycleCount
+    CycleCount,
+    Issue,
+    Reversal
 }

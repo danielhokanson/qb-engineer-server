@@ -18,8 +18,12 @@ public class Part : BaseAuditableEntity
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
 
-    // Preferred vendor
+    // Preferred vendor & auto-PO
     public int? PreferredVendorId { get; set; }
+    public int SafetyStockQty { get; set; }
+    public bool ExcludeFromAutoPo { get; set; }
+    public int? MinOrderQty { get; set; }
+    public int? PackSize { get; set; }
 
     // Inventory thresholds & replenishment
     public decimal? MinStockThreshold { get; set; }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
 
@@ -12,6 +13,17 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     private readonly IClock _clock;
+    private bool _isCapturingAudit;
+
+    /// <summary>
+    /// Set by middleware to identify the current user for automatic audit logging.
+    /// </summary>
+    public int? CurrentUserId { get; set; }
+
+    /// <summary>
+    /// When true, automatic audit logging is suppressed (e.g., during seed operations).
+    /// </summary>
+    public bool SuppressAudit { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options, IClock clock) : base(options)
     {
@@ -354,6 +366,21 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<AnnouncementTeam> AnnouncementTeams => Set<AnnouncementTeam>();
     public DbSet<AnnouncementTemplate> AnnouncementTemplates => Set<AnnouncementTemplate>();
 
+    // Follow-Up Tasks
+    public DbSet<FollowUpTask> FollowUpTasks => Set<FollowUpTask>();
+
+    // Auto-PO Suggestions
+    public DbSet<AutoPoSuggestion> AutoPoSuggestions => Set<AutoPoSuggestion>();
+
+    // Domain Event Failures
+    public DbSet<DomainEventFailure> DomainEventFailures => Set<DomainEventFailure>();
+
+    // User Scan Devices
+    public DbSet<UserScanDevice> UserScanDevices => Set<UserScanDevice>();
+
+    // Training Scan Logs
+    public DbSet<TrainingScanLog> TrainingScanLogs => Set<TrainingScanLog>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -402,10 +429,195 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
         return base.SaveChanges();
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         SetTimestamps();
-        return base.SaveChangesAsync(cancellationToken);
+
+        if (_isCapturingAudit || SuppressAudit)
+            return await base.SaveChangesAsync(cancellationToken);
+
+        _isCapturingAudit = true;
+        try
+        {
+            var (readyLogs, pendingAdded) = CaptureAuditEntries();
+
+            // Add audit logs for Modified/Deleted entities (already have IDs)
+            foreach (var log in readyLogs)
+                ActivityLogs.Add(log);
+
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+            // Now handle Added entities — IDs are populated after first save
+            if (pendingAdded.Count > 0)
+            {
+                foreach (var (entity, log) in pendingAdded)
+                {
+                    log.EntityId = entity.Id;
+                    ActivityLogs.Add(log);
+                }
+                await base.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
+        }
+        finally
+        {
+            _isCapturingAudit = false;
+        }
+    }
+
+    // Entity types excluded from automatic audit logging
+    private static readonly HashSet<Type> AuditExcludedTypes = new()
+    {
+        typeof(ActivityLog),
+        typeof(JobActivityLog),
+        typeof(UserPreference),
+        typeof(SyncQueueEntry),
+        typeof(Notification),
+        typeof(DocumentEmbedding),
+        typeof(ChatMessage),
+        typeof(ChatRoomMember),
+        typeof(ChatMessageMention),
+        typeof(MachineDataPoint),
+        typeof(SpcMeasurement),
+        typeof(TrainingProgress),
+        typeof(AnnouncementAcknowledgment),
+        typeof(WebhookDelivery),
+        typeof(AuditLogEntry),
+    };
+
+    // Properties excluded from field-level change tracking
+    private static readonly HashSet<string> AuditExcludedProperties = new()
+    {
+        nameof(BaseAuditableEntity.CreatedAt),
+        nameof(BaseAuditableEntity.UpdatedAt),
+        nameof(BaseAuditableEntity.DeletedAt),
+        nameof(BaseAuditableEntity.DeletedBy),
+        nameof(BaseEntity.Id),
+    };
+
+    private (List<ActivityLog> readyLogs, List<(BaseAuditableEntity entity, ActivityLog log)> pendingAdded) CaptureAuditEntries()
+    {
+        var readyLogs = new List<ActivityLog>();
+        var pendingAdded = new List<(BaseAuditableEntity, ActivityLog)>();
+
+        var userId = GetCurrentUserId();
+        var now = _clock.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries<BaseAuditableEntity>())
+        {
+            if (AuditExcludedTypes.Contains(entry.Entity.GetType()))
+                continue;
+
+            var entityType = entry.Entity.GetType().Name;
+
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                {
+                    var log = new ActivityLog
+                    {
+                        EntityType = entityType,
+                        EntityId = 0, // populated after save
+                        UserId = userId,
+                        Action = "Created",
+                        Description = $"{FormatEntityTypeName(entityType)} created",
+                        CreatedAt = now,
+                    };
+                    pendingAdded.Add((entry.Entity, log));
+                    break;
+                }
+
+                case EntityState.Modified:
+                {
+                    // Check for soft delete
+                    var deletedAtProp = entry.Property(nameof(BaseAuditableEntity.DeletedAt));
+                    if (deletedAtProp.IsModified && deletedAtProp.CurrentValue != null && deletedAtProp.OriginalValue == null)
+                    {
+                        readyLogs.Add(new ActivityLog
+                        {
+                            EntityType = entityType,
+                            EntityId = entry.Entity.Id,
+                            UserId = userId,
+                            Action = "Deleted",
+                            Description = $"{FormatEntityTypeName(entityType)} deleted",
+                            CreatedAt = now,
+                        });
+                        break;
+                    }
+
+                    // Capture field-level changes
+                    foreach (var prop in entry.Properties)
+                    {
+                        if (!prop.IsModified) continue;
+                        if (AuditExcludedProperties.Contains(prop.Metadata.Name)) continue;
+                        // Skip navigation/shadow properties
+                        if (prop.Metadata.IsShadowProperty()) continue;
+
+                        var oldVal = FormatPropertyValue(prop.OriginalValue);
+                        var newVal = FormatPropertyValue(prop.CurrentValue);
+                        if (oldVal == newVal) continue;
+
+                        readyLogs.Add(new ActivityLog
+                        {
+                            EntityType = entityType,
+                            EntityId = entry.Entity.Id,
+                            UserId = userId,
+                            Action = "FieldChanged",
+                            Description = $"{FormatPropertyName(prop.Metadata.Name)} changed from \"{oldVal}\" to \"{newVal}\"",
+                            FieldName = prop.Metadata.Name,
+                            OldValue = oldVal,
+                            NewValue = newVal,
+                            CreatedAt = now,
+                        });
+                    }
+                    break;
+                }
+            }
+        }
+
+        return (readyLogs, pendingAdded);
+    }
+
+    private int? GetCurrentUserId() => CurrentUserId;
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        return value.Length <= maxLength ? value : value[..(maxLength - 3)] + "...";
+    }
+
+    private static string FormatPropertyValue(object? value)
+    {
+        if (value == null) return "";
+        if (value is DateTimeOffset dto) return dto.ToString("yyyy-MM-dd HH:mm:ss");
+        if (value is DateTime dt) return dt.ToString("yyyy-MM-dd HH:mm:ss");
+        if (value is decimal d) return d.ToString("G");
+        if (value is bool b) return b ? "true" : "false";
+        return value.ToString() ?? "";
+    }
+
+    private static string FormatPropertyName(string name)
+    {
+        // Convert PascalCase to spaced words: "CustomerPO" → "Customer PO"
+        var result = new System.Text.StringBuilder();
+        for (var i = 0; i < name.Length; i++)
+        {
+            if (i > 0 && char.IsUpper(name[i]))
+            {
+                // Don't add space between consecutive uppercase (e.g., "PO")
+                if (!char.IsUpper(name[i - 1]) || (i + 1 < name.Length && char.IsLower(name[i + 1])))
+                    result.Append(' ');
+            }
+            result.Append(name[i]);
+        }
+        return result.ToString();
+    }
+
+    private static string FormatEntityTypeName(string typeName)
+    {
+        // "SalesOrder" → "Sales Order"
+        return FormatPropertyName(typeName);
     }
 
     private void SetTimestamps()

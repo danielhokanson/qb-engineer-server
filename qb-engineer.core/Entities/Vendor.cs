@@ -1,3 +1,5 @@
+using QBEngineer.Core.Enums;
+
 namespace QBEngineer.Core.Entities;
 
 public class Vendor : BaseAuditableEntity
@@ -14,6 +16,8 @@ public class Vendor : BaseAuditableEntity
     public string? PaymentTerms { get; set; }
     public string? Notes { get; set; }
     public bool IsActive { get; set; } = true;
+    public AutoPoMode? AutoPoMode { get; set; }
+    public decimal? MinOrderAmount { get; set; }
 
     // Accounting integration
     public string? ExternalId { get; set; }

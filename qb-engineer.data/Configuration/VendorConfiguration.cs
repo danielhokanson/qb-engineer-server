@@ -24,6 +24,10 @@ public class VendorConfiguration : IEntityTypeConfiguration<Vendor>
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
+        builder.Property(e => e.AutoPoMode)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+        builder.Property(e => e.MinOrderAmount).HasPrecision(18, 4);
 
         builder.HasIndex(e => e.CompanyName);
     }

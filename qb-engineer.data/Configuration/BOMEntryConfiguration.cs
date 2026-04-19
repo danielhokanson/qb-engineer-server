@@ -23,5 +23,13 @@ public class BOMEntryConfiguration : IEntityTypeConfiguration<BOMEntry>
             .WithMany(p => p.UsedInBOM)
             .HasForeignKey(e => e.ChildPartId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.Vendor)
+            .WithMany()
+            .HasForeignKey(e => e.VendorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(e => e.VendorId)
+            .HasFilter("vendor_id IS NOT NULL");
     }
 }

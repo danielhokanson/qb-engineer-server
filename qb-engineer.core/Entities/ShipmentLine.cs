@@ -7,6 +7,14 @@ public class ShipmentLine : BaseEntity
     public int? PartId { get; set; }
     public int Quantity { get; set; }
     public string? Notes { get; set; }
+    public string? Description { get; set; }
+    public decimal? Weight { get; set; }
+    public decimal? Length { get; set; }
+    public decimal? Width { get; set; }
+    public decimal? Height { get; set; }
+    public bool IsHazmat { get; set; }
+    public string? HandlingInstructions { get; set; }
+    public string? SerialNumbers { get; set; }
 
     public Shipment Shipment { get; set; } = null!;
     public SalesOrderLine? SalesOrderLine { get; set; }
