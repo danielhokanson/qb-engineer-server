@@ -14,8 +14,10 @@ public class BinMovement : BaseEntity
     public DateTimeOffset MovedAt { get; set; }
     public BinMovementReason? Reason { get; set; }
     public int? ReversedMovementId { get; set; }
+    public int? ScanActionLogId { get; set; }
 
     public StorageLocation? FromLocation { get; set; }
     public StorageLocation? ToLocation { get; set; }
     public BinMovement? ReversedMovement { get; set; }
+    public ScanActionLog? ScanActionLog { get; set; }
 }

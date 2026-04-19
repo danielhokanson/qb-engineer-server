@@ -13,5 +13,11 @@ public enum BinMovementReason
     Transfer,
     CycleCount,
     Issue,
-    Reversal
+    Reversal,
+    ScanMove,
+    ScanCycleCount,
+    ScanReceive,
+    ScanShip,
+    ScanIssue,
+    ScanReturn
 }

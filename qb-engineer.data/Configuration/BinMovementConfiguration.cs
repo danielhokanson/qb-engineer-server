@@ -27,9 +27,16 @@ public class BinMovementConfiguration : IEntityTypeConfiguration<BinMovement>
             .HasForeignKey(e => e.ReversedMovementId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(e => e.ScanActionLog)
+            .WithMany()
+            .HasForeignKey(e => e.ScanActionLogId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(e => new { e.EntityType, e.EntityId });
         builder.HasIndex(e => e.MovedAt);
         builder.HasIndex(e => e.ReversedMovementId)
             .HasFilter("reversed_movement_id IS NOT NULL");
+        builder.HasIndex(e => e.ScanActionLogId)
+            .HasFilter("scan_action_log_id IS NOT NULL");
     }
 }

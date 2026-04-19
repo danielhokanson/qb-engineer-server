@@ -7,6 +7,9 @@ public enum ScanActionType
     Receive,
     Ship,
     Issue,
+    Inspect,
     Return,
-    Reversal
+    JobStart,
+    JobStop,
+    JobAdvance
 }

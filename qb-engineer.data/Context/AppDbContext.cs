@@ -378,6 +378,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // User Scan Devices
     public DbSet<UserScanDevice> UserScanDevices => Set<UserScanDevice>();
 
+    // Scanner Action Logs
+    public DbSet<ScanActionLog> ScanActionLogs => Set<ScanActionLog>();
+
     // Training Scan Logs
     public DbSet<TrainingScanLog> TrainingScanLogs => Set<TrainingScanLog>();
 
@@ -484,6 +487,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
         typeof(AnnouncementAcknowledgment),
         typeof(WebhookDelivery),
         typeof(AuditLogEntry),
+        typeof(ScanActionLog),
+        typeof(TrainingScanLog),
     };
 
     // Properties excluded from field-level change tracking
