@@ -15,6 +15,9 @@ public static partial class SeedData
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var db = services.GetRequiredService<AppDbContext>();
 
+        // Suppress automatic audit logging during seed to avoid thousands of "Created" entries
+        db.SuppressAudit = true;
+
         // ── 1. Roles (essential — app won't work without these) ──────────
         string[] roles = ["Admin", "Manager", "Engineer", "PM", "ProductionWorker", "OfficeManager"];
         foreach (var role in roles)

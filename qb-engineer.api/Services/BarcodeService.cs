@@ -1,3 +1,6 @@
+using System.Security.Claims;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
@@ -7,7 +10,7 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Services;
 
-public class BarcodeService(AppDbContext db) : IBarcodeService
+public class BarcodeService(AppDbContext db, IHttpContextAccessor httpContextAccessor) : IBarcodeService
 {
     private static readonly Dictionary<BarcodeEntityType, string> Prefixes = new()
     {
@@ -66,6 +69,38 @@ public class BarcodeService(AppDbContext db) : IBarcodeService
         }
 
         db.Barcodes.Add(barcode);
+
+        // Log barcode generation on the parent entity's activity history
+        var parentEntityType = entityType switch
+        {
+            BarcodeEntityType.User => "ApplicationUser",
+            BarcodeEntityType.Part => "Part",
+            BarcodeEntityType.Job => "Job",
+            BarcodeEntityType.SalesOrder => "SalesOrder",
+            BarcodeEntityType.PurchaseOrder => "PurchaseOrder",
+            BarcodeEntityType.Asset => "Asset",
+            BarcodeEntityType.StorageLocation => "StorageLocation",
+            _ => null,
+        };
+
+        if (parentEntityType != null)
+        {
+            var userIdClaim = httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? userId = int.TryParse(userIdClaim, out var uid) ? uid : null;
+
+            db.ActivityLogs.Add(new ActivityLog
+            {
+                EntityType = parentEntityType,
+                EntityId = entityId,
+                UserId = userId,
+                Action = "BarcodeGenerated",
+                Description = $"Barcode generated: {value}",
+                FieldName = "Barcode",
+                NewValue = value,
+                CreatedAt = DateTimeOffset.UtcNow,
+            });
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         return barcode;

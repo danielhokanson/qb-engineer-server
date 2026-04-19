@@ -12,11 +12,11 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
         builder.HasIndex(e => e.CreatedAt);
         builder.HasIndex(e => e.UserId);
 
-        builder.Property(e => e.EntityType).HasMaxLength(50);
-        builder.Property(e => e.Action).HasMaxLength(50);
-        builder.Property(e => e.Description).HasMaxLength(500);
-        builder.Property(e => e.FieldName).HasMaxLength(100);
-        builder.Property(e => e.OldValue).HasMaxLength(1000);
-        builder.Property(e => e.NewValue).HasMaxLength(1000);
+        builder.Property(e => e.EntityType).HasMaxLength(100);
+        builder.Property(e => e.Action).HasMaxLength(100);
+        builder.Property(e => e.Description).HasColumnType("text");
+        builder.Property(e => e.FieldName).HasMaxLength(200);
+        builder.Property(e => e.OldValue).HasColumnType("text");
+        builder.Property(e => e.NewValue).HasColumnType("text");
     }
 }
