@@ -12,7 +12,7 @@ public record SendSetupInviteCommand(int UserId, string BaseUrl) : IRequest;
 public class SendSetupInviteHandler(
     UserManager<ApplicationUser> userManager,
     IMediator mediator,
-    IEmailService emailService,
+    IIntegrationOutboxService outbox,
     ISystemSettingRepository settings) : IRequestHandler<SendSetupInviteCommand>
 {
     public async Task Handle(SendSetupInviteCommand request, CancellationToken cancellationToken)
@@ -40,9 +40,15 @@ public class SendSetupInviteHandler(
             $"<a href=\"{setupUrl}\" style=\"display:inline-block;padding:12px 24px;background:#1e293b;color:white;text-decoration:none;font-weight:600;\">Complete Setup</a><br><br>" +
             $"This link expires in 7 days. If the button doesn't work, copy and paste this URL:<br>{setupUrl}");
 
-        await emailService.SendAsync(new EmailMessage(
-            user.Email!,
-            $"[{companyName}] Complete Your Account Setup",
-            html));
+        var operationKey = $"setup-invite:{user.Id}:{user.SetupToken}";
+        await outbox.EnqueueEmailAsync(
+            operationKey,
+            new EmailMessage(
+                user.Email!,
+                $"[{companyName}] Complete Your Account Setup",
+                html),
+            entityType: "ApplicationUser",
+            entityId: user.Id,
+            ct: cancellationToken);
     }
 }

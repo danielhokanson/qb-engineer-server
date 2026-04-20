@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Features.Admin;
 using QBEngineer.Api.Features.CompanyLocations;
 using QBEngineer.Api.Features.EmployeeProfile;
+using QBEngineer.Api.Features.IntegrationOutbox;
 using QBEngineer.Api.Features.ReferenceData;
 using QBEngineer.Api.Features.ShiftAssignments;
 using QBEngineer.Api.Features.TrackTypes;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -378,6 +380,33 @@ public class AdminController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> SetMfaPolicy([FromBody] MfaPolicyRequestModel request, CancellationToken ct)
     {
         await mediator.Send(new SetMfaPolicyCommand(request.RequiredRoles), ct);
+        return NoContent();
+    }
+
+    // ── Integration Outbox ──
+
+    [HttpGet("integration-outbox")]
+    public async Task<ActionResult<List<OutboxEntryResponseModel>>> GetOutboxEntries(
+        [FromQuery] OutboxStatus? status,
+        [FromQuery] IntegrationProvider? provider,
+        [FromQuery] int take = 200,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetOutboxEntriesQuery(status, provider, take), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("integration-outbox/{id:int}/retry")]
+    public async Task<IActionResult> RetryOutboxEntry(int id, CancellationToken ct)
+    {
+        await mediator.Send(new RetryOutboxEntryCommand(id), ct);
+        return NoContent();
+    }
+
+    [HttpPost("integration-outbox/{id:int}/discard")]
+    public async Task<IActionResult> DiscardOutboxEntry(int id, CancellationToken ct)
+    {
+        await mediator.Send(new DiscardOutboxEntryCommand(id), ct);
         return NoContent();
     }
 }

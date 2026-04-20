@@ -45,6 +45,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<ReferenceData> ReferenceData => Set<ReferenceData>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<SyncQueueEntry> SyncQueueEntries => Set<SyncQueueEntry>();
+    public DbSet<IntegrationOutboxEntry> IntegrationOutboxEntries => Set<IntegrationOutboxEntry>();
     public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();
     public DbSet<BinContent> BinContents => Set<BinContent>();
     public DbSet<BinMovement> BinMovements => Set<BinMovement>();

@@ -446,6 +446,10 @@ try
         builder.Services.AddSingleton<IPredictiveMaintenanceService, MockPredictiveMaintenanceService>();
     }
 
+    // Integration outbox (always real — provides durable queue + idempotency for all outbound integrations)
+    builder.Services.AddScoped<IIntegrationOutboxService, IntegrationOutboxService>();
+    builder.Services.AddScoped<IntegrationOutboxDispatcherJob>();
+
     // MFA service (always real — no mock needed)
     builder.Services.AddScoped<IMfaService, MfaService>();
 
@@ -981,6 +985,10 @@ try
 
     // Hangfire dashboard + recurring jobs
     app.MapHangfireDashboard("/hangfire");
+    RecurringJob.AddOrUpdate<IntegrationOutboxDispatcherJob>(
+        "integration-outbox-dispatcher",
+        job => job.DispatchPendingAsync(CancellationToken.None),
+        "* * * * *"); // Every 1 minute — drains pending email/integration queue
     RecurringJob.AddOrUpdate<RecurringOrderJob>(
         "generate-recurring-orders",
         job => job.GenerateDueOrdersAsync(CancellationToken.None),

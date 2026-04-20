@@ -7,7 +7,7 @@ namespace QBEngineer.Api.Jobs;
 
 public class DailyDigestJob(
     AppDbContext db,
-    IEmailService emailService,
+    IIntegrationOutboxService outbox,
     ISystemSettingRepository settings,
     ILogger<DailyDigestJob> logger)
 {
@@ -66,12 +66,18 @@ public class DailyDigestJob(
                     overdueJobs.Select(j => new DigestJobItem(j.JobNumber, j.Title, j.DueDate)).ToList(),
                     completedYesterday);
 
-                await emailService.SendAsync(new EmailMessage(
-                    user.Email!,
-                    $"[{companyName}] Daily Digest — {now:MMMM d, yyyy}",
-                    html));
+                var operationKey = $"daily-digest:{user.Id}:{now:yyyy-MM-dd}";
+                await outbox.EnqueueEmailAsync(
+                    operationKey,
+                    new EmailMessage(
+                        user.Email!,
+                        $"[{companyName}] Daily Digest — {now:MMMM d, yyyy}",
+                        html),
+                    entityType: "ApplicationUser",
+                    entityId: user.Id,
+                    ct: ct);
 
-                logger.LogInformation("Daily digest sent to {Email}", user.Email);
+                logger.LogInformation("Daily digest queued for {Email}", user.Email);
             }
             catch (OperationCanceledException)
             {

@@ -15,7 +15,7 @@ public record SendInvoiceEmailCommand(int Id, string RecipientEmail) : IRequest;
 public class SendInvoiceEmailHandler(
     AppDbContext db,
     ISystemSettingRepository settings,
-    IEmailService emailService) : IRequestHandler<SendInvoiceEmailCommand>
+    IIntegrationOutboxService outbox) : IRequestHandler<SendInvoiceEmailCommand>
 {
     public async Task Handle(SendInvoiceEmailCommand request, CancellationToken ct)
     {
@@ -54,6 +54,12 @@ public class SendInvoiceEmailHandler(
                     pdfBytes)
             ]);
 
-        await emailService.SendAsync(message, ct);
+        var operationKey = $"invoice-email:{invoice.Id}:{request.RecipientEmail}";
+        await outbox.EnqueueEmailAsync(
+            operationKey,
+            message,
+            entityType: "Invoice",
+            entityId: invoice.Id,
+            ct: ct);
     }
 }
