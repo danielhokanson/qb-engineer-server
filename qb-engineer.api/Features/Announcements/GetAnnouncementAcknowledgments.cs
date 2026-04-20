@@ -15,11 +15,11 @@ public class GetAnnouncementAcknowledgmentsHandler(AppDbContext db) : IRequestHa
         return await db.AnnouncementAcknowledgments
             .AsNoTracking()
             .Where(a => a.AnnouncementId == request.AnnouncementId)
+            .OrderBy(a => a.AcknowledgedAt)
             .Join(db.Users, a => a.UserId, u => u.Id, (a, u) => new AnnouncementAcknowledgmentResponseModel(
                 u.Id,
                 (u.FirstName + " " + u.LastName).Trim(),
                 a.AcknowledgedAt))
-            .OrderBy(a => a.AcknowledgedAt)
             .ToListAsync(ct);
     }
 }
