@@ -120,9 +120,12 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
                 ("handbook", "Employee Handbook", profile?.HandbookAcknowledgedAt is not null, false),
             };
 
-            var completedCount = complianceItems.Count(i => i.IsComplete);
-            var canBeAssigned = complianceItems.Where(i => i.BlocksAssignment).All(i => i.IsComplete);
-            var missingItems = complianceItems.Where(i => !i.IsComplete).Select(i => i.Label).ToArray();
+            // Bypass flag — mirrors GetProfileCompleteness short-circuit. Treat profile as complete
+            // when an admin explicitly skipped onboarding (employee completed off-platform).
+            var isBypassed = profile?.OnboardingBypassedAt is not null;
+            var completedCount = isBypassed ? complianceItems.Length : complianceItems.Count(i => i.IsComplete);
+            var canBeAssigned = isBypassed || complianceItems.Where(i => i.BlocksAssignment).All(i => i.IsComplete);
+            var missingItems = isBypassed ? Array.Empty<string>() : complianceItems.Where(i => !i.IsComplete).Select(i => i.Label).ToArray();
 
             i9Submissions.TryGetValue(user.Id, out var i9Submission);
             var i9Status = I9StatusComputer.Compute(i9Submission);
