@@ -46,6 +46,21 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
             await context.Response.WriteAsJsonAsync(problem);
         }
+        catch (InvalidOperationException ex) when (IsFrameworkException(ex))
+        {
+            logger.LogError(ex, "Framework InvalidOperationException (e.g. EF Core query translation) — returning 500");
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/problem+json";
+
+            var problem = new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An error occurred",
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.1"
+            };
+
+            await context.Response.WriteAsJsonAsync(problem);
+        }
         catch (InvalidOperationException ex)
         {
             logger.LogWarning(ex, "InvalidOperationException caught — returning 409");
@@ -93,5 +108,25 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
             await context.Response.WriteAsJsonAsync(problem);
         }
+    }
+
+    // Business handlers throw InvalidOperationException with user-readable messages
+    // (e.g. "Cannot delete order with active shipments"). Framework code — EF Core
+    // query translation, LINQ provider issues, JSON serialization — also throws
+    // InvalidOperationException but with internal details that must not leak to
+    // users. Distinguish by stack origin + well-known EF Core message prefixes.
+    private static bool IsFrameworkException(InvalidOperationException ex)
+    {
+        var source = ex.Source ?? string.Empty;
+        if (source.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal) ||
+            source.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal) ||
+            source.StartsWith("System.Text.Json", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var message = ex.Message ?? string.Empty;
+        return message.Contains("could not be translated", StringComparison.Ordinal)
+            || message.Contains("The LINQ expression", StringComparison.Ordinal);
     }
 }
