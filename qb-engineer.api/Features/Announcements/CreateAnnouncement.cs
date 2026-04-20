@@ -101,10 +101,14 @@ public class CreateAnnouncementHandler(
 
     private async Task BroadcastAnnouncement(AnnouncementResponseModel announcement, List<int>? targetTeamIds, CancellationToken ct)
     {
+        // ChatHub.OnConnectedAsync adds each user to `user:{id}` on connect.
+        // For scoped announcements, resolve recipient user IDs and push per-user so
+        // every recipient receives the event regardless of which page they're on.
         switch (announcement.Scope)
         {
             case AnnouncementScope.CompanyWide:
-            case AnnouncementScope.TeamLeadsOnly:
+            case AnnouncementScope.Department:
+                // Department is currently treated as company-wide (no Department entity yet).
                 await chatHub.Clients.All.SendAsync("announcementReceived", announcement, ct);
                 break;
 
@@ -112,13 +116,30 @@ public class CreateAnnouncementHandler(
             case AnnouncementScope.IndividualTeam:
                 if (targetTeamIds is { Count: > 0 })
                 {
-                    var groups = targetTeamIds.Select(id => $"team:{id}").ToList();
-                    await chatHub.Clients.Groups(groups).SendAsync("announcementReceived", announcement, ct);
+                    var teamUserIds = await db.Users
+                        .AsNoTracking()
+                        .Where(u => u.TeamId.HasValue && targetTeamIds.Contains(u.TeamId!.Value))
+                        .Select(u => u.Id)
+                        .ToListAsync(ct);
+                    if (teamUserIds.Count > 0)
+                    {
+                        var groups = teamUserIds.Select(id => $"user:{id}").ToList();
+                        await chatHub.Clients.Groups(groups).SendAsync("announcementReceived", announcement, ct);
+                    }
                 }
                 break;
 
-            case AnnouncementScope.Department:
-                await chatHub.Clients.All.SendAsync("announcementReceived", announcement, ct);
+            case AnnouncementScope.TeamLeadsOnly:
+                // Mirror GetActiveAnnouncements filter: team leads = Manager or Admin.
+                var leadIds = await (from ur in db.UserRoles
+                                     join r in db.Roles on ur.RoleId equals r.Id
+                                     where r.Name == "Manager" || r.Name == "Admin"
+                                     select ur.UserId).Distinct().ToListAsync(ct);
+                if (leadIds.Count > 0)
+                {
+                    var groups = leadIds.Select(id => $"user:{id}").ToList();
+                    await chatHub.Clients.Groups(groups).SendAsync("announcementReceived", announcement, ct);
+                }
                 break;
         }
     }
