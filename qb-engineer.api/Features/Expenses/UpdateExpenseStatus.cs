@@ -15,11 +15,18 @@ public record UpdateExpenseStatusCommand(int Id, UpdateExpenseStatusRequestModel
 
 public class UpdateExpenseStatusValidator : AbstractValidator<UpdateExpenseStatusCommand>
 {
+    private const int DeclineNoteMinLength = 10;
+
     public UpdateExpenseStatusValidator()
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.Data.Status).IsInEnum();
         RuleFor(x => x.Data.ApprovalNotes).MaximumLength(1000).When(x => x.Data.ApprovalNotes is not null);
+        RuleFor(x => x.Data.ApprovalNotes)
+            .NotEmpty()
+            .MinimumLength(DeclineNoteMinLength)
+            .When(x => x.Data.Status is ExpenseStatus.Rejected or ExpenseStatus.NeedsRevision)
+            .WithMessage($"A note of at least {DeclineNoteMinLength} characters is required when rejecting or requesting revision.");
     }
 }
 

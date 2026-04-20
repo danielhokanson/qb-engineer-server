@@ -5,5 +5,6 @@ public enum ExpenseStatus
     Pending,
     Approved,
     Rejected,
-    SelfApproved
+    SelfApproved,
+    NeedsRevision
 }

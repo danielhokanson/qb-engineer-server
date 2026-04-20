@@ -385,5 +385,71 @@ public static partial class SeedData
         // ── Training Modules & Paths ──────────────────────────────────────
         await SeedTrainingAsync(db);
         await SeedAdditionalTrainingPathsAsync(db);
+
+        // ── Approval Workflows ────────────────────────────────────────────
+        await SeedApprovalWorkflowsAsync(db);
+    }
+
+    private static async Task SeedApprovalWorkflowsAsync(AppDbContext db)
+    {
+        var changed = false;
+
+        if (!await db.ApprovalWorkflows.AnyAsync(w => w.EntityType == "PurchaseOrder"))
+        {
+            db.ApprovalWorkflows.Add(new ApprovalWorkflow
+            {
+                Name = "Purchase Order — Manager Review",
+                EntityType = "PurchaseOrder",
+                Description = "Any submitted PO. Auto-approved below $500; above that, routed to any Manager.",
+                IsActive = true,
+                Steps =
+                {
+                    new ApprovalStep
+                    {
+                        StepNumber = 1,
+                        Name = "Manager Approval",
+                        ApproverType = ApproverType.Role,
+                        ApproverRole = "Manager",
+                        AutoApproveBelow = 500m,
+                        EscalationHours = 48,
+                        RequireComments = false,
+                        AllowDelegation = true,
+                    },
+                },
+            });
+            changed = true;
+        }
+
+        if (!await db.ApprovalWorkflows.AnyAsync(w => w.EntityType == "Expense"))
+        {
+            db.ApprovalWorkflows.Add(new ApprovalWorkflow
+            {
+                Name = "Expense — Manager Review",
+                EntityType = "Expense",
+                Description = "Submitted expenses. Auto-approved below $100; above that, routed to any Manager.",
+                IsActive = true,
+                Steps =
+                {
+                    new ApprovalStep
+                    {
+                        StepNumber = 1,
+                        Name = "Manager Approval",
+                        ApproverType = ApproverType.Role,
+                        ApproverRole = "Manager",
+                        AutoApproveBelow = 100m,
+                        EscalationHours = 72,
+                        RequireComments = false,
+                        AllowDelegation = true,
+                    },
+                },
+            });
+            changed = true;
+        }
+
+        if (changed)
+        {
+            await db.SaveChangesAsync();
+            Log.Information("Seeded default approval workflows");
+        }
     }
 }

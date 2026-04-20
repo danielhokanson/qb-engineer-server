@@ -30,6 +30,13 @@ public class ExpensesController(IMediator mediator) : ControllerBase
         return Created($"/api/v1/expenses/{result.Id}", result);
     }
 
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<ExpenseResponseModel>> UpdateExpense(int id, [FromBody] UpdateExpenseRequestModel request)
+    {
+        var result = await mediator.Send(new UpdateExpenseCommand(id, request));
+        return Ok(result);
+    }
+
     [HttpPatch("{id:int}/status")]
     public async Task<ActionResult<ExpenseResponseModel>> UpdateExpenseStatus(int id, [FromBody] UpdateExpenseStatusRequestModel request)
     {
@@ -49,6 +56,14 @@ public class ExpensesController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetEntityActivityQuery("Expense", id));
         return Ok(result);
+    }
+
+    [HttpPost("receipts")]
+    [RequestSizeLimit(52_428_800)]
+    public async Task<ActionResult<FileAttachmentResponseModel>> UploadReceipt(IFormFile file)
+    {
+        var result = await mediator.Send(new UploadExpenseReceiptCommand(file));
+        return Created($"/api/v1/files/{result.Id}", result);
     }
 
     [HttpGet("settings")]

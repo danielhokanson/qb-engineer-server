@@ -20,12 +20,20 @@ public class CreateExpenseCommandValidator : AbstractValidator<CreateExpenseComm
     }
 }
 
-public class CreateExpenseHandler(IExpenseRepository repo, IHttpContextAccessor httpContext) : IRequestHandler<CreateExpenseCommand, ExpenseResponseModel>
+public class CreateExpenseHandler(
+    IExpenseRepository repo,
+    IFileRepository fileRepo,
+    IApprovalService approvalService,
+    IMediator mediator,
+    IHttpContextAccessor httpContext) : IRequestHandler<CreateExpenseCommand, ExpenseResponseModel>
 {
     public async Task<ExpenseResponseModel> Handle(CreateExpenseCommand request, CancellationToken cancellationToken)
     {
         var data = request.Data;
         var userId = int.Parse(httpContext.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var settings = await mediator.Send(new GetExpenseSettingsQuery(), cancellationToken);
+        ExpensePolicyEnforcement.Enforce(data.Amount, data.Description, data.ReceiptFileId, settings);
 
         var expense = new Expense
         {
@@ -39,6 +47,21 @@ public class CreateExpenseHandler(IExpenseRepository repo, IHttpContextAccessor 
         };
 
         await repo.AddAsync(expense, cancellationToken);
+
+        // Re-associate a pre-uploaded receipt (EntityId=0) with the new expense row.
+        if (int.TryParse(data.ReceiptFileId, out var receiptId) && receiptId > 0)
+        {
+            var attachment = await fileRepo.FindAsync(receiptId, cancellationToken);
+            if (attachment is not null && attachment.EntityType == "expenses" && attachment.EntityId == 0)
+            {
+                attachment.EntityId = expense.Id;
+                await fileRepo.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        await approvalService.SubmitForApprovalAsync(
+            "Expense", expense.Id, userId, expense.Amount,
+            $"{expense.Category} — {expense.Description}", cancellationToken);
 
         return (await repo.GetByIdAsync(expense.Id, cancellationToken))!;
     }
