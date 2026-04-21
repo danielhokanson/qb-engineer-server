@@ -863,22 +863,25 @@ try
         });
 
         // ── Dev-only: clock control for E2E simulation ─────────────────────
+        // Admin-role gated so external simulations (or curl) must authenticate
+        // before altering server time on a shared/public dev deployment.
         var devClock = app.Services.GetRequiredService<MockClock>();
 
         app.MapPost("/api/v1/dev/clock", (ClockSetRequest req) =>
         {
             devClock.Set(req.Now);
             return Results.Ok(new { now = devClock.UtcNow });
-        });
+        }).RequireAuthorization(p => p.RequireRole("Admin"));
 
         app.MapGet("/api/v1/dev/clock", () =>
-            Results.Ok(new { now = devClock.UtcNow }));
+            Results.Ok(new { now = devClock.UtcNow }))
+            .RequireAuthorization(p => p.RequireRole("Admin"));
 
         app.MapDelete("/api/v1/dev/clock", () =>
         {
             devClock.Set(DateTimeOffset.UtcNow);
             return Results.Ok(new { now = devClock.UtcNow });
-        });
+        }).RequireAuthorization(p => p.RequireRole("Admin"));
 
         // ── Dev-only: simulation state summary ─────────────────────────────
         app.MapGet("/api/v1/dev/simulation-state", async (AppDbContext db) =>
@@ -916,7 +919,7 @@ try
                 pendingExpenses = await db.Expenses.CountAsync(e => e.DeletedAt == null
                                     && e.Status == QBEngineer.Core.Enums.ExpenseStatus.Pending),
             });
-        }).RequireAuthorization();
+        }).RequireAuthorization(p => p.RequireRole("Admin"));
     }
 
     app.UseSession();
