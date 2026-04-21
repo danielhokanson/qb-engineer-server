@@ -104,6 +104,7 @@ public class LoginHandler(
             .FirstOrDefaultAsync(p => p.UserId == userId, ct);
 
         if (profile is null) return false;
+        if (profile.OnboardingBypassedAt is not null) return true;
 
         return !string.IsNullOrWhiteSpace(profile.Street1) &&
                !string.IsNullOrWhiteSpace(profile.City) &&
@@ -144,19 +145,20 @@ public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager, App
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
 
-        var profileComplete = profile is not null &&
-            !string.IsNullOrWhiteSpace(profile.Street1) &&
-            !string.IsNullOrWhiteSpace(profile.City) &&
-            !string.IsNullOrWhiteSpace(profile.State) &&
-            !string.IsNullOrWhiteSpace(profile.ZipCode) &&
-            !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
-            !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone) &&
-            profile.W4CompletedAt is not null &&
-            profile.I9CompletedAt is not null &&
-            profile.StateWithholdingCompletedAt is not null &&
-            profile.DirectDepositCompletedAt is not null &&
-            profile.WorkersCompAcknowledgedAt is not null &&
-            profile.HandbookAcknowledgedAt is not null;
+        var profileComplete = profile is not null && (
+            profile.OnboardingBypassedAt is not null ||
+            (!string.IsNullOrWhiteSpace(profile.Street1) &&
+             !string.IsNullOrWhiteSpace(profile.City) &&
+             !string.IsNullOrWhiteSpace(profile.State) &&
+             !string.IsNullOrWhiteSpace(profile.ZipCode) &&
+             !string.IsNullOrWhiteSpace(profile.EmergencyContactName) &&
+             !string.IsNullOrWhiteSpace(profile.EmergencyContactPhone) &&
+             profile.W4CompletedAt is not null &&
+             profile.I9CompletedAt is not null &&
+             profile.StateWithholdingCompletedAt is not null &&
+             profile.DirectDepositCompletedAt is not null &&
+             profile.WorkersCompAcknowledgedAt is not null &&
+             profile.HandbookAcknowledgedAt is not null));
 
         return new AuthUserResponseModel(
             user.Id,
