@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Authorization;
 using QBEngineer.Api.Features.Search;
 using QBEngineer.Api.Features.ShopFloor;
 using QBEngineer.Core.Models;
@@ -15,7 +16,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
 {
     private static readonly HashSet<string> KioskEntityTypes = new(["Job", "Part"]);
 
-    [AllowAnonymous]
+    [KioskTerminalAuth]
     [HttpGet]
     public async Task<ActionResult<ShopFloorOverviewResponseModel>> GetOverview([FromQuery] int? teamId = null)
     {
@@ -23,7 +24,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    [AllowAnonymous]
+    [KioskTerminalAuth]
     [HttpGet("clock-status")]
     public async Task<ActionResult<List<ClockWorkerModel>>> GetClockStatus([FromQuery] int? teamId = null)
     {
@@ -31,7 +32,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    [AllowAnonymous]
+    [KioskTerminalAuth]
     [HttpGet("search")]
     public async Task<ActionResult<List<SearchResultModel>>> KioskSearch(
         [FromQuery] string q, [FromQuery] int limit = 10)
@@ -44,7 +45,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(filtered);
     }
 
-    [AllowAnonymous]
+    [KioskTerminalAuth]
     [HttpPost("identify-scan")]
     public async Task<ActionResult<ScanIdentificationResult>> IdentifyScan([FromBody] IdentifyScanRequestModel model)
     {
@@ -55,7 +56,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    [AllowAnonymous]
+    [KioskTerminalAuth]
     [HttpPost("clock")]
     public async Task<IActionResult> ClockInOut([FromBody] ClockInOutRequestModel model)
     {
@@ -78,7 +79,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
     }
 
     // ─── Teams ───
-    [AllowAnonymous]
+    [KioskTerminalAuth]
     [HttpGet("teams")]
     public async Task<ActionResult<List<TeamModel>>> GetTeams()
     {
@@ -137,7 +138,7 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
     }
 
     // ─── Terminal Setup ───
-    [AllowAnonymous]
+    [KioskTerminalAuth]
     [HttpGet("terminal")]
     public async Task<ActionResult<KioskTerminalModel>> GetTerminal([FromQuery] string deviceToken)
     {

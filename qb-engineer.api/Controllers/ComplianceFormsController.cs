@@ -1,10 +1,13 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 using MediatR;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 using QBEngineer.Api.Features.ComplianceForms;
 using QBEngineer.Core.Enums;
@@ -15,7 +18,10 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/compliance-forms")]
 [Authorize]
-public class ComplianceFormsController(IMediator mediator) : ControllerBase
+public class ComplianceFormsController(
+    IMediator mediator,
+    IOptions<DocuSealOptions> docuSealOptions,
+    ILogger<ComplianceFormsController> logger) : ControllerBase
 {
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -231,6 +237,36 @@ public class ComplianceFormsController(IMediator mediator) : ControllerBase
     {
         using var reader = new StreamReader(Request.Body);
         var body = await reader.ReadToEndAsync(ct);
+
+        var secret = docuSealOptions.Value.WebhookSecret;
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            logger.LogError("DocuSeal webhook received but WebhookSecret is not configured — rejecting");
+            return Unauthorized();
+        }
+
+        if (!Request.Headers.TryGetValue("X-Docuseal-Signature", out var sigHeader)
+            || string.IsNullOrWhiteSpace(sigHeader))
+        {
+            logger.LogWarning("DocuSeal webhook rejected: missing X-Docuseal-Signature header");
+            return Unauthorized();
+        }
+
+        var expected = Convert.ToHexString(
+            HMACSHA256.HashData(Encoding.UTF8.GetBytes(secret), Encoding.UTF8.GetBytes(body)));
+        var provided = sigHeader.ToString().Trim();
+        if (provided.StartsWith("sha256=", StringComparison.OrdinalIgnoreCase))
+            provided = provided["sha256=".Length..];
+
+        var expectedBytes = Encoding.ASCII.GetBytes(expected);
+        var providedBytes = Encoding.ASCII.GetBytes(provided);
+        if (expectedBytes.Length != providedBytes.Length
+            || !CryptographicOperations.FixedTimeEquals(expectedBytes, providedBytes))
+        {
+            logger.LogWarning("DocuSeal webhook rejected: signature mismatch");
+            return Unauthorized();
+        }
+
         var payload = JsonDocument.Parse(body);
 
         var eventType = payload.RootElement.GetProperty("event_type").GetString();

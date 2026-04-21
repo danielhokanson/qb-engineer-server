@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
+using QBEngineer.Api.Authorization;
 using QBEngineer.Api.Behaviors;
 using QBEngineer.Api.Data;
 using QBEngineer.Api.Hubs;
@@ -26,6 +27,7 @@ using QBEngineer.Integrations;
 using QBEngineer.Integrations.Builders;
 using System.Threading.RateLimiting;
 using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using QBEngineer.Api.Features.AutoPo;
 using QBEngineer.Api.Jobs;
@@ -987,7 +989,10 @@ try
     });
 
     // Hangfire dashboard + recurring jobs
-    app.MapHangfireDashboard("/hangfire");
+    app.MapHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = new[] { new HangfireAdminAuthorizationFilter() },
+    });
     RecurringJob.AddOrUpdate<IntegrationOutboxDispatcherJob>(
         "integration-outbox-dispatcher",
         job => job.DispatchPendingAsync(CancellationToken.None),

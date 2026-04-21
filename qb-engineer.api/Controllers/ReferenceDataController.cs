@@ -18,7 +18,6 @@ public class ReferenceDataController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    [AllowAnonymous]
     [HttpGet("{groupCode}")]
     public async Task<ActionResult<List<ReferenceDataResponseModel>>> GetByGroup(string groupCode)
     {

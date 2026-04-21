@@ -28,7 +28,6 @@ public class AccountingController(
 {
     // ─── Accounting Mode ───
 
-    [AllowAnonymous]
     [HttpGet("admin/accounting-mode")]
     public async Task<ActionResult<AccountingModeResponse>> GetAccountingMode(CancellationToken ct)
     {
