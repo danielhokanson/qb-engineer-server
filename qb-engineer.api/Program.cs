@@ -275,19 +275,12 @@ try
                 OpenIddict.Abstractions.OpenIddictConstants.Scopes.OfflineAccess,
                 "roles");
 
-            // Dev certificates — in production, swap for cert from file or key vault.
-            if (builder.Environment.IsDevelopment())
-            {
-                options.AddDevelopmentEncryptionCertificate()
-                       .AddDevelopmentSigningCertificate();
-            }
-            else
-            {
-                // Production: ephemeral keys for now; swap to persisted cert before first prod deploy.
-                // TODO (OIDC hardening): load signing + encryption certs from cert store or key vault.
-                options.AddEphemeralEncryptionKey()
-                       .AddEphemeralSigningKey();
-            }
+            // Ephemeral keys — regenerated on each restart. Works in any environment including
+            // locked-down containers where AddDevelopmentEncryption/SigningCertificate can't write
+            // to $HOME. TODO (OIDC hardening): load persisted signing + encryption certs from
+            // cert store or key vault before any real external-app OIDC integration ships.
+            options.AddEphemeralEncryptionKey()
+                   .AddEphemeralSigningKey();
 
             options.UseAspNetCore()
                    .EnableAuthorizationEndpointPassthrough()
