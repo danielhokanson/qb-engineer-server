@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pgvector;
@@ -12,9 +13,11 @@ using QBEngineer.Data.Context;
 namespace QBEngineer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422061037_AddOidcProvider")]
+    partial class AddOidcProvider
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -9691,15 +9694,6 @@ namespace QBEngineer.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("owner_email");
-
-                    b.Property<string>("RegistrationAccessTokenHash")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("registration_access_token_hash");
-
-                    b.Property<DateTimeOffset?>("RegistrationAccessTokenRotatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("registration_access_token_rotated_at");
 
                     b.Property<int?>("RegistrationTicketId")
                         .HasColumnType("integer")

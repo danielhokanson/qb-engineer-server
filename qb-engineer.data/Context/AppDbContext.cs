@@ -386,6 +386,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Training Scan Logs
     public DbSet<TrainingScanLog> TrainingScanLogs => Set<TrainingScanLog>();
 
+    // OIDC Provider (sidecar to OpenIddict's built-in tables)
+    public DbSet<OidcClientMetadata> OidcClientMetadata => Set<OidcClientMetadata>();
+    public DbSet<OidcRegistrationTicket> OidcRegistrationTickets => Set<OidcRegistrationTicket>();
+    public DbSet<OidcCustomScope> OidcCustomScopes => Set<OidcCustomScope>();
+    public DbSet<OidcAuditEvent> OidcAuditEvents => Set<OidcAuditEvent>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -393,6 +399,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
         builder.HasPostgresExtension("vector");
 
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // OpenIddict core tables (applications, authorizations, scopes, tokens).
+        // int key matches our ApplicationUser/IdentityRole PK scheme.
+        builder.UseOpenIddict();
 
         // Apply snake_case naming convention for all tables and columns
         foreach (var entity in builder.Model.GetEntityTypes())

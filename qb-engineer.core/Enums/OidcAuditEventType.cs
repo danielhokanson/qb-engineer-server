@@ -1,0 +1,31 @@
+namespace QBEngineer.Core.Enums;
+
+public enum OidcAuditEventType
+{
+    TicketIssued = 0,
+    TicketRedeemed = 1,
+    TicketExpired = 2,
+    TicketRevoked = 3,
+    ClientRegistered = 10,
+    ClientApproved = 11,
+    ClientSuspended = 12,
+    ClientRevoked = 13,
+    ClientUpdated = 14,
+    SecretRotated = 20,
+    RegistrationAccessTokenRotated = 21,
+    ConsentGranted = 30,
+    ConsentRevoked = 31,
+    ConsentDenied = 32,
+    TokenIssued = 40,
+    AuthorizationCodeIssued = 41,
+    UserAuthenticated = 50,
+    RoleGateDenied = 60,
+    ScopeDenied = 61,
+    RedirectUriMismatch = 62,
+    InvalidSoftwareStatement = 63,
+    ScopeCreated = 70,
+    ScopeUpdated = 71,
+    ScopeDeleted = 72,
+    ClientSelfRead = 80,
+    ClientSelfDeleted = 81,
+}
