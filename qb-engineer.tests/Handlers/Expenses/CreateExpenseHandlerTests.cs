@@ -5,6 +5,8 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
 
+using MediatR;
+
 using QBEngineer.Api.Features.Expenses;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
@@ -16,6 +18,9 @@ namespace QBEngineer.Tests.Handlers.Expenses;
 public class CreateExpenseHandlerTests
 {
     private readonly Mock<IExpenseRepository> _expenseRepo = new();
+    private readonly Mock<IFileRepository> _fileRepo = new();
+    private readonly Mock<IApprovalService> _approvalService = new();
+    private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IHttpContextAccessor> _httpContextAccessor = new();
     private readonly CreateExpenseHandler _handler;
 
@@ -33,7 +38,12 @@ public class CreateExpenseHandlerTests
 
         _httpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
 
-        _handler = new CreateExpenseHandler(_expenseRepo.Object, _httpContextAccessor.Object);
+        _handler = new CreateExpenseHandler(
+            _expenseRepo.Object,
+            _fileRepo.Object,
+            _approvalService.Object,
+            _mediator.Object,
+            _httpContextAccessor.Object);
     }
 
     [Fact]
