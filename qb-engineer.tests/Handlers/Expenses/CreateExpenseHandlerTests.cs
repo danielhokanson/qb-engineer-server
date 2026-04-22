@@ -38,6 +38,16 @@ public class CreateExpenseHandlerTests
 
         _httpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
 
+        // Permissive expense policy — no limits, no receipt required. Individual tests
+        // that want to exercise policy enforcement can override this setup.
+        _mediator.Setup(m => m.Send(It.IsAny<GetExpenseSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ExpenseSettingsResponse(
+                AllowSelfApproval: false,
+                AutoApproveThreshold: null,
+                MaxAmount: null,
+                RequireReceipt: false,
+                MinDescriptionLength: 0));
+
         _handler = new CreateExpenseHandler(
             _expenseRepo.Object,
             _fileRepo.Object,
