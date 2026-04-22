@@ -115,19 +115,23 @@ public class ApiEndpointTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    // ─── Anonymous endpoints return 200 ───
+    // ─── Security-hardened endpoints (closed by commit 5255614) ───
 
     [Fact]
-    public async Task GET_ShopFloorDisplay_Returns200_AllowAnonymous()
+    public async Task GET_ShopFloorDisplay_Returns401_WithoutKioskToken()
     {
+        // Shop-floor kiosk endpoints require either admin JWT or
+        // X-Kiosk-Device-Token header validated via [KioskTerminalAuth].
         var response = await _client.GetAsync("/api/v1/display/shop-floor");
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public async Task GET_AccountingMode_Returns200_AllowAnonymous()
+    public async Task GET_AccountingMode_Returns401_WhenUnauthenticated()
     {
+        // accounting-mode was previously [AllowAnonymous]; locked down to
+        // prevent info disclosure about configured accounting providers.
         var response = await _client.GetAsync("/api/v1/admin/accounting-mode");
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }
