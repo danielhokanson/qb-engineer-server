@@ -146,6 +146,14 @@ public class ShopFloorController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpDelete("terminals/{id:int}")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> DeleteTerminal(int id)
+    {
+        await mediator.Send(new DeleteKioskTerminalCommand(id));
+        return NoContent();
+    }
+
     // ─── Terminal Setup ───
     [AllowAnonymous]
     [KioskTerminalAuth]
