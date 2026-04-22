@@ -288,12 +288,6 @@ try
                    .EnableUserInfoEndpointPassthrough()
                    .EnableEndSessionEndpointPassthrough()
                    .EnableStatusCodePagesIntegration();
-
-            // Dev only: allow HTTP for localhost testing. Production requires HTTPS.
-            if (builder.Environment.IsDevelopment())
-            {
-                options.UseAspNetCore().DisableTransportSecurityRequirement();
-            }
         })
         .AddValidation(options =>
         {
