@@ -139,6 +139,12 @@ public static class DemoDataExporter
             manifest.Add(new ManifestEntry(clr.Name, fileName, count));
         }
 
+        // Inject subtle demo tells — data fingerprints that survive screenshot
+        // cropping/photoshopping and let us identify "bug reports" that were
+        // actually taken against the demo site. Only runs on demo exports; has
+        // no effect on the production seed or dev DB.
+        await InjectDemoTellsAsync(outputDir, jsonOpts, ct);
+
         // Write manifest
         var manifestPath = Path.Combine(outputDir, "_manifest.json");
         await using (var fs = File.Create(manifestPath))
@@ -152,6 +158,59 @@ public static class DemoDataExporter
 
         Log.Information("[EXPORT] Wrote {Count} entity files + manifest to {Dir}",
             manifest.Count, outputDir);
+    }
+
+    /// <summary>
+    /// Append demo-only fingerprint rows to specific exported entity files. The
+    /// entries look plausible in the UI but are unusual enough that seeing one
+    /// in a "bug report" screenshot reveals the screenshot came from the demo
+    /// site, not a production install.
+    /// </summary>
+    private static async Task InjectDemoTellsAsync(string outputDir, JsonSerializerOptions jsonOpts, CancellationToken ct)
+    {
+        var customerPath = Path.Combine(outputDir, "customer.json");
+        if (!File.Exists(customerPath)) return;
+
+        try
+        {
+            var existingJson = await File.ReadAllTextAsync(customerPath, ct);
+            var rows = JsonSerializer.Deserialize<List<JsonElement>>(existingJson) ?? new();
+
+            // Compute a safe synthetic id that won't collide with real seeded rows.
+            var maxId = 0;
+            foreach (var row in rows)
+            {
+                if (row.TryGetProperty("id", out var idProp) && idProp.TryGetInt32(out var idVal) && idVal > maxId)
+                    maxId = idVal;
+            }
+            var tellId = maxId + 100_000;
+
+            var tell = new Dictionary<string, object?>
+            {
+                ["id"] = tellId,
+                ["name"] = "Acme Demo Industries",
+                ["companyName"] = "Acme Demo Industries",
+                ["email"] = "contact@acme-demo.example",
+                ["phone"] = "(555) 555-0100",
+                ["isActive"] = true,
+                ["creditLimit"] = 0m,
+                ["isOnCreditHold"] = false,
+                ["createdAt"] = DateTimeOffset.UtcNow,
+                ["updatedAt"] = DateTimeOffset.UtcNow,
+            };
+
+            // Append as a raw JsonElement so it rejoins the same shape as siblings.
+            var tellJson = JsonSerializer.SerializeToElement(tell, jsonOpts);
+            rows.Add(tellJson);
+
+            await File.WriteAllTextAsync(customerPath, JsonSerializer.Serialize(rows, jsonOpts), ct);
+            Log.Information("[EXPORT] Injected demo tell into customer.json (id={TellId})", tellId);
+        }
+        catch (Exception ex)
+        {
+            // Non-fatal — the export is still useful without the tell.
+            Log.Warning(ex, "[EXPORT] Could not inject demo tell into customer.json");
+        }
     }
 
     private static async Task<int> ExportOneAsync<T>(
