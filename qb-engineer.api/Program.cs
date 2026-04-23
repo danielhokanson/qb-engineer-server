@@ -863,6 +863,19 @@ try
             // Seed built-in AI assistants (idempotent)
             await QBEngineer.Api.Features.AiAssistants.SeedAiAssistants.EnsureSeededAsync(db);
 
+            // Demo-data export mode — dump business entities to JSON and exit
+            // before the web host starts. Triggered by EXPORT_DEMO_DATA env var
+            // (path to output directory). Used by the disposable export stack.
+            var exportDir = Environment.GetEnvironmentVariable("EXPORT_DEMO_DATA");
+            if (!string.IsNullOrWhiteSpace(exportDir))
+            {
+                Log.Information("[EXPORT] EXPORT_DEMO_DATA set — exporting to {Dir} and exiting", exportDir);
+                await DemoDataExporter.ExportAsync(db, exportDir, CancellationToken.None);
+                Log.Information("[EXPORT] Export complete — shutting down");
+                await Log.CloseAndFlushAsync();
+                return;
+            }
+
             // Auto-extract form definitions for templates that have IsAutoSync + SourceUrl but no FormDefinitionVersion yet
             var templatesNeedingExtraction = await db.ComplianceFormTemplates
                 .Where(t => t.IsAutoSync && t.SourceUrl != null && !t.FormDefinitionVersions.Any())
