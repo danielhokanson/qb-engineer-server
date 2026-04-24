@@ -4,10 +4,9 @@ using MediatR;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 using QBEngineer.Api.Features.Oidc;
-using QBEngineer.Core.Models;
+using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Api.Controllers;
 
@@ -20,9 +19,8 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [AllowAnonymous]
 [Route("connect/register")]
-public class OidcRegistrationController(IMediator mediator, IOptions<OidcOptions> oidcOptions) : ControllerBase
+public class OidcRegistrationController(IMediator mediator, IOidcProviderSettings providerSettings) : ControllerBase
 {
-    private readonly OidcOptions _oidcOptions = oidcOptions.Value;
 
     private string? GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
 
@@ -43,7 +41,8 @@ public class OidcRegistrationController(IMediator mediator, IOptions<OidcOptions
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterClientRequest body)
     {
-        if (!_oidcOptions.ProviderEnabled)
+        var settings = await providerSettings.GetAsync(HttpContext.RequestAborted);
+        if (!settings.ProviderEnabled)
         {
             return StatusCode(503, new RegistrationErrorResponse(
                 "temporarily_unavailable",
@@ -77,7 +76,7 @@ public class OidcRegistrationController(IMediator mediator, IOptions<OidcOptions
                 PolicyUri: body.PolicyUri,
                 CallerIp: GetIp()));
 
-            var registrationClientUri = BuildRegistrationClientUri(result.ClientId);
+            var registrationClientUri = BuildRegistrationClientUri(result.ClientId, settings.PublicBaseUrl);
 
             var response = new RegisterClientResponse
             {
@@ -115,7 +114,8 @@ public class OidcRegistrationController(IMediator mediator, IOptions<OidcOptions
     [HttpGet("{clientId}")]
     public async Task<IActionResult> ReadSelf(string clientId)
     {
-        if (!_oidcOptions.ProviderEnabled)
+        var settings = await providerSettings.GetAsync(HttpContext.RequestAborted);
+        if (!settings.ProviderEnabled)
         {
             return StatusCode(503);
         }
@@ -131,7 +131,7 @@ public class OidcRegistrationController(IMediator mediator, IOptions<OidcOptions
         try
         {
             var self = await mediator.Send(new GetSelfClientQuery(clientId, token, GetIp()));
-            var registrationClientUri = BuildRegistrationClientUri(clientId);
+            var registrationClientUri = BuildRegistrationClientUri(clientId, settings.PublicBaseUrl);
             return Ok(new SelfClientConfigurationResponse
             {
                 ClientId = self.ClientId,
@@ -163,7 +163,8 @@ public class OidcRegistrationController(IMediator mediator, IOptions<OidcOptions
     [HttpDelete("{clientId}")]
     public async Task<IActionResult> DeleteSelf(string clientId)
     {
-        if (!_oidcOptions.ProviderEnabled)
+        var settings = await providerSettings.GetAsync(HttpContext.RequestAborted);
+        if (!settings.ProviderEnabled)
         {
             return StatusCode(503);
         }
@@ -188,9 +189,9 @@ public class OidcRegistrationController(IMediator mediator, IOptions<OidcOptions
         }
     }
 
-    private string BuildRegistrationClientUri(string clientId)
+    private string BuildRegistrationClientUri(string clientId, string? configuredBaseUrl)
     {
-        var baseUrl = _oidcOptions.PublicBaseUrl;
+        var baseUrl = configuredBaseUrl;
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
             var req = Request;

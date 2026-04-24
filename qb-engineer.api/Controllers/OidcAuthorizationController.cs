@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
@@ -40,14 +39,14 @@ namespace QBEngineer.Api.Controllers;
 public class OidcAuthorizationController(
     AppDbContext db,
     UserManager<ApplicationUser> userManager,
-    IOptions<OidcOptions> oidcOptions,
+    IOidcProviderSettings providerSettings,
     IOidcAuditService audit,
     IOpenIddictApplicationManager appManager,
     IOpenIddictAuthorizationManager authManager) : ControllerBase
 {
-    private readonly OidcOptions _oidcOptions = oidcOptions.Value;
-
     private string? GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
+    private async Task<bool> IsProviderEnabledAsync() =>
+        (await providerSettings.GetAsync(HttpContext.RequestAborted)).ProviderEnabled;
 
     // ─────────────────────────────────────────────────────────────────────────
     // SPA bridge: convert JWT → OidcInteractive cookie
@@ -63,7 +62,7 @@ public class OidcAuthorizationController(
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> InteractiveLogin()
     {
-        if (!_oidcOptions.ProviderEnabled)
+        if (!await IsProviderEnabledAsync())
         {
             return StatusCode(503, new { error = "provider_disabled" });
         }
@@ -113,7 +112,7 @@ public class OidcAuthorizationController(
     [AllowAnonymous]
     public async Task<IActionResult> Authorize()
     {
-        if (!_oidcOptions.ProviderEnabled) return NotFound();
+        if (!await IsProviderEnabledAsync()) return NotFound();
 
         var req = HttpContext.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException("The OpenIddict server request could not be retrieved.");
@@ -329,7 +328,7 @@ public class OidcAuthorizationController(
     [Consumes("application/x-www-form-urlencoded")]
     public async Task<IActionResult> Token()
     {
-        if (!_oidcOptions.ProviderEnabled) return NotFound();
+        if (!await IsProviderEnabledAsync()) return NotFound();
 
         var req = HttpContext.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException("The OpenIddict server request could not be retrieved.");
@@ -400,7 +399,7 @@ public class OidcAuthorizationController(
     [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
     public async Task<IActionResult> UserInfo()
     {
-        if (!_oidcOptions.ProviderEnabled) return NotFound();
+        if (!await IsProviderEnabledAsync()) return NotFound();
 
         var userId = User.FindFirstValue(OpenIddictConstants.Claims.Subject);
         if (string.IsNullOrWhiteSpace(userId))
@@ -474,7 +473,7 @@ public class OidcAuthorizationController(
     [AllowAnonymous]
     public async Task<IActionResult> EndSession()
     {
-        if (!_oidcOptions.ProviderEnabled) return NotFound();
+        if (!await IsProviderEnabledAsync()) return NotFound();
 
         await HttpContext.SignOutAsync("OidcInteractive");
         return SignOut(

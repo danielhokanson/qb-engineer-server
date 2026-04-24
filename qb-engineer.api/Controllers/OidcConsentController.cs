@@ -4,10 +4,9 @@ using MediatR;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 using QBEngineer.Api.Features.Oidc;
-using QBEngineer.Core.Models;
+using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Api.Controllers;
 
@@ -23,19 +22,19 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/oidc/consent")]
-public class OidcConsentController(IMediator mediator, IOptions<OidcOptions> oidcOptions) : ControllerBase
+public class OidcConsentController(IMediator mediator, IOidcProviderSettings providerSettings) : ControllerBase
 {
-    private readonly OidcOptions _oidcOptions = oidcOptions.Value;
-
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private string? GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
+    private async Task<bool> IsProviderEnabledAsync() =>
+        (await providerSettings.GetAsync(HttpContext.RequestAborted)).ProviderEnabled;
 
     [HttpGet("context")]
     public async Task<IActionResult> GetContext(
         [FromQuery(Name = "client_id")] string clientId,
         [FromQuery(Name = "scope")] string? scope)
     {
-        if (!_oidcOptions.ProviderEnabled) return NotFound();
+        if (!await IsProviderEnabledAsync()) return NotFound();
         if (string.IsNullOrWhiteSpace(clientId))
         {
             return BadRequest(new { error = "client_id is required." });
@@ -64,7 +63,7 @@ public class OidcConsentController(IMediator mediator, IOptions<OidcOptions> oid
     [HttpPost("grant")]
     public async Task<IActionResult> Grant([FromBody] ConsentRequest body)
     {
-        if (!_oidcOptions.ProviderEnabled) return NotFound();
+        if (!await IsProviderEnabledAsync()) return NotFound();
         if (body is null || string.IsNullOrWhiteSpace(body.ClientId))
         {
             return BadRequest(new { error = "clientId is required." });
@@ -92,7 +91,7 @@ public class OidcConsentController(IMediator mediator, IOptions<OidcOptions> oid
     [HttpPost("deny")]
     public async Task<IActionResult> Deny([FromBody] ConsentRequest body)
     {
-        if (!_oidcOptions.ProviderEnabled) return NotFound();
+        if (!await IsProviderEnabledAsync()) return NotFound();
         if (body is null || string.IsNullOrWhiteSpace(body.ClientId))
         {
             return BadRequest(new { error = "clientId is required." });

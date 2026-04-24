@@ -380,6 +380,7 @@ try
     builder.Services.Configure<UspsOptions>(builder.Configuration.GetSection(UspsOptions.SectionName));
     builder.Services.Configure<DocuSealOptions>(builder.Configuration.GetSection(DocuSealOptions.SectionName));
     builder.Services.Configure<OidcOptions>(builder.Configuration.GetSection(OidcOptions.SectionName));
+    builder.Services.AddScoped<IOidcProviderSettings, OidcProviderSettingsService>();
     // Shipping carrier options
     builder.Services.Configure<UpsOptions>(builder.Configuration.GetSection(UpsOptions.SectionName));
     builder.Services.Configure<FedExOptions>(builder.Configuration.GetSection(FedExOptions.SectionName));
