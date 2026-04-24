@@ -623,17 +623,25 @@ try
     });
 
     // Hangfire
+    // EnableLongPolling switches job pickup from tight 15s DB polls to PG LISTEN/NOTIFY —
+    // big idle-CPU win. QueuePollInterval is only the fallback if notifications miss.
+    // WorkerCount of 2 is plenty: the vast majority of our recurring jobs are daily cron.
     builder.Services.AddHangfire(config => config
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
-        .UsePostgreSqlStorage(options =>
-            options.UseNpgsqlConnection(
-                builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty)));
+        .UsePostgreSqlStorage(
+            c => c.UseNpgsqlConnection(
+                builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty),
+            new PostgreSqlStorageOptions
+            {
+                EnableLongPolling = true,
+                QueuePollInterval = TimeSpan.FromSeconds(60),
+            }));
     builder.Services.AddHangfireServer(options =>
     {
         options.Queues = ["default"];
-        options.WorkerCount = Math.Max(Environment.ProcessorCount, 4);
+        options.WorkerCount = 2;
     });
     builder.Services.AddScoped<RecurringOrderJob>();
     builder.Services.AddScoped<OverdueInvoiceJob>();
