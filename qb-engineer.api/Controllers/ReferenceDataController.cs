@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Authorization;
 using QBEngineer.Api.Features.ReferenceData;
 using QBEngineer.Core.Models;
 
@@ -18,7 +19,12 @@ public class ReferenceDataController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // Kiosks (shop floor) need to read reference-data groups (clock event types,
+    // hold types, etc.) before any worker has authenticated. Accept the kiosk
+    // device token as a fallback credential on this read-only endpoint.
     [HttpGet("{groupCode}")]
+    [AllowAnonymous]
+    [KioskTerminalAuth]
     public async Task<ActionResult<List<ReferenceDataResponseModel>>> GetByGroup(string groupCode)
     {
         var result = await mediator.Send(new GetReferenceDataByGroupQuery(groupCode));
