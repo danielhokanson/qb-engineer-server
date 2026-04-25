@@ -388,9 +388,6 @@ public static partial class SeedData
 
         // ── Approval Workflows ────────────────────────────────────────────
         await SeedApprovalWorkflowsAsync(db);
-
-        // ── OIDC System Scopes ────────────────────────────────────────────
-        await SeedOidcSystemScopesAsync(db);
     }
 
     private static async Task SeedApprovalWorkflowsAsync(AppDbContext db)
@@ -456,81 +453,4 @@ public static partial class SeedData
         }
     }
 
-    public static async Task SeedOidcSystemScopesAsync(AppDbContext db)
-    {
-        // System scopes are locked: cannot be edited or deleted from the admin UI.
-        // They correspond to the well-known OIDC scopes registered with OpenIddict in Program.cs.
-        var systemScopes = new[]
-        {
-            new OidcCustomScope
-            {
-                Name = "openid",
-                DisplayName = "Sign in",
-                Description = "Allows the app to verify your identity.",
-                ClaimMappingsJson = "[]",
-                IsSystem = true,
-                IsActive = true,
-            },
-            new OidcCustomScope
-            {
-                Name = "profile",
-                DisplayName = "Profile",
-                Description = "Your name, preferred username, and profile picture.",
-                ClaimMappingsJson = "[]",
-                IsSystem = true,
-                IsActive = true,
-            },
-            new OidcCustomScope
-            {
-                Name = "email",
-                DisplayName = "Email address",
-                Description = "Your primary email address.",
-                ClaimMappingsJson = "[]",
-                IsSystem = true,
-                IsActive = true,
-            },
-            new OidcCustomScope
-            {
-                Name = "offline_access",
-                DisplayName = "Stay signed in",
-                Description = "Allows the app to refresh its session without prompting you to sign in again.",
-                ClaimMappingsJson = "[]",
-                IsSystem = true,
-                IsActive = true,
-            },
-            new OidcCustomScope
-            {
-                Name = "roles",
-                DisplayName = "Your roles",
-                Description = "The roles you hold in qb-engineer (e.g. Engineer, Manager, Admin).",
-                ClaimMappingsJson = "[{\"claimType\":\"role\",\"source\":\"role\",\"value\":\"*\"}]",
-                IsSystem = true,
-                IsActive = true,
-            },
-        };
-
-        var changed = false;
-        foreach (var scope in systemScopes)
-        {
-            var existing = await db.OidcCustomScopes.FirstOrDefaultAsync(s => s.Name == scope.Name);
-            if (existing is null)
-            {
-                db.OidcCustomScopes.Add(scope);
-                changed = true;
-            }
-            else if (!existing.IsSystem)
-            {
-                // Re-lock if an admin accidentally cleared the flag.
-                existing.IsSystem = true;
-                existing.IsActive = true;
-                changed = true;
-            }
-        }
-
-        if (changed)
-        {
-            await db.SaveChangesAsync();
-            Log.Information("Seeded OIDC system scopes");
-        }
-    }
 }
