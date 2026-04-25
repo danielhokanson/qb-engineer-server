@@ -30,7 +30,6 @@ using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using QBEngineer.Api.Features.AutoPo;
-using QBEngineer.Api.Features.Oidc;
 using QBEngineer.Api.Jobs;
 using QuestPDF.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -170,21 +169,6 @@ try
         };
     });
 
-    // OIDC interactive cookie — short-lived browser session used by the /connect/authorize
-    // passthrough. The Angular SPA posts its JWT to /api/v1/oidc/interactive-login, which
-    // converts the JWT principal into this cookie so OpenIddict's authorize endpoint can
-    // discover the signed-in user. Never used for API auth.
-    authBuilder.AddCookie("OidcInteractive", options =>
-    {
-        options.Cookie.Name = "qbe-oidc";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-        options.SlidingExpiration = true;
-        options.LoginPath = "/oidc/login";
-    });
-
     // SSO Configuration (optional — each provider independently enabled)
     var ssoOptions = builder.Configuration.GetSection("Sso").Get<SsoOptions>() ?? new SsoOptions();
     builder.Services.Configure<SsoOptions>(builder.Configuration.GetSection("Sso"));
@@ -243,57 +227,6 @@ try
     }
 
     builder.Services.AddAuthorization();
-
-    // OpenIddict — OIDC/OAuth2 server (qb-engineer as identity provider for external apps)
-    // Core: EF Core stores for applications/authorizations/scopes/tokens.
-    // Server: authorization code + PKCE, refresh tokens, JWT access tokens.
-    // Validation: local server so we can introspect our own tokens when they hit our API.
-    builder.Services.AddOpenIddict()
-        .AddCore(options =>
-        {
-            options.UseEntityFrameworkCore().UseDbContext<AppDbContext>();
-        })
-        .AddServer(options =>
-        {
-            options.SetAuthorizationEndpointUris("/connect/authorize")
-                   .SetTokenEndpointUris("/connect/token")
-                   .SetUserInfoEndpointUris("/connect/userinfo")
-                   .SetEndSessionEndpointUris("/connect/logout")
-                   .SetRevocationEndpointUris("/connect/revocation")
-                   .SetIntrospectionEndpointUris("/connect/introspect")
-                   .SetJsonWebKeySetEndpointUris("/.well-known/jwks")
-                   .SetConfigurationEndpointUris("/.well-known/openid-configuration");
-
-            options.AllowAuthorizationCodeFlow()
-                   .RequireProofKeyForCodeExchange()
-                   .AllowRefreshTokenFlow();
-
-            options.RegisterScopes(
-                OpenIddict.Abstractions.OpenIddictConstants.Scopes.OpenId,
-                OpenIddict.Abstractions.OpenIddictConstants.Scopes.Profile,
-                OpenIddict.Abstractions.OpenIddictConstants.Scopes.Email,
-                OpenIddict.Abstractions.OpenIddictConstants.Scopes.OfflineAccess,
-                "roles");
-
-            // Ephemeral keys — regenerated on each restart. Works in any environment including
-            // locked-down containers where AddDevelopmentEncryption/SigningCertificate can't write
-            // to $HOME. TODO (OIDC hardening): load persisted signing + encryption certs from
-            // cert store or key vault before any real external-app OIDC integration ships.
-            options.AddEphemeralEncryptionKey()
-                   .AddEphemeralSigningKey();
-
-            options.UseAspNetCore()
-                   .EnableAuthorizationEndpointPassthrough()
-                   .EnableTokenEndpointPassthrough()
-                   .EnableUserInfoEndpointPassthrough()
-                   .EnableEndSessionEndpointPassthrough()
-                   .EnableStatusCodePagesIntegration();
-        })
-        .AddValidation(options =>
-        {
-            options.UseLocalServer();
-            options.UseAspNetCore();
-        });
 
     // SignalR
     builder.Services.AddSignalR();
@@ -362,10 +295,6 @@ try
     builder.Services.AddScoped<PurchaseOrderGenerator>();
     builder.Services.AddHttpContextAccessor();
 
-    // OIDC provider services
-    builder.Services.AddScoped<IOidcAuditService, OidcAuditService>();
-    builder.Services.AddSingleton<ISoftwareStatementValidator, RejectingSoftwareStatementValidator>();
-
     // Data Protection (OAuth token encryption, key storage in PostgreSQL)
     builder.Services.AddDataProtection()
         .PersistKeysToDbContext<AppDbContext>()
@@ -379,8 +308,6 @@ try
     builder.Services.Configure<AiOptions>(builder.Configuration.GetSection(AiOptions.SectionName));
     builder.Services.Configure<UspsOptions>(builder.Configuration.GetSection(UspsOptions.SectionName));
     builder.Services.Configure<DocuSealOptions>(builder.Configuration.GetSection(DocuSealOptions.SectionName));
-    builder.Services.Configure<OidcOptions>(builder.Configuration.GetSection(OidcOptions.SectionName));
-    builder.Services.AddScoped<IOidcProviderSettings, OidcProviderSettingsService>();
     // Shipping carrier options
     builder.Services.Configure<UpsOptions>(builder.Configuration.GetSection(UpsOptions.SectionName));
     builder.Services.Configure<FedExOptions>(builder.Configuration.GetSection(FedExOptions.SectionName));
