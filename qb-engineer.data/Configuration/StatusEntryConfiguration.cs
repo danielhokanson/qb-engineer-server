@@ -22,10 +22,22 @@ public class StatusEntryConfiguration : IEntityTypeConfiguration<StatusEntry>
         builder.HasIndex(s => new { s.EntityType, s.EntityId, s.Category });
         builder.HasIndex(s => new { s.EntityType, s.EntityId, s.EndedAt });
         builder.HasIndex(s => s.SetById);
+        builder.HasIndex(s => s.WorkCenterId);
+        builder.HasIndex(s => s.OperationId);
 
         builder.HasOne<ApplicationUser>()
             .WithMany()
             .HasForeignKey(s => s.SetById)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(s => s.WorkCenter)
+            .WithMany()
+            .HasForeignKey(s => s.WorkCenterId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(s => s.Operation)
+            .WithMany()
+            .HasForeignKey(s => s.OperationId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

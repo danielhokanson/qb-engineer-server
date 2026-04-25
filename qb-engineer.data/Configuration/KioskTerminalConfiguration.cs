@@ -15,10 +15,18 @@ public class KioskTerminalConfiguration : IEntityTypeConfiguration<KioskTerminal
 
         builder.HasIndex(e => e.DeviceToken).IsUnique();
         builder.HasIndex(e => e.TeamId);
+        builder.HasIndex(e => e.WorkCenterId);
 
         builder.HasOne(e => e.Team)
             .WithMany()
             .HasForeignKey(e => e.TeamId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // SetNull: a retired work center shouldn't break the kiosk pairing.
+        // The terminal falls back to team-wide context until reassigned.
+        builder.HasOne(e => e.WorkCenter)
+            .WithMany()
+            .HasForeignKey(e => e.WorkCenterId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -16,6 +16,7 @@ public class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
         builder.HasIndex(t => new { t.UserId, t.Date });
         builder.HasIndex(t => t.JobId);
         builder.HasIndex(t => t.OperationId);
+        builder.HasIndex(t => t.WorkCenterId);
 
         builder.Property(t => t.LaborCost).HasPrecision(18, 4);
         builder.Property(t => t.BurdenCost).HasPrecision(18, 4);
@@ -23,6 +24,15 @@ public class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
         builder.HasOne(t => t.Operation)
             .WithMany()
             .HasForeignKey(t => t.OperationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // SetNull (not Restrict): work centers can be retired; existing
+        // time entries should keep their dollars/hours but lose the
+        // center pointer. The historical OperationId still anchors the
+        // entry to the routing it was logged against.
+        builder.HasOne(t => t.WorkCenter)
+            .WithMany()
+            .HasForeignKey(t => t.WorkCenterId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

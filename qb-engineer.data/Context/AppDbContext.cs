@@ -226,6 +226,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Scheduling
     public DbSet<WorkCenter> WorkCenters => Set<WorkCenter>();
     public DbSet<WorkCenterCalendar> WorkCenterCalendars => Set<WorkCenterCalendar>();
+    public DbSet<WorkCenterQualification> WorkCenterQualifications => Set<WorkCenterQualification>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<WorkCenterShift> WorkCenterShifts => Set<WorkCenterShift>();
     public DbSet<ScheduledOperation> ScheduledOperations => Set<ScheduledOperation>();

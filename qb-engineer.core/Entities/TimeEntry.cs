@@ -20,6 +20,11 @@ public class TimeEntry : BaseAuditableEntity
     public int? OperationId { get; set; }
     public TimeEntryType EntryType { get; set; } = TimeEntryType.Run;
 
+    // Frozen at write time: denormalized from Operation.WorkCenterId at
+    // timer-stop. Reporting filters time by work center without joining
+    // through Operation (which may have its WorkCenter reassigned later).
+    public int? WorkCenterId { get; set; }
+
     // Costing
     public decimal LaborCost { get; set; }
     public decimal BurdenCost { get; set; }
@@ -27,4 +32,5 @@ public class TimeEntry : BaseAuditableEntity
     // Navigation
     public Job? Job { get; set; }
     public Operation? Operation { get; set; }
+    public WorkCenter? WorkCenter { get; set; }
 }
