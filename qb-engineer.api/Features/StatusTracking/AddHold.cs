@@ -31,6 +31,7 @@ public class AddHoldHandler(
     AppDbContext db,
     IStatusEntryRepository repository,
     IActivityLogRepository activityRepo,
+    IWorkCenterContext workCenterContext,
     IHttpContextAccessor httpContext)
     : IRequestHandler<AddHoldCommand, StatusEntryResponseModel>
 {
@@ -57,6 +58,19 @@ public class AddHoldHandler(
             .Select(r => r.Label)
             .FirstOrDefaultAsync(cancellationToken) ?? request.Data.StatusCode;
 
+        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
+
+        // Capture work-center context only for jobs — for non-job entities
+        // (Customer credit hold, PO hold, etc.) the concept doesn't apply.
+        int? workCenterId = null;
+        int? operationId = null;
+        if (string.Equals(request.EntityType, "job", System.StringComparison.OrdinalIgnoreCase))
+        {
+            (workCenterId, operationId) = await workCenterContext.ResolveForJobAsync(
+                request.EntityId, currentUserId, cancellationToken);
+        }
+
         var statusEntry = new StatusEntry
         {
             EntityType = request.EntityType,
@@ -67,13 +81,11 @@ public class AddHoldHandler(
             StartedAt = DateTimeOffset.UtcNow,
             EndedAt = null,
             Notes = request.Data.Notes?.Trim(),
+            WorkCenterId = workCenterId,
+            OperationId = operationId,
         };
 
         await db.StatusEntries.AddAsync(statusEntry, cancellationToken);
-
-        // Create activity log entry for the hold
-        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
 
         var description = $"Hold added: {label}.";
 
@@ -88,6 +100,8 @@ public class AddHoldHandler(
                 OldValue = null,
                 NewValue = label,
                 Description = description,
+                WorkCenterId = workCenterId,
+                OperationId = operationId,
             }, cancellationToken);
         }
         else

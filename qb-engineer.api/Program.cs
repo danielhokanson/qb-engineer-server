@@ -246,6 +246,7 @@ try
     builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
     builder.Services.AddScoped<IAssetRepository, AssetRepository>();
     builder.Services.AddScoped<ITimeTrackingRepository, TimeTrackingRepository>();
+    builder.Services.AddScoped<IWorkCenterContext, WorkCenterContext>();
     builder.Services.AddScoped<IUserPreferenceRepository, UserPreferenceRepository>();
     builder.Services.AddScoped<IFileRepository, FileRepository>();
     builder.Services.AddScoped<IJobLinkRepository, JobLinkRepository>();

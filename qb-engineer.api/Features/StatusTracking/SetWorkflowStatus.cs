@@ -31,6 +31,7 @@ public class SetWorkflowStatusHandler(
     AppDbContext db,
     IStatusEntryRepository repository,
     IActivityLogRepository activityRepo,
+    IWorkCenterContext workCenterContext,
     IHttpContextAccessor httpContext)
     : IRequestHandler<SetWorkflowStatusCommand, StatusEntryResponseModel>
 {
@@ -60,6 +61,18 @@ public class SetWorkflowStatusHandler(
             .Select(r => r.Label)
             .FirstOrDefaultAsync(cancellationToken) ?? request.Data.StatusCode;
 
+        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
+
+        // Capture work-center context only for jobs.
+        int? workCenterId = null;
+        int? operationId = null;
+        if (string.Equals(request.EntityType, "job", System.StringComparison.OrdinalIgnoreCase))
+        {
+            (workCenterId, operationId) = await workCenterContext.ResolveForJobAsync(
+                request.EntityId, currentUserId, cancellationToken);
+        }
+
         var statusEntry = new StatusEntry
         {
             EntityType = request.EntityType,
@@ -70,13 +83,11 @@ public class SetWorkflowStatusHandler(
             StartedAt = now,
             EndedAt = null,
             Notes = request.Data.Notes?.Trim(),
+            WorkCenterId = workCenterId,
+            OperationId = operationId,
         };
 
         await db.StatusEntries.AddAsync(statusEntry, cancellationToken);
-
-        // Create activity log entry for the status change
-        var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-        int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
 
         var description = previousLabel is not null
             ? $"Status changed from {previousLabel} to {label}."
@@ -93,6 +104,8 @@ public class SetWorkflowStatusHandler(
                 OldValue = previousLabel,
                 NewValue = label,
                 Description = description,
+                WorkCenterId = workCenterId,
+                OperationId = operationId,
             }, cancellationToken);
         }
         else

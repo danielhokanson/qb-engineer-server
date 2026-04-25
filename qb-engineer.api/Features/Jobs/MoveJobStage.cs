@@ -23,6 +23,7 @@ public class MoveJobStageHandler(
     ICustomerRepository customerRepo,
     IAccountingService accountingService,
     ISyncQueueRepository syncQueue,
+    IWorkCenterContext workCenterContext,
     IMediator mediator,
     IHubContext<BoardHub> boardHub,
     IHttpContextAccessor httpContext,
@@ -75,6 +76,9 @@ public class MoveJobStageHandler(
         var userIdClaim = httpContext.HttpContext?.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
         int? currentUserId = userIdClaim is not null ? int.Parse(userIdClaim.Value) : null;
 
+        var (workCenterId, operationId) = await workCenterContext.ResolveForJobAsync(
+            job.Id, currentUserId, cancellationToken);
+
         var log = new JobActivityLog
         {
             JobId = job.Id,
@@ -84,6 +88,8 @@ public class MoveJobStageHandler(
             OldValue = previousStageName,
             NewValue = targetStage.Name,
             Description = $"Moved from {previousStageName} to {targetStage.Name}.",
+            WorkCenterId = workCenterId,
+            OperationId = operationId,
         };
         await actRepo.AddAsync(log, cancellationToken);
 

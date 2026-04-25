@@ -38,6 +38,7 @@ public class MoveJobStageHandlerTests
             Mock.Of<ICustomerRepository>(),
             Mock.Of<IAccountingService>(),
             Mock.Of<ISyncQueueRepository>(),
+            Mock.Of<IWorkCenterContext>(),
             _mediator.Object,
             _boardHub.Object,
             Mock.Of<Microsoft.AspNetCore.Http.IHttpContextAccessor>(),

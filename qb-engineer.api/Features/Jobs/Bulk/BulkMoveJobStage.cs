@@ -14,6 +14,7 @@ public class BulkMoveJobStageHandler(
     IJobRepository jobRepo,
     ITrackTypeRepository trackRepo,
     IActivityLogRepository actRepo,
+    IWorkCenterContext workCenterContext,
     IHubContext<BoardHub> boardHub) : IRequestHandler<BulkMoveJobStageCommand, BulkOperationResponseModel>
 {
     public async Task<BulkOperationResponseModel> Handle(BulkMoveJobStageCommand request, CancellationToken ct)
@@ -41,6 +42,12 @@ public class BulkMoveJobStageHandler(
             job.CurrentStageId = request.StageId;
             job.BoardPosition = ++maxPosition;
 
+            // Bulk moves are typically driven by Mike from his desk, not from a
+            // kiosk — but if a worker happens to be timing on a job in this
+            // batch, we still capture their work center for the audit row.
+            var (workCenterId, operationId) = await workCenterContext.ResolveForJobAsync(
+                job.Id, null, ct);
+
             await actRepo.AddAsync(new JobActivityLog
             {
                 JobId = job.Id,
@@ -49,6 +56,8 @@ public class BulkMoveJobStageHandler(
                 OldValue = previousStageName,
                 NewValue = targetStage.Name,
                 Description = $"Moved from {previousStageName} to {targetStage.Name} (bulk).",
+                WorkCenterId = workCenterId,
+                OperationId = operationId,
             }, ct);
 
             successCount++;

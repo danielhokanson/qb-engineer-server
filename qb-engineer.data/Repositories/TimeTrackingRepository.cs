@@ -61,6 +61,21 @@ public class TimeTrackingRepository(AppDbContext db) : ITimeTrackingRepository
 
     public async Task AddTimeEntryAsync(TimeEntry entry, CancellationToken ct)
     {
+        // Denormalize work center from the operation, frozen at write time.
+        // Reporting filters time by work center without joining through
+        // Operation (whose WorkCenterId can be reassigned later as routing
+        // is edited). Skip if the caller already supplied an override —
+        // future kiosk flows may pass the kiosk's bound center as the
+        // physical truth even when it differs from the operation's planned
+        // center.
+        if (entry.OperationId.HasValue && !entry.WorkCenterId.HasValue)
+        {
+            entry.WorkCenterId = await db.Operations
+                .Where(o => o.Id == entry.OperationId.Value)
+                .Select(o => o.WorkCenterId)
+                .FirstOrDefaultAsync(ct);
+        }
+
         await db.TimeEntries.AddAsync(entry, ct);
         await db.SaveChangesAsync(ct);
     }

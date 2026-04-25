@@ -26,6 +26,7 @@ public class SetWorkflowStatusHandlerTests
             _dbContext,
             _statusRepo.Object,
             Mock.Of<IActivityLogRepository>(),
+            Mock.Of<IWorkCenterContext>(),
             Mock.Of<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
     }
 

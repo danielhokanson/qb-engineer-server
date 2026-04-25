@@ -16,6 +16,7 @@ public record ReleaseHoldCommand(
 public class ReleaseHoldHandler(
     IStatusEntryRepository repository,
     IActivityLogRepository activityRepo,
+    IWorkCenterContext workCenterContext,
     IHttpContextAccessor httpContext)
     : IRequestHandler<ReleaseHoldCommand, StatusEntryResponseModel>
 {
@@ -47,6 +48,12 @@ public class ReleaseHoldHandler(
 
         if (string.Equals(entry.EntityType, "job", System.StringComparison.OrdinalIgnoreCase))
         {
+            // Capture work-center context for the release event — the job
+            // may be back on a different operator/center than when the hold
+            // was placed, and we want the truth at THIS moment.
+            var (workCenterId, operationId) = await workCenterContext.ResolveForJobAsync(
+                entry.EntityId, currentUserId, cancellationToken);
+
             await activityRepo.AddAsync(new JobActivityLog
             {
                 JobId = entry.EntityId,
@@ -56,6 +63,8 @@ public class ReleaseHoldHandler(
                 OldValue = entry.StatusLabel,
                 NewValue = null,
                 Description = description,
+                WorkCenterId = workCenterId,
+                OperationId = operationId,
             }, cancellationToken);
         }
         else
