@@ -22,5 +22,10 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(e => e.CreditLimit).HasPrecision(18, 2);
         builder.Property(e => e.CreditHoldReason).HasMaxLength(500);
         builder.HasIndex(e => e.CreditHoldById);
+
+        // Tax exemption — state cert # max ~50 chars (CA ~12, NY ~9, TX 11).
+        // Indexed because audit reports commonly filter "exempt customers only".
+        builder.Property(e => e.TaxExemptionId).HasMaxLength(50);
+        builder.HasIndex(e => e.IsTaxExempt);
     }
 }

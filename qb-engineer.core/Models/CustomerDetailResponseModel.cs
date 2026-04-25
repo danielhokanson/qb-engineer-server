@@ -7,6 +7,8 @@ public record CustomerDetailResponseModel(
     string? Email,
     string? Phone,
     bool IsActive,
+    bool IsTaxExempt,
+    string? TaxExemptionId,
     string? ExternalId,
     string? ExternalRef,
     string? Provider,

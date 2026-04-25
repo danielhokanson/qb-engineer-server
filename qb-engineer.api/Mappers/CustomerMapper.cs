@@ -31,6 +31,8 @@ public static partial class CustomerMapper
     [MapperIgnoreSource(nameof(Customer.CreditHoldById))]
     [MapperIgnoreSource(nameof(Customer.LastCreditReviewDate))]
     [MapperIgnoreSource(nameof(Customer.CreditReviewFrequencyDays))]
+    [MapperIgnoreSource(nameof(Customer.IsTaxExempt))]
+    [MapperIgnoreSource(nameof(Customer.TaxExemptionId))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.CreatedAt))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.UpdatedAt))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.DeletedAt))]

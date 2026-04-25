@@ -6,6 +6,7 @@ using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Tests.Helpers;
 
 namespace QBEngineer.Tests.Handlers.Invoices;
 
@@ -19,7 +20,11 @@ public class CreateInvoiceHandlerTests
 
     public CreateInvoiceHandlerTests()
     {
-        _handler = new CreateInvoiceHandler(_invoiceRepo.Object, _customerRepo.Object);
+        // Real in-memory DbContext rather than mocking — handler uses it to
+        // resolve SO.CustomerPO when SalesOrderId is set. Tests that don't
+        // pass SalesOrderId hit an empty SalesOrders set; harmless.
+        var db = TestDbContextFactory.Create();
+        _handler = new CreateInvoiceHandler(_invoiceRepo.Object, _customerRepo.Object, db);
     }
 
     [Fact]

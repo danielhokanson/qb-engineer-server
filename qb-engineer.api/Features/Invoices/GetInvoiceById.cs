@@ -38,6 +38,7 @@ public class GetInvoiceByIdHandler(IInvoiceRepository repo)
             total,
             amountPaid,
             total - amountPaid,
+            invoice.CustomerPO,
             invoice.Notes,
             invoice.Lines.Select(l => new InvoiceLineResponseModel(
                 l.Id, l.PartId, l.Part?.PartNumber, l.Description,

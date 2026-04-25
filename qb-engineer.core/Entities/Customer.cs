@@ -17,6 +17,13 @@ public class Customer : BaseAuditableEntity
     public DateTimeOffset? LastCreditReviewDate { get; set; }
     public int? CreditReviewFrequencyDays { get; set; }
 
+    // Tax handling — many B2B manufacturing customers are sales-tax-exempt
+    // (resellers, government, non-profits). When IsTaxExempt is true, invoice
+    // generation must skip the sales-tax line. The exemption ID is the
+    // certificate number kept on file for audit purposes.
+    public bool IsTaxExempt { get; set; }
+    public string? TaxExemptionId { get; set; }
+
     // Accounting integration
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }

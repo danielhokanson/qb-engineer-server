@@ -1,9 +1,11 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Invoices;
 
@@ -16,7 +18,8 @@ public record CreateInvoiceCommand(
     string? CreditTerms,
     decimal TaxRate,
     string? Notes,
-    List<CreateInvoiceLineModel> Lines) : IRequest<InvoiceListItemModel>;
+    List<CreateInvoiceLineModel> Lines,
+    string? CustomerPO = null) : IRequest<InvoiceListItemModel>;
 
 public class CreateInvoiceValidator : AbstractValidator<CreateInvoiceCommand>
 {
@@ -26,6 +29,7 @@ public class CreateInvoiceValidator : AbstractValidator<CreateInvoiceCommand>
         RuleFor(x => x.Lines).NotEmpty().WithMessage("At least one line item is required");
         RuleFor(x => x.TaxRate).GreaterThanOrEqualTo(0).LessThan(1);
         RuleFor(x => x.DueDate).GreaterThanOrEqualTo(x => x.InvoiceDate);
+        RuleFor(x => x.CustomerPO).MaximumLength(50);
         RuleForEach(x => x.Lines).ChildRules(line =>
         {
             line.RuleFor(l => l.Description).NotEmpty();
@@ -35,7 +39,10 @@ public class CreateInvoiceValidator : AbstractValidator<CreateInvoiceCommand>
     }
 }
 
-public class CreateInvoiceHandler(IInvoiceRepository repo, ICustomerRepository customerRepo)
+public class CreateInvoiceHandler(
+    IInvoiceRepository repo,
+    ICustomerRepository customerRepo,
+    AppDbContext db)
     : IRequestHandler<CreateInvoiceCommand, InvoiceListItemModel>
 {
     public async Task<InvoiceListItemModel> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
@@ -49,6 +56,17 @@ public class CreateInvoiceHandler(IInvoiceRepository repo, ICustomerRepository c
             ? Enum.Parse<CreditTerms>(request.CreditTerms, true)
             : null;
 
+        // Propagate CustomerPO from the sourcing SO when the caller didn't
+        // override. B2B customers reject invoices that don't echo their PO #.
+        var customerPo = request.CustomerPO;
+        if (customerPo is null && request.SalesOrderId is int soId)
+        {
+            customerPo = await db.SalesOrders
+                .Where(so => so.Id == soId)
+                .Select(so => so.CustomerPO)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         var invoice = new Invoice
         {
             InvoiceNumber = invoiceNumber,
@@ -60,6 +78,7 @@ public class CreateInvoiceHandler(IInvoiceRepository repo, ICustomerRepository c
             CreditTerms = creditTerms,
             TaxRate = request.TaxRate,
             Notes = request.Notes,
+            CustomerPO = customerPo,
         };
 
         var lineNumber = 1;

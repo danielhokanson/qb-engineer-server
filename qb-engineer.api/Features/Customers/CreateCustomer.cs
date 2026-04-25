@@ -10,7 +10,9 @@ public record CreateCustomerCommand(
     string Name,
     string? CompanyName,
     string? Email,
-    string? Phone) : IRequest<CustomerListItemModel>;
+    string? Phone,
+    bool IsTaxExempt = false,
+    string? TaxExemptionId = null) : IRequest<CustomerListItemModel>;
 
 public class CreateCustomerValidator : AbstractValidator<CreateCustomerCommand>
 {
@@ -20,6 +22,12 @@ public class CreateCustomerValidator : AbstractValidator<CreateCustomerCommand>
         RuleFor(x => x.CompanyName).MaximumLength(200);
         RuleFor(x => x.Email).MaximumLength(200).EmailAddress().When(x => !string.IsNullOrEmpty(x.Email));
         RuleFor(x => x.Phone).MaximumLength(50);
+        RuleFor(x => x.TaxExemptionId).MaximumLength(50);
+        // If they checked the box, they must give us the cert # — auditors
+        // will eventually ask for it and we'd rather not chase the customer.
+        RuleFor(x => x.TaxExemptionId)
+            .NotEmpty().When(x => x.IsTaxExempt)
+            .WithMessage("Tax-exempt customers require an exemption ID on file.");
     }
 }
 
@@ -34,6 +42,8 @@ public class CreateCustomerHandler(ICustomerRepository repo)
             CompanyName = request.CompanyName,
             Email = request.Email,
             Phone = request.Phone,
+            IsTaxExempt = request.IsTaxExempt,
+            TaxExemptionId = request.TaxExemptionId,
         };
 
         await repo.AddAsync(customer, cancellationToken);

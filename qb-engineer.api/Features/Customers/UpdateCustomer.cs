@@ -10,7 +10,9 @@ public record UpdateCustomerCommand(
     string? CompanyName,
     string? Email,
     string? Phone,
-    bool? IsActive) : IRequest;
+    bool? IsActive,
+    bool? IsTaxExempt = null,
+    string? TaxExemptionId = null) : IRequest;
 
 public class UpdateCustomerValidator : AbstractValidator<UpdateCustomerCommand>
 {
@@ -20,6 +22,7 @@ public class UpdateCustomerValidator : AbstractValidator<UpdateCustomerCommand>
         RuleFor(x => x.CompanyName).MaximumLength(200).When(x => x.CompanyName is not null);
         RuleFor(x => x.Email).MaximumLength(200).EmailAddress().When(x => !string.IsNullOrEmpty(x.Email));
         RuleFor(x => x.Phone).MaximumLength(50).When(x => x.Phone is not null);
+        RuleFor(x => x.TaxExemptionId).MaximumLength(50).When(x => x.TaxExemptionId is not null);
     }
 }
 
@@ -36,6 +39,8 @@ public class UpdateCustomerHandler(ICustomerRepository repo)
         if (request.Email is not null) customer.Email = request.Email;
         if (request.Phone is not null) customer.Phone = request.Phone;
         if (request.IsActive.HasValue) customer.IsActive = request.IsActive.Value;
+        if (request.IsTaxExempt.HasValue) customer.IsTaxExempt = request.IsTaxExempt.Value;
+        if (request.TaxExemptionId is not null) customer.TaxExemptionId = request.TaxExemptionId;
 
         await repo.SaveChangesAsync(cancellationToken);
     }

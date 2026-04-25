@@ -21,6 +21,8 @@ public class GetCustomerByIdHandler(ICustomerRepository repo)
             customer.Email,
             customer.Phone,
             customer.IsActive,
+            customer.IsTaxExempt,
+            customer.TaxExemptionId,
             customer.ExternalId,
             customer.ExternalRef,
             customer.Provider,

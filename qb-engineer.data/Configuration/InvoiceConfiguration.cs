@@ -24,6 +24,9 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
+        // Customer PO # echoed from SO at invoice creation. Same 50-char cap
+        // as SalesOrder.CustomerPO so values round-trip without truncation.
+        builder.Property(e => e.CustomerPO).HasMaxLength(50);
 
         builder.HasIndex(e => e.InvoiceNumber).IsUnique();
         builder.HasIndex(e => e.CustomerId);

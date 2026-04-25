@@ -18,6 +18,11 @@ public class Invoice : BaseAuditableEntity
     public decimal TaxRate { get; set; }
     public string? Notes { get; set; }
 
+    // Customer PO reference — copied from SalesOrder.CustomerPO when the
+    // invoice is generated from an SO. Many B2B customers won't process an
+    // invoice that doesn't echo their own PO number.
+    public string? CustomerPO { get; set; }
+
     // Accounting integration
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }

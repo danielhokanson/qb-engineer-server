@@ -19,6 +19,7 @@ public record InvoiceDetailResponseModel(
     decimal Total,
     decimal AmountPaid,
     decimal BalanceDue,
+    string? CustomerPO,
     string? Notes,
     List<InvoiceLineResponseModel> Lines,
     List<PaymentApplicationResponseModel> PaymentApplications,
