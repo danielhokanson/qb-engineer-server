@@ -1,0 +1,60 @@
+# ─── .NET build artifacts ───
+**/bin/
+**/obj/
+**/out/
+**/publish/
+*.dll
+*.pdb
+*.exe
+
+# ─── Visual Studio ───
+**/.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# ─── Rider / JetBrains ───
+.idea/
+*.DotSettings.user
+
+# ─── Test artifacts ───
+**/TestResults/
+**/coverage/
+*.coverage
+*.coveragexml
+*.trx
+
+# ─── NuGet ───
+*.nupkg
+*.snupkg
+**/packages/
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+
+# ─── Secrets & local config ───
+*.local
+*.local.json
+appsettings.Secrets.json
+appsettings.Production.json
+appsettings.*.local.json
+.env
+.env.*
+!.env.example
+
+# ─── Logs ───
+*.log
+logs/
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+
+# ─── Editor swap files ───
+*.swp
+*.swo
+*~
