@@ -4,8 +4,12 @@
 #   - push to main             -> :main-<sha> + :latest
 #   - push of a v*.*.* tag     -> :X.Y.Z + :X.Y + :X
 #
-# Image goes to GHCR (ghcr.io/danielhokanson/qb-engineer-server).
-# Migrations auto-apply on container startup (existing behavior).
+# Image goes to GHCR (ghcr.io/danielhokanson/qb-engineer-server) as a
+# native linux/arm64 build (Raspberry Pi production target). To add amd64
+# later, set `platforms` on build-push to `linux/arm64,linux/amd64` and
+# add a `docker/setup-qemu-action` step.
+#
+# Tests gate the image push: a failing test means no image is published.
 
 name: Release
 
@@ -23,8 +27,48 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: qb_engineer_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=qb_engineer_test;Username=postgres;Password=postgres"
+      MockIntegrations: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (warnings-as-errors)
+        run: dotnet build --no-restore --configuration Release -warnaserror
+
+      - name: Unit + integration tests
+        run: dotnet test --no-build --configuration Release
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
 
     steps:
@@ -58,6 +102,7 @@ jobs:
           context: .
           file: ./qb-engineer.api/Dockerfile
           push: true
+          platforms: linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
