@@ -1,0 +1,64 @@
+# PR + push CI for qb-engineer-server
+#
+# Runs on: every PR into develop or main, every push to develop or main.
+# Steps: restore, build (analyzers run during build), unit + integration tests.
+# Integration tests use a real Postgres (service container), not mocks.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: qb_engineer_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=qb_engineer_test;Username=postgres;Password=postgres"
+      MockIntegrations: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (warnings-as-errors)
+        run: dotnet build --no-restore --configuration Release -warnaserror
+
+      - name: Unit + integration tests
+        run: dotnet test --no-build --configuration Release --logger "trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: TestResults/
+          retention-days: 7
