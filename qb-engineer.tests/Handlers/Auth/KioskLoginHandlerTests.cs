@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Moq;
 using QBEngineer.Api.Features.Auth;
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -19,6 +20,7 @@ public class KioskLoginHandlerTests
     private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly Mock<ISessionStore> _sessionStoreMock;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
+    private readonly Mock<IRoleClaimsExpander> _roleClaimsExpanderMock;
     private readonly KioskLoginHandler _handler;
     private readonly Faker _faker = new();
 
@@ -30,10 +32,17 @@ public class KioskLoginHandlerTests
         _tokenServiceMock = new Mock<ITokenService>();
         _sessionStoreMock = new Mock<ISessionStore>();
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        _roleClaimsExpanderMock = new Mock<IRoleClaimsExpander>();
+        // WU-06 regression: passthrough default returns empty role list. Tests
+        // that exercise role expansion override this per-test.
+        _roleClaimsExpanderMock
+            .Setup(x => x.GetEffectiveRolesAsync(It.IsAny<ApplicationUser>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<string>());
 
         _handler = new KioskLoginHandler(
             _userManagerMock.Object, _tokenServiceMock.Object,
-            _sessionStoreMock.Object, _httpContextAccessorMock.Object);
+            _sessionStoreMock.Object, _httpContextAccessorMock.Object,
+            _roleClaimsExpanderMock.Object);
     }
 
     [Fact]
@@ -56,6 +65,9 @@ public class KioskLoginHandlerTests
             .Returns(new TestAsyncEnumerableQueryable<ApplicationUser>(users));
 
         _userManagerMock.Setup(x => x.GetRolesAsync(user))
+            .ReturnsAsync(new List<string> { "ProductionWorker" });
+        _roleClaimsExpanderMock
+            .Setup(x => x.GetEffectiveRolesAsync(user, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { "ProductionWorker" });
 
         var tokenResult = new TokenResult("test-jwt-token", "test-jti", DateTimeOffset.UtcNow.AddHours(8));

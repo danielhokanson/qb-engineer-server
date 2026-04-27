@@ -18,6 +18,7 @@ public class LoginHandlerTests
     private readonly Mock<ISessionStore> _sessionStoreMock;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
     private readonly Mock<ISystemAuditWriter> _auditWriterMock;
+    private readonly Mock<IRoleClaimsExpander> _roleClaimsExpanderMock;
     private readonly AppDbContext _db;
     private readonly LoginHandler _handler;
     private readonly Faker _faker = new();
@@ -31,12 +32,19 @@ public class LoginHandlerTests
         _sessionStoreMock = new Mock<ISessionStore>();
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         _auditWriterMock = new Mock<ISystemAuditWriter>();
+        _roleClaimsExpanderMock = new Mock<IRoleClaimsExpander>();
+        // WU-06 regression: passthrough default returns empty role list. Tests
+        // that exercise role expansion override this per-test.
+        _roleClaimsExpanderMock
+            .Setup(x => x.GetEffectiveRolesAsync(It.IsAny<ApplicationUser>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<string>());
 
         _db = TestDbContextFactory.Create();
         _handler = new LoginHandler(
             _userManagerMock.Object, _tokenServiceMock.Object,
             _sessionStoreMock.Object, _httpContextAccessorMock.Object, _db,
-            _auditWriterMock.Object);
+            _auditWriterMock.Object,
+            _roleClaimsExpanderMock.Object);
     }
 
     [Fact]
@@ -58,6 +66,9 @@ public class LoginHandlerTests
         _userManagerMock.Setup(x => x.CheckPasswordAsync(user, "ValidPassword1!"))
             .ReturnsAsync(true);
         _userManagerMock.Setup(x => x.GetRolesAsync(user))
+            .ReturnsAsync(new List<string> { "Admin" });
+        _roleClaimsExpanderMock
+            .Setup(x => x.GetEffectiveRolesAsync(user, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { "Admin" });
 
         var tokenResult = new TokenResult("test-jwt-token", "test-jti", DateTimeOffset.UtcNow.AddHours(24));
