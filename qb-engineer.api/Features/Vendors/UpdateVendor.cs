@@ -29,7 +29,7 @@ public class UpdateVendorValidator : AbstractValidator<UpdateVendorCommand>
     }
 }
 
-public class UpdateVendorHandler(IVendorRepository repo)
+public class UpdateVendorHandler(IVendorRepository repo, IClock clock)
     : IRequestHandler<UpdateVendorCommand>
 {
     public async Task Handle(UpdateVendorCommand request, CancellationToken cancellationToken)
@@ -48,7 +48,15 @@ public class UpdateVendorHandler(IVendorRepository repo)
         if (request.Country != null) vendor.Country = request.Country;
         if (request.PaymentTerms != null) vendor.PaymentTerms = request.PaymentTerms;
         if (request.Notes != null) vendor.Notes = request.Notes;
-        if (request.IsActive.HasValue) vendor.IsActive = request.IsActive.Value;
+
+        // Phase 3 H2 / WU-12: stamp DeactivationDate when transitioning
+        // active → inactive; clear it on reactivation. Drives the lifecycle
+        // grace window (existing in-flight POs continue; new POs blocked).
+        if (request.IsActive.HasValue && request.IsActive.Value != vendor.IsActive)
+        {
+            vendor.IsActive = request.IsActive.Value;
+            vendor.DeactivationDate = vendor.IsActive ? null : clock.UtcNow;
+        }
 
         await repo.SaveChangesAsync(cancellationToken);
     }

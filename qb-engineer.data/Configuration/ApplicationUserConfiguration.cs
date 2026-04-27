@@ -9,6 +9,9 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
 {
     public void Configure(EntityTypeBuilder<ApplicationUser> builder)
     {
+        // Phase 3 H2 / WU-12: IActiveAware contract member — derived from IsActive.
+        builder.Ignore(e => e.IsActiveForNewTransactions);
+
         builder.HasIndex(e => e.WorkLocationId);
 
         builder.HasOne(e => e.WorkLocation)

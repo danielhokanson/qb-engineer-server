@@ -1,12 +1,24 @@
+using QBEngineer.Core.Interfaces;
+
 namespace QBEngineer.Core.Entities;
 
-public class Customer : BaseAuditableEntity
+public class Customer : BaseAuditableEntity, IActiveAware
 {
     public string Name { get; set; } = string.Empty;
     public string? CompanyName { get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Captured when <see cref="IsActive"/> transitions from true → false.
+    /// Cleared on reactivation. (Phase 3 H2 / WU-12 — lifecycle grace window.)
+    /// </summary>
+    public DateTimeOffset? DeactivationDate { get; set; }
+
+    // IActiveAware — used by Phase 3 H2 active-check on transaction creation.
+    public bool IsActiveForNewTransactions => IsActive;
+    public string GetDisplayName() => string.IsNullOrWhiteSpace(CompanyName) ? Name : CompanyName;
 
     // Credit management
     public decimal? CreditLimit { get; set; }

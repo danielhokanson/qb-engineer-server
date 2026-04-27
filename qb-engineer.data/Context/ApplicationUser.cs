@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Data.Context;
 
-public class ApplicationUser : IdentityUser<int>
+public class ApplicationUser : IdentityUser<int>, IActiveAware
 {
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
@@ -50,4 +51,13 @@ public class ApplicationUser : IdentityUser<int>
     // addition to whatever Identity-managed roles the user has.
     public int? RoleTemplateId { get; set; }
     public RoleTemplate? RoleTemplate { get; set; }
+
+    // IActiveAware — Phase 3 H2 active-check. A deactivated user cannot be the
+    // target of new shift-assignment / job-assignment records.
+    public bool IsActiveForNewTransactions => IsActive;
+    public string GetDisplayName()
+    {
+        var name = ($"{FirstName} {LastName}").Trim();
+        return string.IsNullOrEmpty(name) ? (UserName ?? $"User #{Id}") : name;
+    }
 }

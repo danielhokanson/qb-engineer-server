@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using QBEngineer.Api.Validation;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -36,13 +37,19 @@ public class CreateSalesOrderValidator : AbstractValidator<CreateSalesOrderComma
     }
 }
 
-public class CreateSalesOrderHandler(ISalesOrderRepository repo, ICustomerRepository customerRepo, IBarcodeService barcodeService)
+public class CreateSalesOrderHandler(
+    ISalesOrderRepository repo,
+    ICustomerRepository customerRepo,
+    IPartRepository partRepo,
+    IBarcodeService barcodeService)
     : IRequestHandler<CreateSalesOrderCommand, SalesOrderListItemModel>
 {
     public async Task<SalesOrderListItemModel> Handle(CreateSalesOrderCommand request, CancellationToken cancellationToken)
     {
-        var customer = await customerRepo.FindAsync(request.CustomerId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Customer {request.CustomerId} not found");
+        var customer = await customerRepo.FindAsync(request.CustomerId, cancellationToken);
+        // Phase 3 H2 / WU-12: customer-active check mirrors the vendor → PO
+        // gate that Phase 1 found missing.
+        ActiveCheck.EnsureActive(customer, "Customer", "customerId", request.CustomerId);
 
         var orderNumber = await repo.GenerateNextOrderNumberAsync(cancellationToken);
 
@@ -65,8 +72,19 @@ public class CreateSalesOrderHandler(ISalesOrderRepository repo, ICustomerReposi
         };
 
         var lineNumber = 1;
-        foreach (var line in request.Lines)
+        for (var i = 0; i < request.Lines.Count; i++)
         {
+            var line = request.Lines[i];
+            // Phase 3 H2 / WU-12: part-active check on SO line. Lines are
+            // permitted with null / zero PartId in some flows (free-form
+            // service line); only enforce the active-check when a part is
+            // actually referenced.
+            if (line.PartId is int partId && partId > 0)
+            {
+                var part = await partRepo.FindAsync(partId, cancellationToken);
+                ActiveCheck.EnsureActive(part, "Part", $"lines[{i}].partId", partId);
+            }
+
             order.Lines.Add(new SalesOrderLine
             {
                 PartId = line.PartId,

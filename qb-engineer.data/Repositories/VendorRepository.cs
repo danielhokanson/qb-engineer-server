@@ -10,10 +10,15 @@ public class VendorRepository(AppDbContext db) : IVendorRepository
 {
     public async Task<List<VendorResponseModel>> GetAllActiveAsync(CancellationToken ct)
     {
+        // Phase 3 H2 / WU-12: dropdown returns ALL vendors (active first,
+        // then inactive) so the UI can render inactive entries greyed-out
+        // with a "(deactivated)" suffix. The UI defaults to filtering
+        // active-only and exposes a "Show inactive" toggle. The new
+        // IsActive flag in the projection drives that.
         return await db.Vendors
-            .Where(v => v.IsActive)
-            .OrderBy(v => v.CompanyName)
-            .Select(v => new VendorResponseModel(v.Id, v.CompanyName))
+            .OrderByDescending(v => v.IsActive)
+            .ThenBy(v => v.CompanyName)
+            .Select(v => new VendorResponseModel(v.Id, v.CompanyName, v.IsActive))
             .ToListAsync(ct);
     }
 

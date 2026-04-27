@@ -9,6 +9,9 @@ public class VendorConfiguration : IEntityTypeConfiguration<Vendor>
     public void Configure(EntityTypeBuilder<Vendor> builder)
     {
         builder.Ignore(e => e.IsDeleted);
+        // Phase 3 H2 / WU-12: IActiveAware contract member — pure compute over
+        // IsActive; EF should not see it as a column.
+        builder.Ignore(e => e.IsActiveForNewTransactions);
 
         builder.Property(e => e.CompanyName).HasMaxLength(200);
         builder.Property(e => e.ContactName).HasMaxLength(200);

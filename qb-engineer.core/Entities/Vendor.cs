@@ -1,8 +1,9 @@
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Core.Entities;
 
-public class Vendor : BaseAuditableEntity
+public class Vendor : BaseAuditableEntity, IActiveAware
 {
     public string CompanyName { get; set; } = string.Empty;
     public string? ContactName { get; set; }
@@ -16,6 +17,15 @@ public class Vendor : BaseAuditableEntity
     public string? PaymentTerms { get; set; }
     public string? Notes { get; set; }
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Captured when <see cref="IsActive"/> transitions from true → false.
+    /// Cleared when reactivated. POs already issued (status != Draft) before
+    /// this date may still be received/closed normally; new POs are blocked.
+    /// (Phase 3 H2 / WU-12 — vendor-lifecycle grace window.)
+    /// </summary>
+    public DateTimeOffset? DeactivationDate { get; set; }
+
     public AutoPoMode? AutoPoMode { get; set; }
     public decimal? MinOrderAmount { get; set; }
 
@@ -25,4 +35,8 @@ public class Vendor : BaseAuditableEntity
     public string? Provider { get; set; }
 
     public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
+
+    // IActiveAware — used by Phase 3 H2 active-check on transaction creation.
+    public bool IsActiveForNewTransactions => IsActive;
+    public string GetDisplayName() => CompanyName;
 }

@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Validation;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -29,8 +30,10 @@ public class CreateMaintenanceScheduleHandler(AppDbContext db)
     {
         var data = request.Data;
 
-        var asset = await db.Assets.FindAsync([data.AssetId], ct)
-            ?? throw new KeyNotFoundException($"Asset {data.AssetId} not found");
+        var asset = await db.Assets.FindAsync([data.AssetId], ct);
+        // Phase 3 H2 / WU-12: asset-active check on maintenance-schedule
+        // create. Retired or out-of-service assets cannot get new schedules.
+        ActiveCheck.EnsureActive(asset, "Asset", "assetId", data.AssetId);
 
         var schedule = new MaintenanceSchedule
         {

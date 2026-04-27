@@ -1,8 +1,9 @@
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Core.Entities;
 
-public class Part : BaseAuditableEntity
+public class Part : BaseAuditableEntity, IActiveAware
 {
     public string PartNumber { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
@@ -66,6 +67,15 @@ public class Part : BaseAuditableEntity
     public Asset? ToolingAsset { get; set; }
 
     public Vendor? PreferredVendor { get; set; }
+
+    // IActiveAware — Phase 3 H2 active-check. Parts use a status enum rather
+    // than a bool. "Active" / "Prototype" / "Draft" are usable on new
+    // transactions; "Obsolete" is not (treated as deactivated).
+    public bool IsActiveForNewTransactions => Status != PartStatus.Obsolete;
+    public string GetDisplayName() => string.IsNullOrWhiteSpace(PartNumber)
+        ? Description
+        : $"{PartNumber} ({Description})";
+
     public ICollection<BOMEntry> BOMEntries { get; set; } = [];
     public ICollection<BOMEntry> UsedInBOM { get; set; } = [];
     public ICollection<Operation> Operations { get; set; } = [];

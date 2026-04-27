@@ -1,8 +1,9 @@
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Core.Entities;
 
-public class Asset : BaseAuditableEntity
+public class Asset : BaseAuditableEntity, IActiveAware
 {
     public string Name { get; set; } = string.Empty;
     public AssetType AssetType { get; set; }
@@ -38,4 +39,9 @@ public class Asset : BaseAuditableEntity
     // External-accounting GL account. Optional on the local DTO — populated by
     // the accounting-sync integration when one is connected. Phase 3 F4.
     public string? GlAccount { get; set; }
+
+    // IActiveAware — Phase 3 H2 active-check. Assets that are Retired or
+    // OutOfService cannot have new maintenance schedules created against them.
+    public bool IsActiveForNewTransactions => Status != AssetStatus.Retired && Status != AssetStatus.OutOfService;
+    public string GetDisplayName() => Name;
 }

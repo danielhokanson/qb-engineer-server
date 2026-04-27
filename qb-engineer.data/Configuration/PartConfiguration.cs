@@ -9,6 +9,8 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
     public void Configure(EntityTypeBuilder<Part> builder)
     {
         builder.Ignore(e => e.IsDeleted);
+        // Phase 3 H2 / WU-12: IActiveAware contract member — derived from Status.
+        builder.Ignore(e => e.IsActiveForNewTransactions);
 
         builder.HasIndex(e => e.PartNumber).IsUnique();
 

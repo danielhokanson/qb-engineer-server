@@ -3,6 +3,7 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using QBEngineer.Api.Features.DomainEvents;
+using QBEngineer.Api.Validation;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
@@ -44,8 +45,11 @@ public class CreatePurchaseOrderHandler(
 {
     public async Task<PurchaseOrderListItemModel> Handle(CreatePurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var vendor = await vendorRepo.FindAsync(request.VendorId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Vendor {request.VendorId} not found");
+        var vendor = await vendorRepo.FindAsync(request.VendorId, cancellationToken);
+        // Phase 3 H2 / WU-12: vendor-active check on PO create. Phase 1 found
+        // deactivated vendors still accepted new POs (no gate); fixes that
+        // gap. NotFound preserved as KeyNotFoundException → 404 via middleware.
+        ActiveCheck.EnsureActive(vendor, "Vendor", "vendorId", request.VendorId);
 
         var poNumber = await poRepo.GenerateNextPONumberAsync(cancellationToken);
 
@@ -57,15 +61,19 @@ public class CreatePurchaseOrderHandler(
             Notes = request.Notes,
         };
 
-        foreach (var line in request.Lines)
+        for (var i = 0; i < request.Lines.Count; i++)
         {
-            var part = await partRepo.FindAsync(line.PartId, cancellationToken)
-                ?? throw new KeyNotFoundException($"Part {line.PartId} not found");
+            var line = request.Lines[i];
+            var part = await partRepo.FindAsync(line.PartId, cancellationToken);
+            // Phase 3 H2 / WU-12: part-active check on PO line. Obsolete parts
+            // are blocked from new POs; UI already filters them on the picker
+            // but a previously-loaded form could still target one.
+            ActiveCheck.EnsureActive(part, "Part", $"lines[{i}].partId", line.PartId);
 
             po.Lines.Add(new PurchaseOrderLine
             {
                 PartId = line.PartId,
-                Description = line.Description ?? part.Description,
+                Description = line.Description ?? part!.Description,
                 OrderedQuantity = line.Quantity,
                 UnitPrice = line.UnitPrice,
                 Notes = line.Notes,
@@ -84,7 +92,7 @@ public class CreatePurchaseOrderHandler(
             await mediator.Publish(new PurchaseOrderCreatedEvent(po.Id, userId), cancellationToken);
 
         return new PurchaseOrderListItemModel(
-            po.Id, po.PONumber, po.VendorId, vendor.CompanyName,
+            po.Id, po.PONumber, po.VendorId, vendor!.CompanyName,
             po.JobId, null, po.Status.ToString(),
             po.Lines.Count,
             po.Lines.Sum(l => l.OrderedQuantity),

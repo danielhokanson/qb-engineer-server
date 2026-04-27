@@ -9,6 +9,8 @@ public class AssetConfiguration : IEntityTypeConfiguration<Asset>
     public void Configure(EntityTypeBuilder<Asset> builder)
     {
         builder.Ignore(e => e.IsDeleted);
+        // Phase 3 H2 / WU-12: IActiveAware contract member — derived from Status.
+        builder.Ignore(e => e.IsActiveForNewTransactions);
 
         builder.Property(e => e.Name).HasMaxLength(200);
         builder.Property(e => e.Location).HasMaxLength(200);

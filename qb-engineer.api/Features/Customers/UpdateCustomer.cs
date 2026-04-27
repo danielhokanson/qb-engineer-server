@@ -26,7 +26,7 @@ public class UpdateCustomerValidator : AbstractValidator<UpdateCustomerCommand>
     }
 }
 
-public class UpdateCustomerHandler(ICustomerRepository repo)
+public class UpdateCustomerHandler(ICustomerRepository repo, IClock clock)
     : IRequestHandler<UpdateCustomerCommand>
 {
     public async Task Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
@@ -38,7 +38,14 @@ public class UpdateCustomerHandler(ICustomerRepository repo)
         if (request.CompanyName is not null) customer.CompanyName = request.CompanyName;
         if (request.Email is not null) customer.Email = request.Email;
         if (request.Phone is not null) customer.Phone = request.Phone;
-        if (request.IsActive.HasValue) customer.IsActive = request.IsActive.Value;
+
+        // Phase 3 H2 / WU-12: stamp/clear DeactivationDate on lifecycle change.
+        if (request.IsActive.HasValue && request.IsActive.Value != customer.IsActive)
+        {
+            customer.IsActive = request.IsActive.Value;
+            customer.DeactivationDate = customer.IsActive ? null : clock.UtcNow;
+        }
+
         if (request.IsTaxExempt.HasValue) customer.IsTaxExempt = request.IsTaxExempt.Value;
         if (request.TaxExemptionId is not null) customer.TaxExemptionId = request.TaxExemptionId;
 

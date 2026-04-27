@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using QBEngineer.Api.Validation;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -30,13 +31,14 @@ public class CreateQuoteValidator : AbstractValidator<CreateQuoteCommand>
     }
 }
 
-public class CreateQuoteHandler(IQuoteRepository repo, ICustomerRepository customerRepo)
+public class CreateQuoteHandler(IQuoteRepository repo, ICustomerRepository customerRepo, IPartRepository partRepo)
     : IRequestHandler<CreateQuoteCommand, QuoteListItemModel>
 {
     public async Task<QuoteListItemModel> Handle(CreateQuoteCommand request, CancellationToken cancellationToken)
     {
-        var customer = await customerRepo.FindAsync(request.CustomerId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Customer {request.CustomerId} not found");
+        var customer = await customerRepo.FindAsync(request.CustomerId, cancellationToken);
+        // Phase 3 H2 / WU-12: customer-active check on quote create.
+        ActiveCheck.EnsureActive(customer, "Customer", "customerId", request.CustomerId);
 
         var quoteNumber = await repo.GenerateNextQuoteNumberAsync(cancellationToken);
 
@@ -51,8 +53,17 @@ public class CreateQuoteHandler(IQuoteRepository repo, ICustomerRepository custo
         };
 
         var lineNumber = 1;
-        foreach (var line in request.Lines)
+        for (var i = 0; i < request.Lines.Count; i++)
         {
+            var line = request.Lines[i];
+            // Phase 3 H2 / WU-12: part-active check on quote line. Skip when
+            // PartId is null (free-form quote line) — same shape as SO.
+            if (line.PartId is int partId && partId > 0)
+            {
+                var part = await partRepo.FindAsync(partId, cancellationToken);
+                ActiveCheck.EnsureActive(part, "Part", $"lines[{i}].partId", partId);
+            }
+
             quote.Lines.Add(new QuoteLine
             {
                 PartId = line.PartId,

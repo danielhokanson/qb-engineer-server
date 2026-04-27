@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Validation;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -26,8 +27,10 @@ public class CreateShiftAssignmentHandler(AppDbContext db) : IRequestHandler<Cre
 {
     public async Task<ShiftAssignmentResponseModel> Handle(CreateShiftAssignmentCommand request, CancellationToken cancellationToken)
     {
-        var user = await db.Users.FindAsync([request.Request.UserId], cancellationToken)
-            ?? throw new KeyNotFoundException($"User {request.Request.UserId} not found");
+        var user = await db.Users.FindAsync([request.Request.UserId], cancellationToken);
+        // Phase 3 H2 / WU-12: employee-active check on shift assignment.
+        // Deactivated users cannot be the target of new assignments.
+        ActiveCheck.EnsureActive(user, "Employee", "userId", request.Request.UserId);
 
         var shift = await db.Shifts.FindAsync([request.Request.ShiftId], cancellationToken)
             ?? throw new KeyNotFoundException($"Shift {request.Request.ShiftId} not found");
