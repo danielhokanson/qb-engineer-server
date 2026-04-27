@@ -40,6 +40,7 @@ public class UpdateAdminUserHandler(
     {
         var user = await db.Users
             .Include(u => u.WorkLocation)
+            .Include(u => u.RoleTemplate)
             .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"User with ID {request.Id} not found.");
 
@@ -128,6 +129,18 @@ public class UpdateAdminUserHandler(
         var canBeAssigned = complianceItems.Where(i => i.BlocksAssignment).All(i => i.IsComplete);
         var missingItems = complianceItems.Where(i => !i.IsComplete).Select(i => i.Label).ToArray();
 
+        // Phase 3 / WU-06 / C1 — include rollup template assignment.
+        string[]? templateRoles = null;
+        if (user.RoleTemplate is not null)
+        {
+            try
+            {
+                templateRoles = System.Text.Json.JsonSerializer.Deserialize<string[]>(
+                    user.RoleTemplate.IncludedRoleNamesJson) ?? [];
+            }
+            catch (System.Text.Json.JsonException) { templateRoles = []; }
+        }
+
         return new AdminUserResponseModel(
             user.Id,
             user.Email!,
@@ -148,6 +161,9 @@ public class UpdateAdminUserHandler(
             missingItems,
             user.WorkLocationId,
             user.WorkLocation?.Name,
-            null); // I9Status — computed in Batch F (I9StatusComputer)
+            null, // I9Status — computed in Batch F (I9StatusComputer)
+            user.RoleTemplateId,
+            user.RoleTemplate?.Name,
+            templateRoles);
     }
 }

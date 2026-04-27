@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -24,7 +25,8 @@ public class NfcKioskLoginHandler(
     UserManager<ApplicationUser> userManager,
     ITokenService tokenService,
     ISessionStore sessionStore,
-    IHttpContextAccessor httpContext) : IRequestHandler<NfcKioskLoginCommand, LoginResponse>
+    IHttpContextAccessor httpContext,
+    IRoleClaimsExpander roleClaimsExpander) : IRequestHandler<NfcKioskLoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(NfcKioskLoginCommand request, CancellationToken cancellationToken)
     {
@@ -46,7 +48,8 @@ public class NfcKioskLoginHandler(
         if (!SetPinHandler.VerifyPin(request.Pin, user.PinHash))
             throw new InvalidOperationException("Invalid scan identifier or PIN");
 
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — RoleTemplate expansion on NFC kiosk login.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
         var extraClaims = new Dictionary<string, string> { ["authTier"] = "nfc" };
         var result = tokenService.GenerateToken(
             user.Id, user.Email!, user.FirstName, user.LastName,

@@ -46,7 +46,8 @@ public class LoginHandler(
     ISessionStore sessionStore,
     IHttpContextAccessor httpContext,
     AppDbContext db,
-    ISystemAuditWriter auditWriter)
+    ISystemAuditWriter auditWriter,
+    IRoleClaimsExpander roleClaimsExpander)
     : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -98,7 +99,9 @@ public class LoginHandler(
                 MfaUserId: user.Id);
         }
 
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — combine identity roles with any roles included via
+        // the user's assigned RoleTemplate so the JWT carries the full set.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
 
         var result = tokenService.GenerateToken(
             user.Id, user.Email!, user.FirstName, user.LastName,
@@ -163,7 +166,10 @@ public class LoginHandler(
 
 public record GetCurrentUserQuery(ClaimsPrincipal User) : IRequest<AuthUserResponseModel>;
 
-public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager, AppDbContext db)
+public class GetCurrentUserHandler(
+    UserManager<ApplicationUser> userManager,
+    AppDbContext db,
+    IRoleClaimsExpander roleClaimsExpander)
     : IRequestHandler<GetCurrentUserQuery, AuthUserResponseModel>
 {
     public async Task<AuthUserResponseModel> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
@@ -177,7 +183,8 @@ public class GetCurrentUserHandler(UserManager<ApplicationUser> userManager, App
         if (!user.IsActive)
             throw new UnauthorizedAccessException("Invalid credentials");
 
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — same expansion as login so /auth/me reflects rollups.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
 
         var profile = await db.EmployeeProfiles
             .AsNoTracking()

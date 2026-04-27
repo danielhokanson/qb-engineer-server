@@ -52,6 +52,65 @@ public class AdminController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // ── Role Templates (Phase 3 / WU-06 / C1) ──
+    // Tenant-configurable rollup roles for small shops where one person
+    // wears many hats. Out-of-the-box system defaults seed at install
+    // (FrontOffice / FloorLead / OwnerOperator).
+
+    [HttpGet("role-templates")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<List<RoleTemplateResponseModel>>> GetRoleTemplates(
+        [FromQuery] bool includeDeactivated = false)
+    {
+        var result = await mediator.Send(new GetRoleTemplatesQuery(includeDeactivated));
+        return Ok(result);
+    }
+
+    [HttpPost("role-templates")]
+    public async Task<ActionResult<RoleTemplateResponseModel>> CreateRoleTemplate(CreateRoleTemplateCommand command)
+    {
+        var result = await mediator.Send(command);
+        return CreatedAtAction(nameof(GetRoleTemplates), new { id = result.Id }, result);
+    }
+
+    [HttpPut("role-templates/{id:int}")]
+    public async Task<ActionResult<RoleTemplateResponseModel>> UpdateRoleTemplate(int id, UpdateRoleTemplateCommand command)
+    {
+        var cmd = command with { Id = id };
+        var result = await mediator.Send(cmd);
+        return Ok(result);
+    }
+
+    [HttpDelete("role-templates/{id:int}")]
+    public async Task<IActionResult> DeleteRoleTemplate(int id)
+    {
+        await mediator.Send(new DeleteRoleTemplateCommand(id));
+        return NoContent();
+    }
+
+    [HttpGet("role-templates/{id:int}/assignees")]
+    public async Task<ActionResult<List<RoleTemplateAssigneeResponseModel>>> GetRoleTemplateAssignees(int id)
+    {
+        var result = await mediator.Send(new GetRoleTemplateAssigneesQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPost("users/{userId:int}/role-template")]
+    public async Task<IActionResult> AssignRoleTemplate(int userId, [FromBody] AssignRoleTemplateRequest request)
+    {
+        await mediator.Send(new AssignRoleTemplateCommand(userId, request.TemplateId));
+        return NoContent();
+    }
+
+    [HttpDelete("users/{userId:int}/role-template")]
+    public async Task<IActionResult> UnassignRoleTemplate(int userId)
+    {
+        await mediator.Send(new UnassignRoleTemplateCommand(userId));
+        return NoContent();
+    }
+
+    public record AssignRoleTemplateRequest(int TemplateId);
+
     // ── Track Types ──
 
     [HttpGet("track-types")]

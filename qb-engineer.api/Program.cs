@@ -292,6 +292,8 @@ try
     builder.Services.AddSingleton<ITokenService, JwtTokenService>();
     builder.Services.AddSingleton<ISessionStore, SessionStore>();
     builder.Services.AddScoped<ISystemAuditWriter, SystemAuditWriter>();
+    // Phase 3 / WU-06 / C1 — role-template rollup expansion at auth time.
+    builder.Services.AddScoped<IRoleClaimsExpander, RoleClaimsExpander>();
     builder.Services.AddMemoryCache();
     builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
     builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();

@@ -22,4 +22,8 @@ public record AdminUserResponseModel(
     string[] MissingComplianceItems,
     int? WorkLocationId,
     string? WorkLocationName,
-    I9ComplianceStatus? I9Status);
+    I9ComplianceStatus? I9Status,
+    // Phase 3 / WU-06 / C1 — rollup template assignment.
+    int? RoleTemplateId = null,
+    string? RoleTemplateName = null,
+    string[]? RoleTemplateIncludedRoles = null);

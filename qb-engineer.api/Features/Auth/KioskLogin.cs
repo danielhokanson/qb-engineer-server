@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -23,7 +24,8 @@ public class KioskLoginHandler(
     UserManager<ApplicationUser> userManager,
     ITokenService tokenService,
     ISessionStore sessionStore,
-    IHttpContextAccessor httpContext) : IRequestHandler<KioskLoginCommand, LoginResponse>
+    IHttpContextAccessor httpContext,
+    IRoleClaimsExpander roleClaimsExpander) : IRequestHandler<KioskLoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(KioskLoginCommand request, CancellationToken cancellationToken)
     {
@@ -36,7 +38,8 @@ public class KioskLoginHandler(
         if (!SetPinHandler.VerifyPin(request.Pin, user.PinHash))
             throw new InvalidOperationException("Invalid barcode or PIN");
 
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — RoleTemplate expansion on kiosk login.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
         var result = tokenService.GenerateToken(
             user.Id, user.Email!, user.FirstName, user.LastName,
             user.Initials, user.AvatarColor, roles,

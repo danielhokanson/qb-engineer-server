@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -26,7 +27,8 @@ public class CompleteSetupHandler(
     UserManager<ApplicationUser> userManager,
     ITokenService tokenService,
     ISessionStore sessionStore,
-    IHttpContextAccessor httpContext) : IRequestHandler<CompleteSetupCommand, LoginResponse>
+    IHttpContextAccessor httpContext,
+    IRoleClaimsExpander roleClaimsExpander) : IRequestHandler<CompleteSetupCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(CompleteSetupCommand request, CancellationToken cancellationToken)
     {
@@ -64,7 +66,8 @@ public class CompleteSetupHandler(
         await userManager.UpdateAsync(user);
 
         // Generate JWT and return login response
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — RoleTemplate expansion at setup completion.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
         var result = tokenService.GenerateToken(
             user.Id, user.Email!, user.FirstName, user.LastName,
             user.Initials, user.AvatarColor, roles);

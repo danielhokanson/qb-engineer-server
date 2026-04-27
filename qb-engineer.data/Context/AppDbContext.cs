@@ -397,6 +397,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Training Scan Logs
     public DbSet<TrainingScanLog> TrainingScanLogs => Set<TrainingScanLog>();
 
+    // Role Templates (Phase 3 / WU-06 / C1) — tenant-configurable rollup roles.
+    public DbSet<RoleTemplate> RoleTemplates => Set<RoleTemplate>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

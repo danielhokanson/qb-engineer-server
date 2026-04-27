@@ -3,6 +3,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -13,7 +14,8 @@ public record RefreshTokenCommand(string CurrentJti, int UserId) : IRequest<Logi
 public class RefreshTokenHandler(
     UserManager<ApplicationUser> userManager,
     ITokenService tokenService,
-    ISessionStore sessionStore) : IRequestHandler<RefreshTokenCommand, LoginResponse>
+    ISessionStore sessionStore,
+    IRoleClaimsExpander roleClaimsExpander) : IRequestHandler<RefreshTokenCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
@@ -24,8 +26,8 @@ public class RefreshTokenHandler(
         if (!user.IsActive)
             throw new UnauthorizedAccessException("Account is disabled");
 
-        // Generate new token
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — expand RoleTemplate so refreshed JWT carries rollup roles.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
         var result = tokenService.GenerateToken(
             user.Id, user.Email!, user.FirstName, user.LastName,
             user.Initials, user.AvatarColor, roles);

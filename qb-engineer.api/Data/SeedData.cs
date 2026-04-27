@@ -19,12 +19,22 @@ public static partial class SeedData
         db.SuppressAudit = true;
 
         // ── 1. Roles (essential — app won't work without these) ──────────
-        string[] roles = ["Admin", "Manager", "Engineer", "PM", "ProductionWorker", "OfficeManager"];
+        // Phase 3 / WU-06 / C1 extended catalog from 6 → 11. The 5 new roles
+        // (Controller, IT Admin, Procurement, Production Manager, Production
+        // Planner) cover small-shop personas the original 6 missed. Existing
+        // role names are unchanged for backward compatibility.
+        string[] roles = [
+            "Admin", "Manager", "Engineer", "PM", "ProductionWorker", "OfficeManager",
+            "Controller", "IT Admin", "Procurement", "Production Manager", "Production Planner",
+        ];
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole<int>(role));
         }
+
+        // ── 1b. Out-of-box role templates (Phase 3 / WU-06 / C1) ─────────
+        await SeedRoleTemplatesAsync(db);
 
         // ── 2. Track Types, Stages & Reference Data (essential) ──────────
         await SeedEssentialDataAsync(db);
@@ -734,6 +744,52 @@ public static partial class SeedData
         }
 
         return user;
+    }
+
+    private static async Task SeedRoleTemplatesAsync(AppDbContext db)
+    {
+        // Idempotent — only inserts a system-default template when no row
+        // with that Name exists. Tenant edits to a system default are NOT
+        // overwritten by re-running the seed.
+        var defaults = new[]
+        {
+            new RoleTemplate
+            {
+                Name = "FrontOffice",
+                Description = "Back-office rollup: Office Manager + Controller + IT Admin. " +
+                              "For small shops where one person handles all back-office work.",
+                IsSystemDefault = true,
+                IncludedRoleNamesJson = """["OfficeManager","Controller","IT Admin"]""",
+            },
+            new RoleTemplate
+            {
+                Name = "FloorLead",
+                Description = "Production rollup: PM + Production Manager + Production Planner. " +
+                              "For shops where one person coordinates all floor-side work.",
+                IsSystemDefault = true,
+                IncludedRoleNamesJson = """["PM","Production Manager","Production Planner"]""",
+            },
+            new RoleTemplate
+            {
+                Name = "OwnerOperator",
+                Description = "Owner rollup: Admin + Manager + Controller. " +
+                              "For solo / micro shops where the owner operates everywhere.",
+                IsSystemDefault = true,
+                IncludedRoleNamesJson = """["Admin","Manager","Controller"]""",
+            },
+        };
+
+        foreach (var tmpl in defaults)
+        {
+            if (!await db.RoleTemplates.AnyAsync(t => t.Name == tmpl.Name))
+                db.RoleTemplates.Add(tmpl);
+        }
+
+        if (db.ChangeTracker.HasChanges())
+        {
+            await db.SaveChangesAsync();
+            Log.Information("Seeded {Count} default role templates", defaults.Length);
+        }
     }
 
     private static async Task SeedDefaultChannelsAsync(AppDbContext db, int adminId)

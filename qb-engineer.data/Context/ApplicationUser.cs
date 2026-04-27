@@ -44,4 +44,10 @@ public class ApplicationUser : IdentityUser<int>
     public bool MfaEnforcedByPolicy { get; set; }
     public DateTimeOffset? MfaEnabledAt { get; set; }
     public int MfaRecoveryCodesRemaining { get; set; }
+
+    // Rollup role template (Phase 3 / WU-06 / C1) — when set, the auth path
+    // expands the template's IncludedRoleNames into JWT role claims in
+    // addition to whatever Identity-managed roles the user has.
+    public int? RoleTemplateId { get; set; }
+    public RoleTemplate? RoleTemplate { get; set; }
 }

@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -30,7 +31,8 @@ public class ScanLoginHandler(
     UserManager<ApplicationUser> userManager,
     ITokenService tokenService,
     ISessionStore sessionStore,
-    IHttpContextAccessor httpContext) : IRequestHandler<ScanLoginCommand, LoginResponse>
+    IHttpContextAccessor httpContext,
+    IRoleClaimsExpander roleClaimsExpander) : IRequestHandler<ScanLoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(ScanLoginCommand request, CancellationToken cancellationToken)
     {
@@ -69,7 +71,8 @@ public class ScanLoginHandler(
             throw new InvalidOperationException("Invalid scan identifier or PIN.");
 
         // 5. Generate JWT with auth tier claim
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — RoleTemplate expansion on scan login.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
         var extraClaims = new Dictionary<string, string> { ["authTier"] = authTier };
         var result = tokenService.GenerateToken(
             user.Id, user.Email!, user.FirstName, user.LastName,

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -13,7 +14,8 @@ public class SsoCallbackHandler(
     UserManager<ApplicationUser> userManager,
     ITokenService tokenService,
     ISessionStore sessionStore,
-    IHttpContextAccessor httpContext) : IRequestHandler<SsoCallbackCommand, LoginResponse>
+    IHttpContextAccessor httpContext,
+    IRoleClaimsExpander roleClaimsExpander) : IRequestHandler<SsoCallbackCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(SsoCallbackCommand request, CancellationToken cancellationToken)
     {
@@ -52,7 +54,8 @@ public class SsoCallbackHandler(
             await userManager.UpdateAsync(user);
         }
 
-        var roles = await userManager.GetRolesAsync(user);
+        // WU-06 / C1 — RoleTemplate expansion on SSO login.
+        var roles = await roleClaimsExpander.GetEffectiveRolesAsync(user, cancellationToken);
         var result = tokenService.GenerateToken(
             user.Id, user.Email!, user.FirstName, user.LastName,
             user.Initials, user.AvatarColor, roles);
