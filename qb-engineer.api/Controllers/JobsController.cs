@@ -250,6 +250,25 @@ public class JobsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // Unarchive — inverse of bulk/archive. Admin-only because restoring an
+    // archived job has audit/visibility implications. Phase 3 / WU-07 / F2.
+    [HttpPatch("bulk/unarchive")]
+    [HttpPost("bulk/unarchive")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkOperationResponseModel>> BulkUnarchive(BulkUnarchiveJobsCommand command)
+    {
+        var result = await mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/unarchive")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<BulkOperationResponseModel>> Unarchive(int id)
+    {
+        var result = await mediator.Send(new BulkUnarchiveJobsCommand(new List<int> { id }));
+        return Ok(result);
+    }
+
     // Cover photo
     [HttpPatch("{id:int}/cover-photo")]
     public async Task<IActionResult> SetCoverPhoto(int id, [FromBody] SetCoverPhotoRequest request)
