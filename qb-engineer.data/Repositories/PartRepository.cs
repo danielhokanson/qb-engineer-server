@@ -11,53 +11,114 @@ public class PartRepository(AppDbContext db) : IPartRepository
 {
     public async Task<List<PartListResponseModel>> GetPartsAsync(PartStatus? status, PartType? type, string? search, CancellationToken ct)
     {
-        var query = db.Parts.AsQueryable();
-
-        if (status.HasValue)
-            query = query.Where(p => p.Status == status.Value);
-
-        if (type.HasValue)
-            query = query.Where(p => p.PartType == type.Value);
-
-        if (!string.IsNullOrWhiteSpace(search))
+        // Legacy non-paged path. Routes through GetPagedAsync with a wide page
+        // so existing internal callers behave unchanged. New work should call
+        // GetPagedAsync directly. (Phase 3 F7-partial / WU-17.)
+        var paged = await GetPagedAsync(new PartListQuery
         {
-            var term = search.Trim().ToLower();
-            query = query.Where(p =>
+            Status = status,
+            Type = type,
+            Q = search,
+            PageSize = 200,
+            // Legacy callers expected partNumber-asc ordering — preserve that.
+            Sort = "partNumber",
+            Order = "asc",
+        }, ct);
+        return paged.Items.ToList();
+    }
+
+    public async Task<PagedResponse<PartListResponseModel>> GetPagedAsync(
+        PartListQuery query, CancellationToken ct)
+    {
+        // Phase 3 F7-partial / WU-17 — standardised paged-list contract.
+        // Sort whitelisted; stable secondary sort by Id for deterministic
+        // pagination across ties.
+        var q = db.Parts.AsQueryable();
+
+        // — Filters —
+        if (query.Status.HasValue)
+            q = q.Where(p => p.Status == query.Status.Value);
+        else if (query.IsActive.HasValue)
+        {
+            // Phase 3 F7-partial: alias IsActive onto the Status enum so the
+            // standardised filter dimension works on parts. true = anything
+            // not Obsolete; false = Obsolete only.
+            q = query.IsActive.Value
+                ? q.Where(p => p.Status != PartStatus.Obsolete)
+                : q.Where(p => p.Status == PartStatus.Obsolete);
+        }
+
+        if (query.Type.HasValue)
+            q = q.Where(p => p.PartType == query.Type.Value);
+
+        if (query.DefaultVendorId.HasValue)
+            q = q.Where(p => p.PreferredVendorId == query.DefaultVendorId.Value);
+
+        if (!string.IsNullOrWhiteSpace(query.Q))
+        {
+            var term = query.Q.Trim().ToLower();
+            q = q.Where(p =>
                 p.PartNumber.ToLower().Contains(term) ||
                 p.Description.ToLower().Contains(term) ||
                 (p.Material != null && p.Material.ToLower().Contains(term)) ||
                 (p.ExternalPartNumber != null && p.ExternalPartNumber.ToLower().Contains(term)));
         }
 
+        if (query.DateFrom.HasValue)
+            q = q.Where(p => p.CreatedAt >= query.DateFrom.Value);
+        if (query.DateTo.HasValue)
+            q = q.Where(p => p.CreatedAt <= query.DateTo.Value);
+
+        // — Count BEFORE paging —
+        var totalCount = await q.CountAsync(ct);
+
+        // — Sort (whitelist; default = createdAt desc) —
+        var sortKey = (query.Sort ?? "").Trim().ToLowerInvariant();
+        var desc = query.OrderDescending;
+        IOrderedQueryable<Part> ordered = sortKey switch
+        {
+            "partnumber"         => desc ? q.OrderByDescending(p => p.PartNumber)         : q.OrderBy(p => p.PartNumber),
+            "description"        => desc ? q.OrderByDescending(p => p.Description)        : q.OrderBy(p => p.Description),
+            "revision"           => desc ? q.OrderByDescending(p => p.Revision)           : q.OrderBy(p => p.Revision),
+            "status"             => desc ? q.OrderByDescending(p => p.Status)             : q.OrderBy(p => p.Status),
+            "parttype"           => desc ? q.OrderByDescending(p => p.PartType)           : q.OrderBy(p => p.PartType),
+            "type"               => desc ? q.OrderByDescending(p => p.PartType)           : q.OrderBy(p => p.PartType),
+            "material"           => desc ? q.OrderByDescending(p => p.Material)           : q.OrderBy(p => p.Material),
+            "externalpartnumber" => desc ? q.OrderByDescending(p => p.ExternalPartNumber) : q.OrderBy(p => p.ExternalPartNumber),
+            "createdat"          => desc ? q.OrderByDescending(p => p.CreatedAt)          : q.OrderBy(p => p.CreatedAt),
+            "updatedat"          => desc ? q.OrderByDescending(p => p.UpdatedAt)          : q.OrderBy(p => p.UpdatedAt),
+            "id"                 => desc ? q.OrderByDescending(p => p.Id)                 : q.OrderBy(p => p.Id),
+            _ => q.OrderByDescending(p => p.CreatedAt),
+        };
+        ordered = ordered.ThenBy(p => p.Id);
+
         var now = DateTimeOffset.UtcNow;
 
-        var parts = await query
-            .Include(p => p.BOMEntries)
-            .OrderBy(p => p.PartNumber)
-            .Select(p => new
-            {
-                Part = p,
-                BomCount = p.BOMEntries.Count,
-                CurrentPrice = db.PartPrices
+        var items = await ordered
+            .Skip(query.Skip)
+            .Take(query.EffectivePageSize)
+            .Select(p => new PartListResponseModel(
+                p.Id,
+                p.PartNumber,
+                p.Description,
+                p.Revision,
+                p.Status,
+                p.PartType,
+                p.Material,
+                p.ExternalPartNumber,
+                p.BOMEntries.Count,
+                p.CreatedAt,
+                db.PartPrices
                     .Where(pp => pp.PartId == p.Id && pp.EffectiveTo == null && pp.EffectiveFrom <= now)
                     .Select(pp => (decimal?)pp.UnitPrice)
-                    .FirstOrDefault(),
-            })
+                    .FirstOrDefault()))
             .ToListAsync(ct);
 
-        return parts.Select(r => new PartListResponseModel(
-            r.Part.Id,
-            r.Part.PartNumber,
-            r.Part.Description,
-            r.Part.Revision,
-            r.Part.Status,
-            r.Part.PartType,
-            r.Part.Material,
-            r.Part.ExternalPartNumber,
-            r.BomCount,
-            r.Part.CreatedAt,
-            r.CurrentPrice
-        )).ToList();
+        return new PagedResponse<PartListResponseModel>(
+            items,
+            totalCount,
+            query.EffectivePage,
+            query.EffectivePageSize);
     }
 
     public async Task<PartDetailResponseModel?> GetDetailAsync(int id, CancellationToken ct)

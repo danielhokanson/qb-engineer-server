@@ -4,11 +4,19 @@ using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Customers;
 
-public record GetCustomerListQuery(string? Search, bool? IsActive) : IRequest<List<CustomerListItemModel>>;
+/// <summary>
+/// Phase 3 F7-partial / WU-17 — paged customer-list query.
+///
+/// The legacy two-arg query (search, isActive) collapses into the new bound
+/// model so existing callers continue to work via the controller layer's
+/// <c>?search=&amp;isActive=</c> aliasing.
+/// </summary>
+public record GetCustomerListQuery(CustomerListQuery Query) : IRequest<PagedResponse<CustomerListItemModel>>;
 
 public class GetCustomerListHandler(ICustomerRepository repo)
-    : IRequestHandler<GetCustomerListQuery, List<CustomerListItemModel>>
+    : IRequestHandler<GetCustomerListQuery, PagedResponse<CustomerListItemModel>>
 {
-    public Task<List<CustomerListItemModel>> Handle(GetCustomerListQuery request, CancellationToken cancellationToken)
-        => repo.GetAllAsync(request.Search, request.IsActive, cancellationToken);
+    public Task<PagedResponse<CustomerListItemModel>> Handle(
+        GetCustomerListQuery request, CancellationToken cancellationToken)
+        => repo.GetPagedAsync(request.Query, cancellationToken);
 }

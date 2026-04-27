@@ -6,7 +6,18 @@ namespace QBEngineer.Core.Interfaces;
 
 public interface IPartRepository
 {
+    /// <summary>
+    /// Legacy (non-paged) list. Kept for any internal caller that still needs
+    /// the full flat array. New work should call <see cref="GetPagedAsync"/>.
+    /// </summary>
     Task<List<PartListResponseModel>> GetPartsAsync(PartStatus? status, PartType? type, string? search, CancellationToken ct);
+
+    /// <summary>
+    /// Paged list per the Phase 3 F7-partial / WU-17 standard contract.
+    /// Returns the slice + the total matching count for pagination UI.
+    /// </summary>
+    Task<PagedResponse<PartListResponseModel>> GetPagedAsync(PartListQuery query, CancellationToken ct);
+
     Task<PartDetailResponseModel?> GetDetailAsync(int id, CancellationToken ct);
     Task<Part?> FindAsync(int id, CancellationToken ct);
     Task<bool> PartNumberExistsAsync(string partNumber, int? excludeId, CancellationToken ct);

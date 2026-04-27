@@ -13,13 +13,29 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin,Manager,Engineer,ProductionWorker,PM,OfficeManager")]
 public class PartsController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Phase 3 F7-partial / WU-17 — standardised paged-list contract.
+    ///
+    /// New shape:
+    ///   <c>GET /parts?page=1&amp;pageSize=25&amp;sort=partNumber&amp;order=asc&amp;q=ASM&amp;status=Active&amp;type=Assembly&amp;dateFrom=2025-01-01&amp;dateTo=2025-12-31&amp;defaultVendorId=4</c>
+    ///
+    /// Response: <c>{ items, totalCount, page, pageSize }</c>.
+    ///
+    /// Backward compat: the legacy <c>?search=&amp;status=&amp;type=</c> form
+    /// continues to work — <c>q</c> wins over <c>search</c> when both are
+    /// supplied. Existing UI callers that don't pass any query params get the
+    /// standard default (page 1, 25 records, createdAt desc).
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<PartListResponseModel>>> GetParts(
-        [FromQuery] PartStatus? status,
-        [FromQuery] PartType? type,
-        [FromQuery] string? search)
+    public async Task<ActionResult<PagedResponse<PartListResponseModel>>> GetParts(
+        [FromQuery] PartListQuery query,
+        [FromQuery(Name = "search")] string? legacySearch,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetPartsQuery(status, type, search));
+        var effective = string.IsNullOrEmpty(query.Q) && !string.IsNullOrEmpty(legacySearch)
+            ? query with { Q = legacySearch }
+            : query;
+        var result = await mediator.Send(new GetPartsQuery(effective), ct);
         return Ok(result);
     }
 

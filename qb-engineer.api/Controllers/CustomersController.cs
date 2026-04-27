@@ -12,12 +12,31 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin,Manager,OfficeManager,PM,Engineer")]
 public class CustomersController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Phase 3 F7-partial / WU-17 — standardised paged-list contract.
+    ///
+    /// New shape:
+    ///   <c>GET /customers?page=1&amp;pageSize=25&amp;sort=createdAt&amp;order=desc&amp;q=acme&amp;isActive=true&amp;dateFrom=2025-01-01&amp;dateTo=2025-12-31&amp;defaultCurrency=USD</c>
+    ///
+    /// Response: <c>{ items, totalCount, page, pageSize }</c>.
+    ///
+    /// Backward compat: the legacy <c>?search=&amp;isActive=</c> form continues
+    /// to work — when both <c>q</c> and <c>search</c> are present, <c>q</c>
+    /// wins. Existing UI callers that don't pass any query params get the
+    /// standard default (page 1, 25 records, createdAt desc).
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<CustomerListItemModel>>> GetCustomers(
-        [FromQuery] string? search,
-        [FromQuery] bool? isActive)
+    public async Task<ActionResult<PagedResponse<CustomerListItemModel>>> GetCustomers(
+        [FromQuery] CustomerListQuery query,
+        [FromQuery(Name = "search")] string? legacySearch,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetCustomerListQuery(search, isActive));
+        // Plumb the legacy `search` param into the standard `q` field if `q`
+        // wasn't supplied. Avoids breaking existing UI / harness callers.
+        var effective = string.IsNullOrEmpty(query.Q) && !string.IsNullOrEmpty(legacySearch)
+            ? query with { Q = legacySearch }
+            : query;
+        var result = await mediator.Send(new GetCustomerListQuery(effective), ct);
         return Ok(result);
     }
 
