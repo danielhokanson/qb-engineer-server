@@ -12,6 +12,12 @@ public class PurchaseOrderLineConfiguration : IEntityTypeConfiguration<PurchaseO
 
         builder.Property(e => e.Description).HasMaxLength(500);
         builder.Property(e => e.Notes).HasMaxLength(1000);
+        // Phase 3 / WU-10 / F8-partial — quantity + price are decimal(18,4).
+        // 4 decimals on quantity is enough for any reasonable UoM (lb/kg/hr/in).
+        // 4 decimals on unit price is industry-standard (allows fractional cents
+        // on long-tail commodities — e.g. $0.0125 per fastener).
+        builder.Property(e => e.OrderedQuantity).HasPrecision(18, 4);
+        builder.Property(e => e.ReceivedQuantity).HasPrecision(18, 4);
         builder.Property(e => e.UnitPrice).HasPrecision(18, 4);
 
         builder.HasIndex(e => e.PurchaseOrderId);

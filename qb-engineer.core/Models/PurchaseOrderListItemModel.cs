@@ -1,5 +1,7 @@
 namespace QBEngineer.Core.Models;
 
+// Phase 3 / WU-10 / F8-partial — TotalOrdered / TotalReceived are decimal
+// (aggregate of decimal line quantities, was int).
 public record PurchaseOrderListItemModel(
     int Id,
     string PONumber,
@@ -9,8 +11,8 @@ public record PurchaseOrderListItemModel(
     string? JobNumber,
     string Status,
     int LineCount,
-    int TotalOrdered,
-    int TotalReceived,
+    decimal TotalOrdered,
+    decimal TotalReceived,
     DateTimeOffset? ExpectedDeliveryDate,
     bool IsBlanket,
     DateTimeOffset CreatedAt);

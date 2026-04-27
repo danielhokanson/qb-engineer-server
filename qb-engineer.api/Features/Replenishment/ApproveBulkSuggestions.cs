@@ -60,7 +60,8 @@ public class ApproveBulkSuggestionsHandler(
                 {
                     PartId = s.PartId,
                     Description = s.Part.Description,
-                    OrderedQuantity = (int)Math.Ceiling(s.SuggestedQuantity),
+                    // Phase 3 / WU-10 — OrderedQuantity decimal; keep Math.Ceiling.
+                    OrderedQuantity = Math.Ceiling(s.SuggestedQuantity),
                     UnitPrice = 0,
                 });
             }

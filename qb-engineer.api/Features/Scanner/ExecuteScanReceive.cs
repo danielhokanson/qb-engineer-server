@@ -79,8 +79,8 @@ public class ExecuteScanReceiveHandler(
         };
         db.ReceivingRecords.Add(receivingRecord);
 
-        // Update PO line received quantity
-        poLine.ReceivedQuantity += (int)data.Quantity;
+        // Update PO line received quantity (decimal-precision safe — Phase 3 / WU-10)
+        poLine.ReceivedQuantity += data.Quantity;
 
         // Create or update bin content at destination
         var destContent = await db.BinContents

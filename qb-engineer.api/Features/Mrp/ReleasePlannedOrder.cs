@@ -53,7 +53,10 @@ public class ReleasePlannedOrderHandler(AppDbContext db, IClock clock, IBarcodeS
                 PurchaseOrderId = po.Id,
                 PartId = order.PartId,
                 Description = order.Part?.Description ?? "",
-                OrderedQuantity = (int)Math.Ceiling(order.Quantity),
+                // Phase 3 / WU-10 — OrderedQuantity is decimal now; preserve the
+                // Math.Ceiling rounding because MRP planned quantities have always
+                // rounded up (whole-unit purchase increments).
+                OrderedQuantity = Math.Ceiling(order.Quantity),
                 UnitPrice = 0,
                 MrpPlannedOrderId = order.Id,
             };

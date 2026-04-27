@@ -47,7 +47,9 @@ public class ApproveSuggestionHandler(
         {
             PartId = suggestion.PartId,
             Description = suggestion.Part.Description,
-            OrderedQuantity = (int)Math.Ceiling(suggestion.SuggestedQuantity),
+            // Phase 3 / WU-10 — OrderedQuantity is decimal; preserve the
+            // Math.Ceiling whole-unit purchase rounding.
+            OrderedQuantity = Math.Ceiling(suggestion.SuggestedQuantity),
             UnitPrice = 0,
         });
 

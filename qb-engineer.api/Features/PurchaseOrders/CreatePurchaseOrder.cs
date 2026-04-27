@@ -25,8 +25,10 @@ public class CreatePurchaseOrderValidator : AbstractValidator<CreatePurchaseOrde
         RuleForEach(x => x.Lines).ChildRules(line =>
         {
             line.RuleFor(l => l.PartId).GreaterThan(0);
-            line.RuleFor(l => l.Quantity).GreaterThan(0);
-            line.RuleFor(l => l.UnitPrice).GreaterThanOrEqualTo(0);
+            // Phase 3 / WU-10 — Quantity is decimal; allow fractional values
+            // (e.g. 0.5 lb of solder), but disallow zero / negative.
+            line.RuleFor(l => l.Quantity).GreaterThan(0m);
+            line.RuleFor(l => l.UnitPrice).GreaterThanOrEqualTo(0m);
         });
     }
 }

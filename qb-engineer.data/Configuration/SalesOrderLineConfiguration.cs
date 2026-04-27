@@ -14,6 +14,10 @@ public class SalesOrderLineConfiguration : IEntityTypeConfiguration<SalesOrderLi
 
         builder.Property(e => e.Description).HasMaxLength(500);
         builder.Property(e => e.Notes).HasMaxLength(1000);
+        // Phase 3 / WU-10 / F8-partial — quantity + price are decimal(18,4).
+        // See PurchaseOrderLineConfiguration for rationale.
+        builder.Property(e => e.Quantity).HasPrecision(18, 4);
+        builder.Property(e => e.ShippedQuantity).HasPrecision(18, 4);
         builder.Property(e => e.UnitPrice).HasPrecision(18, 4);
 
         builder.HasIndex(e => e.SalesOrderId);
