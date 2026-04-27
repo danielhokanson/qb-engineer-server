@@ -5,6 +5,7 @@ namespace QBEngineer.Api.Jobs;
 public class AccountingCacheSyncJob(
     IAccountingProviderFactory providerFactory,
     ISystemSettingRepository systemSettings,
+    IClock clock,
     ILogger<AccountingCacheSyncJob> logger)
 {
     public async Task RefreshCacheAsync(CancellationToken ct = default)
@@ -28,7 +29,7 @@ public class AccountingCacheSyncJob(
 
         var customers = await accountingService.GetCustomersAsync(ct);
         var count = customers.Count;
-        var now = DateTimeOffset.UtcNow.ToString("O");
+        var now = clock.UtcNow.ToString("O");
 
         await systemSettings.UpsertAsync(
             "accounting_last_sync",

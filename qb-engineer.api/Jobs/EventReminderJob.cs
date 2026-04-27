@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
@@ -11,11 +12,12 @@ namespace QBEngineer.Api.Jobs;
 /// </summary>
 public class EventReminderJob(
     AppDbContext db,
+    IClock clock,
     ILogger<EventReminderJob> logger)
 {
     public async Task SendRemindersAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var reminderWindow = now.AddMinutes(30);
 
         var upcomingEvents = await db.Events

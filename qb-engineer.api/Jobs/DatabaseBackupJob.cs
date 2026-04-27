@@ -2,10 +2,13 @@ using System.Diagnostics;
 
 using Npgsql;
 
+using QBEngineer.Core.Interfaces;
+
 namespace QBEngineer.Api.Jobs;
 
 public class DatabaseBackupJob(
     IConfiguration config,
+    IClock clock,
     ILogger<DatabaseBackupJob> logger)
 {
     public async Task RunBackupAsync(CancellationToken ct = default)
@@ -13,7 +16,7 @@ public class DatabaseBackupJob(
         var connectionString = config.GetConnectionString("DefaultConnection") ?? string.Empty;
         var backupOptions = config.GetSection("Backup").Get<DatabaseBackupOptions>() ?? new DatabaseBackupOptions();
 
-        var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd_HHmmss");
+        var timestamp = clock.UtcNow.ToString("yyyyMMdd_HHmmss");
         var fileName = $"qb_engineer_{timestamp}.sql.gz";
         var filePath = Path.Combine(backupOptions.BackupPath, fileName);
 
@@ -69,7 +72,7 @@ public class DatabaseBackupJob(
 
     private void CleanupOldBackups(string backupPath, int retentionDays)
     {
-        var cutoff = DateTimeOffset.UtcNow.AddDays(-retentionDays);
+        var cutoff = clock.UtcNow.AddDays(-retentionDays);
         var backupFiles = Directory.GetFiles(backupPath, "qb_engineer_*.sql*");
 
         foreach (var file in backupFiles)

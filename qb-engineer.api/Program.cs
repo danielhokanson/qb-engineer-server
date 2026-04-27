@@ -967,6 +967,85 @@ try
                                     && e.Status == QBEngineer.Core.Enums.ExpenseStatus.Pending),
             });
         }).RequireAuthorization(p => p.RequireRole("Admin"));
+
+        // ── Dev-only: force-fire a Hangfire job synchronously ─────────────
+        // Lets E2E tests advance the clock then trigger a notification job
+        // immediately, instead of waiting for the next Hangfire tick.
+        // Phase 3 / WU-05 / B1.
+        app.MapPost("/api/v1/dev/jobs/run/{jobName}", async (string jobName, IServiceProvider sp, CancellationToken ct) =>
+        {
+            // Whitelist of jobs that can be force-fired (job class name → entry method).
+            // Restricted to the Hangfire job classes registered in this app.
+            var jobMap = new Dictionary<string, (Type Type, string Method)>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["RecurringOrderJob"]              = (typeof(RecurringOrderJob),              "GenerateDueOrdersAsync"),
+                ["RecurringExpenseJob"]            = (typeof(RecurringExpenseJob),            "GenerateDueExpensesAsync"),
+                ["OverdueInvoiceJob"]              = (typeof(OverdueInvoiceJob),              "MarkOverdueInvoicesAsync"),
+                ["UninvoicedJobNudgeJob"]          = (typeof(UninvoicedJobNudgeJob),          "NudgeUninvoicedJobsAsync"),
+                ["ScheduledTaskJob"]               = (typeof(ScheduledTaskJob),               "RunDueTasksAsync"),
+                ["DailyDigestJob"]                 = (typeof(DailyDigestJob),                 "SendDailyDigestAsync"),
+                ["OverdueMaintenanceJob"]          = (typeof(OverdueMaintenanceJob),          "CheckOverdueMaintenanceAsync"),
+                ["DatabaseBackupJob"]              = (typeof(DatabaseBackupJob),              "RunBackupAsync"),
+                ["IntegrationOutboxDispatcherJob"] = (typeof(IntegrationOutboxDispatcherJob), "DispatchPendingAsync"),
+                ["SyncQueueProcessorJob"]          = (typeof(SyncQueueProcessorJob),          "ProcessQueueAsync"),
+                ["CustomerSyncJob"]                = (typeof(CustomerSyncJob),                "SyncCustomersAsync"),
+                ["AccountingCacheSyncJob"]         = (typeof(AccountingCacheSyncJob),         "RefreshCacheAsync"),
+                ["OrphanDetectionJob"]             = (typeof(OrphanDetectionJob),             "DetectOrphansAsync"),
+                ["ItemSyncJob"]                    = (typeof(ItemSyncJob),                    "SyncItemsAsync"),
+                ["DocumentIndexJob"]               = (typeof(DocumentIndexJob),               "IndexRecentlyUpdatedAsync"),
+                ["ComplianceFormSyncJob"]          = (typeof(ComplianceFormSyncJob),          "SyncFederalFormsAsync"),
+                ["CheckI9OverdueJob"]              = (typeof(CheckI9OverdueJob),              "CheckOverdueSection2Async"),
+                ["CheckI9ReverificationJob"]       = (typeof(CheckI9ReverificationJob),       "CheckReverificationDueAsync"),
+                ["CheckMismatchedClockEventsJob"]  = (typeof(CheckMismatchedClockEventsJob),  "CheckMismatchedEventsAsync"),
+                ["ReorderAnalysisJob"]             = (typeof(ReorderAnalysisJob),             "RunAnalysisAsync"),
+                ["EventReminderJob"]               = (typeof(EventReminderJob),               "SendRemindersAsync"),
+                ["MrpRunJob"]                      = (typeof(MrpRunJob),                      "ExecuteNightlyRunAsync"),
+                ["PollEdiInboundJob"]              = (typeof(PollEdiInboundJob),              "PollAllPartnersAsync"),
+                ["CheckApprovalEscalationsJob"]    = (typeof(CheckApprovalEscalationsJob),    "ExecuteAsync"),
+                ["CheckCreditReviewsDueJob"]       = (typeof(CheckCreditReviewsDueJob),       "ExecuteAsync"),
+                ["RecalculateVendorScorecardsJob"] = (typeof(RecalculateVendorScorecardsJob), "RecalculateAsync"),
+                ["AutoPurchaseOrderJob"]           = (typeof(AutoPurchaseOrderJob),           "Execute"),
+                ["InvoicePastDueCheckJob"]         = (typeof(InvoicePastDueCheckJob),         "Execute"),
+                ["QuoteExpiringCheckJob"]          = (typeof(QuoteExpiringCheckJob),          "Execute"),
+                ["CheckInventoryLevelsJob"]        = (typeof(CheckInventoryLevelsJob),        "Execute"),
+                ["CheckJobCostOverrunJob"]         = (typeof(CheckJobCostOverrunJob),         "Execute"),
+            };
+
+            if (!jobMap.TryGetValue(jobName, out var entry))
+            {
+                return Results.NotFound(new { error = $"Unknown job '{jobName}'", available = jobMap.Keys.OrderBy(k => k) });
+            }
+
+            using var scope = sp.CreateScope();
+            // Some jobs are registered explicitly; others are constructed by Hangfire's
+            // activator on demand. ActivatorUtilities.GetServiceOrCreateInstance covers both.
+            var job = ActivatorUtilities.GetServiceOrCreateInstance(scope.ServiceProvider, entry.Type);
+
+            var method = entry.Type.GetMethod(entry.Method)
+                ?? throw new InvalidOperationException($"Method {entry.Method} not found on {entry.Type.Name}");
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                // Job entry methods take an optional CancellationToken parameter
+                var paramCount = method.GetParameters().Length;
+                var args = paramCount == 1 ? new object[] { ct } : Array.Empty<object>();
+                var result = method.Invoke(job, args);
+                if (result is Task task)
+                {
+                    await task;
+                }
+                sw.Stop();
+                return Results.Ok(new { job = jobName, elapsedMs = sw.ElapsedMilliseconds });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                Log.Warning(ex, "Dev job-run failed for {Job}", jobName);
+                var inner = ex is System.Reflection.TargetInvocationException tie ? tie.InnerException ?? ex : ex;
+                return Results.Problem(inner.Message, statusCode: 500, title: $"Job {jobName} failed");
+            }
+        }).RequireAuthorization(p => p.RequireRole("Admin"));
     }
 
     app.UseSession();

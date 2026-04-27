@@ -9,6 +9,7 @@ public class DailyDigestJob(
     AppDbContext db,
     IIntegrationOutboxService outbox,
     ISystemSettingRepository settings,
+    IClock clock,
     ILogger<DailyDigestJob> logger)
 {
     public async Task SendDailyDigestAsync(CancellationToken ct = default)
@@ -22,7 +23,7 @@ public class DailyDigestJob(
             .Select(u => new { u.Id, u.Email, u.FirstName })
             .ToListAsync(ct);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var yesterday = now.AddDays(-1);
 
         foreach (var user in users)

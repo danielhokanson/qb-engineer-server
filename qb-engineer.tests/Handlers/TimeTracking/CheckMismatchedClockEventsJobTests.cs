@@ -33,7 +33,10 @@ public class CheckMismatchedClockEventsJobTests
                 new("LunchEnd", "End Lunch", "In", "LunchStart", "lunch", true, false, "play_arrow", "#22c55e"),
             });
 
-        _job = new CheckMismatchedClockEventsJob(_db, clockEventTypeService.Object, logger.Object);
+        var clock = new Mock<IClock>();
+        clock.Setup(c => c.UtcNow).Returns(() => DateTimeOffset.UtcNow);
+
+        _job = new CheckMismatchedClockEventsJob(_db, clockEventTypeService.Object, clock.Object, logger.Object);
     }
 
     private async Task<ApplicationUser> SeedUser(string first, string last)

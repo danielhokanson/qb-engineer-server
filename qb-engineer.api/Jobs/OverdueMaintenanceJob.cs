@@ -5,6 +5,7 @@ using MediatR;
 
 using QBEngineer.Api.Features.Notifications;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -14,11 +15,12 @@ public class OverdueMaintenanceJob(
     AppDbContext db,
     UserManager<ApplicationUser> userManager,
     ISender mediator,
+    IClock clock,
     ILogger<OverdueMaintenanceJob> logger)
 {
     public async Task CheckOverdueMaintenanceAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
 
         var overdueSchedules = await db.MaintenanceSchedules
             .Include(s => s.Asset)

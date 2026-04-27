@@ -11,6 +11,7 @@ public class DocumentIndexJob(
     AppDbContext db,
     IMediator mediator,
     IAiService aiService,
+    IClock clock,
     ILogger<DocumentIndexJob> logger)
 {
     private static readonly string[] SupportedEntityTypes = ["Job", "Part", "Customer", "Asset"];
@@ -45,7 +46,7 @@ public class DocumentIndexJob(
             return;
         }
 
-        var since = DateTimeOffset.UtcNow.AddMinutes(-35); // Overlap slightly to avoid gaps
+        var since = clock.UtcNow.AddMinutes(-35); // Overlap slightly to avoid gaps
         var totalIndexed = 0;
 
         foreach (var entityType in SupportedEntityTypes)

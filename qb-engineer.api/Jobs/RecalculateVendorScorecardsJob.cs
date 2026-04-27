@@ -8,11 +8,12 @@ namespace QBEngineer.Api.Jobs;
 /// </summary>
 public class RecalculateVendorScorecardsJob(
     IVendorScorecardService scorecardService,
+    IClock clock,
     ILogger<RecalculateVendorScorecardsJob> logger)
 {
     public async Task RecalculateAsync(CancellationToken ct = default)
     {
-        var periodEnd = DateOnly.FromDateTime(DateTime.UtcNow);
+        var periodEnd = DateOnly.FromDateTime(clock.UtcNow.UtcDateTime);
         var periodStart = periodEnd.AddMonths(-12);
 
         logger.LogInformation(

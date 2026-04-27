@@ -13,11 +13,13 @@ namespace QBEngineer.Api.Jobs;
 public class CheckMismatchedClockEventsJob(
     AppDbContext db,
     IClockEventTypeService clockEventTypeService,
+    IClock clock,
     ILogger<CheckMismatchedClockEventsJob> logger)
 {
     public async Task CheckMismatchedEventsAsync(CancellationToken ct = default)
     {
-        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+        var now = clock.UtcNow;
+        var yesterday = DateOnly.FromDateTime(now.UtcDateTime.AddDays(-1));
         var dayStart = yesterday.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var dayEnd = yesterday.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
@@ -64,7 +66,7 @@ public class CheckMismatchedClockEventsJob(
         var existingNotifications = await db.Notifications
             .Where(n => n.Type == "mismatched_clock_event"
                 && mismatchedUserIds.Contains(n.UserId)
-                && n.CreatedAt >= dayStart && n.CreatedAt <= DateTimeOffset.UtcNow)
+                && n.CreatedAt >= dayStart && n.CreatedAt <= now)
             .Select(n => n.UserId)
             .ToListAsync(ct);
 

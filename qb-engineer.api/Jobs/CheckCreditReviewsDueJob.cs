@@ -1,16 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
 
 public class CheckCreditReviewsDueJob(
     AppDbContext db,
+    IClock clock,
     ILogger<CheckCreditReviewsDueJob> logger)
 {
     public async Task ExecuteAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
 
         var dueCustomers = await db.Customers
             .AsNoTracking()

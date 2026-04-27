@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Jobs;
 /// </summary>
 public class ReorderAnalysisJob(
     AppDbContext db,
+    IClock clock,
     ILogger<ReorderAnalysisJob> logger)
 {
     private const int ChunkSize = 500;
@@ -29,7 +31,7 @@ public class ReorderAnalysisJob(
 
     public async Task RunAnalysisAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var cutoff90 = now.AddDays(-90);
 
         logger.LogInformation("[ReorderAnalysis] Starting daily reorder analysis at {Time}", now);

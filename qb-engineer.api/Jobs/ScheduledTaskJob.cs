@@ -1,15 +1,16 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QBEngineer.Api.Features.ScheduledTasks;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
 
-public class ScheduledTaskJob(AppDbContext db, IMediator mediator, ILogger<ScheduledTaskJob> logger)
+public class ScheduledTaskJob(AppDbContext db, IMediator mediator, IClock clock, ILogger<ScheduledTaskJob> logger)
 {
     public async Task RunDueTasksAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var dueTasks = await db.ScheduledTasks
             .Where(t => t.IsActive && t.DeletedAt == null && t.NextRunAt <= now)
             .ToListAsync(ct);

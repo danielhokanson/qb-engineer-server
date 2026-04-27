@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Api.Features.Notifications;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -13,11 +14,12 @@ public class UninvoicedJobNudgeJob(
     AppDbContext db,
     UserManager<ApplicationUser> userManager,
     IMediator mediator,
+    IClock clock,
     ILogger<UninvoicedJobNudgeJob> logger)
 {
     public async Task NudgeUninvoicedJobsAsync(CancellationToken ct = default)
     {
-        var cutoff = DateTimeOffset.UtcNow.AddDays(-3);
+        var cutoff = clock.UtcNow.AddDays(-3);
 
         var uninvoicedCount = await db.Jobs
             .Where(j => j.CompletedDate != null && !j.IsArchived)

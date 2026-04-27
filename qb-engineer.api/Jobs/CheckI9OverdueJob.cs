@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
@@ -12,11 +13,12 @@ namespace QBEngineer.Api.Jobs;
 /// </summary>
 public class CheckI9OverdueJob(
     AppDbContext db,
+    IClock clock,
     ILogger<CheckI9OverdueJob> logger)
 {
     public async Task CheckOverdueSection2Async(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
 
         var overdue = await db.ComplianceFormSubmissions
             .Include(s => s.Template)

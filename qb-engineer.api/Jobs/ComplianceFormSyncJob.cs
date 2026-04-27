@@ -11,6 +11,7 @@ public class ComplianceFormSyncJob(
     AppDbContext db,
     IDocumentSigningService signingService,
     IHttpClientFactory httpClientFactory,
+    IClock clock,
     ILogger<ComplianceFormSyncJob> logger)
 {
     public async Task SyncFederalFormsAsync(CancellationToken ct = default)
@@ -68,7 +69,7 @@ public class ComplianceFormSyncJob(
 
                 template.DocuSealTemplateId = docuSealTemplateId;
                 template.Sha256Hash = hash;
-                template.LastSyncedAt = DateTimeOffset.UtcNow;
+                template.LastSyncedAt = clock.UtcNow;
                 synced++;
 
                 logger.LogInformation("Synced template {Name} → DocuSeal template {Id}", template.Name, docuSealTemplateId);

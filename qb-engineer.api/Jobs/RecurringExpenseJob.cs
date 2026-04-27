@@ -1,17 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
 
 public class RecurringExpenseJob(
     AppDbContext db,
+    IClock clock,
     ILogger<RecurringExpenseJob> logger)
 {
     public async Task GenerateDueExpensesAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var dueExpenses = await db.RecurringExpenses
             .Where(r => r.IsActive && r.NextOccurrenceDate <= now)
             .Where(r => r.EndDate == null || r.EndDate > now)

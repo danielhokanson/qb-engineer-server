@@ -1,17 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
 
 public class RecurringOrderJob(
     AppDbContext db,
+    IClock clock,
     ILogger<RecurringOrderJob> logger)
 {
     public async Task GenerateDueOrdersAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var dueOrders = await db.RecurringOrders
             .Include(ro => ro.Lines)
             .Where(ro => ro.IsActive && ro.NextGenerationDate <= now)
@@ -27,7 +29,7 @@ public class RecurringOrderJob(
         {
             var salesOrder = new Core.Entities.SalesOrder
             {
-                OrderNumber = $"SO-AUTO-{DateTimeOffset.UtcNow:yyyyMMdd}-{recurring.Id}",
+                OrderNumber = $"SO-AUTO-{now:yyyyMMdd}-{recurring.Id}",
                 CustomerId = recurring.CustomerId,
                 ShippingAddressId = recurring.ShippingAddressId,
                 Status = SalesOrderStatus.Draft,

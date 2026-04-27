@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
@@ -12,13 +13,14 @@ namespace QBEngineer.Api.Jobs;
 /// </summary>
 public class CheckI9ReverificationJob(
     AppDbContext db,
+    IClock clock,
     ILogger<CheckI9ReverificationJob> logger)
 {
     private static readonly TimeSpan WarningWindow = TimeSpan.FromDays(90);
 
     public async Task CheckReverificationDueAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var warningCutoff = now.Add(WarningWindow);
 
         // Documents overdue or expiring within 90 days

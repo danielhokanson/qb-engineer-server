@@ -1,17 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Jobs;
 
 public class OverdueInvoiceJob(
     AppDbContext db,
+    IClock clock,
     ILogger<OverdueInvoiceJob> logger)
 {
     public async Task MarkOverdueInvoicesAsync(CancellationToken ct = default)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var overdueInvoices = await db.Invoices
             .Where(i => i.Status == InvoiceStatus.Sent && i.DueDate < now)
             .ToListAsync(ct);
