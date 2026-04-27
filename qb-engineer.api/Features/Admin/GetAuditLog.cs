@@ -35,21 +35,26 @@ public class GetAuditLogHandler(AppDbContext db) : IRequestHandler<GetAuditLogQu
 
         var totalCount = await query.CountAsync(ct);
 
-        var entries = await query
-            .OrderByDescending(a => a.CreatedAt)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .Join(db.Users, a => a.UserId, u => u.Id, (a, u) => new AuditLogEntryResponseModel(
+        // Left-join to Users so audit rows for unknown/system actors (UserId=0)
+        // and rows whose user has been hard-deleted still surface in the result.
+        var entries = await (
+            from a in query
+                .OrderByDescending(a => a.CreatedAt)
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+            join u in db.Users on a.UserId equals u.Id into uj
+            from u in uj.DefaultIfEmpty()
+            select new AuditLogEntryResponseModel(
                 a.Id,
                 a.UserId,
-                (u.FirstName + " " + u.LastName).Trim(),
+                u != null ? (u.FirstName + " " + u.LastName).Trim() : string.Empty,
                 a.Action,
                 a.EntityType,
                 a.EntityId,
                 a.Details,
                 a.IpAddress,
-                a.CreatedAt))
-            .ToListAsync(ct);
+                a.CreatedAt)
+        ).ToListAsync(ct);
 
         var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
         return new PaginatedResult<AuditLogEntryResponseModel>(entries, request.Page, request.PageSize, totalCount, totalPages);

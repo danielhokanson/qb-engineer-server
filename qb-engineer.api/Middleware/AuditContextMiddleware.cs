@@ -5,7 +5,8 @@ using QBEngineer.Data.Context;
 namespace QBEngineer.Api.Middleware;
 
 /// <summary>
-/// Sets the CurrentUserId on AppDbContext for automatic audit logging.
+/// Sets the CurrentUserId, CurrentIpAddress, and CurrentUserAgent on AppDbContext
+/// for automatic activity-log + system-wide audit-log writes.
 /// Must run after UseAuthentication/UseAuthorization.
 /// </summary>
 public class AuditContextMiddleware(RequestDelegate next)
@@ -16,6 +17,15 @@ public class AuditContextMiddleware(RequestDelegate next)
         if (int.TryParse(userIdClaim, out var userId))
         {
             db.CurrentUserId = userId;
+        }
+
+        db.CurrentIpAddress = context.Connection.RemoteIpAddress?.ToString();
+
+        var userAgent = context.Request.Headers.UserAgent.ToString();
+        if (!string.IsNullOrEmpty(userAgent))
+        {
+            // audit_log_entries.user_agent is varchar(500); truncate defensively
+            db.CurrentUserAgent = userAgent.Length > 500 ? userAgent[..500] : userAgent;
         }
 
         await next(context);

@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using QBEngineer.Api.Features.Auth;
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -12,6 +13,7 @@ public class ChangePasswordHandlerTests
 {
     private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
     private readonly Mock<ISessionStore> _sessionStoreMock;
+    private readonly Mock<ISystemAuditWriter> _auditWriterMock;
     private readonly ChangePasswordHandler _handler;
     private readonly Faker _faker = new();
 
@@ -21,8 +23,9 @@ public class ChangePasswordHandlerTests
             Mock.Of<IUserStore<ApplicationUser>>(), null!, null!, null!, null!, null!, null!, null!, null!);
 
         _sessionStoreMock = new Mock<ISessionStore>();
+        _auditWriterMock = new Mock<ISystemAuditWriter>();
 
-        _handler = new ChangePasswordHandler(_userManagerMock.Object, _sessionStoreMock.Object);
+        _handler = new ChangePasswordHandler(_userManagerMock.Object, _sessionStoreMock.Object, _auditWriterMock.Object);
     }
 
     [Fact]

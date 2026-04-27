@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -29,7 +30,10 @@ public class UpdateAdminUserValidator : AbstractValidator<UpdateAdminUserCommand
     }
 }
 
-public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, AppDbContext db)
+public class UpdateAdminUserHandler(
+    UserManager<ApplicationUser> userManager,
+    AppDbContext db,
+    ISystemAuditWriter auditWriter)
     : IRequestHandler<UpdateAdminUserCommand, AdminUserResponseModel>
 {
     public async Task<AdminUserResponseModel> Handle(UpdateAdminUserCommand request, CancellationToken cancellationToken)
@@ -59,6 +63,31 @@ public class UpdateAdminUserHandler(UserManager<ApplicationUser> userManager, Ap
             var currentRoles = await userManager.GetRolesAsync(user);
             await userManager.RemoveFromRolesAsync(user, currentRoles);
             await userManager.AddToRoleAsync(user, request.Role);
+
+            // Cross-entity audit row: role change is system-wide audit only.
+            await auditWriter.WriteAsync("RoleAssigned", db.CurrentUserId ?? 0,
+                entityType: "ApplicationUser",
+                entityId: user.Id,
+                details: System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    targetUserId = user.Id,
+                    fromRoles = currentRoles.ToArray(),
+                    toRole = request.Role,
+                }),
+                ct: cancellationToken);
+        }
+
+        if (request.IsActive.HasValue)
+        {
+            // Activation/deactivation is captured by per-entity SaveChanges
+            // already, but the explicit DEACTIVATED action is high-signal —
+            // surface it as a discrete system-wide row too.
+            await auditWriter.WriteAsync(
+                request.IsActive.Value ? "UserActivated" : "UserDeactivated",
+                db.CurrentUserId ?? 0,
+                entityType: "ApplicationUser",
+                entityId: user.Id,
+                ct: cancellationToken);
         }
 
         var roles = await userManager.GetRolesAsync(user);

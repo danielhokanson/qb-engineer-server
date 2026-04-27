@@ -279,6 +279,7 @@ try
     builder.Services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
     builder.Services.AddSingleton<ITokenService, JwtTokenService>();
     builder.Services.AddSingleton<ISessionStore, SessionStore>();
+    builder.Services.AddScoped<ISystemAuditWriter, SystemAuditWriter>();
     builder.Services.AddMemoryCache();
     builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
     builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();
@@ -959,6 +960,11 @@ try
     app.UseSession();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // Sets AppDbContext.CurrentUserId from authenticated claims so
+    // automatic activity-log + audit-log writes can attribute the actor.
+    // Must run AFTER UseAuthentication / UseAuthorization. (Phase 3 / WU-03 / A2)
+    app.UseMiddleware<AuditContextMiddleware>();
 
     app.MapControllers();
     app.MapGet("/api/v1/version", async () =>

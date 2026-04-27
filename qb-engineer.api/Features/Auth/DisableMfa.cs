@@ -2,13 +2,16 @@ using System.Security.Claims;
 
 using MediatR;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 
 namespace QBEngineer.Api.Features.Auth;
 
 public record DisableMfaCommand(ClaimsPrincipal User) : IRequest;
 
-public class DisableMfaHandler(IMfaService mfaService) : IRequestHandler<DisableMfaCommand>
+public class DisableMfaHandler(
+    IMfaService mfaService,
+    ISystemAuditWriter auditWriter) : IRequestHandler<DisableMfaCommand>
 {
     public async Task Handle(DisableMfaCommand request, CancellationToken cancellationToken)
     {
@@ -16,5 +19,10 @@ public class DisableMfaHandler(IMfaService mfaService) : IRequestHandler<Disable
             ?? throw new UnauthorizedAccessException());
 
         await mfaService.DisableMfaAsync(userId, cancellationToken);
+
+        await auditWriter.WriteAsync("MfaDisabled", userId,
+            entityType: "ApplicationUser",
+            entityId: userId,
+            ct: cancellationToken);
     }
 }

@@ -21,6 +21,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public int? CurrentUserId { get; set; }
 
     /// <summary>
+    /// Set by middleware. Captured into system-wide audit_log_entries.ip_address.
+    /// </summary>
+    public string? CurrentIpAddress { get; set; }
+
+    /// <summary>
+    /// Set by middleware. Captured into system-wide audit_log_entries.user_agent.
+    /// </summary>
+    public string? CurrentUserAgent { get; set; }
+
+    /// <summary>
     /// When true, automatic audit logging is suppressed (e.g., during seed operations).
     /// </summary>
     public bool SuppressAudit { get; set; }
@@ -445,21 +455,29 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
         _isCapturingAudit = true;
         try
         {
-            var (readyLogs, pendingAdded) = CaptureAuditEntries();
+            var (readyLogs, pendingAdded, readyAuditLogs, pendingAuditAdded) = CaptureAuditEntries();
 
-            // Add audit logs for Modified/Deleted entities (already have IDs)
+            // Add per-entity activity logs and system-wide audit-log entries for
+            // Modified/Deleted entities (already have IDs).
             foreach (var log in readyLogs)
                 ActivityLogs.Add(log);
+            foreach (var auditLog in readyAuditLogs)
+                AuditLogEntries.Add(auditLog);
 
             var result = await base.SaveChangesAsync(cancellationToken);
 
-            // Now handle Added entities — IDs are populated after first save
-            if (pendingAdded.Count > 0)
+            // Now handle Added entities — IDs are populated after first save.
+            if (pendingAdded.Count > 0 || pendingAuditAdded.Count > 0)
             {
                 foreach (var (entity, log) in pendingAdded)
                 {
                     log.EntityId = entity.Id;
                     ActivityLogs.Add(log);
+                }
+                foreach (var (entity, auditLog) in pendingAuditAdded)
+                {
+                    auditLog.EntityId = entity.Id;
+                    AuditLogEntries.Add(auditLog);
                 }
                 await base.SaveChangesAsync(cancellationToken);
             }
@@ -504,13 +522,27 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
         nameof(BaseEntity.Id),
     };
 
-    private (List<ActivityLog> readyLogs, List<(BaseAuditableEntity entity, ActivityLog log)> pendingAdded) CaptureAuditEntries()
+    private (
+        List<ActivityLog> readyLogs,
+        List<(BaseAuditableEntity entity, ActivityLog log)> pendingAdded,
+        List<AuditLogEntry> readyAuditLogs,
+        List<(BaseAuditableEntity entity, AuditLogEntry auditLog)> pendingAuditAdded
+    ) CaptureAuditEntries()
     {
         var readyLogs = new List<ActivityLog>();
         var pendingAdded = new List<(BaseAuditableEntity, ActivityLog)>();
+        var readyAuditLogs = new List<AuditLogEntry>();
+        var pendingAuditAdded = new List<(BaseAuditableEntity, AuditLogEntry)>();
 
         var userId = GetCurrentUserId();
+        var ipAddress = CurrentIpAddress;
+        var userAgent = CurrentUserAgent;
         var now = _clock.UtcNow;
+
+        // Per-request collected field changes (for synthesised system-wide
+        // "<Entity>Updated" rows that summarise the diff in one entry).
+        // entityType+entityId -> list of (FieldName, OldValue, NewValue)
+        var modifiedDiffs = new Dictionary<(string entityType, int entityId), List<(string Field, string Old, string New)>>();
 
         foreach (var entry in ChangeTracker.Entries<BaseAuditableEntity>())
         {
@@ -533,6 +565,24 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
                         CreatedAt = now,
                     };
                     pendingAdded.Add((entry.Entity, log));
+
+                    // System-wide audit log row (only if we have an authenticated actor;
+                    // seed/system operations skip the audit log).
+                    if (userId is int auditUid)
+                    {
+                        var auditLog = new AuditLogEntry
+                        {
+                            UserId = auditUid,
+                            Action = $"{entityType}Created",
+                            EntityType = entityType,
+                            EntityId = 0, // populated after save
+                            Details = SafeSerialize(BuildEntitySnapshot(entry, useCurrentValues: true)),
+                            IpAddress = ipAddress,
+                            UserAgent = userAgent,
+                            CreatedAt = now,
+                        };
+                        pendingAuditAdded.Add((entry.Entity, auditLog));
+                    }
                     break;
                 }
 
@@ -551,6 +601,21 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
                             Description = $"{FormatEntityTypeName(entityType)} deleted",
                             CreatedAt = now,
                         });
+
+                        if (userId is int delUid)
+                        {
+                            readyAuditLogs.Add(new AuditLogEntry
+                            {
+                                UserId = delUid,
+                                Action = $"{entityType}Deleted",
+                                EntityType = entityType,
+                                EntityId = entry.Entity.Id,
+                                Details = null,
+                                IpAddress = ipAddress,
+                                UserAgent = userAgent,
+                                CreatedAt = now,
+                            });
+                        }
                         break;
                     }
 
@@ -578,14 +643,91 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
                             NewValue = newVal,
                             CreatedAt = now,
                         });
+
+                        var key = (entityType, entry.Entity.Id);
+                        if (!modifiedDiffs.TryGetValue(key, out var list))
+                        {
+                            list = new List<(string, string, string)>();
+                            modifiedDiffs[key] = list;
+                        }
+                        list.Add((prop.Metadata.Name, oldVal, newVal));
                     }
                     break;
                 }
             }
         }
 
-        return (readyLogs, pendingAdded);
+        // Emit one system-wide AuditLogEntry per modified entity (collapsing
+        // per-field ActivityLog rows into a single audit row with a JSON diff
+        // payload — better signal for compliance/security review).
+        if (userId is int updUid)
+        {
+            foreach (var ((entityType, entityId), diffs) in modifiedDiffs)
+            {
+                if (diffs.Count == 0) continue;
+                var details = SafeSerialize(diffs.Select(d => new
+                {
+                    field = d.Field,
+                    oldValue = d.Old,
+                    newValue = d.New,
+                }));
+
+                readyAuditLogs.Add(new AuditLogEntry
+                {
+                    UserId = updUid,
+                    Action = $"{entityType}Updated",
+                    EntityType = entityType,
+                    EntityId = entityId,
+                    Details = details,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    CreatedAt = now,
+                });
+            }
+        }
+
+        return (readyLogs, pendingAdded, readyAuditLogs, pendingAuditAdded);
     }
+
+    private static Dictionary<string, object?> BuildEntitySnapshot(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<BaseAuditableEntity> entry,
+        bool useCurrentValues)
+    {
+        var snapshot = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var prop in entry.Properties)
+        {
+            if (AuditExcludedProperties.Contains(prop.Metadata.Name)) continue;
+            if (prop.Metadata.IsShadowProperty()) continue;
+            var value = useCurrentValues ? prop.CurrentValue : prop.OriginalValue;
+            snapshot[prop.Metadata.Name] = value switch
+            {
+                DateTimeOffset dto => dto.ToString("yyyy-MM-dd HH:mm:ssK"),
+                DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss"),
+                _ => value,
+            };
+        }
+        return snapshot;
+    }
+
+    private static string? SafeSerialize(object? value)
+    {
+        if (value == null) return null;
+        try
+        {
+            return System.Text.Json.JsonSerializer.Serialize(value, _auditJsonOptions);
+        }
+        catch
+        {
+            return value.ToString();
+        }
+    }
+
+    private static readonly System.Text.Json.JsonSerializerOptions _auditJsonOptions = new()
+    {
+        WriteIndented = false,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
 
     private int? GetCurrentUserId() => CurrentUserId;
 

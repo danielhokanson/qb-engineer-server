@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using QBEngineer.Api.Features.Auth;
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 using QBEngineer.Tests.Helpers;
@@ -16,6 +17,7 @@ public class LoginHandlerTests
     private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly Mock<ISessionStore> _sessionStoreMock;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
+    private readonly Mock<ISystemAuditWriter> _auditWriterMock;
     private readonly AppDbContext _db;
     private readonly LoginHandler _handler;
     private readonly Faker _faker = new();
@@ -28,11 +30,13 @@ public class LoginHandlerTests
         _tokenServiceMock = new Mock<ITokenService>();
         _sessionStoreMock = new Mock<ISessionStore>();
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        _auditWriterMock = new Mock<ISystemAuditWriter>();
 
         _db = TestDbContextFactory.Create();
         _handler = new LoginHandler(
             _userManagerMock.Object, _tokenServiceMock.Object,
-            _sessionStoreMock.Object, _httpContextAccessorMock.Object, _db);
+            _sessionStoreMock.Object, _httpContextAccessorMock.Object, _db,
+            _auditWriterMock.Object);
     }
 
     [Fact]

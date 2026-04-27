@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
 
@@ -44,7 +45,8 @@ public class LoginHandler(
     ITokenService tokenService,
     ISessionStore sessionStore,
     IHttpContextAccessor httpContext,
-    AppDbContext db)
+    AppDbContext db,
+    ISystemAuditWriter auditWriter)
     : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -52,12 +54,38 @@ public class LoginHandler(
         var user = await userManager.FindByEmailAsync(request.Email);
 
         if (user is null || !user.IsActive)
+        {
+            // Audit failed login (cross-entity event). UserId is the matched
+            // user's id when known by email (even if inactive), 0 otherwise.
+            var attemptedUserId = user?.Id ?? 0;
+            var failDetails = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                email = request.Email,
+                reason = user is null ? "user-not-found" : "user-inactive",
+            });
+            await auditWriter.WriteAsync("UserLoginFailed", attemptedUserId,
+                entityType: "ApplicationUser",
+                entityId: user?.Id,
+                details: failDetails,
+                ct: cancellationToken);
             throw new UnauthorizedAccessException("Invalid credentials");
+        }
 
         var passwordValid = await userManager.CheckPasswordAsync(user, request.Password);
 
         if (!passwordValid)
+        {
+            await auditWriter.WriteAsync("UserLoginFailed", user.Id,
+                entityType: "ApplicationUser",
+                entityId: user.Id,
+                details: System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    email = request.Email,
+                    reason = "invalid-password",
+                }),
+                ct: cancellationToken);
             throw new UnauthorizedAccessException("Invalid credentials");
+        }
 
         // Check if MFA is required
         if (user.MfaEnabled)
@@ -83,6 +111,16 @@ public class LoginHandler(
             cancellationToken);
 
         var profileComplete = await CheckProfileComplete(user.Id, cancellationToken);
+
+        await auditWriter.WriteAsync("UserLoggedIn", user.Id,
+            entityType: "ApplicationUser",
+            entityId: user.Id,
+            details: System.Text.Json.JsonSerializer.Serialize(new
+            {
+                email = user.Email,
+                method = "credentials",
+            }),
+            ct: cancellationToken);
 
         var userResponse = new AuthUserResponseModel(
             user.Id,

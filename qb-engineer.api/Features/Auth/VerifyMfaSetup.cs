@@ -3,6 +3,7 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -19,13 +20,26 @@ public class VerifyMfaSetupValidator : AbstractValidator<VerifyMfaSetupCommand>
     }
 }
 
-public class VerifyMfaSetupHandler(IMfaService mfaService) : IRequestHandler<VerifyMfaSetupCommand, bool>
+public class VerifyMfaSetupHandler(
+    IMfaService mfaService,
+    ISystemAuditWriter auditWriter) : IRequestHandler<VerifyMfaSetupCommand, bool>
 {
     public async Task<bool> Handle(VerifyMfaSetupCommand request, CancellationToken cancellationToken)
     {
         var userId = int.Parse(request.User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? throw new UnauthorizedAccessException());
 
-        return await mfaService.VerifyTotpSetupAsync(userId, request.DeviceId, request.Code, cancellationToken);
+        var result = await mfaService.VerifyTotpSetupAsync(userId, request.DeviceId, request.Code, cancellationToken);
+
+        if (result)
+        {
+            await auditWriter.WriteAsync("MfaEnabled", userId,
+                entityType: "ApplicationUser",
+                entityId: userId,
+                details: System.Text.Json.JsonSerializer.Serialize(new { deviceId = request.DeviceId }),
+                ct: cancellationToken);
+        }
+
+        return result;
     }
 }
