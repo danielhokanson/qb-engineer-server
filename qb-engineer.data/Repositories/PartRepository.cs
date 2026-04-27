@@ -152,7 +152,12 @@ public class PartRepository(AppDbContext db) : IPartRepository
             _ => "PRT-",
         };
 
+        // IgnoreQueryFilters() so soft-deleted parts are also considered when
+        // computing the next sequential number. The unique index ix_parts_part_number
+        // covers ALL rows (including soft-deleted), so reusing a soft-deleted
+        // suffix would 23505 the INSERT. (Phase 3 F6.)
         var suffixes = await db.Parts
+            .IgnoreQueryFilters()
             .Where(p => p.PartNumber.StartsWith(prefix))
             .Select(p => p.PartNumber.Substring(prefix.Length))
             .ToListAsync(ct);

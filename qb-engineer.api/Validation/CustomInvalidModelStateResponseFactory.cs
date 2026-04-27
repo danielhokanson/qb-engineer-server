@@ -154,6 +154,25 @@ public static class CustomInvalidModelStateResponseFactory
             return "Identifier is not valid";
         }
 
+        // Enum-binding failures — System.Text.Json's JsonStringEnumConverter throws
+        // a generic "could not be converted to <Namespace>.<EnumType>" when the
+        // supplied string is not a member. The outer wrapper ("could not be
+        // converted to <RequestModel>") is unhelpful too; the inner exception's
+        // first line is the same shape but on the actual enum type. (Phase 3 F6.)
+        if (cleaned.Contains("could not be converted to QBEngineer.Core.Enums.", StringComparison.Ordinal))
+        {
+            return "Value is not one of the allowed values";
+        }
+
+        // The outer model-record conversion failure is what the user sees when
+        // any nested field (most commonly an enum) fails to convert. Without a
+        // dedicated message it leaks "QBEngineer.Core.Models.<RequestModel>" to
+        // users. (Phase 3 F6.)
+        if (cleaned.Contains("could not be converted to QBEngineer.Core.Models.", StringComparison.Ordinal))
+        {
+            return "One or more fields contain an invalid value";
+        }
+
         // Required-body family
         if (cleaned.Contains("non-empty request body is required", StringComparison.OrdinalIgnoreCase))
         {
