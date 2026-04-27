@@ -37,7 +37,9 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using QBEngineer.Api.HealthChecks;
 using Scalar.AspNetCore;
 using QBEngineer.Api.Extensions;
+using QBEngineer.Api.Validation;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -518,6 +520,14 @@ try
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             options.JsonSerializerOptions.Converters.Add(new QBEngineer.Api.Converters.FlexibleDateOnlyConverter());
         });
+
+    // Custom model-binding error envelope (Phase 3 H6) — replaces ASP.NET Core's
+    // default "JSON value could not be converted..." text with structured errors.
+    builder.Services.Configure<ApiBehaviorOptions>(options =>
+    {
+        options.InvalidModelStateResponseFactory = CustomInvalidModelStateResponseFactory.Create();
+    });
+
     builder.Services.AddOpenApi();
 
     // CORS — read allowed origins from CORS_ORIGINS env var (comma-separated),
