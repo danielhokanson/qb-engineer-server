@@ -19,5 +19,8 @@ public class SalesTaxRateConfiguration : IEntityTypeConfiguration<SalesTaxRate>
         builder.HasIndex(e => e.Code).IsUnique();
         builder.HasIndex(e => e.StateCode);
         builder.HasIndex(e => new { e.StateCode, e.EffectiveTo });
+
+        // Phase 3 F5 — full-record fields. GlPostingAccount bounded to 100 chars.
+        builder.Property(e => e.GlPostingAccount).HasMaxLength(100);
     }
 }

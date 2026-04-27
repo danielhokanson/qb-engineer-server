@@ -56,10 +56,13 @@ public class CustomerRepository(AppDbContext db) : ICustomerRepository
 
     public async Task<Customer?> FindWithDetailsAsync(int id, CancellationToken ct)
     {
+        // Phase 3 F3 — also pull addresses so the detail GET surfaces the
+        // billing/shipping data the create-with-full-record path persisted.
         return await db.Customers
             .Include(c => c.Contacts.Where(ct => ct.DeletedAt == null))
             .Include(c => c.Jobs.Where(j => j.DeletedAt == null))
                 .ThenInclude(j => j.CurrentStage)
+            .Include(c => c.Addresses.Where(a => a.DeletedAt == null))
             .FirstOrDefaultAsync(c => c.Id == id, ct);
     }
 

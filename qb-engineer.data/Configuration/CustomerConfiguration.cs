@@ -27,5 +27,13 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         // Indexed because audit reports commonly filter "exempt customers only".
         builder.Property(e => e.TaxExemptionId).HasMaxLength(50);
         builder.HasIndex(e => e.IsTaxExempt);
+
+        // Phase 3 F3 — default tax/currency captured at create-time.
+        builder.Property(e => e.DefaultCurrency).HasMaxLength(3);
+        builder.HasOne(e => e.DefaultTaxCode)
+            .WithMany()
+            .HasForeignKey(e => e.DefaultTaxCodeId)
+            .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(e => e.DefaultTaxCodeId);
     }
 }

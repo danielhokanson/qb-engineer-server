@@ -38,8 +38,18 @@ public class CustomersController(IMediator mediator) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CustomerListItemModel>> CreateCustomer(CreateCustomerRequestModel request)
     {
+        // Phase 3 F3 — pass through the new full-record fields. The first four
+        // positional args preserve the original signature for compile parity
+        // across callers; everything past that is named.
         var result = await mediator.Send(new CreateCustomerCommand(
-            request.Name, request.CompanyName, request.Email, request.Phone));
+            request.Name, request.CompanyName, request.Email, request.Phone,
+            IsTaxExempt: request.IsTaxExempt,
+            TaxExemptionId: request.TaxExemptionId,
+            CreditLimit: request.CreditLimit,
+            DefaultTaxCodeId: request.DefaultTaxCodeId,
+            DefaultCurrency: request.DefaultCurrency,
+            BillingAddress: request.BillingAddress,
+            ShippingAddress: request.ShippingAddress));
         return CreatedAtAction(nameof(GetCustomer), new { id = result.Id }, result);
     }
 

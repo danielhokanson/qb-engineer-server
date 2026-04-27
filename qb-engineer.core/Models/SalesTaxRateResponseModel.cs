@@ -10,4 +10,8 @@ public record SalesTaxRateResponseModel(
     DateTimeOffset? EffectiveTo,
     bool IsDefault,
     bool IsActive,
-    string? Description);
+    string? Description,
+    // Phase 3 F5 — surface full-record fields on the response so a POST-with-
+    // everything can be verified via a GET round-trip.
+    bool ExemptFlag = false,
+    string? GlPostingAccount = null);

@@ -32,5 +32,17 @@ public class AssetConfiguration : IEntityTypeConfiguration<Asset>
             .WithMany()
             .HasForeignKey(e => e.SourcePartId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Phase 3 F4 — full-record fields. AcquisitionCost stored at money
+        // precision (18,2); GlAccount bounded to 100 chars same as the
+        // sales-tax GL posting field.
+        builder.Property(e => e.AcquisitionCost).HasPrecision(18, 2);
+        builder.Property(e => e.GlAccount).HasMaxLength(100);
+
+        builder.HasOne(e => e.WorkCenter)
+            .WithMany()
+            .HasForeignKey(e => e.WorkCenterId)
+            .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(e => e.WorkCenterId);
     }
 }

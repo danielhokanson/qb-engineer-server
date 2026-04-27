@@ -39,7 +39,7 @@ public class GetTaxRateForCustomerHandler(AppDbContext db)
                 .OrderByDescending(r => r.EffectiveFrom)
                 .Select(r => new SalesTaxRateResponseModel(
                     r.Id, r.Name, r.Code, r.StateCode, r.Rate, r.EffectiveFrom, r.EffectiveTo,
-                    r.IsDefault, r.IsActive, r.Description))
+                    r.IsDefault, r.IsActive, r.Description, r.ExemptFlag, r.GlPostingAccount))
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (stateRate is not null)
@@ -56,7 +56,7 @@ public class GetTaxRateForCustomerHandler(AppDbContext db)
             .OrderByDescending(r => r.EffectiveFrom)
             .Select(r => new SalesTaxRateResponseModel(
                 r.Id, r.Name, r.Code, r.StateCode, r.Rate, r.EffectiveFrom, r.EffectiveTo,
-                r.IsDefault, r.IsActive, r.Description))
+                r.IsDefault, r.IsActive, r.Description, r.ExemptFlag, r.GlPostingAccount))
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

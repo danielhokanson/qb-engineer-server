@@ -31,6 +31,7 @@ public class AssetRepository(AppDbContext db) : IAssetRepository
         var assets = await query
             .Include(a => a.SourceJob)
             .Include(a => a.SourcePart)
+            .Include(a => a.WorkCenter)
             .OrderBy(a => a.Name)
             .ToListAsync(ct);
         return assets.Select(ToResponseModel).ToList();
@@ -41,6 +42,7 @@ public class AssetRepository(AppDbContext db) : IAssetRepository
         var asset = await db.Assets
             .Include(a => a.SourceJob)
             .Include(a => a.SourcePart)
+            .Include(a => a.WorkCenter)
             .FirstOrDefaultAsync(a => a.Id == id, ct);
         return asset is null ? null : ToResponseModel(asset);
     }
@@ -62,5 +64,11 @@ public class AssetRepository(AppDbContext db) : IAssetRepository
         a.SerialNumber, a.Status, a.PhotoFileId, a.CurrentHours, a.Notes,
         a.IsCustomerOwned, a.CavityCount, a.ToolLifeExpectancy, a.CurrentShotCount,
         a.SourceJobId, a.SourceJob?.JobNumber, a.SourcePartId, a.SourcePart?.PartNumber,
-        a.CreatedAt, a.UpdatedAt);
+        a.CreatedAt, a.UpdatedAt,
+        // Phase 3 F4 — full-record fields surfaced on the GET response.
+        AcquisitionCost: a.AcquisitionCost,
+        DepreciationMethod: a.DepreciationMethod,
+        WorkCenterId: a.WorkCenterId,
+        WorkCenterCode: a.WorkCenter?.Code,
+        GlAccount: a.GlAccount);
 }

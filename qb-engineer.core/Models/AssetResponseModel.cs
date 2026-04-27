@@ -23,4 +23,11 @@ public record AssetResponseModel(
     int? SourcePartId,
     string? SourcePartNumber,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    // Phase 3 F4 — surface full-record fields on the GET so a POST-with-
+    // everything can be verified via a single round-trip.
+    decimal? AcquisitionCost = null,
+    DepreciationMethod? DepreciationMethod = null,
+    int? WorkCenterId = null,
+    string? WorkCenterCode = null,
+    string? GlAccount = null);

@@ -16,6 +16,19 @@ public class CreateAssetCommandValidator : AbstractValidator<CreateAssetCommand>
         RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Data.SerialNumber).MaximumLength(100).When(x => x.Data.SerialNumber is not null);
         RuleFor(x => x.Data.Location).MaximumLength(200).When(x => x.Data.Location is not null);
+
+        // Phase 3 F4 — bounds on the new full-record fields. Acquisition cost
+        // bounded the same as customer credit limit (0 .. 1B); above that
+        // the operator is more likely to have typo'd than to actually have a
+        // billion-dollar machine on the floor.
+        RuleFor(x => x.Data.AcquisitionCost)
+            .InclusiveBetween(0m, 1_000_000_000m)
+            .When(x => x.Data.AcquisitionCost.HasValue)
+            .WithMessage("Acquisition cost must be between 0 and 1,000,000,000.");
+
+        RuleFor(x => x.Data.GlAccount)
+            .MaximumLength(100)
+            .When(x => x.Data.GlAccount is not null);
     }
 }
 
@@ -38,6 +51,11 @@ public class CreateAssetHandler(IAssetRepository repo, IBarcodeService barcodeSe
             ToolLifeExpectancy = data.ToolLifeExpectancy,
             SourceJobId = data.SourceJobId,
             SourcePartId = data.SourcePartId,
+            // Phase 3 F4 — full-record fields written at create time.
+            AcquisitionCost = data.AcquisitionCost,
+            DepreciationMethod = data.DepreciationMethod,
+            WorkCenterId = data.WorkCenterId,
+            GlAccount = data.GlAccount?.Trim(),
         };
 
         await repo.AddAsync(asset, cancellationToken);

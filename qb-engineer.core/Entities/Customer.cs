@@ -24,6 +24,14 @@ public class Customer : BaseAuditableEntity
     public bool IsTaxExempt { get; set; }
     public string? TaxExemptionId { get; set; }
 
+    // Default tax + currency used when invoicing this customer if the line/header
+    // does not specify otherwise. Both nullable so the tenant default applies.
+    // Phase 3 F3 — captured at create-time to avoid a PATCH-after-create round trip.
+    public int? DefaultTaxCodeId { get; set; }
+    public SalesTaxRate? DefaultTaxCode { get; set; }
+    /// <summary>ISO 4217 3-letter currency code (e.g. "USD"). Null = use tenant default.</summary>
+    public string? DefaultCurrency { get; set; }
+
     // Accounting integration
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }

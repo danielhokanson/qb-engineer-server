@@ -41,10 +41,16 @@ public class UpdateSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Update
         rate.EffectiveFrom = request.Data.EffectiveFrom ?? rate.EffectiveFrom;
         rate.IsDefault = request.Data.IsDefault;
         rate.Description = request.Data.Description?.Trim();
+        // Phase 3 F5 — also accept full-record fields on update so the same
+        // payload shape works for both create and edit.
+        rate.ExemptFlag = request.Data.ExemptFlag;
+        rate.GlPostingAccount = request.Data.GlPostingAccount?.Trim();
 
         await db.SaveChangesAsync(cancellationToken);
 
         return new SalesTaxRateResponseModel(
-            rate.Id, rate.Name, rate.Code, rate.StateCode, rate.Rate, rate.EffectiveFrom, rate.EffectiveTo, rate.IsDefault, rate.IsActive, rate.Description);
+            rate.Id, rate.Name, rate.Code, rate.StateCode, rate.Rate,
+            rate.EffectiveFrom, rate.EffectiveTo, rate.IsDefault, rate.IsActive,
+            rate.Description, rate.ExemptFlag, rate.GlPostingAccount);
     }
 }

@@ -22,4 +22,20 @@ public class SalesTaxRate : BaseAuditableEntity
     public bool IsDefault { get; set; }
     public bool IsActive { get; set; } = true;
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Marks this rate row as an exemption marker — e.g. a 0% row used to
+    /// flag a jurisdiction or reason where sales tax does not apply. Local
+    /// concern; orthogonal to <see cref="Rate"/> so a 0% non-exempt row
+    /// (rate temporarily zeroed) and a 0% exempt row (always exempt) can
+    /// coexist. Phase 3 F5.
+    /// </summary>
+    public bool ExemptFlag { get; set; }
+
+    /// <summary>
+    /// External-accounting GL posting account this tax should map to when the
+    /// accounting-sync integration is configured. Optional — populated by the
+    /// provider's tax-account mapping flow. Phase 3 F5.
+    /// </summary>
+    public string? GlPostingAccount { get; set; }
 }

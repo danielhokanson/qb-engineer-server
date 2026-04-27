@@ -15,7 +15,9 @@ public class GetSalesTaxRatesHandler(AppDbContext db) : IRequestHandler<GetSales
             .AsNoTracking()
             .OrderBy(r => r.Name)
             .Select(r => new SalesTaxRateResponseModel(
-                r.Id, r.Name, r.Code, r.StateCode, r.Rate, r.EffectiveFrom, r.EffectiveTo, r.IsDefault, r.IsActive, r.Description))
+                r.Id, r.Name, r.Code, r.StateCode, r.Rate,
+                r.EffectiveFrom, r.EffectiveTo, r.IsDefault, r.IsActive,
+                r.Description, r.ExemptFlag, r.GlPostingAccount))
             .ToListAsync(cancellationToken);
     }
 }

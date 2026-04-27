@@ -16,6 +16,10 @@ public class CreateSalesTaxRateValidator : AbstractValidator<CreateSalesTaxRateC
         RuleFor(x => x.Data.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Data.Code).NotEmpty().MaximumLength(20);
         RuleFor(x => x.Data.Rate).InclusiveBetween(0, 1).WithMessage("Rate must be between 0 and 1 (e.g. 0.07 for 7%).");
+        // Phase 3 F5 — bound the optional GL account string so a typo
+        // doesn't accidentally jam an entire description into the field.
+        RuleFor(x => x.Data.GlPostingAccount).MaximumLength(100)
+            .When(x => x.Data.GlPostingAccount is not null);
     }
 }
 
@@ -57,12 +61,17 @@ public class CreateSalesTaxRateHandler(AppDbContext db) : IRequestHandler<Create
             EffectiveTo = null,
             IsDefault = request.Data.IsDefault,
             Description = request.Data.Description?.Trim(),
+            // Phase 3 F5 — full-record fields written at create time.
+            ExemptFlag = request.Data.ExemptFlag,
+            GlPostingAccount = request.Data.GlPostingAccount?.Trim(),
         };
 
         db.SalesTaxRates.Add(rate);
         await db.SaveChangesAsync(cancellationToken);
 
         return new SalesTaxRateResponseModel(
-            rate.Id, rate.Name, rate.Code, rate.StateCode, rate.Rate, rate.EffectiveFrom, rate.EffectiveTo, rate.IsDefault, rate.IsActive, rate.Description);
+            rate.Id, rate.Name, rate.Code, rate.StateCode, rate.Rate,
+            rate.EffectiveFrom, rate.EffectiveTo, rate.IsDefault, rate.IsActive,
+            rate.Description, rate.ExemptFlag, rate.GlPostingAccount);
     }
 }

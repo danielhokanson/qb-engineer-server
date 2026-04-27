@@ -1,4 +1,6 @@
 using MediatR;
+using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -40,6 +42,30 @@ public class GetCustomerByIdHandler(ICustomerRepository repo)
                     j.Id, j.JobNumber, j.Title,
                     j.CurrentStage?.Name, j.CurrentStage?.Color,
                     j.DueDate))
-                .ToList());
+                .ToList(),
+            // Phase 3 F3 — surface full-record fields so a POST-with-everything
+            // can be verified via a single GET round-trip.
+            CreditLimit: customer.CreditLimit,
+            DefaultTaxCodeId: customer.DefaultTaxCodeId,
+            DefaultCurrency: customer.DefaultCurrency,
+            BillingAddress: PickAddress(customer, AddressType.Billing),
+            ShippingAddress: PickAddress(customer, AddressType.Shipping));
+    }
+
+    private static AddressOutput? PickAddress(Customer customer, AddressType type)
+    {
+        // Prefer the IsDefault row matching the requested type; otherwise the
+        // first matching row; otherwise an entry typed Both. Returns null if
+        // no addresses are configured at all.
+        var match = customer.Addresses
+            .Where(a => a.AddressType == type)
+            .OrderByDescending(a => a.IsDefault)
+            .FirstOrDefault()
+            ?? customer.Addresses
+                .Where(a => a.AddressType == AddressType.Both)
+                .OrderByDescending(a => a.IsDefault)
+                .FirstOrDefault();
+        return match is null ? null : new AddressOutput(
+            match.Line1, match.Line2, match.City, match.State, match.PostalCode, match.Country);
     }
 }
