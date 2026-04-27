@@ -82,6 +82,23 @@ public class PurchaseOrdersController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    // Phase 3 / WU-14 / H3 — short-close a partially-received PO. The /close
+    // endpoint 409s on anything that isn't fully received; this lets AP /
+    // Procurement close the PO when the remainder won't be received (vendor
+    // backorder cancelled, item discontinued). Reason is required for audit.
+    [HttpPost("{id:int}/short-close")]
+    [Authorize(Roles = "Admin,Manager,OfficeManager,Procurement")]
+    public async Task<ActionResult<PurchaseOrderDetailResponseModel>> ShortClosePurchaseOrder(
+        int id, [FromBody] ShortClosePurchaseOrderRequestModel request)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Reason))
+            return BadRequest(new { errors = new { reason = new[] { "Reason is required." } } });
+
+        await mediator.Send(new ShortClosePurchaseOrderCommand(id, request.Reason));
+        var updated = await mediator.Send(new GetPurchaseOrderByIdQuery(id));
+        return Ok(updated);
+    }
+
     [HttpGet("calendar")]
     public async Task<ActionResult<List<PoCalendarResponseModel>>> GetForCalendar(
         [FromQuery] DateOnly from,

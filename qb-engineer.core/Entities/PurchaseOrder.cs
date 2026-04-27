@@ -17,6 +17,12 @@ public class PurchaseOrder : BaseAuditableEntity, IConcurrencyVersioned
     public DateTimeOffset? ReceivedDate { get; set; }
     public string? Notes { get; set; }
 
+    // Phase 3 / WU-14 / H3 — short-close audit trail. Set when the PO is
+    // closed via /short-close (vendor backorder cancelled, item
+    // discontinued); null for normal Closed POs.
+    public string? ShortCloseReason { get; set; }
+    public DateTimeOffset? ShortClosedAt { get; set; }
+
     // Blanket PO fields
     public bool IsBlanket { get; set; }
     public decimal? BlanketTotalQuantity { get; set; }

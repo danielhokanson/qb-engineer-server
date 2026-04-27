@@ -16,6 +16,8 @@ public class PurchaseOrderConfiguration : IEntityTypeConfiguration<PurchaseOrder
 
         builder.Property(e => e.PONumber).HasMaxLength(20);
         builder.Property(e => e.Notes).HasMaxLength(2000);
+        // Phase 3 / WU-14 / H3 — short-close reason audit field.
+        builder.Property(e => e.ShortCloseReason).HasMaxLength(2000);
         builder.Property(e => e.BlanketTotalQuantity).HasPrecision(18, 4);
         builder.Property(e => e.BlanketReleasedQuantity).HasPrecision(18, 4);
         builder.Property(e => e.AgreedUnitPrice).HasPrecision(18, 4);

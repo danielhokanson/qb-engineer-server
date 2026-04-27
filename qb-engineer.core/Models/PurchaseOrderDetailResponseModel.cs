@@ -21,4 +21,7 @@ public record PurchaseOrderDetailResponseModel(
     decimal? AgreedUnitPrice,
     List<PurchaseOrderLineResponseModel> Lines,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    // Phase 3 / WU-14 / H3 — short-close audit fields.
+    string? ShortCloseReason = null,
+    DateTimeOffset? ShortClosedAt = null);

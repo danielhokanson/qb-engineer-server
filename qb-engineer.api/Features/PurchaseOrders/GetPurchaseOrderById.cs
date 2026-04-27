@@ -41,10 +41,13 @@ public class GetPurchaseOrderByIdHandler(IPurchaseOrderRepository repo)
                 l.OrderedQuantity,
                 l.ReceivedQuantity,
                 l.RemainingQuantity,
+                l.CancelledShortCloseQuantity,
                 l.UnitPrice,
                 l.OrderedQuantity * l.UnitPrice,
                 l.Notes)).ToList(),
             po.CreatedAt,
-            po.UpdatedAt);
+            po.UpdatedAt,
+            po.ShortCloseReason,
+            po.ShortClosedAt);
     }
 }

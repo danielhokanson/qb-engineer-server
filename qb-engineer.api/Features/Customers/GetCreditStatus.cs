@@ -61,6 +61,43 @@ public class GetCreditStatusHandler(AppDbContext db) : IRequestHandler<GetCredit
             : utilizationPercent > 80 ? CreditRisk.Medium
             : CreditRisk.Low;
 
+        // Phase 3 / WU-14 / H3 / P4-OVERPAY — surface unapplied credits.
+        // Pull every customer payment with applications, then filter
+        // client-side to those where unapplied > 0. Computing
+        // (Amount - sum(applications)) in SQL is fine but shaping it
+        // through EF Core requires a sub-aggregate; the customer payment
+        // count for any one customer is small enough that the in-memory
+        // filter is the simpler implementation.
+        var paymentRows = await db.Payments
+            .AsNoTracking()
+            .Where(p => p.CustomerId == request.CustomerId)
+            .Select(p => new
+            {
+                p.Id,
+                p.PaymentNumber,
+                p.PaymentDate,
+                p.Amount,
+                p.ReferenceNumber,
+                Applied = p.Applications.Sum(a => (decimal?)a.Amount) ?? 0m,
+            })
+            .ToListAsync(ct);
+
+        var unappliedCredits = paymentRows
+            .Select(p => new
+            {
+                p.Id,
+                p.PaymentNumber,
+                p.PaymentDate,
+                Unapplied = p.Amount - p.Applied,
+                p.ReferenceNumber,
+            })
+            .Where(p => p.Unapplied > 0)
+            .OrderByDescending(p => p.PaymentDate)
+            .Select(p => new UnappliedCreditDetail(
+                p.Id, p.PaymentNumber, p.PaymentDate, p.Unapplied, p.ReferenceNumber))
+            .ToList();
+        var unappliedCreditAmount = unappliedCredits.Sum(c => c.Amount);
+
         return new CreditStatusResponseModel
         {
             CustomerId = customer.Id,
@@ -75,6 +112,8 @@ public class GetCreditStatusHandler(AppDbContext db) : IRequestHandler<GetCredit
             HoldReason = customer.CreditHoldReason,
             IsOverLimit = isOverLimit,
             RiskLevel = riskLevel,
+            UnappliedCreditAmount = unappliedCreditAmount,
+            UnappliedCredits = unappliedCredits,
         };
     }
 }

@@ -11,12 +11,21 @@ public class PurchaseOrderLine : BaseEntity
     // for any reasonable UoM. Cases EDGE-DECIMAL-PRECISION-001 / -004.
     public decimal OrderedQuantity { get; set; }
     public decimal ReceivedQuantity { get; set; }
+    // Phase 3 / WU-14 / H3 — short-close support. When the PO is short-closed
+    // (vendor backorder cancelled, item discontinued), the unreceived quantity
+    // is captured here so the line stays around for historical accuracy but
+    // the system understands it will not be received. Always 0 for normal POs;
+    // set on /short-close to (OrderedQuantity - ReceivedQuantity at close-time).
+    public decimal CancelledShortCloseQuantity { get; set; }
     public decimal UnitPrice { get; set; }
     public string? Notes { get; set; }
     public int? MrpPlannedOrderId { get; set; }
     public int? UomId { get; set; }
 
-    public decimal RemainingQuantity => OrderedQuantity - ReceivedQuantity;
+    // Phase 3 / WU-14 — RemainingQuantity excludes cancelled-short-close so
+    // a short-closed line reports 0 remaining, not the unreceived portion.
+    public decimal RemainingQuantity => OrderedQuantity - ReceivedQuantity - CancelledShortCloseQuantity;
+    public decimal UnreceivedQuantity => OrderedQuantity - ReceivedQuantity;
 
     public PurchaseOrder PurchaseOrder { get; set; } = null!;
     public Part Part { get; set; } = null!;

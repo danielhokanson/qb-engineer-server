@@ -9,6 +9,7 @@ public class PurchaseOrderLineConfiguration : IEntityTypeConfiguration<PurchaseO
     public void Configure(EntityTypeBuilder<PurchaseOrderLine> builder)
     {
         builder.Ignore(e => e.RemainingQuantity);
+        builder.Ignore(e => e.UnreceivedQuantity);
 
         builder.Property(e => e.Description).HasMaxLength(500);
         builder.Property(e => e.Notes).HasMaxLength(1000);
@@ -18,6 +19,8 @@ public class PurchaseOrderLineConfiguration : IEntityTypeConfiguration<PurchaseO
         // on long-tail commodities — e.g. $0.0125 per fastener).
         builder.Property(e => e.OrderedQuantity).HasPrecision(18, 4);
         builder.Property(e => e.ReceivedQuantity).HasPrecision(18, 4);
+        // Phase 3 / WU-14 / H3 — short-close. Same precision as Ordered/Received.
+        builder.Property(e => e.CancelledShortCloseQuantity).HasPrecision(18, 4).HasDefaultValue(0m);
         builder.Property(e => e.UnitPrice).HasPrecision(18, 4);
 
         builder.HasIndex(e => e.PurchaseOrderId);
