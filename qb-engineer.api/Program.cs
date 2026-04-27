@@ -1048,6 +1048,31 @@ try
                 return Results.Problem(inner.Message, statusCode: 500, title: $"Job {jobName} failed");
             }
         }).RequireAuthorization(p => p.RequireRole("Admin"));
+
+        // ── Dev-only: report-test-data seeding (Phase 3 / WU-16 / H7) ─────
+        // Phase 1 found 11 Reports cases couldn't be graded because the seed
+        // had no source data for the reports to aggregate. This endpoint
+        // populates representative data per category — sentinel-prefixed
+        // (RT-SEED-) for traceability and clean removal. Idempotent.
+        app.MapPost("/api/v1/dev/seed-report-test-data",
+            async (QBEngineer.Api.Features.Dev.SeedReportTestDataRequest req, AppDbContext db, IClock clock, CancellationToken ct) =>
+        {
+            var scope = QBEngineer.Api.Features.Dev.SeedScopeParser.Parse(req?.Scope);
+            if (scope == QBEngineer.Api.Features.Dev.SeedScope.None)
+                return Results.BadRequest(new { error = "Unknown scope. Valid: all, completed-jobs, ncrs, work-centers, pm-schedules, mrp-exceptions, real-receipts, lot-consumption, finished-serials." });
+
+            var seeder = new QBEngineer.Api.Features.Dev.SeedReportTestData(db, clock);
+            var seeded = await seeder.SeedAsync(scope, ct);
+            return Results.Ok(new { scope = req!.Scope, seeded });
+        }).RequireAuthorization(p => p.RequireRole("Admin"));
+
+        app.MapPost("/api/v1/dev/seed-report-test-data/cleanup",
+            async (AppDbContext db, IClock clock, CancellationToken ct) =>
+        {
+            var seeder = new QBEngineer.Api.Features.Dev.SeedReportTestData(db, clock);
+            var removed = await seeder.CleanupAsync(ct);
+            return Results.Ok(new { removed });
+        }).RequireAuthorization(p => p.RequireRole("Admin"));
     }
 
     app.UseSession();
