@@ -5,6 +5,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
@@ -21,7 +22,7 @@ public class CreateBiApiKeyValidator : AbstractValidator<CreateBiApiKeyCommand>
     }
 }
 
-public class CreateBiApiKeyHandler(AppDbContext db)
+public class CreateBiApiKeyHandler(AppDbContext db, ISystemAuditWriter auditWriter)
     : IRequestHandler<CreateBiApiKeyCommand, CreateBiApiKeyResponseModel>
 {
     public async Task<CreateBiApiKeyResponseModel> Handle(
@@ -52,6 +53,25 @@ public class CreateBiApiKeyHandler(AppDbContext db)
 
         db.BiApiKeys.Add(apiKey);
         await db.SaveChangesAsync(cancellationToken);
+
+        // System-wide audit row. Phase 3 / WU-04 / A3.
+        // NEVER include the plaintext or hash in details — name + prefix only.
+        var actorId = db.CurrentUserId ?? 0;
+        var details = JsonSerializer.Serialize(new
+        {
+            name = apiKey.Name,
+            keyPrefix = apiKey.KeyPrefix,
+            expiresAt = apiKey.ExpiresAt,
+            allowedEntitySets = model.AllowedEntitySets,
+            allowedIps = model.AllowedIps,
+        });
+        await auditWriter.WriteAsync(
+            action: "BiApiKeyIssued",
+            userId: actorId,
+            entityType: nameof(BiApiKey),
+            entityId: apiKey.Id,
+            details: details,
+            ct: cancellationToken);
 
         return new CreateBiApiKeyResponseModel
         {

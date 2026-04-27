@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
+using QBEngineer.Api.Authentication;
 using QBEngineer.Api.Authorization;
 using QBEngineer.Api.Behaviors;
 using QBEngineer.Api.Data;
@@ -170,6 +171,17 @@ try
             }
         };
     });
+
+    // BI API-key auth scheme (Phase 3 / WU-04 / A3) — used by /api/v1/bi/*
+    // endpoints for third-party BI tool access. Issuance/revocation stay on
+    // JWT (Admin role); keys cannot issue keys.
+    authBuilder.AddScheme<BiApiKeyAuthenticationOptions, BiApiKeyAuthenticationHandler>(
+        BiApiKeyAuthenticationOptions.SchemeName,
+        options =>
+        {
+            options.AuditUseEvents =
+                builder.Configuration.GetValue("BiApiKey:AuditUseEvents", defaultValue: false);
+        });
 
     // SSO Configuration (optional — each provider independently enabled)
     var ssoOptions = builder.Configuration.GetSection("Sso").Get<SsoOptions>() ?? new SsoOptions();
