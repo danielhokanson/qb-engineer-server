@@ -166,7 +166,8 @@ public class JobRepository(AppDbContext db) : IJobRepository
             job.ChildJobs.Count(c => c.DeletedAt == null),
             job.CreatedAt,
             job.UpdatedAt,
-            job.CoverPhotoFileId.HasValue ? $"/api/v1/files/{job.CoverPhotoFileId}" : null);
+            job.CoverPhotoFileId.HasValue ? $"/api/v1/files/{job.CoverPhotoFileId}" : null,
+            job.Version);
     }
 
     public async Task<Job?> FindAsync(int id, CancellationToken ct)

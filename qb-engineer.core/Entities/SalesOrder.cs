@@ -2,8 +2,11 @@ using QBEngineer.Core.Enums;
 
 namespace QBEngineer.Core.Entities;
 
-public class SalesOrder : BaseAuditableEntity
+public class SalesOrder : BaseAuditableEntity, IConcurrencyVersioned
 {
+    /// <summary>Optimistic-locking version. See IConcurrencyVersioned. WU-11.</summary>
+    public uint Version { get; set; }
+
     public string OrderNumber { get; set; } = string.Empty;
     public int CustomerId { get; set; }
     public int? QuoteId { get; set; }

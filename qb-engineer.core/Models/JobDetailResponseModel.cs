@@ -37,4 +37,7 @@ public record JobDetailResponseModel(
     int ChildJobCount,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    string? CoverPhotoUrl = null);
+    string? CoverPhotoUrl = null,
+    // WU-11 / TODO E1 — optimistic-locking version. UI uses this as If-Match
+    // on subsequent PATCH/PUT/DELETE.
+    uint RowVersion = 0);

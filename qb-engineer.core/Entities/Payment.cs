@@ -5,8 +5,11 @@ namespace QBEngineer.Core.Entities;
 /// <summary>
 /// ⚡ ACCOUNTING BOUNDARY — Standalone mode: full CRUD. Integrated mode: read-only cache from accounting system.
 /// </summary>
-public class Payment : BaseAuditableEntity
+public class Payment : BaseAuditableEntity, IConcurrencyVersioned
 {
+    /// <summary>Optimistic-locking version. See IConcurrencyVersioned. WU-11.</summary>
+    public uint Version { get; set; }
+
     public string PaymentNumber { get; set; } = string.Empty;
     public int CustomerId { get; set; }
     public PaymentMethod Method { get; set; }

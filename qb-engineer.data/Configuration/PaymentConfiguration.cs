@@ -15,6 +15,9 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Ignore(e => e.AppliedAmount);
         builder.Ignore(e => e.UnappliedAmount);
 
+        // WU-11 / TODO E1 — optimistic locking
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         builder.Property(e => e.PaymentNumber).HasMaxLength(20);
         builder.Property(e => e.ReferenceNumber).HasMaxLength(50);
         builder.Property(e => e.Notes).HasMaxLength(2000);

@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Payments;
+using QBEngineer.Core.Entities;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
@@ -40,6 +42,7 @@ public class PaymentsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [IfMatch(typeof(Payment))]
     public async Task<IActionResult> DeletePayment(int id)
     {
         await mediator.Send(new DeletePaymentCommand(id));

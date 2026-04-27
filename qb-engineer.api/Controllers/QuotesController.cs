@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Quotes;
+using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
@@ -38,6 +40,7 @@ public class QuotesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [IfMatch(typeof(Quote))]
     public async Task<IActionResult> UpdateQuote(int id, UpdateQuoteRequestModel request)
     {
         await mediator.Send(new UpdateQuoteCommand(
@@ -79,6 +82,7 @@ public class QuotesController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [IfMatch(typeof(Quote))]
     public async Task<IActionResult> DeleteQuote(int id)
     {
         await mediator.Send(new DeleteQuoteCommand(id));

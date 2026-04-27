@@ -14,6 +14,9 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         builder.Ignore(e => e.TaxAmount);
         builder.Ignore(e => e.Total);
 
+        // WU-11 / TODO E1 — optimistic locking
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         // Shared fields
         builder.Property(e => e.Type).HasConversion<string>().HasMaxLength(20);
         builder.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);

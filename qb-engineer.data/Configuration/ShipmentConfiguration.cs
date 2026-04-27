@@ -10,6 +10,9 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
     {
         builder.Ignore(e => e.IsDeleted);
 
+        // WU-11 / TODO E1 — optimistic locking
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         builder.Property(e => e.ShipmentNumber).HasMaxLength(20);
         builder.Property(e => e.Carrier).HasMaxLength(100);
         builder.Property(e => e.TrackingNumber).HasMaxLength(100);

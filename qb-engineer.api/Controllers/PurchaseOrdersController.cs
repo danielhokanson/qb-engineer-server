@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.PurchaseOrders;
+using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
@@ -38,6 +40,7 @@ public class PurchaseOrdersController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [IfMatch(typeof(PurchaseOrder))]
     public async Task<IActionResult> UpdatePurchaseOrder(int id, UpdatePurchaseOrderRequestModel request)
     {
         await mediator.Send(new UpdatePurchaseOrderCommand(id, request.Notes, request.ExpectedDeliveryDate));
@@ -89,6 +92,7 @@ public class PurchaseOrdersController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [IfMatch(typeof(PurchaseOrder))]
     public async Task<IActionResult> DeletePurchaseOrder(int id)
     {
         await mediator.Send(new DeletePurchaseOrderCommand(id));

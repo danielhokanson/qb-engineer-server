@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Invoices;
+using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
@@ -70,6 +72,7 @@ public class InvoicesController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [IfMatch(typeof(Invoice))]
     public async Task<IActionResult> DeleteInvoice(int id)
     {
         await mediator.Send(new DeleteInvoiceCommand(id));

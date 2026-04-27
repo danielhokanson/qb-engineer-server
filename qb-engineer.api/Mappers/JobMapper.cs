@@ -55,7 +55,9 @@ public static partial class JobMapper
             ParentJobNumber: job.ParentJob?.JobNumber,
             ChildJobCount: job.ChildJobs?.Count(c => c.DeletedAt == null) ?? 0,
             CreatedAt: job.CreatedAt,
-            UpdatedAt: job.UpdatedAt);
+            UpdatedAt: job.UpdatedAt,
+            CoverPhotoUrl: null,
+            RowVersion: job.Version);
     }
 
     /// <summary>

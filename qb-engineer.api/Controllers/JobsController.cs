@@ -2,7 +2,9 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Jobs;
+using QBEngineer.Core.Entities;
 using QBEngineer.Api.Features.Jobs.Bulk;
 using QBEngineer.Api.Features.Jobs.Links;
 using QBEngineer.Api.Features.Jobs.Parts;
@@ -55,6 +57,7 @@ public class JobsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [IfMatch(typeof(Job))]
     public async Task<ActionResult<JobDetailResponseModel>> UpdateJob(int id, UpdateJobCommand command)
     {
         var cmd = command with { Id = id };
@@ -63,6 +66,7 @@ public class JobsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("{id:int}/stage")]
+    [IfMatch(typeof(Job))]
     public async Task<ActionResult<JobDetailResponseModel>> MoveJobStage(int id, MoveJobStageCommand command)
     {
         var cmd = command with { JobId = id };
@@ -71,6 +75,7 @@ public class JobsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("{id:int}/position")]
+    [IfMatch(typeof(Job))]
     public async Task<ActionResult> UpdateJobPosition(int id, UpdateJobPositionCommand command)
     {
         var cmd = command with { JobId = id };

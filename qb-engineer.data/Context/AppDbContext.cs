@@ -791,6 +791,22 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
                     break;
             }
         }
+
+        // WU-11 / TODO E1 — bump optimistic-locking Version on every Modified
+        // save for transactional entities. New rows start at 1.
+        foreach (var entry in ChangeTracker.Entries<IConcurrencyVersioned>())
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    if (entry.Entity.Version == 0) entry.Entity.Version = 1;
+                    break;
+                case EntityState.Modified:
+                    entry.Entity.Version = unchecked(entry.Entity.Version + 1);
+                    if (entry.Entity.Version == 0) entry.Entity.Version = 1; // wraparound guard
+                    break;
+            }
+        }
     }
 
     private static string ToSnakeCase(string name)

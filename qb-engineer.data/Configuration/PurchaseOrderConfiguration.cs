@@ -11,6 +11,9 @@ public class PurchaseOrderConfiguration : IEntityTypeConfiguration<PurchaseOrder
         builder.Ignore(e => e.IsDeleted);
         builder.Ignore(e => e.BlanketRemainingQuantity);
 
+        // WU-11 / TODO E1 — optimistic locking
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         builder.Property(e => e.PONumber).HasMaxLength(20);
         builder.Property(e => e.Notes).HasMaxLength(2000);
         builder.Property(e => e.BlanketTotalQuantity).HasPrecision(18, 4);

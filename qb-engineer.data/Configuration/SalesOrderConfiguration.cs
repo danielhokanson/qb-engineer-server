@@ -13,6 +13,9 @@ public class SalesOrderConfiguration : IEntityTypeConfiguration<SalesOrder>
         builder.Ignore(e => e.TaxAmount);
         builder.Ignore(e => e.Total);
 
+        // WU-11 / TODO E1 — optimistic locking
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         builder.Property(e => e.OrderNumber).HasMaxLength(20);
         builder.Property(e => e.CustomerPO).HasMaxLength(50);
         builder.Property(e => e.Notes).HasMaxLength(2000);

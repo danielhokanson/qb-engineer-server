@@ -18,6 +18,9 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Ignore(e => e.AmountPaid);
         builder.Ignore(e => e.BalanceDue);
 
+        // WU-11 / TODO E1 — optimistic locking
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         builder.Property(e => e.InvoiceNumber).HasMaxLength(20);
         builder.Property(e => e.Notes).HasMaxLength(2000);
         builder.Property(e => e.TaxRate).HasPrecision(8, 6);

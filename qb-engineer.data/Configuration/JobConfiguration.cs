@@ -10,6 +10,9 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
     {
         builder.Ignore(e => e.IsDeleted);
 
+        // WU-11 / TODO E1 — optimistic locking
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         builder.HasIndex(e => e.JobNumber).IsUnique();
         builder.HasIndex(e => new { e.TrackTypeId, e.CurrentStageId });
         builder.HasIndex(e => e.AssigneeId);

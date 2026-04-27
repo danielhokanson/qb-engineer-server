@@ -2,8 +2,11 @@ using QBEngineer.Core.Enums;
 
 namespace QBEngineer.Core.Entities;
 
-public class Job : BaseAuditableEntity
+public class Job : BaseAuditableEntity, IConcurrencyVersioned
 {
+    /// <summary>Optimistic-locking version. See IConcurrencyVersioned. WU-11.</summary>
+    public uint Version { get; set; }
+
     public string JobNumber { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
