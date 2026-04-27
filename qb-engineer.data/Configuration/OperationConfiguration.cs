@@ -20,6 +20,10 @@ public class OperationConfiguration : IEntityTypeConfiguration<Operation>
         builder.Property(e => e.OverlapPercent).HasPrecision(5, 2);
         builder.Property(e => e.ScrapFactor).HasPrecision(5, 4);
         builder.Property(e => e.SubcontractCost).HasPrecision(18, 4);
+        // Phase 3 H5 / WU-13 — subcontract turn time on the routing-op
+        // contract (separate from the int SubcontractLeadTimeDays
+        // scheduling field). Half-day granularity → precision (5,1).
+        builder.Property(e => e.SubcontractTurnTimeDays).HasPrecision(5, 1);
         builder.Property(e => e.LaborRate).HasPrecision(18, 4);
         builder.Property(e => e.BurdenRate).HasPrecision(18, 4);
         builder.Property(e => e.EstimatedLaborCost).HasPrecision(18, 4);

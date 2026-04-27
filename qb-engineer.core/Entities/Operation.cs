@@ -25,6 +25,14 @@ public class Operation : BaseAuditableEntity
     public int? SubcontractLeadTimeDays { get; set; }
     public string? SubcontractInstructions { get; set; }
 
+    // Phase 3 H5 / WU-13 — subcontract metadata exposed on routing-op DTOs.
+    // SubcontractTurnTimeDays is decimal (half-day granularity, e.g. 0.5,
+    // 1.5, 5.0) — distinct from SubcontractLeadTimeDays (int, internal
+    // scheduling lead). The TODO calls for "turn time" semantics on the
+    // routing-op contract (round-trip days for the subcontracted batch),
+    // separate from the integer lead-time bookkeeping field.
+    public decimal? SubcontractTurnTimeDays { get; set; }
+
     // Costing fields
     public decimal LaborRate { get; set; }
     public decimal BurdenRate { get; set; }

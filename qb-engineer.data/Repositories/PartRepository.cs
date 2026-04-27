@@ -205,6 +205,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
             .Where(s => s.PartId == partId)
             .Include(s => s.WorkCenter)
             .Include(s => s.ReferencedOperation)
+            .Include(s => s.SubcontractVendor)
             .Include(s => s.Materials).ThenInclude(m => m.BomEntry).ThenInclude(b => b.ChildPart)
             .OrderBy(s => s.StepNumber)
             .Select(s => new OperationResponseModel(
@@ -229,7 +230,12 @@ public class PartRepository(AppDbContext db) : IPartRepository
                     m.Quantity,
                     m.Notes)).ToList(),
                 s.CreatedAt,
-                s.UpdatedAt))
+                s.UpdatedAt,
+                // Phase 3 H5 / WU-13 — subcontract metadata round-tripped.
+                s.IsSubcontract,
+                s.SubcontractVendorId,
+                s.SubcontractVendor != null ? s.SubcontractVendor.CompanyName : null,
+                s.SubcontractTurnTimeDays))
             .ToListAsync(ct);
     }
 

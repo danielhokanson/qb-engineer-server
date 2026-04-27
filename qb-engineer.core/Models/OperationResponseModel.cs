@@ -15,4 +15,11 @@ public record OperationResponseModel(
     string? ReferencedOperationTitle,
     List<OperationMaterialResponseModel> Materials,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    // Phase 3 H5 / WU-13 — subcontract metadata round-tripped on GET so the
+    // routing-op editor and subcontract-send-out flows see vendor + turn
+    // time on operations marked as subcontract.
+    bool IsSubcontract = false,
+    int? SubcontractVendorId = null,
+    string? SubcontractVendorName = null,
+    decimal? SubcontractTurnTimeDays = null);
