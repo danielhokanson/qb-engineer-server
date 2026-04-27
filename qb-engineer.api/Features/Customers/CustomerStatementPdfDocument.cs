@@ -55,15 +55,22 @@ public class CustomerStatementPdfDocument(
                 content.Item().Text("Invoices").FontSize(12).Bold();
                 content.Item().PaddingTop(5).Table(table =>
                 {
+                    // WU-15 / RPT-CUSTSTMT-001: column widths previously summed
+                    // to 520pt fixed plus a relative column on a Letter page
+                    // with 50pt horizontal margins (~512pt content area).
+                    // QuestPDF threw DocumentLayoutException ("conflicting size
+                    // constraints") for every customer with invoices. Tighten
+                    // the fixed columns so the table fits with the relative
+                    // Status column intact.
                     table.ColumnsDefinition(cols =>
                     {
-                        cols.ConstantColumn(100);
-                        cols.ConstantColumn(90);
-                        cols.ConstantColumn(90);
-                        cols.RelativeColumn();
-                        cols.ConstantColumn(80);
-                        cols.ConstantColumn(80);
-                        cols.ConstantColumn(80);
+                        cols.ConstantColumn(75);   // Invoice #
+                        cols.ConstantColumn(70);   // Date
+                        cols.ConstantColumn(70);   // Due Date
+                        cols.RelativeColumn();      // Status
+                        cols.ConstantColumn(65);   // Total
+                        cols.ConstantColumn(65);   // Paid
+                        cols.ConstantColumn(65);   // Balance
                     });
 
                     table.Header(header =>

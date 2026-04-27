@@ -138,9 +138,14 @@ public class ReportsController(IMediator mediator) : ControllerBase
 
     [HttpGet("quote-to-close")]
     public async Task<ActionResult<List<QuoteToCloseReportItem>>> GetQuoteToClose(
-        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+        [FromQuery] DateTimeOffset? start, [FromQuery] DateTimeOffset? end)
     {
-        var result = await mediator.Send(new GetQuoteToCloseReportQuery(start, end));
+        // WU-15 / Phase 3 / RPT-QUOTECONV-001: when no range is supplied,
+        // default to a trailing 12-month window so the report aggregates
+        // sensibly rather than returning empty (the previous behavior bound
+        // missing params to DateTimeOffset.MinValue, filtering out every row).
+        var (s, e) = ResolveDefaultDateRange(start, end);
+        var result = await mediator.Send(new GetQuoteToCloseReportQuery(s, e));
         return Ok(result);
     }
 
@@ -163,9 +168,15 @@ public class ReportsController(IMediator mediator) : ControllerBase
 
     [HttpGet("employee-productivity")]
     public async Task<ActionResult<List<EmployeeProductivityReportItem>>> GetEmployeeProductivity(
-        [FromQuery] DateTimeOffset start, [FromQuery] DateTimeOffset end)
+        [FromQuery] DateTimeOffset? start, [FromQuery] DateTimeOffset? end)
     {
-        var result = await mediator.Send(new GetEmployeeProductivityReportQuery(start, end));
+        // WU-15 / Phase 3 / RPT-EMPLABOR-001: when no range is supplied,
+        // default to a trailing 12-month window so the report aggregates
+        // against the existing time-entry rows. Previously, missing params
+        // bound to DateTimeOffset.MinValue and the date filter excluded
+        // everything.
+        var (s, e) = ResolveDefaultDateRange(start, end);
+        var result = await mediator.Send(new GetEmployeeProductivityReportQuery(s, e));
         return Ok(result);
     }
 
@@ -287,5 +298,17 @@ public class ReportsController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetSixBigLossesQuery(workCenterId, dateFrom, dateTo), ct);
         return Ok(result);
+    }
+
+    // WU-15 / Phase 3 / H1: shared helper for date-ranged reports that should
+    // aggregate against the trailing 12 months when no explicit range is
+    // supplied (rather than DateTimeOffset.MinValue, which yields an empty
+    // result set on every date filter).
+    private static (DateTimeOffset Start, DateTimeOffset End) ResolveDefaultDateRange(
+        DateTimeOffset? start, DateTimeOffset? end)
+    {
+        var resolvedEnd = end ?? DateTimeOffset.UtcNow;
+        var resolvedStart = start ?? resolvedEnd.AddMonths(-12);
+        return (resolvedStart, resolvedEnd);
     }
 }
