@@ -57,12 +57,14 @@ public class GetEmployeeListHandler(AppDbContext db, UserManager<ApplicationUser
             .ThenBy(u => u.FirstName)
             .ToListAsync(cancellationToken);
 
-        // Batch-load profiles for job title / department / start date
+        // Batch-load profiles for job title / department / start date. Phase 3
+        // / WU-19: EmployeeProfile.UserId is nullable; filter to linked
+        // profiles only when joining to the User-keyed list.
         var userIds = users.Select(u => u.Id).ToList();
         var profiles = await db.EmployeeProfiles
             .AsNoTracking()
-            .Where(p => userIds.Contains(p.UserId))
-            .ToDictionaryAsync(p => p.UserId, cancellationToken);
+            .Where(p => p.UserId != null && userIds.Contains(p.UserId.Value))
+            .ToDictionaryAsync(p => p.UserId!.Value, cancellationToken);
 
         // Batch-load team names
         var teamIds = users.Where(u => u.TeamId.HasValue).Select(u => u.TeamId!.Value).Distinct().ToList();

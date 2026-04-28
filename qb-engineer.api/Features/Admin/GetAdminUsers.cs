@@ -36,12 +36,13 @@ public class GetAdminUsersHandler(AppDbContext db, UserManager<ApplicationUser> 
             })
             .ToDictionaryAsync(x => x.UserId, cancellationToken);
 
-        // Batch-load employee profiles for compliance status
+        // Batch-load employee profiles for compliance status. Phase 3 / WU-19:
+        // EmployeeProfile.UserId is nullable; filter to linked profiles only.
         var userIds = users.Select(u => u.Id).ToList();
         var profiles = await db.EmployeeProfiles
             .AsNoTracking()
-            .Where(p => userIds.Contains(p.UserId))
-            .ToDictionaryAsync(p => p.UserId, cancellationToken);
+            .Where(p => p.UserId != null && userIds.Contains(p.UserId.Value))
+            .ToDictionaryAsync(p => p.UserId!.Value, cancellationToken);
 
         // Batch-load I-9 submissions for status computation
         var i9Submissions = await db.ComplianceFormSubmissions

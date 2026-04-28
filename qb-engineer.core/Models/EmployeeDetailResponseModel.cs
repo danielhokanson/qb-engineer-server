@@ -2,6 +2,10 @@ namespace QBEngineer.Core.Models;
 
 public record EmployeeDetailResponseModel(
     int Id,
+    // Phase 3 / WU-19 / F9: nullable when Employee has no User account.
+    // For a linked Employee, equals the User id; for a User-less Employee
+    // returned via the EmployeeProfile.Id path, this is null.
+    int? UserId,
     string FirstName,
     string LastName,
     string? Initials,

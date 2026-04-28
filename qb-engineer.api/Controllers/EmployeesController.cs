@@ -37,6 +37,73 @@ public class EmployeesController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    // ── Phase 3 / WU-19 / F9 — Employee/User split (1:0-1) ──
+    //
+    // Backend pass: Employee can exist with no User account. The existing
+    // UI onboarding flow (creates User + Employee in one shot) continues to
+    // work — its path is unchanged. New endpoints below cover the User-less
+    // case so HR can onboard an employee before IT provisions a system
+    // account.
+
+    /// <summary>
+    /// Create an Employee record without requiring a User account
+    /// (Phase 3 / WU-19 / F9). The returned <c>id</c> is the
+    /// EmployeeProfile.Id, which is then accepted by
+    /// <c>GET /api/v1/employees/{id}</c>, the grant- and
+    /// revoke-system-access endpoints, and <c>DELETE /api/v1/employees/{id}</c>.
+    /// </summary>
+    [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<EmployeeProfileResponseModel>> CreateEmployee(
+        [FromBody] CreateEmployeeCommand request, CancellationToken ct)
+    {
+        var result = await mediator.Send(request, ct);
+        return Created($"/api/v1/employees/{result.Id}", result);
+    }
+
+    /// <summary>
+    /// Promote an existing Employee to also have a User account
+    /// (grant system access). Mirrors the <c>POST /api/v1/admin/users</c>
+    /// path on the User side — issues a setup token and links the User to
+    /// the EmployeeProfile.
+    /// </summary>
+    [HttpPost("{employeeId:int}/grant-system-access")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<GrantSystemAccessResponseModel>> GrantSystemAccess(
+        int employeeId,
+        [FromBody] GrantSystemAccessRequest request,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new GrantSystemAccessCommand(employeeId, request.Email, request.Role), ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Un-link the User from an Employee while preserving both records.
+    /// The User is deactivated (preserves audit history); the Employee
+    /// remains and can be re-promoted later.
+    /// </summary>
+    [HttpDelete("{employeeId:int}/system-access")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RevokeSystemAccess(int employeeId, CancellationToken ct)
+    {
+        var ok = await mediator.Send(new RevokeSystemAccessCommand(employeeId), ct);
+        return ok ? NoContent() : NotFound();
+    }
+
+    /// <summary>
+    /// Soft-delete an Employee (by EmployeeProfile.Id). If a User is linked
+    /// the User is left in place (deactivated) so audit history is preserved.
+    /// </summary>
+    [HttpDelete("{employeeId:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteEmployee(int employeeId, CancellationToken ct)
+    {
+        var ok = await mediator.Send(new DeleteEmployeeCommand(employeeId), ct);
+        return ok ? NoContent() : NotFound();
+    }
+
     [HttpGet("{id:int}/stats")]
     public async Task<ActionResult<EmployeeStatsResponseModel>> GetEmployeeStats(int id)
     {

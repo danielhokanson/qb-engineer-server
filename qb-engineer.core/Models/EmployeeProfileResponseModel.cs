@@ -4,7 +4,7 @@ namespace QBEngineer.Core.Models;
 
 public record EmployeeProfileResponseModel(
     int Id,
-    int UserId,
+    int? UserId,
 
     // Personal
     DateTimeOffset? DateOfBirth,

@@ -4,7 +4,15 @@ namespace QBEngineer.Core.Entities;
 
 public class EmployeeProfile : BaseAuditableEntity
 {
-    public int UserId { get; set; }
+    // Phase 3 / WU-19 / F9: nullable so an Employee can exist with no User
+    // account (HR onboards before IT provisions access).
+    public int? UserId { get; set; }
+
+    // Identity (denormalized when no User account exists; User overrides
+    // these when present at projection time)
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? WorkEmail { get; set; }
 
     // Personal
     public DateTimeOffset? DateOfBirth { get; set; }

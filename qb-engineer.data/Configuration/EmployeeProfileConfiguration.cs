@@ -11,7 +11,18 @@ public class EmployeeProfileConfiguration : IEntityTypeConfiguration<EmployeePro
     {
         builder.Ignore(e => e.IsDeleted);
 
-        builder.HasIndex(e => e.UserId).IsUnique();
+        // Phase 3 / WU-19 / F9: Employee can exist with no User account.
+        // UserId is nullable; the unique constraint is filtered to non-null
+        // values so multiple User-less Employees can coexist while a User
+        // can still be linked to at most one Employee.
+        builder.HasIndex(e => e.UserId)
+            .IsUnique()
+            .HasFilter("user_id IS NOT NULL");
+
+        // Identity (denormalized when no User exists)
+        builder.Property(e => e.FirstName).HasMaxLength(100);
+        builder.Property(e => e.LastName).HasMaxLength(100);
+        builder.Property(e => e.WorkEmail).HasMaxLength(256);
 
         // Personal
         builder.Property(e => e.Gender).HasMaxLength(50);
