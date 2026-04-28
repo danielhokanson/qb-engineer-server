@@ -32,7 +32,8 @@ public class CreateShipmentValidator : AbstractValidator<CreateShipmentCommand>
                     (l.SalesOrderLineId.HasValue && l.SalesOrderLineId > 0) ||
                     (l.PartId.HasValue && l.PartId > 0))
                 .WithMessage("Each line must reference either a Sales Order Line or a Part");
-            line.RuleFor(l => l.Quantity).GreaterThan(0);
+            // Phase 3 / WU-23 (F8-broad): decimal quantity supports fractional UoM.
+            line.RuleFor(l => l.Quantity).GreaterThan(0m);
         });
     }
 }

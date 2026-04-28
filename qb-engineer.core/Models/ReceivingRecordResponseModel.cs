@@ -6,7 +6,7 @@ public record ReceivingRecordResponseModel(
     string? PurchaseOrderNumber,
     int? PartId,
     string? PartNumber,
-    int QuantityReceived,
+    decimal QuantityReceived,
     string? ReceivedBy,
     int? StorageLocationId,
     string? StorageLocationName,

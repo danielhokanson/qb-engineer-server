@@ -6,7 +6,7 @@ public record CreateLotRecordRequestModel(
     int? JobId,
     int? ProductionRunId,
     int? PurchaseOrderLineId,
-    int Quantity,
+    decimal Quantity,
     DateTimeOffset? ExpirationDate,
     string? SupplierLotNumber,
     string? Notes);

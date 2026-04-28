@@ -5,5 +5,5 @@ public record ShipmentLineResponseModel(
     int? SalesOrderLineId,
     int? PartId,
     string Description,
-    int Quantity,
+    decimal Quantity,
     string? Notes);

@@ -33,7 +33,8 @@ public class CreateInvoiceValidator : AbstractValidator<CreateInvoiceCommand>
         RuleForEach(x => x.Lines).ChildRules(line =>
         {
             line.RuleFor(l => l.Description).NotEmpty();
-            line.RuleFor(l => l.Quantity).GreaterThan(0);
+            // Phase 3 / WU-23 (F8-broad): decimal quantity supports fractional UoM.
+            line.RuleFor(l => l.Quantity).GreaterThan(0m);
             line.RuleFor(l => l.UnitPrice).GreaterThanOrEqualTo(0);
         });
     }

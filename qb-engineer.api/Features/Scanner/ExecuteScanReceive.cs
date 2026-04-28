@@ -73,7 +73,9 @@ public class ExecuteScanReceiveHandler(
         var receivingRecord = new ReceivingRecord
         {
             PurchaseOrderLineId = data.PurchaseOrderLineId,
-            QuantityReceived = (int)data.Quantity,
+            // Phase 3 / WU-23 (F8-broad): ReceivingRecord.QuantityReceived is now
+            // decimal; the (int) cast is gone, scan-receive preserves precision.
+            QuantityReceived = data.Quantity,
             ReceivedBy = userName,
             StorageLocationId = data.ToLocationId,
         };

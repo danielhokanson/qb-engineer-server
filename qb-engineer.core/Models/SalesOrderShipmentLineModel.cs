@@ -4,6 +4,6 @@ public record SalesOrderShipmentLineModel(
     int Id,
     int? PartId,
     string? PartNumber,
-    int Quantity,
+    decimal Quantity,
     string? Notes,
     int? SalesOrderLineId);

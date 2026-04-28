@@ -2,7 +2,7 @@ namespace QBEngineer.Core.Models;
 
 public record ReceivePurchaseOrderRequestModel(
     int PurchaseOrderLineId,
-    int QuantityReceived,
+    decimal QuantityReceived,
     int? LocationId,
     string? LotNumber,
     string? Notes);

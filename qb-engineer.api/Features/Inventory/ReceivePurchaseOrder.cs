@@ -18,7 +18,8 @@ public class ReceivePurchaseOrderCommandValidator : AbstractValidator<ReceivePur
     public ReceivePurchaseOrderCommandValidator()
     {
         RuleFor(x => x.Data.PurchaseOrderLineId).GreaterThan(0);
-        RuleFor(x => x.Data.QuantityReceived).GreaterThan(0);
+        // Phase 3 / WU-23 (F8-broad): decimal quantity supports fractional UoM.
+        RuleFor(x => x.Data.QuantityReceived).GreaterThan(0m);
     }
 }
 

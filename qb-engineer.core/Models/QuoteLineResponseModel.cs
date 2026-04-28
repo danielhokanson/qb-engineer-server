@@ -5,7 +5,7 @@ public record QuoteLineResponseModel(
     int? PartId,
     string? PartNumber,
     string Description,
-    int Quantity,
+    decimal Quantity,
     decimal UnitPrice,
     decimal LineTotal,
     int LineNumber,

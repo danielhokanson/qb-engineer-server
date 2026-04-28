@@ -10,7 +10,7 @@ public record LotRecordResponseModel(
     string? JobNumber,
     int? ProductionRunId,
     int? PurchaseOrderLineId,
-    int Quantity,
+    decimal Quantity,
     DateTimeOffset? ExpirationDate,
     string? SupplierLotNumber,
     string? Notes,

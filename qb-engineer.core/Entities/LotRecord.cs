@@ -7,7 +7,9 @@ public class LotRecord : BaseAuditableEntity
     public int? JobId { get; set; }
     public int? ProductionRunId { get; set; }
     public int? PurchaseOrderLineId { get; set; }
-    public int Quantity { get; set; }
+    // Phase 3 / WU-23 (F8-broad): UoM-aware fractional quantities for material-
+    // by-weight / volume / length lots.
+    public decimal Quantity { get; set; }
     public DateTimeOffset? ExpirationDate { get; set; }
     public string? SupplierLotNumber { get; set; }
     public string? Notes { get; set; }

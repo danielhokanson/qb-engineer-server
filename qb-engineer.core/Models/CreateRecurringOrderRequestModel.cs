@@ -12,5 +12,5 @@ public record CreateRecurringOrderRequestModel(
 public record CreateRecurringOrderLineModel(
     int PartId,
     string Description,
-    int Quantity,
+    decimal Quantity,
     decimal UnitPrice);

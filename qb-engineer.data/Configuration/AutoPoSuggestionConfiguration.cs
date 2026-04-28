@@ -13,6 +13,9 @@ public class AutoPoSuggestionConfiguration : IEntityTypeConfiguration<AutoPoSugg
 
         builder.Property(e => e.SourceSalesOrderIds).HasColumnType("jsonb");
 
+        // Phase 3 / WU-23 (F8-broad): decimal(18,4) for UoM-aware fractional qty.
+        builder.Property(e => e.SuggestedQty).HasPrecision(18, 4);
+
         builder.Property(e => e.Status)
             .HasConversion<string>()
             .HasMaxLength(20);

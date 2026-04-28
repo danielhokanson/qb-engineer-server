@@ -7,7 +7,7 @@ public record AutoPoSuggestionResponseModel(
     string? PartDescription,
     int VendorId,
     string VendorName,
-    int SuggestedQty,
+    decimal SuggestedQty,
     DateTimeOffset NeededByDate,
     string Status,
     List<string>? SourceSalesOrderNumbers,

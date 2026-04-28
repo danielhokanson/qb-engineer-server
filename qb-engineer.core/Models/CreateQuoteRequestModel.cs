@@ -11,6 +11,6 @@ public record CreateQuoteRequestModel(
 public record CreateQuoteLineModel(
     int? PartId,
     string Description,
-    int Quantity,
+    decimal Quantity,
     decimal UnitPrice,
     string? Notes);

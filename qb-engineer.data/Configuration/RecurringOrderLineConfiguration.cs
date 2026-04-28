@@ -9,6 +9,8 @@ public class RecurringOrderLineConfiguration : IEntityTypeConfiguration<Recurrin
     public void Configure(EntityTypeBuilder<RecurringOrderLine> builder)
     {
         builder.Property(e => e.Description).HasMaxLength(500);
+        // Phase 3 / WU-23 (F8-broad): decimal(18,4) for UoM-aware fractional qty.
+        builder.Property(e => e.Quantity).HasPrecision(18, 4);
         builder.Property(e => e.UnitPrice).HasPrecision(18, 4);
 
         builder.HasIndex(e => e.RecurringOrderId);

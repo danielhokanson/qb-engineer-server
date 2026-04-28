@@ -14,5 +14,5 @@ public record CreateInvoiceRequestModel(
 public record CreateInvoiceLineModel(
     int? PartId,
     string Description,
-    int Quantity,
+    decimal Quantity,
     decimal UnitPrice);

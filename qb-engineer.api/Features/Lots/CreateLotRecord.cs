@@ -15,7 +15,8 @@ public class CreateLotRecordCommandValidator : AbstractValidator<CreateLotRecord
     public CreateLotRecordCommandValidator()
     {
         RuleFor(x => x.Data.PartId).GreaterThan(0);
-        RuleFor(x => x.Data.Quantity).GreaterThan(0);
+        // Phase 3 / WU-23 (F8-broad): decimal quantity supports fractional UoM.
+        RuleFor(x => x.Data.Quantity).GreaterThan(0m);
         RuleFor(x => x.Data.LotNumber).MaximumLength(100).When(x => x.Data.LotNumber is not null);
         RuleFor(x => x.Data.SupplierLotNumber).MaximumLength(100).When(x => x.Data.SupplierLotNumber is not null);
         RuleFor(x => x.Data.Notes).MaximumLength(2000).When(x => x.Data.Notes is not null);

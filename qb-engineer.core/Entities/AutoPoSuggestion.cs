@@ -6,7 +6,8 @@ public class AutoPoSuggestion : BaseAuditableEntity
 {
     public int PartId { get; set; }
     public int VendorId { get; set; }
-    public int SuggestedQty { get; set; }
+    // Phase 3 / WU-23 (F8-broad): auto-PO suggestions on fractional-UoM parts.
+    public decimal SuggestedQty { get; set; }
     public DateTimeOffset NeededByDate { get; set; }
     public string? SourceSalesOrderIds { get; set; }
     public AutoPoSuggestionStatus Status { get; set; } = AutoPoSuggestionStatus.Pending;

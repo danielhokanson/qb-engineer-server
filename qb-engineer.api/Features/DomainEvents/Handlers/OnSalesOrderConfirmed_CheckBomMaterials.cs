@@ -129,7 +129,9 @@ public class OnSalesOrderConfirmed_CheckBomMaterials(
                 {
                     PartId = materialPartId,
                     VendorId = vendorId,
-                    SuggestedQty = (int)Math.Ceiling(shortfall),
+                    // Phase 3 / WU-23 (F8-broad): AutoPoSuggestion.SuggestedQty is
+                    // now decimal; preserve fractional precision for UoM-aware demand.
+                    SuggestedQty = Math.Ceiling(shortfall),
                     NeededByDate = deliveryDate.AddDays(-7), // Need materials before delivery
                     SourceSalesOrderIds = so.Id.ToString(),
                     Status = AutoPoSuggestionStatus.Pending,
