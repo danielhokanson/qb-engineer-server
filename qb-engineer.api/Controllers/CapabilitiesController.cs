@@ -3,10 +3,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using QBEngineer.Api.Capabilities;
+using QBEngineer.Api.Features.Capabilities.AuditLog;
 using QBEngineer.Api.Features.Capabilities.BulkToggle;
 using QBEngineer.Api.Features.Capabilities.Config;
 using QBEngineer.Api.Features.Capabilities.Descriptor;
+using QBEngineer.Api.Features.Capabilities.Relations;
 using QBEngineer.Api.Features.Capabilities.Toggle;
+using QBEngineer.Api.Features.Capabilities.Validate;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Controllers;
 
@@ -133,6 +137,62 @@ public class CapabilitiesController(IMediator mediator) : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Phase 4 Phase-E — Returns audit-log entries scoped to a single
+    /// capability. Drives the per-capability detail page's "Recent activity"
+    /// section (4E §Screen 5; 4E-decisions-log #8). Pagination via cursor:
+    /// <c>?before=&lt;timestamp&gt;&amp;take=N</c>. Admin-only.
+    /// </summary>
+    [HttpGet("{id}/audit-log")]
+    [Authorize(Roles = "Admin")]
+    [CapabilityBootstrap]
+    public async Task<ActionResult<IReadOnlyList<AuditLogEntryResponseModel>>> GetAuditLog(
+        string id,
+        [FromQuery] DateTimeOffset? before,
+        [FromQuery] int take = 25,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetCapabilityAuditLogQuery(id, before, take), ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Phase 4 Phase-E — Returns the dependency graph for a single capability:
+    /// what it depends on (Dependencies), what depends on it (Dependents), and
+    /// what is mutually exclusive with it (Mutexes). Each entry is augmented
+    /// with the peer's current name, area, and enabled state so the UI doesn't
+    /// have to walk the full descriptor to compute the inverse graph.
+    /// </summary>
+    [HttpGet("{id}/relations")]
+    [CapabilityBootstrap]
+    public async Task<ActionResult<CapabilityRelationsResponseModel>> GetRelations(
+        string id,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetCapabilityRelationsQuery(id), ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Phase 4 Phase-E — Validate-only ("dry run") variant of bulk-toggle.
+    /// Returns the same constraint-violation envelope the bulk-toggle would,
+    /// but does NOT persist anything. Useful for client-side preview before
+    /// committing a multi-toggle change (consumed by the Phase G preset-apply
+    /// confirmation modal in a later phase). Admin-only.
+    /// </summary>
+    [HttpPost("validate")]
+    [Authorize(Roles = "Admin")]
+    [CapabilityBootstrap]
+    public async Task<ActionResult<ValidateCapabilityChangesResponseModel>> Validate(
+        [FromBody] ValidateCapabilityChangesRequestModel body,
+        CancellationToken ct = default)
+    {
+        var result = await mediator.Send(
+            new ValidateCapabilityChangesCommand(body.Items),
+            ct);
+        return Ok(result);
+    }
+
     private ActionResult ToCapabilityMutationResult(CapabilityMutationException ex)
     {
         Response.ContentType = "application/problem+json";
@@ -142,3 +202,12 @@ public class CapabilitiesController(IMediator mediator) : ControllerBase
         };
     }
 }
+
+/// <summary>
+/// Phase 4 Phase-E — Body for <c>POST /api/v1/capabilities/validate</c>.
+/// Mirrors <see cref="QBEngineer.Api.Features.Capabilities.Validate.ValidateChangeItem"/>
+/// at the request shape so the controller doesn't bind directly to the
+/// MediatR command record (which would also require duplicate-id validation
+/// at bind time).
+/// </summary>
+public record ValidateCapabilityChangesRequestModel(IReadOnlyList<ValidateChangeItem> Items);
