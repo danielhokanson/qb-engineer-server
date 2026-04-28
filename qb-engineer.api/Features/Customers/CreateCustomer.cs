@@ -31,7 +31,15 @@ public class CreateCustomerValidator : AbstractValidator<CreateCustomerCommand>
 {
     public CreateCustomerValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        // EDGE-NULLEMPTY-002 (Phase 3 closeout): NotEmpty() treats ASCII
+        // whitespace (spaces, tabs, \r\n) as empty, but Unicode whitespace
+        // and zero-width characters (U+200B ZWSP, U+200C ZWNJ, U+200D ZWJ,
+        // U+FEFF BOM, etc.) sneak through. Tighten the rule so that a
+        // visually-empty Name is rejected uniformly.
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200)
+            .Must(NameHasVisibleContent)
+            .When(x => !string.IsNullOrEmpty(x.Name))
+            .WithMessage("'Name' must contain visible (non-whitespace) characters.");
         RuleFor(x => x.CompanyName).MaximumLength(200);
         RuleFor(x => x.Email).MaximumLength(200).EmailAddress().When(x => !string.IsNullOrEmpty(x.Email));
         RuleFor(x => x.Phone).MaximumLength(50);
@@ -76,6 +84,26 @@ public class CreateCustomerValidator : AbstractValidator<CreateCustomerCommand>
             RuleFor(x => x.ShippingAddress!.State).NotEmpty().MaximumLength(100);
             RuleFor(x => x.ShippingAddress!.Postal).NotEmpty().MaximumLength(20);
         });
+    }
+
+    // EDGE-NULLEMPTY-002 — return true only if the name has at least one
+    // character that's neither ASCII whitespace, Unicode whitespace, nor a
+    // zero-width / format character. Catches U+200B/200C/200D ZWSP/ZWNJ/ZWJ,
+    // U+2060 word joiner, U+FEFF BOM, and the Unicode-space block (U+00A0
+    // NBSP, U+2000–U+200A en/em/etc. spaces, U+202F narrow NBSP, U+205F
+    // medium math space, U+3000 ideographic space).
+    private static bool NameHasVisibleContent(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+        foreach (var rune in value.EnumerateRunes())
+        {
+            if (System.Text.Rune.IsWhiteSpace(rune)) continue;
+            var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(rune.Value);
+            if (cat == System.Globalization.UnicodeCategory.Format) continue;
+            if (cat == System.Globalization.UnicodeCategory.Control) continue;
+            return true;
+        }
+        return false;
     }
 }
 
