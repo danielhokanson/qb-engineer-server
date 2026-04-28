@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.SalesOrders;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,Engineer")]
+[RequiresCapability("CAP-P2P-BACKTOBACK")]
 public class BackToBacksController(IMediator mediator) : ControllerBase
 {
     [HttpPost("sales-orders/{soId:int}/lines/{lineId:int}/back-to-back")]

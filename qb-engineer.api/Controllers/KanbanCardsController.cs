@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.KanbanReplenishment;
 using QBEngineer.Core.Models;
 
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/kanban-cards")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,Engineer,ProductionWorker")]
+[RequiresCapability("CAP-EXT-KANBAN-REPLENISHMENT")]
 public class KanbanCardsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

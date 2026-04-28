@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using QBEngineer.Api.Authorization;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Search;
 using QBEngineer.Api.Features.ShopFloor;
 using QBEngineer.Core.Models;
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/display/shop-floor")]
 [Authorize]
+[RequiresCapability("CAP-EXT-SHOPFLOOR-KIOSK")]
 public class ShopFloorController(IMediator mediator) : ControllerBase
 {
     private static readonly HashSet<string> KioskEntityTypes = new(["Job", "Part"]);

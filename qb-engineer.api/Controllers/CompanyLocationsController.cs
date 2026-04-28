@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.CompanyLocations;
 using QBEngineer.Core.Models;
 
@@ -9,6 +10,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/company-locations")]
 [Authorize(Roles = "Admin")]
+[RequiresCapability("CAP-MD-LOCATIONS")]
 public class CompanyLocationsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

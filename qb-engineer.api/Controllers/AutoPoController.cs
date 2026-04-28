@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.AutoPo;
 using QBEngineer.Api.Jobs;
 using QBEngineer.Core.Enums;
@@ -15,6 +16,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/auto-po")]
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
+[RequiresCapability("CAP-P2P-AUTOPO")]
 public class AutoPoController(IMediator mediator) : ControllerBase
 {
     [HttpGet("suggestions")]

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Jobs;
 using QBEngineer.Api.Features.Reports;
 using QBEngineer.Core.Models;
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1")]
 [Authorize(Roles = "Admin,Manager,Engineer,PM")]
+[RequiresCapability("CAP-P2P-SUBCONTRACT")]
 public class SubcontractController(IMediator mediator) : ControllerBase
 {
     [HttpPost("jobs/{jobId:int}/operations/{opId:int}/send-out")]

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Eco;
 using QBEngineer.Api.Features.Quality;
 using QBEngineer.Core.Enums;
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/quality")]
 [Authorize]
+[RequiresCapability("CAP-QC-INSPECTION")]
 public class QualityController(IMediator mediator) : ControllerBase
 {
     [HttpGet("templates")]
@@ -60,6 +62,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpGet("ecos")]
     [Authorize(Roles = "Admin,Manager,Engineer")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<ActionResult<List<EcoResponseModel>>> GetEcos([FromQuery] EcoStatus? status)
     {
         var result = await mediator.Send(new GetEcosQuery(status));
@@ -68,6 +71,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpGet("ecos/{id:int}")]
     [Authorize(Roles = "Admin,Manager,Engineer")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<ActionResult<EcoResponseModel>> GetEcoById(int id)
     {
         var result = await mediator.Send(new GetEcoByIdQuery(id));
@@ -76,6 +80,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPost("ecos")]
     [Authorize(Roles = "Admin,Manager,Engineer")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<ActionResult<EcoResponseModel>> CreateEco([FromBody] CreateEcoRequestModel request)
     {
         var result = await mediator.Send(new CreateEcoCommand(request));
@@ -84,6 +89,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPatch("ecos/{id:int}")]
     [Authorize(Roles = "Admin,Manager,Engineer")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<ActionResult<EcoResponseModel>> UpdateEco(int id, [FromBody] UpdateEcoRequestModel request)
     {
         var result = await mediator.Send(new UpdateEcoCommand(id, request));
@@ -92,6 +98,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPost("ecos/{id:int}/approve")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<IActionResult> ApproveEco(int id)
     {
         await mediator.Send(new ApproveEcoCommand(id));
@@ -100,6 +107,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPost("ecos/{id:int}/implement")]
     [Authorize(Roles = "Admin,Manager,Engineer")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<IActionResult> ImplementEco(int id)
     {
         await mediator.Send(new ImplementEcoCommand(id));
@@ -108,6 +116,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPost("ecos/{id:int}/affected-items")]
     [Authorize(Roles = "Admin,Manager,Engineer")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<ActionResult<EcoAffectedItemResponseModel>> AddAffectedItem(
         int id, [FromBody] CreateEcoAffectedItemRequestModel request)
     {
@@ -117,6 +126,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpDelete("ecos/{id:int}/affected-items/{itemId:int}")]
     [Authorize(Roles = "Admin,Manager,Engineer")]
+    [RequiresCapability("CAP-MD-ECO")]
     public async Task<IActionResult> DeleteAffectedItem(int id, int itemId)
     {
         await mediator.Send(new DeleteEcoAffectedItemCommand(id, itemId));
@@ -126,6 +136,7 @@ public class QualityController(IMediator mediator) : ControllerBase
     // ── Gages ──
 
     [HttpGet("gages")]
+    [RequiresCapability("CAP-QC-GAGE")]
     public async Task<ActionResult<List<GageResponseModel>>> GetGages(
         [FromQuery] GageStatus? status, [FromQuery] string? search)
     {
@@ -134,6 +145,7 @@ public class QualityController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("gages/{id:int}")]
+    [RequiresCapability("CAP-QC-GAGE")]
     public async Task<ActionResult<GageResponseModel>> GetGageById(int id)
     {
         var result = await mediator.Send(new GetGageByIdQuery(id));
@@ -142,6 +154,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPost("gages")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-QC-GAGE")]
     public async Task<ActionResult<GageResponseModel>> CreateGage(
         [FromBody] CreateGageRequestModel request)
     {
@@ -151,6 +164,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPatch("gages/{id:int}")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-QC-GAGE")]
     public async Task<ActionResult<GageResponseModel>> UpdateGage(
         int id, [FromBody] UpdateGageRequestModel request)
     {
@@ -159,6 +173,7 @@ public class QualityController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("gages/due")]
+    [RequiresCapability("CAP-QC-GAGE")]
     public async Task<ActionResult<List<GageResponseModel>>> GetGagesDue(
         [FromQuery] int daysAhead = 30)
     {
@@ -167,6 +182,7 @@ public class QualityController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("gages/{id:int}/calibrations")]
+    [RequiresCapability("CAP-QC-GAGE")]
     public async Task<ActionResult<List<CalibrationRecordResponseModel>>> GetGageCalibrations(int id)
     {
         var result = await mediator.Send(new GetGageCalibrationsQuery(id));
@@ -175,6 +191,7 @@ public class QualityController(IMediator mediator) : ControllerBase
 
     [HttpPost("gages/{id:int}/calibrations")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-QC-GAGE")]
     public async Task<ActionResult<CalibrationRecordResponseModel>> CreateCalibration(
         int id, [FromBody] CreateCalibrationRecordRequestModel request)
     {

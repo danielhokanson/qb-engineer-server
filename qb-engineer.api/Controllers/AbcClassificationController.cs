@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Inventory;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/inventory/abc")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,Engineer")]
+[RequiresCapability("CAP-PLAN-ABC")]
 public class AbcClassificationController(IMediator mediator) : ControllerBase
 {
     [HttpPost("run")]

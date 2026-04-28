@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Jobs;
 using QBEngineer.Core.Entities;
@@ -18,6 +19,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/jobs")]
 [Authorize(Roles = "Admin,Manager,PM,Engineer,ProductionWorker,OfficeManager")]
+[RequiresCapability("CAP-MFG-WO-RELEASE")]
 public class JobsController(IMediator mediator) : ControllerBase
 {
     /// <summary>
@@ -224,6 +226,7 @@ public class JobsController(IMediator mediator) : ControllerBase
 
     // Production Runs
     [HttpGet("{id:int}/production-runs")]
+    [RequiresCapability("CAP-MFG-COMPLETE")]
     public async Task<ActionResult<List<ProductionRunResponseModel>>> GetProductionRuns(int id)
     {
         var result = await mediator.Send(new GetProductionRunsQuery(id));
@@ -231,6 +234,7 @@ public class JobsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{id:int}/production-runs")]
+    [RequiresCapability("CAP-MFG-COMPLETE")]
     public async Task<ActionResult<ProductionRunResponseModel>> CreateProductionRun(
         int id, CreateProductionRunRequestModel request)
     {
@@ -240,6 +244,7 @@ public class JobsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:int}/production-runs/{runId:int}")]
+    [RequiresCapability("CAP-MFG-COMPLETE")]
     public async Task<ActionResult<ProductionRunResponseModel>> UpdateProductionRun(
         int id, int runId, UpdateProductionRunRequestModel request)
     {
@@ -251,6 +256,7 @@ public class JobsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:int}/production-runs/{runId:int}")]
+    [RequiresCapability("CAP-MFG-COMPLETE")]
     public async Task<ActionResult> DeleteProductionRun(int id, int runId)
     {
         await mediator.Send(new DeleteProductionRunCommand(id, runId));
@@ -375,11 +381,13 @@ public class JobsController(IMediator mediator) : ControllerBase
         => Ok(await mediator.Send(new GetJobCostSummaryQuery(id), ct));
 
     [HttpGet("{id:int}/material-issues")]
+    [RequiresCapability("CAP-MFG-MATL-ISSUE")]
     public async Task<ActionResult<List<MaterialIssueResponseModel>>> GetMaterialIssues(
         int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default)
         => Ok(await mediator.Send(new GetJobMaterialIssuesQuery(id, page, pageSize), ct));
 
     [HttpPost("{id:int}/material-issues")]
+    [RequiresCapability("CAP-MFG-MATL-ISSUE")]
     public async Task<ActionResult<MaterialIssueResponseModel>> CreateMaterialIssue(
         int id, [FromBody] MaterialIssueRequest req, CancellationToken ct)
     {
@@ -392,6 +400,7 @@ public class JobsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{id:int}/material-issues/{issueId:int}/return")]
+    [RequiresCapability("CAP-MFG-MATL-ISSUE")]
     public async Task<ActionResult<MaterialIssueResponseModel>> ReturnMaterialIssue(
         int id, int issueId, CancellationToken ct)
     {

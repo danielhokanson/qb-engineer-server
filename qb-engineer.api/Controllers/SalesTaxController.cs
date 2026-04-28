@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.SalesTax;
 using QBEngineer.Core.Models;
 
@@ -9,6 +10,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/sales-tax-rates")]
 [Authorize]
+[RequiresCapability("CAP-MD-TAXCODES")]
 public class SalesTaxController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

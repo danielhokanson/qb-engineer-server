@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Inventory;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/inventory/transfers")]
 [Authorize]
+[RequiresCapability("CAP-INV-MULTILOC")]
 public class InterPlantTransfersController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

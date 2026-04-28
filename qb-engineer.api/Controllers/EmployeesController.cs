@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Employees;
 using QBEngineer.Core.Models;
@@ -13,6 +14,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/employees")]
 [Authorize(Roles = "Admin,Manager")]
+[RequiresCapability("CAP-MD-EMPLOYEES")]
 public class EmployeesController(IMediator mediator) : ControllerBase
 {
     /// <summary>

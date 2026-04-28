@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Assets;
 using QBEngineer.Core.Enums;
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/assets")]
 [Authorize(Roles = "Admin,Manager,Engineer")]
+[RequiresCapability("CAP-MD-ASSETS")]
 public class AssetsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
@@ -52,6 +54,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id:int}/maintenance/logs")]
+    [RequiresCapability("CAP-MAINT-PM")]
     public async Task<ActionResult<List<MaintenanceLogListItemResponseModel>>> GetAssetMaintenanceLogs(int id)
     {
         var result = await mediator.Send(new GetAssetMaintenanceLogsQuery(id));
@@ -59,6 +62,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id:int}/maintenance")]
+    [RequiresCapability("CAP-MAINT-PM")]
     public async Task<ActionResult<List<MaintenanceScheduleResponseModel>>> GetAssetMaintenanceSchedules(int id)
     {
         var result = await mediator.Send(new GetMaintenanceSchedulesQuery(id));
@@ -66,6 +70,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("maintenance")]
+    [RequiresCapability("CAP-MAINT-PM")]
     public async Task<ActionResult<List<MaintenanceScheduleResponseModel>>> GetAllMaintenanceSchedules()
     {
         var result = await mediator.Send(new GetMaintenanceSchedulesQuery(null));
@@ -73,6 +78,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{id:int}/maintenance")]
+    [RequiresCapability("CAP-MAINT-PM")]
     public async Task<ActionResult<MaintenanceScheduleResponseModel>> CreateMaintenanceSchedule(
         int id, [FromBody] CreateMaintenanceScheduleRequestModel request)
     {
@@ -82,6 +88,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("maintenance/{scheduleId:int}/log")]
+    [RequiresCapability("CAP-MAINT-PM")]
     public async Task<ActionResult<MaintenanceLogResponseModel>> LogMaintenance(
         int scheduleId, [FromBody] LogMaintenanceRequestModel request)
     {
@@ -90,6 +97,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("maintenance/{scheduleId:int}")]
+    [RequiresCapability("CAP-MAINT-PM")]
     public async Task<IActionResult> DeleteMaintenanceSchedule(int scheduleId)
     {
         await mediator.Send(new DeleteMaintenanceScheduleCommand(scheduleId));
@@ -109,6 +117,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     // ─── Downtime Logging ───
 
     [HttpGet("{id:int}/downtime")]
+    [RequiresCapability("CAP-MAINT-BREAKDOWN")]
     public async Task<ActionResult<List<DowntimeLogResponseModel>>> GetAssetDowntime(int id)
     {
         var result = await mediator.Send(new GetDowntimeLogsQuery(id));
@@ -116,6 +125,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("downtime")]
+    [RequiresCapability("CAP-MAINT-BREAKDOWN")]
     public async Task<ActionResult<List<DowntimeLogResponseModel>>> GetAllDowntime()
     {
         var result = await mediator.Send(new GetDowntimeLogsQuery(null));
@@ -123,6 +133,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{id:int}/downtime")]
+    [RequiresCapability("CAP-MAINT-BREAKDOWN")]
     public async Task<ActionResult<DowntimeLogResponseModel>> CreateDowntimeLog(
         int id, [FromBody] CreateDowntimeLogRequestModel request)
     {
@@ -131,6 +142,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPatch("downtime/{id:int}/end")]
+    [RequiresCapability("CAP-MAINT-BREAKDOWN")]
     public async Task<ActionResult<DowntimeLogResponseModel>> EndDowntimeLog(int id)
     {
         var result = await mediator.Send(new EndDowntimeLogCommand(id));
@@ -140,6 +152,7 @@ public class AssetsController(IMediator mediator) : ControllerBase
     // ─── Maintenance Job Linking ───
 
     [HttpPost("maintenance/{scheduleId:int}/create-job")]
+    [RequiresCapability("CAP-MAINT-PM")]
     public async Task<ActionResult<object>> CreateMaintenanceJob(int scheduleId)
     {
         var jobId = await mediator.Send(new CreateMaintenanceJobCommand(scheduleId));

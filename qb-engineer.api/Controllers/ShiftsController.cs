@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Scheduling;
 using QBEngineer.Core.Models;
 
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/shifts")]
 [Authorize(Roles = "Admin,Manager")]
+[RequiresCapability("CAP-HR-SHIFTS")]
 public class ShiftsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

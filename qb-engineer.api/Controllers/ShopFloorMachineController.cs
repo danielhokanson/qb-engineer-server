@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.IoT;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/shop-floor/machine")]
 [Authorize]
+[RequiresCapability("CAP-MFG-MACHINE-CONNECT")]
 public class ShopFloorMachineController(IMediator mediator) : ControllerBase
 {
     [HttpGet("{workCenterId:int}/live")]

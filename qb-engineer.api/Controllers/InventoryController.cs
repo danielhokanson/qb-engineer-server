@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Inventory;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/inventory")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,Engineer,ProductionWorker")]
+[RequiresCapability("CAP-INV-CORE")]
 public class InventoryController(IMediator mediator) : ControllerBase
 {
     [HttpGet("locations")]
@@ -109,6 +111,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     // ── Stock Operations ──
 
     [HttpPost("transfer")]
+    [RequiresCapability("CAP-INV-MULTILOC")]
     public async Task<IActionResult> TransferStock([FromBody] TransferStockRequestModel request)
     {
         await mediator.Send(new TransferStockCommand(request));
@@ -126,6 +129,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     // ── Cycle Counts ──
 
     [HttpGet("cycle-counts")]
+    [RequiresCapability("CAP-INV-CYCLECOUNT")]
     public async Task<ActionResult<List<CycleCountResponseModel>>> GetCycleCounts(
         [FromQuery] int? locationId,
         [FromQuery] string? status)
@@ -135,6 +139,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("cycle-counts")]
+    [RequiresCapability("CAP-INV-CYCLECOUNT")]
     public async Task<ActionResult<CycleCountResponseModel>> CreateCycleCount(
         [FromBody] CreateCycleCountRequestModel request)
     {
@@ -144,6 +149,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
 
     [HttpPut("cycle-counts/{id:int}")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-INV-CYCLECOUNT")]
     public async Task<IActionResult> UpdateCycleCount(int id, [FromBody] UpdateCycleCountRequestModel request)
     {
         await mediator.Send(new UpdateCycleCountCommand(id, request));
@@ -153,6 +159,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     // ── Reservations ──
 
     [HttpGet("reservations")]
+    [RequiresCapability("CAP-INV-RESERVE")]
     public async Task<ActionResult<List<ReservationResponseModel>>> GetReservations(
         [FromQuery] int? partId,
         [FromQuery] int? jobId)
@@ -162,6 +169,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("reservations")]
+    [RequiresCapability("CAP-INV-RESERVE")]
     public async Task<ActionResult<ReservationResponseModel>> CreateReservation(
         [FromBody] CreateReservationRequestModel request)
     {
@@ -170,6 +178,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("reservations/{id:int}")]
+    [RequiresCapability("CAP-INV-RESERVE")]
     public async Task<IActionResult> ReleaseReservation(int id)
     {
         await mediator.Send(new ReleaseReservationCommand(id));
@@ -179,6 +188,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     // ── Inspection ──
 
     [HttpGet("pending-inspection")]
+    [RequiresCapability("CAP-QC-INSPECTION")]
     public async Task<ActionResult<List<PendingInspectionItem>>> GetPendingInspections()
     {
         var result = await mediator.Send(new GetPendingInspectionsQuery());
@@ -186,6 +196,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("inspect/{receivingRecordId:int}")]
+    [RequiresCapability("CAP-QC-INSPECTION")]
     public async Task<IActionResult> RecordInspectionResult(int receivingRecordId, [FromBody] InspectionResultRequestModel data)
     {
         await mediator.Send(new RecordInspectionResultCommand(receivingRecordId, data));
@@ -194,6 +205,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
 
     [HttpPost("inspect/{receivingRecordId:int}/waive")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-QC-INSPECTION")]
     public async Task<IActionResult> WaiveInspection(int receivingRecordId)
     {
         await mediator.Send(new WaiveInspectionCommand(receivingRecordId));
@@ -203,6 +215,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     // ── Units of Measure ──
 
     [HttpGet("uom")]
+    [RequiresCapability("CAP-MD-UOM")]
     public async Task<ActionResult<List<UomResponseModel>>> GetUnitsOfMeasure([FromQuery] string? category)
     {
         var result = await mediator.Send(new GetUnitsOfMeasureQuery(category));
@@ -211,6 +224,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
 
     [HttpPost("uom")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-MD-UOM")]
     public async Task<ActionResult<UomResponseModel>> CreateUnitOfMeasure([FromBody] CreateUomRequestModel data)
     {
         var result = await mediator.Send(new CreateUnitOfMeasureCommand(data));
@@ -219,6 +233,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
 
     [HttpPut("uom/{id:int}")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-MD-UOM")]
     public async Task<ActionResult<UomResponseModel>> UpdateUnitOfMeasure(int id, [FromBody] CreateUomRequestModel data)
     {
         var result = await mediator.Send(new UpdateUnitOfMeasureCommand(id, data));
@@ -226,6 +241,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("uom/conversions")]
+    [RequiresCapability("CAP-MD-UOM")]
     public async Task<ActionResult<List<UomConversionResponseModel>>> GetUomConversions([FromQuery] int? partId)
     {
         var result = await mediator.Send(new GetUomConversionsQuery(partId));
@@ -234,6 +250,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
 
     [HttpPost("uom/conversions")]
     [Authorize(Roles = "Admin,Manager")]
+    [RequiresCapability("CAP-MD-UOM")]
     public async Task<ActionResult<UomConversionResponseModel>> CreateUomConversion([FromBody] CreateUomConversionRequestModel data)
     {
         var result = await mediator.Send(new CreateUomConversionCommand(data));
@@ -241,6 +258,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("uom/convert")]
+    [RequiresCapability("CAP-MD-UOM")]
     public async Task<ActionResult<ConvertQuantityResult>> ConvertQuantity(
         [FromQuery] int fromUomId, [FromQuery] int toUomId,
         [FromQuery] decimal quantity, [FromQuery] int? partId)
@@ -252,6 +270,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     // ── ATP (Available-to-Promise) ──────────────────────────────────────
 
     [HttpGet("atp/{partId:int}")]
+    [RequiresCapability("CAP-PLAN-ATP")]
     public async Task<ActionResult<AtpResult>> GetAtp(int partId, [FromQuery] decimal quantity = 1)
     {
         var result = await mediator.Send(new GetAtpForPartQuery(partId, quantity));
@@ -259,6 +278,7 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("atp/{partId:int}/timeline")]
+    [RequiresCapability("CAP-PLAN-ATP")]
     public async Task<ActionResult<List<AtpBucket>>> GetAtpTimeline(
         int partId, [FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
     {

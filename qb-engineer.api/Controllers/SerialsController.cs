@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Serials;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/serials")]
 [Authorize(Roles = "Admin,Manager,Engineer")]
+[RequiresCapability("CAP-INV-SERIALS")]
 public class SerialsController(IMediator mediator) : ControllerBase
 {
     [HttpGet("part/{partId:int}")]
