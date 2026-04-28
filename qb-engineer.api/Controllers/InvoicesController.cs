@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Invoices;
 using QBEngineer.Core.Entities;
@@ -15,6 +16,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/invoices")]
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
+[RequiresCapability("CAP-O2C-INVOICE")]
 public class InvoicesController(IMediator mediator) : ControllerBase
 {
     /// <summary>

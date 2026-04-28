@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Chat;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/chat")]
 [Authorize]
+[RequiresCapability("CAP-EXT-CHAT")]
 public class ChatController(IMediator mediator) : ControllerBase
 {
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

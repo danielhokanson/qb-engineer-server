@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Parts;
 using QBEngineer.Core.Enums;
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/parts")]
 [Authorize(Roles = "Admin,Manager,Engineer,ProductionWorker,PM,OfficeManager")]
+[RequiresCapability("CAP-MD-PARTS")]
 public class PartsController(IMediator mediator) : ControllerBase
 {
     /// <summary>

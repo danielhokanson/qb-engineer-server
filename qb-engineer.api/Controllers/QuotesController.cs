@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Quotes;
 using QBEngineer.Core.Entities;
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/quotes")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
+[RequiresCapability("CAP-O2C-QUOTE")]
 public class QuotesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

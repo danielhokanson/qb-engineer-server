@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.PurchaseOrders;
 using QBEngineer.Core.Entities;
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/purchase-orders")]
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
+[RequiresCapability("CAP-P2P-PO")]
 public class PurchaseOrdersController(IMediator mediator) : ControllerBase
 {
     /// <summary>

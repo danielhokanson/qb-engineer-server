@@ -8,8 +8,10 @@ namespace QBEngineer.Tests.Capabilities;
 
 /// <summary>
 /// Phase 4 Phase-A — Test-only authentication handler. Authenticates every
-/// request as a fixed test admin user. Activated by setting the request
-/// header <c>X-Test-User</c> (any value); absence = anonymous.
+/// request bearing the <c>X-Test-User</c> header.
+/// Phase 4 Phase-B — extended to honor <c>X-Test-Role</c> so non-admin paths
+/// can be exercised (default: <c>Admin</c>).
+/// Absence of <c>X-Test-User</c> = anonymous.
 ///
 /// Lives next to the capability tests because Phase A is the first place
 /// the test project needed authenticated endpoint coverage.
@@ -24,17 +26,25 @@ public class TestAuthHandler(
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.ContainsKey("X-Test-User"))
+        if (!Request.Headers.TryGetValue("X-Test-User", out var userIdValues))
         {
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
+        // Default role is Admin so existing Phase A tests stay green; tests
+        // that need to exercise role-restricted branches send X-Test-Role.
+        var role = Request.Headers.TryGetValue("X-Test-Role", out var roleValues) && !string.IsNullOrEmpty(roleValues.ToString())
+            ? roleValues.ToString()
+            : "Admin";
+
+        var userId = string.IsNullOrWhiteSpace(userIdValues.ToString()) ? "1" : "1";
+
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "1"),
-            new Claim(ClaimTypes.Name, "test-admin"),
-            new Claim(ClaimTypes.Email, "test-admin@qbengineer.local"),
-            new Claim(ClaimTypes.Role, "Admin"),
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Name, "test-user"),
+            new Claim(ClaimTypes.Email, "test-user@qbengineer.local"),
+            new Claim(ClaimTypes.Role, role),
         };
         var identity = new ClaimsIdentity(claims, SchemeName);
         var principal = new ClaimsPrincipal(identity);
