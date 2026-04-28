@@ -5,8 +5,14 @@ namespace QBEngineer.Core.Entities;
 /// One row per stable capability code (e.g. "CAP-MD-CUSTOMERS"). The seeder
 /// upserts on <see cref="Code"/> and never overwrites <see cref="Enabled"/>
 /// once the row exists (admin-changed state is operator-owned).
+///
+/// Phase 4 Phase-C — Implements <see cref="IConcurrencyVersioned"/> so admin
+/// toggles can use the same If-Match / 412 Precondition Failed pattern that
+/// transactional entities (Job, Invoice, etc.) use. The xmin column remains
+/// for Postgres-level concurrency, while <see cref="Version"/> is the
+/// API-surfaced ETag value that works in both Postgres and InMemory tests.
 /// </summary>
-public class Capability : BaseAuditableEntity
+public class Capability : BaseAuditableEntity, IConcurrencyVersioned
 {
     /// <summary>Stable capability identifier from the 4A catalog (e.g. "CAP-MD-CUSTOMERS"). Immutable once seeded.</summary>
     public string Code { get; set; } = string.Empty;
@@ -35,6 +41,14 @@ public class Capability : BaseAuditableEntity
 
     /// <summary>Optimistic concurrency token (Postgres xmin / EF Core RowVersion).</summary>
     public uint RowVersion { get; set; }
+
+    /// <summary>
+    /// Phase 4 Phase-C — Monotonically incrementing version, used as the
+    /// API-surfaced ETag value. Manually bumped by
+    /// <see cref="QBEngineer.Data.Context.AppDbContext"/> on every Modified
+    /// save (same pattern as Job / Invoice / etc.). Starts at 1.
+    /// </summary>
+    public uint Version { get; set; } = 1;
 
     public ICollection<CapabilityConfig> Configs { get; set; } = [];
 }

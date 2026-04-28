@@ -521,6 +521,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
         typeof(AuditLogEntry),
         typeof(ScanActionLog),
         typeof(TrainingScanLog),
+        // Phase 4 — capability mutations write to AuditLogEntry via
+        // ISystemAuditWriter; per-entity ActivityLog rows would duplicate.
+        typeof(Capability),
+        typeof(CapabilityConfig),
     };
 
     // Properties excluded from field-level change tracking

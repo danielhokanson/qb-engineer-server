@@ -31,6 +31,10 @@ public class CapabilityConfiguration : IEntityTypeConfiguration<Capability>
             .ValueGeneratedOnAddOrUpdate()
             .IsConcurrencyToken();
 
+        // Phase 4 Phase-C — API-surfaced ETag value, bumped manually in
+        // AppDbContext.SaveChangesAsync() per IConcurrencyVersioned contract.
+        builder.Property(e => e.Version).HasDefaultValue(1u);
+
         builder.HasMany(e => e.Configs)
             .WithOne(c => c.Capability)
             .HasForeignKey(c => c.CapabilityId)

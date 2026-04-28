@@ -24,5 +24,8 @@ public class CapabilityConfigConfiguration : IEntityTypeConfiguration<Capability
             .HasColumnType("xid")
             .ValueGeneratedOnAddOrUpdate()
             .IsConcurrencyToken();
+
+        // Phase 4 Phase-C — API-surfaced ETag value (Capability.Version-style).
+        builder.Property(e => e.Version).HasDefaultValue(1u);
     }
 }

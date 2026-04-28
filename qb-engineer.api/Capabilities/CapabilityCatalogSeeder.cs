@@ -70,6 +70,18 @@ public class CapabilityCatalogSeeder(AppDbContext db, ILogger<CapabilityCatalogS
             logger.LogInformation(
                 "[CAPABILITY-SEED] Catalog seed complete: inserted={Inserted}, refreshed={Refreshed}, total={Total}",
                 inserted, refreshed, CapabilityCatalog.All.Count);
+
+            // Phase 4 Phase-C — surface catalog drift (edges referencing
+            // codes not in the catalog body). Warns once at startup and
+            // then silently skips the bad edges at evaluation time.
+            var byCode = CapabilityCatalog.All.ToDictionary(c => c.Code, c => c);
+            var dropped = CapabilityDependencyResolver.ValidateGraph(byCode, logger);
+            if (dropped > 0)
+            {
+                logger.LogWarning(
+                    "[CAPABILITY-CATALOG] {Dropped} dependency / mutex edge(s) skipped because their endpoints are missing from the catalog. The install remains usable; check CapabilityCatalogRelations for drift.",
+                    dropped);
+            }
         }
         finally
         {

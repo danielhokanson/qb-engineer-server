@@ -19,3 +19,13 @@ public sealed record CapabilityDefinition(
     string Description,
     bool IsDefaultOn,
     string? RequiresRoles = null);
+
+/// <summary>
+/// Phase 4 Phase-C — Encodes the dependency / soft-mutex graph from the
+/// Phase 4A capability catalog. Edges are evaluated at toggle time by
+/// <see cref="CapabilityDependencyResolver"/> to enforce 4D §8.2 / §8.3 /
+/// 4D-decisions-log #7 (block-with-informative-error semantics).
+/// </summary>
+/// <param name="From">The capability whose toggle is being evaluated.</param>
+/// <param name="To">The other capability participating in the relationship.</param>
+public sealed record CapabilityEdge(string From, string To);

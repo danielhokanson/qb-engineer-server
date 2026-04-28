@@ -52,6 +52,24 @@ public class CapabilityToggleTests
         response.EnsureSuccessStatusCode();
     }
 
+    /// <summary>
+    /// Phase 4 Phase-C — bypasses the dependency-cascade-block by writing
+    /// directly to the DB and refreshing the snapshot. Used by Phase B tests
+    /// that need to put the install in a state the admin API would reject
+    /// (e.g. disable a capability while its dependents are still enabled,
+    /// to verify the gate fires).
+    /// </summary>
+    private async Task ForceCapabilityStateAsync(string code, bool enabled)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var row = await db.Capabilities.FirstAsync(c => c.Code == code);
+        row.Enabled = enabled;
+        await db.SaveChangesAsync();
+        var snapshots = scope.ServiceProvider.GetRequiredService<QBEngineer.Api.Capabilities.ICapabilitySnapshotProvider>();
+        await snapshots.RefreshAsync();
+    }
+
     // ─── Happy path / Gated path / Restore ───
 
     [Fact]
@@ -97,16 +115,19 @@ public class CapabilityToggleTests
     [Fact]
     public async Task Capability_Toggle_Off_Then_On_Restores_Endpoint_Access()
     {
-        // CAP-MD-CUSTOMERS is default-on. Disable, verify gated, re-enable,
-        // verify accessible again. This is the "round-trip" smoke test.
-        await SetCapabilityAsync("CAP-MD-CUSTOMERS", false);
+        // CAP-MD-CUSTOMERS is default-on with several enabled dependents
+        // (CAP-O2C-QUOTE, CAP-O2C-SO, CAP-RPT-OPERATIONAL). Phase C's
+        // dependency-cascade-block would reject a direct admin disable here,
+        // so we bypass via direct DB write to set up the test state — the
+        // verification still asserts the gate behavior end-to-end.
+        await ForceCapabilityStateAsync("CAP-MD-CUSTOMERS", false);
         try
         {
             var client = AuthenticatedClient();
             var disabledResponse = await client.GetAsync("/api/v1/customers");
             Assert.Equal(HttpStatusCode.Forbidden, disabledResponse.StatusCode);
 
-            // Restore.
+            // Restore via the public API (no dependents block enabling).
             await SetCapabilityAsync("CAP-MD-CUSTOMERS", true);
 
             var enabledResponse = await client.GetAsync("/api/v1/customers");
@@ -116,7 +137,7 @@ public class CapabilityToggleTests
         {
             // Defensive — make sure default-on state is restored even if the
             // assertion fails in the middle of the round-trip.
-            await SetCapabilityAsync("CAP-MD-CUSTOMERS", true);
+            await ForceCapabilityStateAsync("CAP-MD-CUSTOMERS", true);
         }
     }
 
@@ -142,11 +163,15 @@ public class CapabilityToggleTests
         // /api/v1/auth/login does not have [RequiresCapability] and is NOT
         // mistakenly gated by anything else either — verify it stays reachable.
         // Same reasoning for /api/v1/capabilities/descriptor (bootstrap-marked).
+        //
+        // Phase C: the public API now blocks disabling capabilities whose
+        // dependents are still enabled. We bypass via direct DB write because
+        // the test deliberately constructs an unreachable-via-API state.
         var snapshot = SnapshotAllGatedCodes();
         try
         {
             foreach (var code in snapshot.Keys)
-                await SetCapabilityAsync(code, false);
+                await ForceCapabilityStateAsync(code, false);
 
             var client = _factory.CreateClient();
 
@@ -173,7 +198,7 @@ public class CapabilityToggleTests
             // Restore every capability to its prior state so subsequent tests
             // see the same baseline.
             foreach (var (code, enabled) in snapshot)
-                await SetCapabilityAsync(code, enabled);
+                await ForceCapabilityStateAsync(code, enabled);
         }
     }
 
