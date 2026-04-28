@@ -408,6 +408,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Capability> Capabilities => Set<Capability>();
     public DbSet<CapabilityConfig> CapabilityConfigs => Set<CapabilityConfig>();
 
+    // Discovery (Phase 4 Phase-F) — wizard run audit trail.
+    public DbSet<DiscoveryRun> DiscoveryRuns => Set<DiscoveryRun>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -525,6 +528,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
         // ISystemAuditWriter; per-entity ActivityLog rows would duplicate.
         typeof(Capability),
         typeof(CapabilityConfig),
+        // Phase 4 Phase-F — DiscoveryRun is itself an audit row. The bulk
+        // toggle it triggers writes its own AuditLogEntry per capability.
+        typeof(DiscoveryRun),
     };
 
     // Properties excluded from field-level change tracking
