@@ -3,6 +3,7 @@ using FluentAssertions;
 using Moq;
 using QBEngineer.Api.Features.SalesOrders;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -12,13 +13,23 @@ public class CreateSalesOrderHandlerTests
 {
     private readonly Mock<ISalesOrderRepository> _orderRepo = new();
     private readonly Mock<ICustomerRepository> _customerRepo = new();
+    private readonly Mock<IPartRepository> _partRepo = new();
+    private readonly Mock<IBarcodeService> _barcodeService = new();
     private readonly CreateSalesOrderHandler _handler;
 
     private readonly Faker _faker = new();
 
     public CreateSalesOrderHandlerTests()
     {
-        _handler = new CreateSalesOrderHandler(_orderRepo.Object, _customerRepo.Object, Mock.Of<IBarcodeService>());
+        // WU-09 regression: passthrough default returns an active Part so the
+        // active-check on PartId-bearing lines does not throw. Tests that
+        // exercise part-active behavior override per-test.
+        _partRepo
+            .Setup(r => r.FindAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int id, CancellationToken _) => new Part { Id = id, Status = PartStatus.Active });
+
+        _handler = new CreateSalesOrderHandler(
+            _orderRepo.Object, _customerRepo.Object, _partRepo.Object, _barcodeService.Object);
     }
 
     [Fact]

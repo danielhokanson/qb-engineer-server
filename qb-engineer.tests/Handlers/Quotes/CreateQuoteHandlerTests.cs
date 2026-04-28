@@ -14,13 +14,21 @@ public class CreateQuoteHandlerTests
 {
     private readonly Mock<IQuoteRepository> _quoteRepo = new();
     private readonly Mock<ICustomerRepository> _customerRepo = new();
+    private readonly Mock<IPartRepository> _partRepo = new();
     private readonly CreateQuoteHandler _handler;
 
     private readonly Faker _faker = new();
 
     public CreateQuoteHandlerTests()
     {
-        _handler = new CreateQuoteHandler(_quoteRepo.Object, _customerRepo.Object);
+        // WU-09 regression: passthrough default returns an active Part so the
+        // active-check on PartId-bearing lines does not throw. Tests that
+        // exercise part-active behavior override per-test.
+        _partRepo
+            .Setup(r => r.FindAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int id, CancellationToken _) => new Part { Id = id, Status = PartStatus.Active });
+
+        _handler = new CreateQuoteHandler(_quoteRepo.Object, _customerRepo.Object, _partRepo.Object);
     }
 
     [Fact]
