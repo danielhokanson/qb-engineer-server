@@ -530,6 +530,7 @@ try
     });
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+    builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(QBEngineer.Api.Behaviors.CapabilityGateBehavior<,>));
 
     // Domain Events — dead letter queue + backward scheduling
     builder.Services.AddScoped<QBEngineer.Api.Features.DomainEvents.DomainEventFailureService>();

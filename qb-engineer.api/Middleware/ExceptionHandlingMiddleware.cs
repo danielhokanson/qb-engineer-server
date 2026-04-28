@@ -2,6 +2,8 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
+
 namespace QBEngineer.Api.Middleware;
 
 public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
@@ -76,6 +78,26 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             };
 
             await context.Response.WriteAsJsonAsync(problem);
+        }
+        catch (CapabilityDisabledException ex)
+        {
+            // Mirror the CapabilityGateMiddleware envelope shape so HTTP callers
+            // see the same 403 + X-Capability-Disabled response regardless of
+            // whether the controller-edge gate or the MediatR pipeline gate
+            // fired (Phase 4 Phase-H).
+            logger.LogInformation(
+                "[CAPABILITY-GATE] MediatR request rejected — capability {Capability} disabled",
+                ex.Capability);
+
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/problem+json";
+            context.Response.Headers["X-Capability-Disabled"] = ex.Capability;
+
+            var json = JsonSerializer.Serialize(ex.ToEnvelope(), new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            });
+            await context.Response.WriteAsync(json);
         }
         catch (UnauthorizedAccessException ex)
         {

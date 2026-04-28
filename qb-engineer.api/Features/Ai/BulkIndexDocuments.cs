@@ -2,10 +2,16 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Ai;
 
+// Phase 4 Phase-H smoke demonstration of the MediatR-side capability gate.
+// CAP-EXT-AI-ASSISTANT is default-off, so the BulkIndexDocumentsCommand —
+// invoked by the DocumentIndexJob Hangfire recurring job — is short-circuited
+// by CapabilityGateBehavior on installs that haven't opted into AI features.
+[RequiresCapability("CAP-EXT-AI-ASSISTANT")]
 public record BulkIndexDocumentsCommand(string? EntityType = null) : IRequest<int>;
 
 public class BulkIndexDocumentsValidator : AbstractValidator<BulkIndexDocumentsCommand>
