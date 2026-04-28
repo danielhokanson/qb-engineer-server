@@ -404,6 +404,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Role Templates (Phase 3 / WU-06 / C1) — tenant-configurable rollup roles.
     public DbSet<RoleTemplate> RoleTemplates => Set<RoleTemplate>();
 
+    // Capabilities (Phase 4 Phase-A) — capability gating storage.
+    public DbSet<Capability> Capabilities => Set<Capability>();
+    public DbSet<CapabilityConfig> CapabilityConfigs => Set<CapabilityConfig>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

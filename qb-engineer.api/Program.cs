@@ -297,6 +297,12 @@ try
     // Phase 3 / WU-06 / C1 — role-template rollup expansion at auth time.
     builder.Services.AddScoped<IRoleClaimsExpander, RoleClaimsExpander>();
     builder.Services.AddMemoryCache();
+
+    // Phase 4 Phase-A — capability gating infrastructure.
+    builder.Services.AddSingleton<QBEngineer.Api.Capabilities.ICapabilitySnapshotProvider,
+                                  QBEngineer.Api.Capabilities.CapabilitySnapshotProvider>();
+    builder.Services.AddScoped<QBEngineer.Api.Capabilities.ICapabilityCatalogSeeder,
+                               QBEngineer.Api.Capabilities.CapabilityCatalogSeeder>();
     builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
     builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();
     builder.Services.AddScoped<IMrpService, MrpService>();
@@ -827,6 +833,17 @@ try
             // Seed built-in AI assistants (idempotent)
             await QBEngineer.Api.Features.AiAssistants.SeedAiAssistants.EnsureSeededAsync(db);
 
+            // Phase 4 Phase-A — seed the capability catalog (idempotent), then
+            // hydrate the singleton snapshot. Must run AFTER migrations and
+            // before the middleware pipeline serves any request.
+            var capabilitySeeder = scope.ServiceProvider.GetRequiredService<QBEngineer.Api.Capabilities.ICapabilityCatalogSeeder>();
+            await capabilitySeeder.SeedAsync();
+            var capabilitySnapshots = app.Services.GetRequiredService<QBEngineer.Api.Capabilities.ICapabilitySnapshotProvider>();
+            await capabilitySnapshots.RefreshAsync();
+            Log.Information("[CAPABILITY-SEED] Snapshot hydrated: {Count} capabilities ({Enabled} enabled)",
+                capabilitySnapshots.Current.EnabledByCode.Count,
+                capabilitySnapshots.Current.EnabledByCode.Count(kv => kv.Value));
+
             // Demo-data export mode — dump business entities to JSON and exit
             // before the web host starts. Triggered by EXPORT_DEMO_DATA env var
             // (path to output directory). Used by the disposable export stack.
@@ -1077,9 +1094,17 @@ try
         }).RequireAuthorization(p => p.RequireRole("Admin"));
     }
 
+    app.UseRouting();
     app.UseSession();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // Phase 4 Phase-A — capability gating. Runs after UseRouting so the
+    // endpoint metadata is resolved, after auth so we know who the user is
+    // (audit + role hint), and before the controller body so a write never
+    // reaches the DB on a disabled capability. Wired but not yet applied to
+    // any endpoint; Phase B is the gating slice.
+    app.UseMiddleware<QBEngineer.Api.Capabilities.CapabilityGateMiddleware>();
 
     // Sets AppDbContext.CurrentUserId from authenticated claims so
     // automatic activity-log + audit-log writes can attribute the actor.
