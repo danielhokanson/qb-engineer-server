@@ -16,11 +16,24 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class PaymentsController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Phase 3 F7-broad / WU-22 — standardised paged-list contract.
+    ///
+    /// New shape:
+    ///   <c>GET /payments?page=1&amp;pageSize=25&amp;sort=paymentDate&amp;order=desc&amp;q=PMT-001&amp;customerId=4&amp;paymentMethod=Check&amp;dateFrom=2025-01-01&amp;dateTo=2025-12-31</c>
+    ///
+    /// Response: <c>{ items, totalCount, page, pageSize }</c>.
+    ///
+    /// Backward compat: the legacy <c>?customerId=</c> form continues to
+    /// work. Existing UI callers that don't pass any query params get the
+    /// standard default (page 1, 25 records, paymentDate desc).
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<PaymentListItemModel>>> GetPayments(
-        [FromQuery] int? customerId)
+    public async Task<ActionResult<PagedResponse<PaymentListItemModel>>> GetPayments(
+        [FromQuery] PaymentListQuery query,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetPaymentsQuery(customerId));
+        var result = await mediator.Send(new GetPaymentsQuery(query), ct);
         return Ok(result);
     }
 

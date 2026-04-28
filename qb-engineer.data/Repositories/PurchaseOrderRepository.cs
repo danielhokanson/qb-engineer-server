@@ -12,23 +12,90 @@ public class PurchaseOrderRepository(AppDbContext db) : IPurchaseOrderRepository
     public async Task<List<PurchaseOrderListItemModel>> GetAllAsync(
         int? vendorId, int? jobId, PurchaseOrderStatus? status, CancellationToken ct)
     {
-        var query = db.PurchaseOrders
+        // Legacy non-paged path. Routes to the paged implementation under the
+        // hood with a wide page so existing internal callers (which expected
+        // the full flat list) are not affected. (Phase 3 F7-broad / WU-22.)
+        var paged = await GetPagedAsync(new PurchaseOrderListQuery
+        {
+            VendorId = vendorId,
+            JobId = jobId,
+            Status = status,
+            PageSize = 200,
+        }, ct);
+        return paged.Items.ToList();
+    }
+
+    public async Task<PagedResponse<PurchaseOrderListItemModel>> GetPagedAsync(
+        PurchaseOrderListQuery query, CancellationToken ct)
+    {
+        // Phase 3 F7-broad / WU-22 — standardised paged-list contract.
+        // Sort is whitelisted to a fixed set of safe columns to prevent EF
+        // injection. Stable secondary sort by Id keeps page boundaries
+        // deterministic.
+        var q = db.PurchaseOrders
             .Include(po => po.Vendor)
             .Include(po => po.Job)
             .Include(po => po.Lines)
             .AsQueryable();
 
-        if (vendorId.HasValue)
-            query = query.Where(po => po.VendorId == vendorId.Value);
+        // — Filters —
+        if (query.VendorId.HasValue)
+            q = q.Where(po => po.VendorId == query.VendorId.Value);
 
-        if (jobId.HasValue)
-            query = query.Where(po => po.JobId == jobId.Value);
+        if (query.JobId.HasValue)
+            q = q.Where(po => po.JobId == query.JobId.Value);
 
-        if (status.HasValue)
-            query = query.Where(po => po.Status == status.Value);
+        if (query.Status.HasValue)
+            q = q.Where(po => po.Status == query.Status.Value);
 
-        return await query
-            .OrderByDescending(po => po.CreatedAt)
+        if (!string.IsNullOrWhiteSpace(query.Q))
+        {
+            var term = query.Q.Trim().ToLower();
+            q = q.Where(po =>
+                po.PONumber.ToLower().Contains(term) ||
+                po.Vendor.CompanyName.ToLower().Contains(term) ||
+                (po.Job != null && po.Job.JobNumber.ToLower().Contains(term)));
+        }
+
+        // PO doesn't have a separate OrderDate — CreatedAt is the canonical
+        // order date for filtering purposes.
+        if (query.DateFrom.HasValue)
+            q = q.Where(po => po.CreatedAt >= query.DateFrom.Value);
+
+        if (query.DateTo.HasValue)
+            q = q.Where(po => po.CreatedAt <= query.DateTo.Value);
+
+        // Filter out POs whose vendor was soft-deleted — the projection below
+        // inner-joins Vendor via po.Vendor.CompanyName, so without this the
+        // count drifts ahead of len(items) and pages can return short of
+        // pageSize even when more rows exist. (Phase 3 F7-broad / WU-22.)
+        q = q.Where(po => po.Vendor != null);
+
+        // — Count BEFORE paging —
+        var totalCount = await q.CountAsync(ct);
+
+        // — Sort (whitelist; default = createdAt desc) —
+        var sortKey = (query.Sort ?? "").Trim().ToLowerInvariant();
+        var desc = query.OrderDescending;
+        IOrderedQueryable<PurchaseOrder> ordered = sortKey switch
+        {
+            "ponumber"            => desc ? q.OrderByDescending(po => po.PONumber)              : q.OrderBy(po => po.PONumber),
+            "vendor"              => desc ? q.OrderByDescending(po => po.Vendor.CompanyName)    : q.OrderBy(po => po.Vendor.CompanyName),
+            "vendorname"          => desc ? q.OrderByDescending(po => po.Vendor.CompanyName)    : q.OrderBy(po => po.Vendor.CompanyName),
+            "status"              => desc ? q.OrderByDescending(po => po.Status)                : q.OrderBy(po => po.Status),
+            "expecteddeliverydate"=> desc ? q.OrderByDescending(po => po.ExpectedDeliveryDate)  : q.OrderBy(po => po.ExpectedDeliveryDate),
+            "createdat"           => desc ? q.OrderByDescending(po => po.CreatedAt)             : q.OrderBy(po => po.CreatedAt),
+            "orderdate"           => desc ? q.OrderByDescending(po => po.CreatedAt)             : q.OrderBy(po => po.CreatedAt),
+            "updatedat"           => desc ? q.OrderByDescending(po => po.UpdatedAt)             : q.OrderBy(po => po.UpdatedAt),
+            "id"                  => desc ? q.OrderByDescending(po => po.Id)                    : q.OrderBy(po => po.Id),
+            _ => q.OrderByDescending(po => po.CreatedAt),
+        };
+        ordered = ordered.ThenBy(po => po.Id);
+
+        // — Page slice + projection —
+        var items = await ordered
+            .Skip(query.Skip)
+            .Take(query.EffectivePageSize)
             .Select(po => new PurchaseOrderListItemModel(
                 po.Id,
                 po.PONumber,
@@ -44,6 +111,12 @@ public class PurchaseOrderRepository(AppDbContext db) : IPurchaseOrderRepository
                 po.IsBlanket,
                 po.CreatedAt))
             .ToListAsync(ct);
+
+        return new PagedResponse<PurchaseOrderListItemModel>(
+            items,
+            totalCount,
+            query.EffectivePage,
+            query.EffectivePageSize);
     }
 
     public async Task<PurchaseOrder?> FindAsync(int id, CancellationToken ct)

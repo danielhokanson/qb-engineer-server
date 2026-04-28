@@ -4,25 +4,21 @@ using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Jobs;
 
-public record GetJobsQuery(
-    int? TrackTypeId,
-    int? CurrentStageId,
-    int? AssigneeId,
-    bool IsArchived = false,
-    string? Search = null,
-    int? CustomerId = null) : IRequest<List<JobListResponseModel>>;
+/// <summary>
+/// Phase 3 F7-broad / WU-22 — paged job-list query.
+///
+/// Replaces the previous (trackTypeId, stageId, assigneeId, isArchived,
+/// search, customerId) signature with the bound JobListQuery model. The
+/// controller continues to accept the legacy query-param names so existing
+/// callers work unchanged. Specialised list endpoints (kanban, calendar)
+/// remain on the legacy unpaged path.
+/// </summary>
+public record GetJobsQuery(JobListQuery Query) : IRequest<PagedResponse<JobListResponseModel>>;
 
-public class GetJobsHandler(IJobRepository repo) : IRequestHandler<GetJobsQuery, List<JobListResponseModel>>
+public class GetJobsHandler(IJobRepository repo)
+    : IRequestHandler<GetJobsQuery, PagedResponse<JobListResponseModel>>
 {
-    public Task<List<JobListResponseModel>> Handle(GetJobsQuery request, CancellationToken cancellationToken)
-    {
-        return repo.GetJobsAsync(
-            request.TrackTypeId,
-            request.CurrentStageId,
-            request.AssigneeId,
-            request.IsArchived,
-            request.Search,
-            cancellationToken,
-            request.CustomerId);
-    }
+    public Task<PagedResponse<JobListResponseModel>> Handle(
+        GetJobsQuery request, CancellationToken cancellationToken)
+        => repo.GetPagedJobsAsync(request.Query, cancellationToken);
 }

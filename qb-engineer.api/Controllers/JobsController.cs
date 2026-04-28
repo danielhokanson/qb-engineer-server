@@ -20,16 +20,35 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin,Manager,PM,Engineer,ProductionWorker,OfficeManager")]
 public class JobsController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Phase 3 F7-broad / WU-22 — standardised paged-list contract for the
+    /// table-view of jobs.
+    ///
+    /// New shape:
+    ///   <c>GET /jobs?page=1&amp;pageSize=25&amp;sort=createdAt&amp;order=desc&amp;q=widget&amp;stageId=4&amp;customerId=2&amp;assigneeId=7&amp;dateFrom=2025-01-01</c>
+    ///
+    /// Response: <c>{ items, totalCount, page, pageSize }</c>.
+    ///
+    /// Backward compat: legacy query params (<c>trackTypeId</c>,
+    /// <c>stageId</c>, <c>assigneeId</c>, <c>isArchived</c>, <c>search</c>,
+    /// <c>customerId</c>) continue to bind directly via the JobListQuery
+    /// model. The legacy <c>?search=</c> is plumbed into <c>q</c> when
+    /// <c>q</c> is not supplied.
+    ///
+    /// Kanban-board view (<c>/api/v1/kanban-cards</c>) and the
+    /// <c>/jobs/calendar.ics</c> export retain their existing specialised
+    /// query semantics.
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<JobListResponseModel>>> GetJobs(
-        [FromQuery] int? trackTypeId,
-        [FromQuery] int? stageId,
-        [FromQuery] int? assigneeId,
-        [FromQuery] bool isArchived = false,
-        [FromQuery] string? search = null,
-        [FromQuery] int? customerId = null)
+    public async Task<ActionResult<PagedResponse<JobListResponseModel>>> GetJobs(
+        [FromQuery] JobListQuery query,
+        [FromQuery(Name = "search")] string? legacySearch,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetJobsQuery(trackTypeId, stageId, assigneeId, isArchived, search, customerId));
+        var effective = string.IsNullOrEmpty(query.Q) && !string.IsNullOrEmpty(legacySearch)
+            ? query with { Q = legacySearch }
+            : query;
+        var result = await mediator.Send(new GetJobsQuery(effective), ct);
         return Ok(result);
     }
 

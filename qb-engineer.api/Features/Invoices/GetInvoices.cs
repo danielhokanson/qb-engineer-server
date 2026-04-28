@@ -1,17 +1,22 @@
 using MediatR;
-using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Invoices;
 
-public record GetInvoicesQuery(int? CustomerId, InvoiceStatus? Status) : IRequest<List<InvoiceListItemModel>>;
+/// <summary>
+/// Phase 3 F7-broad / WU-22 — paged invoice-list query.
+///
+/// Replaces the previous (customerId, status) signature with the bound
+/// InvoiceListQuery model. The controller continues to accept the legacy
+/// query-param names so existing callers work unchanged.
+/// </summary>
+public record GetInvoicesQuery(InvoiceListQuery Query) : IRequest<PagedResponse<InvoiceListItemModel>>;
 
 public class GetInvoicesHandler(IInvoiceRepository repo)
-    : IRequestHandler<GetInvoicesQuery, List<InvoiceListItemModel>>
+    : IRequestHandler<GetInvoicesQuery, PagedResponse<InvoiceListItemModel>>
 {
-    public async Task<List<InvoiceListItemModel>> Handle(GetInvoicesQuery request, CancellationToken cancellationToken)
-    {
-        return await repo.GetAllAsync(request.CustomerId, request.Status, cancellationToken);
-    }
+    public Task<PagedResponse<InvoiceListItemModel>> Handle(
+        GetInvoicesQuery request, CancellationToken cancellationToken)
+        => repo.GetPagedAsync(request.Query, cancellationToken);
 }

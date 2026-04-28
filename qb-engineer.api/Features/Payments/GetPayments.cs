@@ -4,13 +4,19 @@ using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Payments;
 
-public record GetPaymentsQuery(int? CustomerId) : IRequest<List<PaymentListItemModel>>;
+/// <summary>
+/// Phase 3 F7-broad / WU-22 — paged payment-list query.
+///
+/// Replaces the previous (customerId) signature with the bound
+/// PaymentListQuery model. The controller continues to accept the legacy
+/// query-param names so existing callers work unchanged.
+/// </summary>
+public record GetPaymentsQuery(PaymentListQuery Query) : IRequest<PagedResponse<PaymentListItemModel>>;
 
 public class GetPaymentsHandler(IPaymentRepository repo)
-    : IRequestHandler<GetPaymentsQuery, List<PaymentListItemModel>>
+    : IRequestHandler<GetPaymentsQuery, PagedResponse<PaymentListItemModel>>
 {
-    public async Task<List<PaymentListItemModel>> Handle(GetPaymentsQuery request, CancellationToken cancellationToken)
-    {
-        return await repo.GetAllAsync(request.CustomerId, cancellationToken);
-    }
+    public Task<PagedResponse<PaymentListItemModel>> Handle(
+        GetPaymentsQuery request, CancellationToken cancellationToken)
+        => repo.GetPagedAsync(request.Query, cancellationToken);
 }

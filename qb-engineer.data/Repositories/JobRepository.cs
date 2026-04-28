@@ -12,6 +12,9 @@ public class JobRepository(AppDbContext db) : IJobRepository
         int? trackTypeId, int? stageId, int? assigneeId,
         bool isArchived, string? search, CancellationToken ct, int? customerId = null)
     {
+        // Legacy (unpaged) path — kanban + calendar load all jobs in stage
+        // order. Paged callers should use GetPagedJobsAsync instead.
+        // (Phase 3 F7-broad / WU-22.)
         var query = db.Jobs
             .Include(j => j.CurrentStage)
             .Include(j => j.Customer)
@@ -109,6 +112,147 @@ public class JobRepository(AppDbContext db) : IJobRepository
                 activeHolds,
                 j.CoverPhotoFileId.HasValue ? $"/api/v1/files/{j.CoverPhotoFileId}" : null);
         }).ToList();
+    }
+
+    public async Task<PagedResponse<JobListResponseModel>> GetPagedJobsAsync(
+        JobListQuery query, CancellationToken ct)
+    {
+        // Phase 3 F7-broad / WU-22 — standardised paged-list contract for the
+        // table-view of jobs. Kanban + calendar continue to use the legacy
+        // GetJobsAsync (stage order, no paging) by design.
+        var q = db.Jobs
+            .Include(j => j.CurrentStage)
+            .Include(j => j.Customer)
+            .Where(j => j.IsArchived == query.IsArchived);
+
+        // — Filters —
+        if (query.TrackTypeId.HasValue)
+            q = q.Where(j => j.TrackTypeId == query.TrackTypeId.Value);
+
+        if (query.StageId.HasValue)
+            q = q.Where(j => j.CurrentStageId == query.StageId.Value);
+
+        if (query.AssigneeId.HasValue)
+            q = q.Where(j => j.AssigneeId == query.AssigneeId.Value);
+
+        if (query.CustomerId.HasValue)
+            q = q.Where(j => j.CustomerId == query.CustomerId.Value);
+
+        if (!string.IsNullOrWhiteSpace(query.Q))
+        {
+            var term = query.Q.Trim().ToLower();
+            q = q.Where(j =>
+                j.Title.ToLower().Contains(term) ||
+                j.JobNumber.ToLower().Contains(term));
+        }
+
+        if (query.DateFrom.HasValue)
+            q = q.Where(j => j.CreatedAt >= query.DateFrom.Value);
+
+        if (query.DateTo.HasValue)
+            q = q.Where(j => j.CreatedAt <= query.DateTo.Value);
+
+        // — Count BEFORE paging —
+        var totalCount = await q.CountAsync(ct);
+
+        // — Sort (whitelist; default = createdAt desc) —
+        var sortKey = (query.Sort ?? "").Trim().ToLowerInvariant();
+        var desc = query.OrderDescending;
+        IOrderedQueryable<Job> ordered = sortKey switch
+        {
+            "name"        => desc ? q.OrderByDescending(j => j.Title)              : q.OrderBy(j => j.Title),
+            "title"       => desc ? q.OrderByDescending(j => j.Title)              : q.OrderBy(j => j.Title),
+            "jobnumber"   => desc ? q.OrderByDescending(j => j.JobNumber)          : q.OrderBy(j => j.JobNumber),
+            "stage"       => desc ? q.OrderByDescending(j => j.CurrentStage.SortOrder) : q.OrderBy(j => j.CurrentStage.SortOrder),
+            "priority"    => desc ? q.OrderByDescending(j => j.Priority)           : q.OrderBy(j => j.Priority),
+            "duedate"     => desc ? q.OrderByDescending(j => j.DueDate)            : q.OrderBy(j => j.DueDate),
+            "startdate"   => desc ? q.OrderByDescending(j => j.StartDate)          : q.OrderBy(j => j.StartDate),
+            "createdat"   => desc ? q.OrderByDescending(j => j.CreatedAt)          : q.OrderBy(j => j.CreatedAt),
+            "updatedat"   => desc ? q.OrderByDescending(j => j.UpdatedAt)          : q.OrderBy(j => j.UpdatedAt),
+            "id"          => desc ? q.OrderByDescending(j => j.Id)                 : q.OrderBy(j => j.Id),
+            _ => q.OrderByDescending(j => j.CreatedAt),
+        };
+        ordered = ordered.ThenBy(j => j.Id);
+
+        // — Page slice + load related data for projection —
+        var jobs = await ordered
+            .Skip(query.Skip)
+            .Take(query.EffectivePageSize)
+            .Include(j => j.SalesOrderLine)
+                .ThenInclude(sol => sol!.SalesOrder)
+                    .ThenInclude(so => so.Invoices)
+            .Include(j => j.ChildJobs)
+            .Include(j => j.CoverPhotoFile)
+            .ToListAsync(ct);
+
+        // Load assignee info for the page slice
+        var assigneeIds = jobs
+            .Where(j => j.AssigneeId.HasValue)
+            .Select(j => j.AssigneeId!.Value)
+            .Distinct()
+            .ToList();
+
+        var assignees = assigneeIds.Count > 0
+            ? await db.Users
+                .Where(u => assigneeIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, ct)
+            : [];
+
+        // Load active holds for jobs in the result set
+        var jobIds = jobs.Select(j => j.Id).ToList();
+        var activeHoldsByJobId = jobIds.Count > 0
+            ? await db.StatusEntries
+                .Where(se =>
+                    se.EntityType == "Job" &&
+                    jobIds.Contains(se.EntityId) &&
+                    se.Category == "hold" &&
+                    se.EndedAt == null)
+                .GroupBy(se => se.EntityId)
+                .ToDictionaryAsync(
+                    g => g.Key,
+                    g => g.Select(se => se.StatusLabel).ToList(),
+                    ct)
+            : [];
+
+        var items = jobs.Select(j =>
+        {
+            var assignee = j.AssigneeId.HasValue && assignees.TryGetValue(j.AssigneeId.Value, out var u) ? u : null;
+            string? billingStatus = null;
+            if (j.CompletedDate != null)
+            {
+                var hasInvoice = j.SalesOrderLine?.SalesOrder?.Invoices?.Any() == true;
+                billingStatus = hasInvoice ? "Invoiced" : "Uninvoiced";
+            }
+
+            var activeHolds = activeHoldsByJobId.TryGetValue(j.Id, out var holds) ? holds : [];
+
+            return new JobListResponseModel(
+                j.Id,
+                j.JobNumber,
+                j.Title,
+                j.CurrentStage.Name,
+                j.CurrentStage.Color,
+                j.AssigneeId,
+                assignee?.Initials,
+                assignee?.AvatarColor,
+                j.Priority.ToString(),
+                j.DueDate,
+                j.DueDate.HasValue && j.DueDate.Value < DateTimeOffset.UtcNow && j.CompletedDate == null,
+                j.Customer?.Name,
+                billingStatus,
+                j.Disposition?.ToString(),
+                j.ChildJobs.Count(c => c.DeletedAt == null),
+                j.ExternalRef,
+                null,
+                activeHolds,
+                j.CoverPhotoFileId.HasValue ? $"/api/v1/files/{j.CoverPhotoFileId}" : null);
+        }).ToList();
+
+        return new PagedResponse<JobListResponseModel>(
+            items,
+            totalCount,
+            query.EffectivePage,
+            query.EffectivePageSize);
     }
 
     public async Task<JobDetailResponseModel?> GetDetailAsync(int id, CancellationToken ct)

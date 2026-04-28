@@ -4,13 +4,19 @@ using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Vendors;
 
-public record GetVendorsQuery(string? Search, bool? IsActive) : IRequest<List<VendorListItemModel>>;
+/// <summary>
+/// Phase 3 F7-broad / WU-22 — paged vendor-list query.
+///
+/// Replaces the previous (search, isActive) signature with the bound
+/// VendorListQuery model. The controller continues to accept the legacy
+/// query-param names so existing callers work unchanged.
+/// </summary>
+public record GetVendorsQuery(VendorListQuery Query) : IRequest<PagedResponse<VendorListItemModel>>;
 
 public class GetVendorsHandler(IVendorRepository repo)
-    : IRequestHandler<GetVendorsQuery, List<VendorListItemModel>>
+    : IRequestHandler<GetVendorsQuery, PagedResponse<VendorListItemModel>>
 {
-    public async Task<List<VendorListItemModel>> Handle(GetVendorsQuery request, CancellationToken cancellationToken)
-    {
-        return await repo.GetAllAsync(request.Search, request.IsActive, cancellationToken);
-    }
+    public Task<PagedResponse<VendorListItemModel>> Handle(
+        GetVendorsQuery request, CancellationToken cancellationToken)
+        => repo.GetPagedAsync(request.Query, cancellationToken);
 }

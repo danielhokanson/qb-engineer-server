@@ -15,17 +15,37 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin,Manager")]
 public class EmployeesController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Phase 3 F7-broad / WU-22 — standardised paged-list contract.
+    ///
+    /// New shape:
+    ///   <c>GET /employees?page=1&amp;pageSize=25&amp;sort=lastName&amp;order=asc&amp;q=jane&amp;isActive=true&amp;teamId=4&amp;role=Manager&amp;department=Engineering&amp;dateFrom=2025-01-01</c>
+    ///
+    /// Response: <c>{ items, totalCount, page, pageSize }</c>.
+    ///
+    /// Backward compat: the legacy <c>?search=&amp;teamId=&amp;role=&amp;isActive=</c>
+    /// form continues to work — when both <c>q</c> and <c>search</c> are
+    /// present, <c>q</c> wins. Existing UI callers that don't pass any query
+    /// params get the standard default (page 1, 25 records,
+    /// lastName/firstName asc).
+    ///
+    /// Manager restriction is enforced server-side: non-admin callers only
+    /// see employees in their own team.
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<EmployeeListItemResponseModel>>> GetEmployees(
-        [FromQuery] string? search,
-        [FromQuery] int? teamId,
-        [FromQuery] string? role,
-        [FromQuery] bool? isActive)
+    public async Task<ActionResult<PagedResponse<EmployeeListItemResponseModel>>> GetEmployees(
+        [FromQuery] EmployeeListQuery query,
+        [FromQuery(Name = "search")] string? legacySearch,
+        CancellationToken ct)
     {
         var callerUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var callerIsAdmin = User.IsInRole("Admin");
 
-        var result = await mediator.Send(new GetEmployeeListQuery(search, teamId, role, isActive, callerUserId, callerIsAdmin));
+        var effective = string.IsNullOrEmpty(query.Q) && !string.IsNullOrEmpty(legacySearch)
+            ? query with { Q = legacySearch }
+            : query;
+
+        var result = await mediator.Send(new GetEmployeeListQuery(effective, callerUserId, callerIsAdmin), ct);
         return Ok(result);
     }
 

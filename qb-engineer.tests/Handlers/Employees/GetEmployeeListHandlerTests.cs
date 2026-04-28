@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 using QBEngineer.Api.Features.Employees;
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 using QBEngineer.Tests.Helpers;
 
@@ -36,14 +37,15 @@ public class GetEmployeeListHandlerTests
             .ReturnsAsync(["Engineer"]);
 
         var handler = new GetEmployeeListHandler(db, _userManager.Object);
-        var query = new GetEmployeeListQuery(null, null, null, true, null, true);
+        var query = new GetEmployeeListQuery(
+            new EmployeeListQuery { IsActive = true }, null, true);
 
         // Act
         var result = await handler.Handle(query, CancellationToken.None);
 
-        // Assert
-        result.Should().HaveCount(2);
-        result.All(e => e.IsActive).Should().BeTrue();
+        // Assert (Phase 3 F7-broad / WU-22 — paged envelope)
+        result.Items.Should().HaveCount(2);
+        result.Items.All(e => e.IsActive).Should().BeTrue();
     }
 
     [Fact]
@@ -60,14 +62,15 @@ public class GetEmployeeListHandlerTests
             .ReturnsAsync(["Engineer"]);
 
         var handler = new GetEmployeeListHandler(db, _userManager.Object);
-        var query = new GetEmployeeListQuery("hokanson", null, null, null, null, true);
+        var query = new GetEmployeeListQuery(
+            new EmployeeListQuery { Q = "hokanson" }, null, true);
 
         // Act
         var result = await handler.Handle(query, CancellationToken.None);
 
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().LastName.Should().Be("Hokanson");
+        // Assert (Phase 3 F7-broad / WU-22 — paged envelope)
+        result.Items.Should().HaveCount(1);
+        result.Items.First().LastName.Should().Be("Hokanson");
     }
 
     [Fact]
@@ -86,13 +89,14 @@ public class GetEmployeeListHandlerTests
             .ReturnsAsync(["Engineer"]);
 
         var handler = new GetEmployeeListHandler(db, _userManager.Object);
-        var query = new GetEmployeeListQuery(null, null, "Admin", null, null, true);
+        var query = new GetEmployeeListQuery(
+            new EmployeeListQuery { Role = "Admin" }, null, true);
 
         // Act
         var result = await handler.Handle(query, CancellationToken.None);
 
-        // Assert
-        result.Should().HaveCount(1);
-        result.First().FirstName.Should().Be("Admin");
+        // Assert (Phase 3 F7-broad / WU-22 — paged envelope)
+        result.Items.Should().HaveCount(1);
+        result.Items.First().FirstName.Should().Be("Admin");
     }
 }

@@ -17,12 +17,24 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class InvoicesController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Phase 3 F7-broad / WU-22 — standardised paged-list contract.
+    ///
+    /// New shape:
+    ///   <c>GET /invoices?page=1&amp;pageSize=25&amp;sort=invoiceDate&amp;order=desc&amp;q=INV-001&amp;customerId=4&amp;status=Sent&amp;dateFrom=2025-01-01&amp;dateTo=2025-12-31</c>
+    ///
+    /// Response: <c>{ items, totalCount, page, pageSize }</c>.
+    ///
+    /// Backward compat: the legacy <c>?customerId=&amp;status=</c> form
+    /// continues to work. Existing UI callers that don't pass any query
+    /// params get the standard default (page 1, 25 records, createdAt desc).
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<InvoiceListItemModel>>> GetInvoices(
-        [FromQuery] int? customerId,
-        [FromQuery] InvoiceStatus? status)
+    public async Task<ActionResult<PagedResponse<InvoiceListItemModel>>> GetInvoices(
+        [FromQuery] InvoiceListQuery query,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetInvoicesQuery(customerId, status));
+        var result = await mediator.Send(new GetInvoicesQuery(query), ct);
         return Ok(result);
     }
 

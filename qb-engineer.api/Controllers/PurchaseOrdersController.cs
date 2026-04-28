@@ -14,13 +14,26 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
 public class PurchaseOrdersController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Phase 3 F7-broad / WU-22 — standardised paged-list contract.
+    ///
+    /// New shape:
+    ///   <c>GET /purchase-orders?page=1&amp;pageSize=25&amp;sort=createdAt&amp;order=desc&amp;q=PO-001&amp;vendorId=4&amp;status=Draft&amp;dateFrom=2025-01-01&amp;dateTo=2025-12-31</c>
+    ///
+    /// Response: <c>{ items, totalCount, page, pageSize }</c>.
+    ///
+    /// Backward compat: the legacy <c>?vendorId=&amp;jobId=&amp;status=</c>
+    /// form continues to work — those params are bound directly on the
+    /// PurchaseOrderListQuery model. Existing UI callers that don't pass any
+    /// query params get the standard default (page 1, 25 records,
+    /// createdAt desc).
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<PurchaseOrderListItemModel>>> GetPurchaseOrders(
-        [FromQuery] int? vendorId,
-        [FromQuery] int? jobId,
-        [FromQuery] PurchaseOrderStatus? status)
+    public async Task<ActionResult<PagedResponse<PurchaseOrderListItemModel>>> GetPurchaseOrders(
+        [FromQuery] PurchaseOrderListQuery query,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetPurchaseOrdersQuery(vendorId, jobId, status));
+        var result = await mediator.Send(new GetPurchaseOrdersQuery(query), ct);
         return Ok(result);
     }
 
