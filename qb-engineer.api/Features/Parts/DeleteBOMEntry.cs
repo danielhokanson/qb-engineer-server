@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using MediatR;
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -6,7 +8,10 @@ namespace QBEngineer.Api.Features.Parts;
 
 public record DeleteBOMEntryCommand(int ParentPartId, int BomEntryId) : IRequest<PartDetailResponseModel>;
 
-public class DeleteBOMEntryHandler(IPartRepository repo) : IRequestHandler<DeleteBOMEntryCommand, PartDetailResponseModel>
+public class DeleteBOMEntryHandler(
+    IPartRepository repo,
+    IBomRevisionService bomRevisions,
+    IHttpContextAccessor httpContext) : IRequestHandler<DeleteBOMEntryCommand, PartDetailResponseModel>
 {
     public async Task<PartDetailResponseModel> Handle(DeleteBOMEntryCommand request, CancellationToken cancellationToken)
     {
@@ -14,6 +19,10 @@ public class DeleteBOMEntryHandler(IPartRepository repo) : IRequestHandler<Delet
             ?? throw new KeyNotFoundException($"BOM entry {request.BomEntryId} not found on part {request.ParentPartId}");
 
         await repo.RemoveBomEntryAsync(entry);
+
+        // Phase 3 H4 / WU-20 — removing a component is a structural change.
+        var userId = int.TryParse(httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out var v) ? v : (int?)null;
+        await bomRevisions.CaptureCurrentStateAsync(request.ParentPartId, userId, "Component removed", cancellationToken);
 
         return (await repo.GetDetailAsync(request.ParentPartId, cancellationToken))!;
     }

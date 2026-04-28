@@ -42,5 +42,15 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
             .WithMany()
             .HasForeignKey(e => e.ToolingAssetId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Phase 3 H4 / WU-20 — pointer to active BomRevision. SetNull on
+        // the FK so deleting a revision (rare; cascades from the part) does
+        // not cascade-orphan-loop. Matched-side relationship is configured
+        // on BomRevision.Part (WithMany BomRevisions).
+        builder.HasIndex(e => e.CurrentBomRevisionId);
+        builder.HasOne(e => e.CurrentBomRevision)
+            .WithMany()
+            .HasForeignKey(e => e.CurrentBomRevisionId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

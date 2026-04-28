@@ -82,4 +82,11 @@ public class Part : BaseAuditableEntity, IActiveAware
     public ICollection<PurchaseOrderLine> PurchaseOrderLines { get; set; } = [];
     public ICollection<PartAlternate> Alternates { get; set; } = [];
     public ICollection<SerialNumber> SerialNumbers { get; set; } = [];
+
+    // Phase 3 H4 / WU-20 — BOM revision history. CurrentBomRevisionId points
+    // at the active immutable snapshot of this part's BOM. Older revisions
+    // hang off the part via the BomRevisions collection but stay frozen.
+    public int? CurrentBomRevisionId { get; set; }
+    public BomRevision? CurrentBomRevision { get; set; }
+    public ICollection<BomRevision> BomRevisions { get; set; } = [];
 }

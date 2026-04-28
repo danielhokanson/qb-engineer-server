@@ -74,5 +74,14 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
             .WithMany()
             .HasForeignKey(e => e.MrpPlannedOrderId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Phase 3 H4 / WU-20 — Job pins the BOM revision in effect when
+        // released. Restrict deletion of a BomRevision while jobs reference
+        // it (compliance reconstruction depends on the snapshot living on).
+        builder.HasIndex(e => e.BomRevisionIdAtRelease);
+        builder.HasOne(e => e.BomRevisionAtRelease)
+            .WithMany()
+            .HasForeignKey(e => e.BomRevisionIdAtRelease)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

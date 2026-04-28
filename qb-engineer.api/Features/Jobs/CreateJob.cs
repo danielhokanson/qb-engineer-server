@@ -3,6 +3,7 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using QBEngineer.Api.Features.DomainEvents;
 using QBEngineer.Api.Hubs;
 using QBEngineer.Core.Entities;
@@ -20,7 +21,8 @@ public record CreateJobCommand(
     int? AssigneeId,
     int? CustomerId,
     JobPriority? Priority,
-    DateTimeOffset? DueDate) : IRequest<JobDetailResponseModel>;
+    DateTimeOffset? DueDate,
+    int? PartId = null) : IRequest<JobDetailResponseModel>;
 
 public class CreateJobCommandValidator : AbstractValidator<CreateJobCommand>
 {
@@ -67,7 +69,22 @@ public class CreateJobHandler(
             Priority = request.Priority ?? JobPriority.Normal,
             DueDate = request.DueDate,
             BoardPosition = maxPosition + 1,
+            PartId = request.PartId,
         };
+
+        // Phase 3 H4 / WU-20 — if this job is being released against a
+        // part with a current BOM revision, pin that revision id so future
+        // modifications to the BOM don't retroactively alter what this job
+        // was built against. Captured at create time so the pin is in place
+        // before the row is even saved (single SaveChanges).
+        if (request.PartId is int pinPartId)
+        {
+            var currentRevId = await db.Parts
+                .Where(p => p.Id == pinPartId)
+                .Select(p => p.CurrentBomRevisionId)
+                .FirstOrDefaultAsync(cancellationToken);
+            job.BomRevisionIdAtRelease = currentRevId;
+        }
 
         job.ActivityLogs.Add(new JobActivityLog
         {

@@ -68,6 +68,18 @@ public class JobsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Phase 3 H4 / WU-20 — return the BOM revision the job was released
+    /// against, with a flag indicating whether the part's BOM has been
+    /// updated since.
+    /// </summary>
+    [HttpGet("{id:int}/bom-at-release")]
+    public async Task<ActionResult<JobBomAtReleaseResponseModel>> GetJobBomAtRelease(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetJobBomAtReleaseQuery(id), ct);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<ActionResult<JobDetailResponseModel>> CreateJob(CreateJobCommand command)
     {

@@ -25,6 +25,14 @@ public class Job : BaseAuditableEntity, IConcurrencyVersioned
     public int? SalesOrderLineId { get; set; }
     public int? MrpPlannedOrderId { get; set; }
 
+    // Phase 3 H4 / WU-20 — pin the BOM revision the job was released
+    // against, so historical reconstruction reads through Job →
+    // BomRevision (specific id) rather than Job → Part → current BOM.
+    // Captured by the Job-create / BOM-pin flow when the job is associated
+    // with a part that has a current BOM revision.
+    public int? BomRevisionIdAtRelease { get; set; }
+    public BomRevision? BomRevisionAtRelease { get; set; }
+
     // Accounting integration
     public string? ExternalId { get; set; }
     public string? ExternalRef { get; set; }

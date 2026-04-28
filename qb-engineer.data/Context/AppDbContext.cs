@@ -52,6 +52,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Part> Parts => Set<Part>();
     public DbSet<PartPrice> PartPrices => Set<PartPrice>();
     public DbSet<BOMEntry> BOMEntries => Set<BOMEntry>();
+
+    // Phase 3 H4 / WU-20 — BOM revision history.
+    public DbSet<BomRevision> BomRevisions => Set<BomRevision>();
+    public DbSet<BomRevisionEntry> BomRevisionEntries => Set<BomRevisionEntry>();
     public DbSet<ReferenceData> ReferenceData => Set<ReferenceData>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<SyncQueueEntry> SyncQueueEntries => Set<SyncQueueEntry>();

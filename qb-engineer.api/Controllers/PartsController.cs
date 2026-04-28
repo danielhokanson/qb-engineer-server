@@ -83,6 +83,22 @@ public class PartsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Phase 3 H4 / WU-20 — list all BOM revisions for a part.</summary>
+    [HttpGet("{id:int}/bom/revisions")]
+    public async Task<ActionResult<List<BomRevisionSummaryResponseModel>>> GetBomRevisions(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetBomRevisionsQuery(id), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Phase 3 H4 / WU-20 — read one immutable BOM revision in detail.</summary>
+    [HttpGet("{id:int}/bom/revisions/{revId:int}")]
+    public async Task<ActionResult<BomRevisionDetailResponseModel>> GetBomRevisionById(int id, int revId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetBomRevisionByIdQuery(id, revId), ct);
+        return Ok(result);
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeletePart(int id)
     {

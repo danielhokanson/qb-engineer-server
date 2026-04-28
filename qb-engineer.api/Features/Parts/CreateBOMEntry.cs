@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
+using QBEngineer.Api.Services;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
@@ -18,7 +20,10 @@ public class CreateBOMEntryCommandValidator : AbstractValidator<CreateBOMEntryCo
     }
 }
 
-public class CreateBOMEntryHandler(IPartRepository repo) : IRequestHandler<CreateBOMEntryCommand, PartDetailResponseModel>
+public class CreateBOMEntryHandler(
+    IPartRepository repo,
+    IBomRevisionService bomRevisions,
+    IHttpContextAccessor httpContext) : IRequestHandler<CreateBOMEntryCommand, PartDetailResponseModel>
 {
     public async Task<PartDetailResponseModel> Handle(CreateBOMEntryCommand request, CancellationToken cancellationToken)
     {
@@ -47,6 +52,17 @@ public class CreateBOMEntryHandler(IPartRepository repo) : IRequestHandler<Creat
 
         await repo.AddBomEntryAsync(entry, cancellationToken);
 
+        // Phase 3 H4 / WU-20 — adding a component is a structural change;
+        // capture an immutable revision snapshot of the new state.
+        var userId = TryGetUserId(httpContext);
+        await bomRevisions.CaptureCurrentStateAsync(request.ParentPartId, userId, "Component added", cancellationToken);
+
         return (await repo.GetDetailAsync(request.ParentPartId, cancellationToken))!;
+    }
+
+    private static int? TryGetUserId(IHttpContextAccessor http)
+    {
+        var raw = http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(raw, out var v) ? v : (int?)null;
     }
 }

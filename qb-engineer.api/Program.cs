@@ -255,6 +255,8 @@ try
     builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
     builder.Services.AddScoped<IPartRepository, PartRepository>();
+    // Phase 3 H4 / WU-20 — BOM revision auto-snapshot service.
+    builder.Services.AddScoped<IBomRevisionService, BomRevisionService>();
     builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
     builder.Services.AddScoped<ILeadRepository, LeadRepository>();
     builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
