@@ -4,6 +4,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
+
 namespace QBEngineer.Api.Controllers;
 
 /// <summary>
@@ -14,6 +16,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/downloads")]
 [Authorize]
+[RequiresCapability("CAP-CROSS-DOCS")]
 public class DownloadsController : ControllerBase
 {
     private readonly string _toolsPath;

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using QBEngineer.Api.Authentication;
+using QBEngineer.Api.Capabilities;
 
 namespace QBEngineer.Api.Controllers;
 
@@ -25,6 +26,7 @@ namespace QBEngineer.Api.Controllers;
 [Authorize(
     AuthenticationSchemes = BiApiKeyAuthenticationOptions.SchemeName,
     Roles = "BiApiClient")]
+[RequiresCapability("CAP-CROSS-BI-EXPORT")]
 public class BiController : ControllerBase
 {
     /// <summary>

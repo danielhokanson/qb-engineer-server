@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 
@@ -13,6 +14,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1")]
 [Authorize]
+[RequiresCapability("CAP-ACCT-EXTERNAL")]
 public class AccountingController(
     IAccountingProviderFactory providerFactory,
     IQuickBooksTokenService tokenService,

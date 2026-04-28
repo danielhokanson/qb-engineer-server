@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Webhooks;
 using QBEngineer.Core.Models;
 
@@ -9,6 +10,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/admin/webhooks")]
 [Authorize(Roles = "Admin")]
+[RequiresCapability("CAP-CROSS-WEBHOOKS")]
 public class WebhooksController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

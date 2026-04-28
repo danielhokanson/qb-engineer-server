@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Core.Models;
 
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/{entityType}/{entityId:int}")]
 [Authorize]
+[RequiresCapability("CAP-CROSS-ACTIVITY-LOG")]
 public class EntityActivityController(IMediator mediator) : ControllerBase
 {
     private static readonly HashSet<string> AllowedEntityTypes = new(StringComparer.OrdinalIgnoreCase)

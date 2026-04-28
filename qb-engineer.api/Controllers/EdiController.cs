@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Edi;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/edi")]
 [Authorize(Roles = "Admin,Manager")]
+[RequiresCapability("CAP-CROSS-INTEG-EDI")]
 public class EdiController(IMediator mediator) : ControllerBase
 {
     // ── Trading Partners ────────────────────────────────────────

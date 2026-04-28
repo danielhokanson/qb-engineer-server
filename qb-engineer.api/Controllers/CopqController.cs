@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Quality;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/reports/copq")]
 [Authorize]
+[RequiresCapability("CAP-RPT-OPERATIONAL")]
 public class CopqController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

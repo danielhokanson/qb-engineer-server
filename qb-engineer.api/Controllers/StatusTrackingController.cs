@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.StatusTracking;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/status-tracking")]
 [Authorize]
+[RequiresCapability("CAP-CROSS-ACTIVITY-LOG")]
 public class StatusTrackingController(IMediator mediator) : ControllerBase
 {
     [HttpGet("{entityType}/{entityId:int}/history")]

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Reports;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/reports")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
+[RequiresCapability("CAP-RPT-OPERATIONAL")]
 public class ReportsController(IMediator mediator) : ControllerBase
 {
     [HttpGet("jobs-by-stage")]

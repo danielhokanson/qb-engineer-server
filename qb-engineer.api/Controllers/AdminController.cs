@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Admin;
 using QBEngineer.Api.Features.CompanyLocations;
 using QBEngineer.Api.Features.EmployeeProfile;
@@ -280,6 +281,7 @@ public class AdminController(IMediator mediator) : ControllerBase
     // ── Audit Log ──
 
     [HttpGet("audit-log")]
+    [RequiresCapability("CAP-IDEN-AUDIT-SYSTEM-LOG")]
     public async Task<ActionResult<PaginatedResult<AuditLogEntryResponseModel>>> GetAuditLog(
         [FromQuery] int? userId, [FromQuery] string? action, [FromQuery] string? entityType,
         [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to,
@@ -429,6 +431,7 @@ public class AdminController(IMediator mediator) : ControllerBase
     // ── MFA Policy ──────────────────────────────────────
 
     [HttpGet("mfa/compliance")]
+    [RequiresCapability("CAP-IDEN-AUTH-MFA")]
     public async Task<IActionResult> GetMfaCompliance(CancellationToken ct)
     {
         var result = await mediator.Send(new GetMfaPolicyStatusQuery(), ct);
@@ -436,6 +439,7 @@ public class AdminController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("mfa/policy")]
+    [RequiresCapability("CAP-IDEN-AUTH-MFA")]
     public async Task<IActionResult> SetMfaPolicy([FromBody] MfaPolicyRequestModel request, CancellationToken ct)
     {
         await mediator.Send(new SetMfaPolicyCommand(request.RequiredRoles), ct);

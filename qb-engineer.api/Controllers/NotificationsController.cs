@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Notifications;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/notifications")]
 [Authorize]
+[RequiresCapability("CAP-CROSS-NOTIFICATIONS")]
 public class NotificationsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Ai;
 using QBEngineer.Api.Features.AiAssistants;
 using QBEngineer.Core.Models;
@@ -13,6 +14,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/ai")]
 [Authorize]
+[RequiresCapability("CAP-EXT-AI-ASSISTANT")]
 public class AiController(IMediator mediator) : ControllerBase
 {
     private static readonly string[] RolePriority = ["Admin", "Manager", "OfficeManager", "PM", "Engineer", "ProductionWorker"];
