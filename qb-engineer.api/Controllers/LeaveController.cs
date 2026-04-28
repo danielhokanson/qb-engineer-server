@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Leave;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/leave")]
 [Authorize]
+[RequiresCapability("CAP-HR-LEAVE")]
 public class LeaveController(IMediator mediator) : ControllerBase
 {
     // ── Policies (Admin) ──

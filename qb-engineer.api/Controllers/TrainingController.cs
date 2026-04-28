@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Training;
 using QBEngineer.Core.Models;
 
@@ -13,6 +14,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/training")]
 [Authorize]
+[RequiresCapability("CAP-HR-TRAINING")]
 public class TrainingController(IMediator mediator) : ControllerBase
 {
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

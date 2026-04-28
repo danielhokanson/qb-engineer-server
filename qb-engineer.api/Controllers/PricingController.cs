@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Pricing;
 using QBEngineer.Core.Models;
 
@@ -9,6 +10,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/pricing")]
 [Authorize]
+[RequiresCapability("CAP-MD-PRICELIST")]
 public class PricingController(IMediator mediator) : ControllerBase
 {
     [HttpGet("resolve")]

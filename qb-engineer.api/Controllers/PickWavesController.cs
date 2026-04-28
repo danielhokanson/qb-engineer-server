@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Shipping;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/pick-waves")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,Engineer,ProductionWorker")]
+[RequiresCapability("CAP-O2C-PICKPACK")]
 public class PickWavesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

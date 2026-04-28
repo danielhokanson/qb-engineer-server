@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.SalesOrders;
 using QBEngineer.Core.Models;
 
@@ -26,6 +27,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/sales-orders")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
+[RequiresCapability("CAP-O2C-SO")]
 public class SalesOrdersListController(IMediator mediator) : ControllerBase
 {
     /// <summary>

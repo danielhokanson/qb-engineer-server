@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Estimates;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/estimates")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
+[RequiresCapability("CAP-O2C-QUOTE")]
 public class EstimatesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.CustomerReturns;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/customer-returns")]
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
+[RequiresCapability("CAP-O2C-RMA")]
 public class CustomerReturnsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

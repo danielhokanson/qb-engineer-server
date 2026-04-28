@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.ComplianceForms;
 using QBEngineer.Core.Models;
 
@@ -13,6 +14,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/identity-documents")]
 [Authorize]
+[RequiresCapability("CAP-QC-COMPLIANCE-FORMS")]
 public class IdentityDocumentsController(IMediator mediator) : ControllerBase
 {
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

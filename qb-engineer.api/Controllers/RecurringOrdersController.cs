@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.RecurringOrders;
 using QBEngineer.Core.Models;
 
@@ -9,6 +10,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/recurring-orders")]
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
+[RequiresCapability("CAP-O2C-RECURRING")]
 public class RecurringOrdersController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

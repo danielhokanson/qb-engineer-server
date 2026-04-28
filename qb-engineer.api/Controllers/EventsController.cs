@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Events;
 using QBEngineer.Core.Models;
 
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/events")]
 [Authorize]
+[RequiresCapability("CAP-MD-EMPLOYEES")]
 public class EventsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Cpq;
 using QBEngineer.Core.Models;
 
@@ -9,6 +10,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/cpq")]
 [Authorize]
+[RequiresCapability("CAP-O2C-CPQ")]
 public class CpqController(IMediator mediator) : ControllerBase
 {
     [HttpGet("configurators")]

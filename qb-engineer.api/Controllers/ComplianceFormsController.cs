@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.ComplianceForms;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -18,6 +19,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/compliance-forms")]
 [Authorize]
+[RequiresCapability("CAP-QC-COMPLIANCE-FORMS")]
 public class ComplianceFormsController(
     IMediator mediator,
     IOptions<DocuSealOptions> docuSealOptions,

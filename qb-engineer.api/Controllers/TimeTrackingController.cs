@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.TimeTracking;
 using QBEngineer.Core.Models;
 
@@ -10,6 +11,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/time-tracking")]
 [Authorize]
+[RequiresCapability("CAP-HR-TIMETRACK")]
 public class TimeTrackingController(IMediator mediator) : ControllerBase
 {
     [HttpGet("entries")]

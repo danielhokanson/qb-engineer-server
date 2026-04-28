@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Concurrency;
 using QBEngineer.Api.Features.Shipments;
 using QBEngineer.Core.Entities;
@@ -12,6 +13,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/shipments")]
 [Authorize(Roles = "Admin,Manager,OfficeManager")]
+[RequiresCapability("CAP-O2C-SHIP")]
 public class ShipmentsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

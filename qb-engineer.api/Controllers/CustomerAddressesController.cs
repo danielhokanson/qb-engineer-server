@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.CustomerAddresses;
 using QBEngineer.Core.Models;
 
@@ -9,6 +10,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/customers/{customerId:int}/addresses")]
 [Authorize(Roles = "Admin,Manager,OfficeManager,PM")]
+[RequiresCapability("CAP-MD-CUSTOMERS")]
 public class CustomerAddressesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

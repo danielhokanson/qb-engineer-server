@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Leads;
 using QBEngineer.Core.Enums;
@@ -11,6 +12,7 @@ namespace QBEngineer.Api.Controllers;
 [ApiController]
 [Route("api/v1/leads")]
 [Authorize(Roles = "Admin,Manager,PM")]
+[RequiresCapability("CAP-O2C-LEAD")]
 public class LeadsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
