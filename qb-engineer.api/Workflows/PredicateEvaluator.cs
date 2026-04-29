@@ -182,6 +182,25 @@ public class PredicateEvaluator(ILogger<PredicateEvaluator>? logger = null,
         value = null;
         if (string.IsNullOrEmpty(fieldName)) return false;
 
+        // Dictionary-shaped entities (used by the cross-tier drift test, where
+        // JSON is hydrated into Dictionary<string, object?> instead of a POCO)
+        // — accept both camelCase exact match and PascalCase fallback.
+        if (entity is IDictionary<string, object?> dict)
+        {
+            if (dict.TryGetValue(fieldName, out var v))
+            {
+                value = v;
+                return true;
+            }
+            var pascalKey = char.ToUpperInvariant(fieldName[0]) + fieldName[1..];
+            if (dict.TryGetValue(pascalKey, out v))
+            {
+                value = v;
+                return true;
+            }
+            return false;
+        }
+
         var pascal = char.ToUpperInvariant(fieldName[0]) + fieldName[1..];
         var type = entity.GetType();
 

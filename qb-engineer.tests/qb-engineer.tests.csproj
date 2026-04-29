@@ -31,4 +31,13 @@
     <ProjectReference Include="..\qb-engineer.data\qb-engineer.data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Workflow Pattern Phase 4 — predicate evaluator drift fixtures.
+         Twin file lives at qb-engineer-ui/src/app/shared/services/__fixtures__/predicate-drift-fixtures.json.
+         Both must stay in sync — adding a case here requires landing the same case TS-side. -->
+    <None Update="Workflows\PredicateDriftFixtures.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
