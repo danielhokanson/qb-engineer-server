@@ -181,6 +181,9 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.IsSerialTracked,
             part.ToolingAssetId,
             part.ToolingAsset?.Name,
+            // Workflow Pattern Phase 5 — surfaces cost gates for the hasCost predicate.
+            part.ManualCostOverride,
+            part.CurrentCostCalculationId,
             bomEntries,
             usedIn,
             part.CreatedAt,

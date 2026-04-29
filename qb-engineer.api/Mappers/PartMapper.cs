@@ -40,6 +40,9 @@ public static partial class PartMapper
             IsSerialTracked: part.IsSerialTracked,
             ToolingAssetId: part.ToolingAssetId,
             ToolingAssetName: part.ToolingAsset?.Name,
+            // Workflow Pattern Phase 5 — surfaces cost gates for the hasCost predicate.
+            ManualCostOverride: part.ManualCostOverride,
+            CurrentCostCalculationId: part.CurrentCostCalculationId,
             BomEntries: bomEntries ?? [],
             UsedIn: usedIn ?? [],
             CreatedAt: part.CreatedAt,

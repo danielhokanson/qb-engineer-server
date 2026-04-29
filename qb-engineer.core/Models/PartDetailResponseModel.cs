@@ -25,6 +25,10 @@ public record PartDetailResponseModel(
     bool IsSerialTracked,
     int? ToolingAssetId,
     string? ToolingAssetName,
+    // Workflow Pattern Phase 5 — surfaces cost gates so the workflow shell's
+    // hasCost predicate can read the part's current cost state.
+    decimal? ManualCostOverride,
+    int? CurrentCostCalculationId,
     List<BOMEntryResponseModel> BomEntries,
     List<BOMUsageResponseModel> UsedIn,
     DateTimeOffset CreatedAt,

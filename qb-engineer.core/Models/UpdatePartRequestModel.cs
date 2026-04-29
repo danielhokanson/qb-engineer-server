@@ -16,4 +16,7 @@ public record UpdatePartRequestModel(
     decimal? ReorderPoint,
     decimal? ReorderQuantity,
     int? LeadTimeDays,
-    int? SafetyStockDays);
+    int? SafetyStockDays,
+    // Workflow Pattern Phase 5 — manual cost override (Tier 1 single-rate).
+    // Sentinel value -1 means "clear to null".
+    decimal? ManualCostOverride = null);
