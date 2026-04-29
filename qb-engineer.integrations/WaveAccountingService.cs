@@ -65,10 +65,10 @@ public class WaveAccountingService(
         return customers;
     }
 
-    public async Task<AccountingCustomer?> GetCustomerAsync(string externalId, CancellationToken ct)
+    public Task<AccountingCustomer?> GetCustomerAsync(string externalId, CancellationToken ct)
     {
         // Wave GraphQL does not support fetching a single customer by ID in the same way — return null
-        return null;
+        return Task.FromResult<AccountingCustomer?>(null);
     }
 
     public async Task<string> CreateCustomerAsync(AccountingCustomer customer, CancellationToken ct)
@@ -87,10 +87,10 @@ public class WaveAccountingService(
         return doc.RootElement.GetProperty("data").GetProperty("customerCreate").GetProperty("customer").GetProperty("id").GetString()!;
     }
 
-    public async Task<string> CreateEstimateAsync(AccountingDocument document, CancellationToken ct)
+    public Task<string> CreateEstimateAsync(AccountingDocument document, CancellationToken ct)
     {
         logger.LogWarning("[Wave] CreateEstimate not supported via Wave GraphQL API — returning local ID");
-        return $"wave-local-{Guid.NewGuid():N}";
+        return Task.FromResult($"wave-local-{Guid.NewGuid():N}");
     }
 
     public async Task<string> CreateInvoiceAsync(AccountingDocument document, CancellationToken ct)
@@ -112,10 +112,10 @@ public class WaveAccountingService(
         return doc.RootElement.GetProperty("data").GetProperty("invoiceCreate").GetProperty("invoice").GetProperty("id").GetString()!;
     }
 
-    public async Task<string> CreatePurchaseOrderAsync(AccountingDocument document, CancellationToken ct)
+    public Task<string> CreatePurchaseOrderAsync(AccountingDocument document, CancellationToken ct)
     {
         logger.LogWarning("[Wave] CreatePurchaseOrder not supported — returning local ID");
-        return $"wave-local-{Guid.NewGuid():N}";
+        return Task.FromResult($"wave-local-{Guid.NewGuid():N}");
     }
 
     public Task<AccountingPayment?> GetPaymentAsync(string externalId, CancellationToken ct) =>

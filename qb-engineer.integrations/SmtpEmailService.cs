@@ -48,7 +48,7 @@ public class SmtpEmailService : IEmailService
         await client.ConnectAsync(_options.Host, _options.Port, _options.UseSsl, ct);
 
         if (!string.IsNullOrEmpty(_options.Username))
-            await client.AuthenticateAsync(_options.Username, _options.Password, ct);
+            await client.AuthenticateAsync(_options.Username, _options.Password ?? string.Empty, ct);
 
         await client.SendAsync(mime, ct);
         await client.DisconnectAsync(true, ct);
@@ -64,7 +64,7 @@ public class SmtpEmailService : IEmailService
             await client.ConnectAsync(_options.Host, _options.Port, _options.UseSsl, ct);
 
             if (!string.IsNullOrEmpty(_options.Username))
-                await client.AuthenticateAsync(_options.Username, _options.Password, ct);
+                await client.AuthenticateAsync(_options.Username, _options.Password ?? string.Empty, ct);
 
             await client.DisconnectAsync(true, ct);
             _logger.LogInformation("[SMTP] Connection test succeeded");

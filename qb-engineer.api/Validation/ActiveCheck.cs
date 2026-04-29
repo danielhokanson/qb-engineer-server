@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using FluentValidation;
 using FluentValidation.Results;
 using QBEngineer.Core.Interfaces;
@@ -45,7 +47,7 @@ public static class ActiveCheck
     /// thrown <see cref="KeyNotFoundException"/> matches the existing error
     /// message format used across the codebase.</param>
     public static void EnsureActive<T>(
-        T? entity,
+        [NotNull] T? entity,
         string entityKindLabel,
         string fieldPath,
         int entityId)

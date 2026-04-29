@@ -153,10 +153,10 @@ public class FreshBooksAccountingService(
         return doc.RootElement.GetProperty("response").GetProperty("result").GetProperty("invoice").GetProperty("id").GetInt64().ToString();
     }
 
-    public async Task<string> CreatePurchaseOrderAsync(AccountingDocument document, CancellationToken ct)
+    public Task<string> CreatePurchaseOrderAsync(AccountingDocument document, CancellationToken ct)
     {
         logger.LogWarning("[FreshBooks] CreatePurchaseOrder not natively supported — returning local ID");
-        return $"freshbooks-local-{Guid.NewGuid():N}";
+        return Task.FromResult($"freshbooks-local-{Guid.NewGuid():N}");
     }
 
     public Task<AccountingPayment?> GetPaymentAsync(string externalId, CancellationToken ct) =>

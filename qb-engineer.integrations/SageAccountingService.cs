@@ -89,10 +89,10 @@ public class SageAccountingService(
         return doc.RootElement.GetProperty("id").GetString()!;
     }
 
-    public async Task<string> CreateEstimateAsync(AccountingDocument document, CancellationToken ct)
+    public Task<string> CreateEstimateAsync(AccountingDocument document, CancellationToken ct)
     {
         logger.LogWarning("[Sage] CreateEstimate — Sage Business Cloud does not natively support quotes via API v3.1, returning local ID");
-        return $"sage-local-{Guid.NewGuid():N}";
+        return Task.FromResult($"sage-local-{Guid.NewGuid():N}");
     }
 
     public async Task<string> CreateInvoiceAsync(AccountingDocument document, CancellationToken ct)

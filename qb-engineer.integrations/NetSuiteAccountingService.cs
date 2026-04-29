@@ -98,10 +98,10 @@ public class NetSuiteAccountingService(
         return id;
     }
 
-    public async Task<string> CreateEstimateAsync(AccountingDocument document, CancellationToken ct)
+    public Task<string> CreateEstimateAsync(AccountingDocument document, CancellationToken ct)
     {
         logger.LogWarning("[NetSuite] CreateEstimate not supported via REST record API — returning local ID");
-        return $"netsuite-local-{Guid.NewGuid():N}";
+        return Task.FromResult($"netsuite-local-{Guid.NewGuid():N}");
     }
 
     public async Task<string> CreateInvoiceAsync(AccountingDocument document, CancellationToken ct)
@@ -217,10 +217,10 @@ public class NetSuiteAccountingService(
     public Task<AccountingItem?> GetItemAsync(string externalId, CancellationToken ct) =>
         Task.FromResult<AccountingItem?>(null);
 
-    public async Task<string> CreateItemAsync(AccountingItem item, CancellationToken ct)
+    public Task<string> CreateItemAsync(AccountingItem item, CancellationToken ct)
     {
         logger.LogWarning("[NetSuite] CreateItem — inventory item creation requires specific account configuration, returning local ID");
-        return $"netsuite-local-{Guid.NewGuid():N}";
+        return Task.FromResult($"netsuite-local-{Guid.NewGuid():N}");
     }
 
     public Task UpdateItemAsync(string externalId, AccountingItem item, CancellationToken ct) =>
