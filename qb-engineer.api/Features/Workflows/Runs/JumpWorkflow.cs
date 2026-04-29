@@ -1,0 +1,99 @@
+using System.Text.Json;
+
+using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+
+using QBEngineer.Api.Services;
+using QBEngineer.Api.Workflows;
+using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+
+namespace QBEngineer.Api.Features.Workflows.Runs;
+
+/// <summary>
+/// Workflow Pattern Phase 3 / D2 — Jump to a specific step. Allowed when:
+///   • target is the current step (no-op);
+///   • target is to the LEFT of current (always allowed — earlier completed step);
+///   • target is to the RIGHT of current AND every step between current and
+///     target has its completion gates satisfied (forward jump = same as
+///     advancing through them in sequence).
+/// </summary>
+public record JumpWorkflowCommand(int RunId, JumpWorkflowRequestModel Body)
+    : IRequest<WorkflowRunResponseModel>;
+
+public class JumpWorkflowValidator : AbstractValidator<JumpWorkflowCommand>
+{
+    public JumpWorkflowValidator()
+    {
+        RuleFor(x => x.Body.TargetStepId).NotEmpty().MaximumLength(64);
+    }
+}
+
+public class JumpWorkflowHandler(
+    AppDbContext db,
+    IEntityReadinessService readiness,
+    ISystemAuditWriter auditWriter,
+    IClock clock) : IRequestHandler<JumpWorkflowCommand, WorkflowRunResponseModel>
+{
+    public async Task<WorkflowRunResponseModel> Handle(JumpWorkflowCommand request, CancellationToken ct)
+    {
+        var run = await db.WorkflowRuns.FirstOrDefaultAsync(r => r.Id == request.RunId, ct)
+            ?? throw new KeyNotFoundException($"Workflow run id {request.RunId} not found.");
+        if (run.CompletedAt is not null || run.AbandonedAt is not null)
+            throw new InvalidOperationException("Workflow run is no longer active.");
+
+        var def = await db.WorkflowDefinitions.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.DefinitionId == run.DefinitionId, ct)
+            ?? throw new InvalidOperationException(
+                $"Workflow definition '{run.DefinitionId}' missing — run is orphaned.");
+
+        var steps = WorkflowStepHelper.ParseSteps(def.StepsJson);
+        var targetIdx = WorkflowStepHelper.IndexOf(steps, request.Body.TargetStepId);
+        if (targetIdx < 0)
+            throw new InvalidOperationException(
+                $"Step '{request.Body.TargetStepId}' is not part of definition '{def.DefinitionId}'.");
+
+        var currentIdx = WorkflowStepHelper.IndexOf(steps, run.CurrentStepId);
+        if (currentIdx < 0) currentIdx = 0; // fall back to first step on orphaned current
+
+        // Forward jump: every step between current and target (exclusive of
+        // target itself, inclusive of current) must satisfy its gates.
+        if (targetIdx > currentIdx)
+        {
+            var missing = await readiness.GetMissingValidatorsAsync(run.EntityType, run.EntityId, ct);
+            var failing = missing.Select(m => m.ValidatorId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            for (var i = currentIdx; i < targetIdx; i++)
+            {
+                foreach (var gate in steps[i].CompletionGates)
+                    if (failing.Contains(gate))
+                        throw new WorkflowMissingValidatorsException(
+                            missing.Where(m => steps[i].CompletionGates.Contains(m.ValidatorId, StringComparer.OrdinalIgnoreCase))
+                                .Select(m => new MissingValidatorResponseModel(
+                                    m.ValidatorId, m.DisplayNameKey, m.MissingMessageKey))
+                                .ToList(),
+                            $"Cannot jump forward to '{steps[targetIdx].Id}' — step '{steps[i].Id}' is not yet complete.");
+            }
+        }
+
+        run.CurrentStepId = steps[targetIdx].Id;
+        run.LastActivityAt = clock.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        await auditWriter.WriteAsync(
+            action: WorkflowAuditEvents.JumpedTo,
+            userId: db.CurrentUserId ?? 0,
+            entityType: WorkflowAuditEvents.EntityType,
+            entityId: run.Id,
+            details: JsonSerializer.Serialize(new
+            {
+                runId = run.Id,
+                from = currentIdx >= 0 && currentIdx < steps.Count ? steps[currentIdx].Id : null,
+                to = run.CurrentStepId,
+            }),
+            ct: ct);
+
+        return run.ToResponse();
+    }
+}

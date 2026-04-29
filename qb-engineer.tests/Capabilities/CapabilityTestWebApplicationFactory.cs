@@ -87,6 +87,12 @@ public class CapabilityTestWebApplicationFactory : WebApplicationFactory<Program
         var snapshots = host.Services.GetRequiredService<ICapabilitySnapshotProvider>();
         snapshots.RefreshAsync().GetAwaiter().GetResult();
 
+        // Workflow Pattern Phase 3 — seed entity validators + workflow
+        // definitions so integration tests share the same baseline as a
+        // freshly-bootstrapped install.
+        var workflowSeeder = scope.ServiceProvider.GetRequiredService<QBEngineer.Api.Workflows.IWorkflowSubstrateSeeder>();
+        workflowSeeder.SeedAsync().GetAwaiter().GetResult();
+
         return host;
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Parts;
+using QBEngineer.Api.Features.Parts.PromoteStatus;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
 
@@ -106,6 +107,19 @@ public class PartsController(IMediator mediator) : ControllerBase
     {
         await mediator.Send(new DeletePartCommand(id));
         return NoContent();
+    }
+
+    /// <summary>
+    /// Workflow Pattern Phase 3 — Authoritative Part status promotion.
+    /// Runs entity readiness validators server-side; success → 200 with the
+    /// updated detail, failure → 409 with the missing-validators envelope.
+    /// </summary>
+    [HttpPost("{id:int}/promote-status")]
+    public async Task<ActionResult<PartDetailResponseModel>> PromoteStatus(
+        int id, [FromBody] PromoteEntityStatusRequestModel body, CancellationToken ct)
+    {
+        var result = await mediator.Send(new PromotePartStatusCommand(id, body), ct);
+        return Ok(result);
     }
 
     [HttpGet("{id:int}/revisions")]

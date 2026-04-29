@@ -68,6 +68,14 @@ public class Part : BaseAuditableEntity, IActiveAware
 
     public Vendor? PreferredVendor { get; set; }
 
+    // Workflow Pattern Phase 2 / D3 — Per-record cost override + pointer at the
+    // active CostCalculation snapshot. Read priority for displayed cost:
+    //   ManualCostOverride ?? CostCalculation.ResultAmount ?? null.
+    // Until D5 ships, only ManualCostOverride is ever populated.
+    public decimal? ManualCostOverride { get; set; }
+    public int? CurrentCostCalculationId { get; set; }
+    public CostCalculation? CurrentCostCalculation { get; set; }
+
     // IActiveAware — Phase 3 H2 active-check. Parts use a status enum rather
     // than a bool. "Active" / "Prototype" / "Draft" are usable on new
     // transactions; "Obsolete" is not (treated as deactivated).

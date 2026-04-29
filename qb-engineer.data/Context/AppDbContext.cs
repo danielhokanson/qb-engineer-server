@@ -411,6 +411,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     // Discovery (Phase 4 Phase-F) — wizard run audit trail.
     public DbSet<DiscoveryRun> DiscoveryRuns => Set<DiscoveryRun>();
 
+    // Workflow Pattern Phase 2 — workflow runtime + readiness validators +
+    // costing substrate (D5 schema landed empty; populated in a later phase).
+    public DbSet<WorkflowRun> WorkflowRuns => Set<WorkflowRun>();
+    public DbSet<WorkflowRunEntity> WorkflowRunEntities => Set<WorkflowRunEntity>();
+    public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
+    public DbSet<EntityReadinessValidator> EntityReadinessValidators => Set<EntityReadinessValidator>();
+    public DbSet<CostingProfile> CostingProfiles => Set<CostingProfile>();
+    public DbSet<CostCalculation> CostCalculations => Set<CostCalculation>();
+    public DbSet<CostCalculationInputs> CostCalculationInputs => Set<CostCalculationInputs>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

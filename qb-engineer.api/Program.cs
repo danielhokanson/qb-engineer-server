@@ -303,6 +303,29 @@ try
                                   QBEngineer.Api.Capabilities.CapabilitySnapshotProvider>();
     builder.Services.AddScoped<QBEngineer.Api.Capabilities.ICapabilityCatalogSeeder,
                                QBEngineer.Api.Capabilities.CapabilityCatalogSeeder>();
+
+    // Workflow Pattern Phase 3 — DSL evaluator + seeder. Singleton evaluator
+    // (stateless, reflection-cached); the empty custom-function registry is
+    // injected by default and can be replaced in a later phase.
+    builder.Services.AddSingleton<QBEngineer.Api.Workflows.IPredicateCustomFunctionRegistry,
+                                  QBEngineer.Api.Workflows.EmptyPredicateCustomFunctionRegistry>();
+    builder.Services.AddSingleton<QBEngineer.Api.Workflows.PredicateEvaluator>();
+    builder.Services.AddScoped<QBEngineer.Api.Workflows.IWorkflowSubstrateSeeder,
+                               QBEngineer.Api.Workflows.WorkflowSubstrateSeeder>();
+    builder.Services.AddScoped<QBEngineer.Api.Workflows.IEntityReadinessService,
+                               QBEngineer.Api.Workflows.EntityReadinessService>();
+    builder.Services.AddScoped<QBEngineer.Api.Workflows.IEntityReadinessLoader,
+                               QBEngineer.Api.Workflows.PartReadinessLoader>();
+
+    // Workflow per-entity-type adapters. Phase 3 wires the Part variant;
+    // later phases register customer / quote / vendor / etc.
+    builder.Services.AddScoped<QBEngineer.Api.Workflows.PartWorkflowAdapter>();
+    builder.Services.AddScoped<QBEngineer.Api.Workflows.IWorkflowEntityCreator>(
+        sp => sp.GetRequiredService<QBEngineer.Api.Workflows.PartWorkflowAdapter>());
+    builder.Services.AddScoped<QBEngineer.Api.Workflows.IWorkflowFieldApplier>(
+        sp => sp.GetRequiredService<QBEngineer.Api.Workflows.PartWorkflowAdapter>());
+    builder.Services.AddScoped<QBEngineer.Api.Workflows.IWorkflowEntityPromoter>(
+        sp => sp.GetRequiredService<QBEngineer.Api.Workflows.PartWorkflowAdapter>());
     builder.Services.AddScoped<IClockEventTypeService, ClockEventTypeService>();
     builder.Services.AddScoped<IUserIntegrationService, UserIntegrationService>();
     builder.Services.AddScoped<IMrpService, MrpService>();
@@ -844,6 +867,13 @@ try
             Log.Information("[CAPABILITY-SEED] Snapshot hydrated: {Count} capabilities ({Enabled} enabled)",
                 capabilitySnapshots.Current.EnabledByCode.Count,
                 capabilitySnapshots.Current.EnabledByCode.Count(kv => kv.Value));
+
+            // Workflow Pattern Phase 3 — seed entity readiness validators +
+            // workflow definitions. Idempotent stable-id upsert. Runs after
+            // migrations and the capability seeder so cross-feature seeds
+            // share the same audit-suppression posture.
+            var workflowSeeder = scope.ServiceProvider.GetRequiredService<QBEngineer.Api.Workflows.IWorkflowSubstrateSeeder>();
+            await workflowSeeder.SeedAsync();
 
             // Demo-data export mode — dump business entities to JSON and exit
             // before the web host starts. Triggered by EXPORT_DEMO_DATA env var

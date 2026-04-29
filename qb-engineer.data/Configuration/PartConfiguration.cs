@@ -52,5 +52,15 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
             .WithMany()
             .HasForeignKey(e => e.CurrentBomRevisionId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Workflow Pattern Phase 2 / D3 — manual cost override + pointer at
+        // active CostCalculation snapshot. SetNull because deleting a calc
+        // row should leave the part intact.
+        builder.Property(e => e.ManualCostOverride).HasColumnType("decimal(18,4)");
+        builder.HasIndex(e => e.CurrentCostCalculationId);
+        builder.HasOne(e => e.CurrentCostCalculation)
+            .WithMany()
+            .HasForeignKey(e => e.CurrentCostCalculationId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

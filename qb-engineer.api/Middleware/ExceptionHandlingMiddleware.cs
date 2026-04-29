@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 using QBEngineer.Api.Capabilities;
+using QBEngineer.Api.Workflows;
 
 namespace QBEngineer.Api.Middleware;
 
@@ -47,6 +48,31 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             };
 
             await context.Response.WriteAsJsonAsync(problem);
+        }
+        catch (WorkflowMissingValidatorsException ex)
+        {
+            // Workflow Pattern Phase 3 — readiness gate failure. Returns 409
+            // with the envelope { title, detail, missing: [...] } so the
+            // client can render "Missing: BOM, Routing" with jump-to links.
+            logger.LogInformation("[WORKFLOW] Readiness gate failed: {Count} missing validators", ex.Missing.Count);
+
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            context.Response.ContentType = "application/problem+json";
+
+            var envelope = new
+            {
+                status = StatusCodes.Status409Conflict,
+                title = "Readiness validators not satisfied",
+                detail = ex.Message,
+                type = "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+                code = "workflow-readiness-missing",
+                missing = ex.Missing,
+            };
+            var json = JsonSerializer.Serialize(envelope, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            });
+            await context.Response.WriteAsync(json);
         }
         catch (InvalidOperationException ex) when (IsFrameworkException(ex))
         {
