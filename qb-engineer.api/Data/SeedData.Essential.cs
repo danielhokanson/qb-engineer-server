@@ -391,6 +391,10 @@ public static partial class SeedData
 
         // ── Pillar 1 — Part ItemKind taxonomy (idempotent upsert) ─────────
         await SeedPartItemKindsAsync(db);
+
+        // ── Pillar 2 follow-up — Part MaterialSpec / ValuationClass ───────
+        await SeedPartMaterialSpecsAsync(db);
+        await SeedPartValuationClassesAsync(db);
     }
 
     /// <summary>
@@ -422,6 +426,162 @@ public static partial class SeedData
             ("tool", "Tool", 8),
             ("consumable", "Consumable", 9),
             ("custom", "Custom", 10),
+        };
+
+        var added = 0;
+        foreach (var (code, label, sort) in seeds)
+        {
+            if (existingSet.Contains(code)) continue;
+            db.ReferenceData.Add(new ReferenceData
+            {
+                IsSeedData = true,
+                GroupCode = group,
+                Code = code,
+                Label = label,
+                SortOrder = sort,
+                IsActive = true,
+            });
+            added++;
+        }
+        if (added > 0) await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Pillar 2 follow-up — Material specification taxonomy on parts.
+    /// Hierarchical: parent material families (Aluminum, Steel, Stainless,
+    /// Plastic, …) with common engineering grades as children. Idempotent
+    /// upsert keyed on (GroupCode, Code); admin extensions are preserved.
+    /// </summary>
+    internal static async Task SeedPartMaterialSpecsAsync(AppDbContext db)
+    {
+        const string group = "part.material_spec";
+
+        var existing = await db.ReferenceData
+            .Where(r => r.GroupCode == group)
+            .ToListAsync();
+        var existingByCode = existing
+            .GroupBy(r => r.Code, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        // Parents: top-level material families. ParentId stays null.
+        var parents = new (string Code, string Label, int Sort)[]
+        {
+            ("aluminum", "Aluminum", 1),
+            ("steel", "Steel", 2),
+            ("stainless", "Stainless Steel", 3),
+            ("plastic", "Plastic", 4),
+            ("brass", "Brass / Bronze", 5),
+            ("copper", "Copper", 6),
+            ("titanium", "Titanium", 7),
+            ("other-metal", "Other Metal", 8),
+            ("composite", "Composite", 9),
+            ("rubber", "Rubber / Elastomer", 10),
+        };
+
+        var parentAdded = 0;
+        foreach (var (code, label, sort) in parents)
+        {
+            if (existingByCode.ContainsKey(code)) continue;
+            db.ReferenceData.Add(new ReferenceData
+            {
+                IsSeedData = true,
+                GroupCode = group,
+                Code = code,
+                Label = label,
+                SortOrder = sort,
+                IsActive = true,
+                ParentId = null,
+            });
+            parentAdded++;
+        }
+        if (parentAdded > 0) await db.SaveChangesAsync();
+
+        // Re-load after parent insert so we can resolve ParentId for children.
+        var parentByCode = (await db.ReferenceData
+                .Where(r => r.GroupCode == group && r.ParentId == null)
+                .ToListAsync())
+            .ToDictionary(r => r.Code, r => r.Id, StringComparer.OrdinalIgnoreCase);
+
+        // Children: engineering grades grouped under their parent family.
+        // (parentCode, code, label, sort)
+        var children = new (string ParentCode, string Code, string Label, int Sort)[]
+        {
+            ("aluminum",  "aluminum-6061-t6",  "6061-T6",                    1),
+            ("aluminum",  "aluminum-7075-t6",  "7075-T6",                    2),
+            ("aluminum",  "aluminum-5052-h32", "5052-H32",                   3),
+            ("aluminum",  "aluminum-2024-t3",  "2024-T3",                    4),
+
+            ("steel",     "steel-1018",        "1018 Cold-Rolled",           1),
+            ("steel",     "steel-1045",        "1045",                       2),
+            ("steel",     "steel-4140",        "4140 Alloy",                 3),
+            ("steel",     "steel-a36",         "A36 Structural",             4),
+            ("steel",     "steel-12l14",       "12L14 (Free-Machining)",     5),
+
+            ("stainless", "stainless-303",     "303",                        1),
+            ("stainless", "stainless-304",     "304",                        2),
+            ("stainless", "stainless-316",     "316 / 316L",                 3),
+            ("stainless", "stainless-410",     "410",                        4),
+            ("stainless", "stainless-440c",    "440C",                       5),
+            ("stainless", "stainless-17-4-ph", "17-4 PH",                    6),
+
+            ("plastic",   "plastic-abs",       "ABS",                        1),
+            ("plastic",   "plastic-pc",        "Polycarbonate",              2),
+            ("plastic",   "plastic-delrin",    "Delrin (Acetal)",            3),
+            ("plastic",   "plastic-uhmw",      "UHMW Polyethylene",          4),
+            ("plastic",   "plastic-nylon-6-6", "Nylon 6/6",                  5),
+            ("plastic",   "plastic-pp",        "Polypropylene",              6),
+            ("plastic",   "plastic-pvc",       "PVC",                        7),
+            ("plastic",   "plastic-peek",      "PEEK",                       8),
+
+            ("brass",     "brass-360",         "Brass 360 (Free-Machining)", 1),
+            ("brass",     "bronze-932",        "Bronze 932 (SAE 660)",       2),
+
+            ("copper",    "copper-c110",       "Copper C110 (ETP)",          1),
+
+            ("titanium",  "titanium-grade-2",  "Grade 2 (Pure)",             1),
+            ("titanium",  "titanium-grade-5",  "Grade 5 (Ti-6Al-4V)",        2),
+        };
+
+        var childAdded = 0;
+        foreach (var (parentCode, code, label, sort) in children)
+        {
+            if (existingByCode.ContainsKey(code)) continue;
+            if (!parentByCode.TryGetValue(parentCode, out var parentId)) continue;
+            db.ReferenceData.Add(new ReferenceData
+            {
+                IsSeedData = true,
+                GroupCode = group,
+                Code = code,
+                Label = label,
+                SortOrder = sort,
+                IsActive = true,
+                ParentId = parentId,
+            });
+            childAdded++;
+        }
+        if (childAdded > 0) await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Pillar 2 follow-up — Inventory valuation method taxonomy on parts.
+    /// Flat list (no hierarchy). Idempotent upsert keyed on (GroupCode, Code).
+    /// </summary>
+    internal static async Task SeedPartValuationClassesAsync(AppDbContext db)
+    {
+        const string group = "part.valuation_class";
+        var existing = await db.ReferenceData
+            .Where(r => r.GroupCode == group)
+            .Select(r => r.Code)
+            .ToListAsync();
+        var existingSet = existing.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var seeds = new (string Code, string Label, int Sort)[]
+        {
+            ("fifo",         "FIFO (First-In, First-Out)",   1),
+            ("lifo",         "LIFO (Last-In, First-Out)",    2),
+            ("weighted-avg", "Weighted Average",             3),
+            ("standard",     "Standard Cost",                4),
+            ("specific",     "Specific Identification",      5),
         };
 
         var added = 0;
