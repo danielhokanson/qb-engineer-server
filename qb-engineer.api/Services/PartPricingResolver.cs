@@ -46,7 +46,7 @@ public class PartPricingResolver(AppDbContext db) : IPartPricingResolver
                         && e.PartId == partId
                         && e.MinQuantity <= qty)
                     .OrderByDescending(e => e.MinQuantity)
-                    .Select(e => new { e.Id, e.UnitPrice })
+                    .Select(e => new { e.Id, e.UnitPrice, e.Currency, e.Notes })
                     .FirstOrDefaultAsync(ct);
 
                 if (entry is not null)
@@ -54,10 +54,10 @@ public class PartPricingResolver(AppDbContext db) : IPartPricingResolver
                     return new ResolvedPartPrice(
                         PartId: partId,
                         UnitPrice: entry.UnitPrice,
-                        Currency: DefaultCurrency,
+                        Currency: entry.Currency,
                         Source: PartPriceSource.PriceListEntry,
                         SourceRowId: entry.Id,
-                        Notes: null);
+                        Notes: entry.Notes);
                 }
             }
         }
@@ -69,7 +69,7 @@ public class PartPricingResolver(AppDbContext db) : IPartPricingResolver
                 && pp.EffectiveFrom <= now
                 && (pp.EffectiveTo == null || pp.EffectiveTo > now))
             .OrderByDescending(pp => pp.EffectiveFrom)
-            .Select(pp => new { pp.Id, pp.UnitPrice, pp.Notes })
+            .Select(pp => new { pp.Id, pp.UnitPrice, pp.Currency, pp.Notes })
             .FirstOrDefaultAsync(ct);
 
         if (partPrice is not null)
@@ -77,7 +77,7 @@ public class PartPricingResolver(AppDbContext db) : IPartPricingResolver
             return new ResolvedPartPrice(
                 PartId: partId,
                 UnitPrice: partPrice.UnitPrice,
-                Currency: DefaultCurrency,
+                Currency: partPrice.Currency,
                 Source: PartPriceSource.PartPrice,
                 SourceRowId: partPrice.Id,
                 Notes: partPrice.Notes);
@@ -137,6 +137,7 @@ public class PartPricingResolver(AppDbContext db) : IPartPricingResolver
                 pp.Id,
                 pp.PartId,
                 pp.UnitPrice,
+                pp.Currency,
                 pp.EffectiveFrom,
                 pp.Notes,
             })
@@ -179,7 +180,7 @@ public class PartPricingResolver(AppDbContext db) : IPartPricingResolver
                 result[id] = new ResolvedPartPrice(
                     PartId: id,
                     UnitPrice: pp.UnitPrice,
-                    Currency: DefaultCurrency,
+                    Currency: pp.Currency,
                     Source: PartPriceSource.PartPrice,
                     SourceRowId: pp.Id,
                     Notes: pp.Notes);

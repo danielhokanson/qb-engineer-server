@@ -151,6 +151,83 @@ public class PartPricingResolverTests
     }
 
     [Fact]
+    public async Task ResolveAsync_PartPrice_HonoursPartPriceCurrency()
+    {
+        // Arrange — Pillar 2 Dispatch B added Currency to PartPrice. The
+        // resolver must echo it back rather than hardcoding USD.
+        using var db = TestDbContextFactory.Create();
+        var part = NewPart("PRC-EUR");
+        db.Parts.Add(part);
+        await db.SaveChangesAsync();
+
+        db.PartPrices.Add(new PartPrice
+        {
+            PartId = part.Id,
+            UnitPrice = 18.75m,
+            Currency = "EUR",
+            EffectiveFrom = DateTimeOffset.UtcNow.AddDays(-1),
+            Notes = "Eurozone price",
+        });
+        await db.SaveChangesAsync();
+
+        var resolver = new PartPricingResolver(db);
+
+        // Act
+        var result = await resolver.ResolveAsync(part.Id, customerId: null, quantity: null, CancellationToken.None);
+
+        // Assert
+        result.Source.Should().Be(PartPriceSource.PartPrice);
+        result.UnitPrice.Should().Be(18.75m);
+        result.Currency.Should().Be("EUR");
+        result.Notes.Should().Be("Eurozone price");
+    }
+
+    [Fact]
+    public async Task ResolveAsync_PriceListEntry_HonoursEntryCurrency()
+    {
+        // Arrange — Pillar 2 Dispatch B added Currency + Notes to
+        // PriceListEntry. Resolver must echo them.
+        using var db = TestDbContextFactory.Create();
+        var part = NewPart("PRC-PLE-EUR");
+        var customer = new Customer { Name = "Eurocorp" };
+        db.Parts.Add(part);
+        db.Customers.Add(customer);
+        await db.SaveChangesAsync();
+
+        var priceList = new PriceList
+        {
+            Name = "Eurocorp",
+            CustomerId = customer.Id,
+            IsActive = true,
+            EffectiveFrom = DateTimeOffset.UtcNow.AddDays(-1),
+        };
+        db.PriceLists.Add(priceList);
+        await db.SaveChangesAsync();
+
+        db.PriceListEntries.Add(new PriceListEntry
+        {
+            PriceListId = priceList.Id,
+            PartId = part.Id,
+            MinQuantity = 1,
+            UnitPrice = 21.50m,
+            Currency = "EUR",
+            Notes = "Customer-quoted EUR price",
+        });
+        await db.SaveChangesAsync();
+
+        var resolver = new PartPricingResolver(db);
+
+        // Act
+        var result = await resolver.ResolveAsync(part.Id, customer.Id, quantity: 1m, CancellationToken.None);
+
+        // Assert
+        result.Source.Should().Be(PartPriceSource.PriceListEntry);
+        result.UnitPrice.Should().Be(21.50m);
+        result.Currency.Should().Be("EUR");
+        result.Notes.Should().Be("Customer-quoted EUR price");
+    }
+
+    [Fact]
     public async Task ResolveAsync_VendorPartTier_HonoursTierCurrency()
     {
         // Arrange — preferred VendorPart whose tier carries non-USD currency.

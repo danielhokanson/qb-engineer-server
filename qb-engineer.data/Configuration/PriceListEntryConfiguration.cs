@@ -10,6 +10,14 @@ public class PriceListEntryConfiguration : IEntityTypeConfiguration<PriceListEnt
     {
         builder.Property(e => e.UnitPrice).HasPrecision(18, 4);
 
+        builder.Property(e => e.Currency)
+            .HasMaxLength(3)
+            .IsRequired()
+            .HasDefaultValue("USD");
+
+        builder.Property(e => e.Notes)
+            .HasMaxLength(2000);
+
         builder.HasIndex(e => e.PriceListId);
         builder.HasIndex(e => e.PartId);
         builder.HasIndex(e => new { e.PriceListId, e.PartId, e.MinQuantity }).IsUnique();

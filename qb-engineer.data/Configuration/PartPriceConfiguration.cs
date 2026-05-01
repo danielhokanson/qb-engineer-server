@@ -15,6 +15,11 @@ public class PartPriceConfiguration : IEntityTypeConfiguration<PartPrice>
             .HasPrecision(18, 4)
             .IsRequired();
 
+        builder.Property(p => p.Currency)
+            .HasMaxLength(3)
+            .IsRequired()
+            .HasDefaultValue("USD");
+
         builder.Property(p => p.EffectiveFrom)
             .IsRequired();
 

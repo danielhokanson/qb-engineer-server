@@ -38,4 +38,10 @@ public class MockCurrencyService(ILogger<MockCurrencyService> logger) : ICurrenc
         logger.LogInformation("[MockCurrency] FetchExchangeRates for {Date}", date);
         return Task.CompletedTask;
     }
+
+    public Task<string> GetBaseCurrencyAsync(CancellationToken ct)
+    {
+        logger.LogInformation("[MockCurrency] GetBaseCurrency");
+        return Task.FromResult("USD");
+    }
 }

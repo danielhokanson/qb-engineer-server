@@ -15,6 +15,15 @@ public class PartPrice : BaseEntity
 {
     public int PartId { get; set; }
     public decimal UnitPrice { get; set; }
+
+    /// <summary>
+    /// ISO-4217 currency code (e.g. "USD", "EUR"). Defaults to "USD" so existing
+    /// rows backfilled by the migration retain a sensible value. The
+    /// IPartPricingResolver echoes this back through ResolvedPartPrice.Currency
+    /// so the UI can decide whether to suffix the code.
+    /// </summary>
+    public string Currency { get; set; } = "USD";
+
     public DateTimeOffset EffectiveFrom { get; set; }
     public DateTimeOffset? EffectiveTo { get; set; }
     public string? Notes { get; set; }

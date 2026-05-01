@@ -476,9 +476,11 @@ try
         // EDI: mock for now — real providers (AS2/SFTP) can be added per trading partner
         builder.Services.AddSingleton<IEdiService, MockEdiService>();
         builder.Services.AddSingleton<IEdiTransportService, MockEdiTransportService>();
-        // CPQ, Currency, Localization, Plant — mock for now until real engines built
+        // CPQ, Localization, Plant — mock for now until real engines built
         builder.Services.AddSingleton<ICpqService, MockCpqService>();
-        builder.Services.AddSingleton<ICurrencyService, MockCurrencyService>();
+        // Currency: real CurrencyService reads currency.base from system_settings
+        // (FX methods still stubbed; base currency is the only piece in use today)
+        builder.Services.AddScoped<ICurrencyService, CurrencyService>();
         builder.Services.AddSingleton<ILocalizationService, MockLocalizationService>();
         builder.Services.AddScoped<IPlantContextService, MockPlantContextService>();
         // IoT, E-Commerce, BI — mock for now until real integrations built
