@@ -14,6 +14,7 @@ namespace QBEngineer.Api.Jobs;
 public class ReorderAnalysisJob(
     AppDbContext db,
     IClock clock,
+    IPartSourcingResolver sourcingResolver,
     ILogger<ReorderAnalysisJob> logger)
 {
     private const int ChunkSize = 500;
@@ -77,6 +78,11 @@ public class ReorderAnalysisJob(
                 break;
 
             var partIds = parts.Select(p => p.Id).ToList();
+
+            // Pillar 3 — bulk-resolve effective sourcing values for this
+            // chunk. Prefers the preferred VendorPart row's LeadTimeDays
+            // when one exists, falls back to the Part snapshot otherwise.
+            var sourcingByPart = await sourcingResolver.ResolveManyAsync(partIds, ct);
 
             // Current stock per part (for this chunk)
             var stockByPart = await db.BinContents
@@ -146,7 +152,11 @@ public class ReorderAnalysisJob(
                 var part = parts.FirstOrDefault(p => p.Id == pending.PartId);
                 if (part == null) continue;
 
-                if (!NeedsReorder(part, available, incomingQty, pending.BurnRateDailyAvg))
+                var effectiveLeadTime = sourcingByPart.TryGetValue(part.Id, out var sv)
+                    ? sv.LeadTimeDays
+                    : part.LeadTimeDays;
+
+                if (!NeedsReorder(part, effectiveLeadTime, available, incomingQty, pending.BurnRateDailyAvg))
                 {
                     pending.Status = ReorderSuggestionStatus.Expired;
                     expiredCount++;
@@ -187,7 +197,11 @@ public class ReorderAnalysisJob(
                 var bestBurnRate = burnRate90 ?? burnRate60 ?? burnRate30 ?? 0m;
                 var windowDays = burnRate90.HasValue ? 90 : burnRate60.HasValue ? 60 : burnRate30.HasValue ? 30 : 0;
 
-                if (!NeedsReorder(part, available, incomingQty, bestBurnRate))
+                var effectiveLeadTime = sourcingByPart.TryGetValue(part.Id, out var sv)
+                    ? sv.LeadTimeDays
+                    : part.LeadTimeDays;
+
+                if (!NeedsReorder(part, effectiveLeadTime, available, incomingQty, bestBurnRate))
                     continue;
 
                 int? daysRemaining = null;
@@ -209,7 +223,7 @@ public class ReorderAnalysisJob(
                 }
                 else if (bestBurnRate > 0)
                 {
-                    var coverDays = (part.LeadTimeDays ?? 14) + (part.SafetyStockDays ?? 14);
+                    var coverDays = (effectiveLeadTime ?? 14) + (part.SafetyStockDays ?? 14);
                     suggestedQty = bestBurnRate * coverDays;
                 }
                 else
@@ -288,14 +302,14 @@ public class ReorderAnalysisJob(
     }
 
     private static bool NeedsReorder(
-        Part part, decimal available, decimal incomingQty, decimal burnRate)
+        Part part, int? effectiveLeadTimeDays, decimal available, decimal incomingQty, decimal burnRate)
     {
         if (part.ReorderPoint.HasValue)
             return (available + incomingQty) <= part.ReorderPoint.Value;
 
         if (burnRate > 0)
         {
-            var coverDays = (part.LeadTimeDays ?? 14) + (part.SafetyStockDays ?? 7);
+            var coverDays = (effectiveLeadTimeDays ?? 14) + (part.SafetyStockDays ?? 7);
             return (available + incomingQty) < burnRate * coverDays;
         }
 

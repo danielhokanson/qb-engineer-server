@@ -21,7 +21,7 @@ public class ExecuteMrpRunHandlerTests
         using var db = TestDbContextFactory.Create();
         var clock = new SystemClock();
         var logger = NullLogger<MrpService>.Instance;
-        var mrpService = new MrpService(db, clock, logger);
+        var mrpService = new MrpService(db, clock, new PartSourcingResolver(db), logger);
 
         var handler = new ExecuteMrpRunHandler(mrpService);
         var command = new ExecuteMrpRunCommand(MrpRunType.Full, 90, null, null);
@@ -80,7 +80,7 @@ public class ExecuteMrpRunHandlerTests
         db.SalesOrderLines.Add(soLine);
         await db.SaveChangesAsync();
 
-        var mrpService = new MrpService(db, clock, logger);
+        var mrpService = new MrpService(db, clock, new PartSourcingResolver(db), logger);
         var handler = new ExecuteMrpRunHandler(mrpService);
         var command = new ExecuteMrpRunCommand(MrpRunType.Full, 90, null, null);
 
@@ -111,7 +111,7 @@ public class ExecuteMrpRunHandlerTests
         });
         await db.SaveChangesAsync();
 
-        var mrpService = new MrpService(db, clock, logger);
+        var mrpService = new MrpService(db, clock, new PartSourcingResolver(db), logger);
         var handler = new ExecuteMrpRunHandler(mrpService);
         var command = new ExecuteMrpRunCommand(MrpRunType.Full, 90, null, null);
 
@@ -128,7 +128,7 @@ public class ExecuteMrpRunHandlerTests
         using var db = TestDbContextFactory.Create();
         var clock = new SystemClock();
         var logger = NullLogger<MrpService>.Instance;
-        var mrpService = new MrpService(db, clock, logger);
+        var mrpService = new MrpService(db, clock, new PartSourcingResolver(db), logger);
 
         var handler = new SimulateMrpRunHandler(mrpService);
         var command = new SimulateMrpRunCommand(MrpRunType.Simulation, 60, null, null);

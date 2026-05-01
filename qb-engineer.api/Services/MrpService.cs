@@ -9,7 +9,11 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Services;
 
-public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logger) : IMrpService
+public class MrpService(
+    AppDbContext db,
+    IClock clock,
+    IPartSourcingResolver sourcingResolver,
+    ILogger<MrpService> logger) : IMrpService
 {
     public async Task<MrpRunResponseModel> ExecuteRunAsync(MrpRunOptions options, CancellationToken cancellationToken = default)
     {
@@ -293,6 +297,12 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
                 })
                 .ToDictionaryAsync(p => p.Id, cancellationToken);
 
+            // Pillar 3 — bulk-resolve effective sourcing values across the
+            // entire BOM tree. Lead time for supply-window timing comes
+            // from the preferred VendorPart row when configured, falling
+            // back to the Part snapshot.
+            var sourcingByPart = await sourcingResolver.ResolveManyAsync(allPartIds.ToList(), cancellationToken);
+
             // Also load on-hand for child parts
             var childOnHand = await db.BinContents
                 .AsNoTracking()
@@ -343,7 +353,11 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
                         : [];
 
                     var part = allParts.GetValueOrDefault(partId);
-                    var leadTime = part?.LeadTimeDays ?? 14;
+                    // Pillar 3: prefer per-vendor lead time from the resolver.
+                    var resolvedLeadTime = sourcingByPart.TryGetValue(partId, out var sv)
+                        ? sv.LeadTimeDays
+                        : part?.LeadTimeDays;
+                    var leadTime = resolvedLeadTime ?? 14;
                     var lotRule = part?.LotSizingRule ?? LotSizingRule.LotForLot;
 
                     var runningOnHand = availableOnHand;
@@ -414,7 +428,11 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
                                 foreach (var child in children)
                                 {
                                     var childQty = orderQty * child.Quantity;
-                                    var childLeadTime = child.LeadTimeDays ?? allParts.GetValueOrDefault(child.ChildPartId)?.LeadTimeDays ?? 14;
+                                    // Pillar 3: BOM-level override wins, then preferred VendorPart, then Part snapshot.
+                                    var childResolvedLeadTime = sourcingByPart.TryGetValue(child.ChildPartId, out var csv)
+                                        ? csv.LeadTimeDays
+                                        : allParts.GetValueOrDefault(child.ChildPartId)?.LeadTimeDays;
+                                    var childLeadTime = child.LeadTimeDays ?? childResolvedLeadTime ?? 14;
                                     var childRequiredDate = startDate;
 
                                     var childDemand = new MrpDemand

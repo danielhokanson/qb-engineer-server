@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Enums;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -9,7 +10,7 @@ namespace QBEngineer.Api.Features.Replenishment;
 
 public record GetBurnRatesQuery(string? Search, bool NeedsReorderOnly) : IRequest<List<BurnRateResponseModel>>;
 
-public class GetBurnRatesHandler(AppDbContext db)
+public class GetBurnRatesHandler(AppDbContext db, IPartSourcingResolver sourcingResolver)
     : IRequestHandler<GetBurnRatesQuery, List<BurnRateResponseModel>>
 {
     private static readonly BinMovementReason[] ConsumptionReasons =
@@ -37,6 +38,10 @@ public class GetBurnRatesHandler(AppDbContext db)
             .ToListAsync(cancellationToken);
 
         var partIds = parts.Select(p => p.Id).ToList();
+
+        // Pillar 3 — resolve effective sourcing values for every part in the
+        // result set. The needs-reorder decision uses the resolved lead time.
+        var sourcingByPart = await sourcingResolver.ResolveManyAsync(partIds, cancellationToken);
 
         // On-hand stock per part
         var stockByPart = await db.BinContents
@@ -128,7 +133,10 @@ public class GetBurnRatesHandler(AppDbContext db)
                 projectedStockout = now.AddDays((double)daysRemaining.Value);
             }
 
-            var needsReorder = DetermineNeedsReorder(part, available, incomingQty, bestBurnRate);
+            var effectiveLeadTime = sourcingByPart.TryGetValue(part.Id, out var sv)
+                ? sv.LeadTimeDays
+                : part.LeadTimeDays;
+            var needsReorder = DetermineNeedsReorder(part, effectiveLeadTime, available, incomingQty, bestBurnRate);
 
             if (request.NeedsReorderOnly && !needsReorder)
                 continue;
@@ -170,7 +178,7 @@ public class GetBurnRatesHandler(AppDbContext db)
     }
 
     private static bool DetermineNeedsReorder(
-        Core.Entities.Part part, decimal available, decimal incomingQty, decimal? burnRate)
+        Core.Entities.Part part, int? effectiveLeadTimeDays, decimal available, decimal incomingQty, decimal? burnRate)
     {
         // Explicit reorder point overrides everything
         if (part.ReorderPoint.HasValue)
@@ -179,7 +187,7 @@ public class GetBurnRatesHandler(AppDbContext db)
         // Burn-rate based: stock won't cover lead time + safety buffer
         if (burnRate.HasValue && burnRate.Value > 0)
         {
-            var coverDays = (part.LeadTimeDays ?? 14) + (part.SafetyStockDays ?? 7);
+            var coverDays = (effectiveLeadTimeDays ?? 14) + (part.SafetyStockDays ?? 7);
             var neededStock = burnRate.Value * coverDays;
             return (available + incomingQty) < neededStock;
         }

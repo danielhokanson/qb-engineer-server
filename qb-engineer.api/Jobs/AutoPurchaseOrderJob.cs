@@ -19,6 +19,7 @@ public class AutoPurchaseOrderJob(
     IClock clock,
     ISystemSettingRepository settingsRepo,
     PurchaseOrderGenerator poGenerator,
+    IPartSourcingResolver sourcingResolver,
     ILogger<AutoPurchaseOrderJob> logger)
 {
     private static readonly PurchaseOrderStatus[] OpenPoStatuses =
@@ -102,6 +103,12 @@ public class AutoPurchaseOrderJob(
             .GroupBy(b => b.ParentPartId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        // Pillar 3 — bulk-resolve effective sourcing values for every child
+        // part referenced by these Buy BOM entries. Falls back to the Part
+        // snapshot when no preferred VendorPart is configured.
+        var bomChildPartIds = buyBomEntries.Select(b => b.ChildPartId).Distinct().ToList();
+        var sourcingByChildPart = await sourcingResolver.ResolveManyAsync(bomChildPartIds, ct);
+
         // 5. Calculate demand per child part
         // demand = SUM(SO_line_remaining_qty * BOM_qty_per_unit) across all active SOs
         var demandByChildPart = new Dictionary<int, DemandInfo>();
@@ -133,7 +140,13 @@ public class AutoPurchaseOrderJob(
 
                 if (deliveryDate.HasValue)
                 {
-                    var leadTimeDays = bom.LeadTimeDays ?? bom.ChildPart.LeadTimeDays ?? 14;
+                    // Pillar 3: prefer per-vendor lead time from preferred
+                    // VendorPart row over the Part snapshot. BOM-level
+                    // override (bom.LeadTimeDays) still wins over both.
+                    var resolvedLeadTime = sourcingByChildPart.TryGetValue(bom.ChildPartId, out var resolved)
+                        ? resolved.LeadTimeDays
+                        : bom.ChildPart.LeadTimeDays;
+                    var leadTimeDays = bom.LeadTimeDays ?? resolvedLeadTime ?? 14;
                     var neededBy = deliveryDate.Value.AddDays(-leadTimeDays - bufferDays);
                     if (info.EarliestNeededBy is null || neededBy < info.EarliestNeededBy)
                         info.EarliestNeededBy = neededBy;
@@ -232,13 +245,23 @@ public class AutoPurchaseOrderJob(
             // Determine order quantity with rounding
             var orderQty = (int)Math.Ceiling(shortfall);
 
+            // Pillar 3: prefer per-vendor PackSize / MinOrderQty from the
+            // preferred VendorPart row, fall back to the Part snapshot.
+            var sourcing = sourcingByChildPart.TryGetValue(childPartId, out var partSourcing)
+                ? partSourcing
+                : null;
+            var effectivePackSize = sourcing?.PackSize
+                ?? (part.PackSize.HasValue ? (decimal?)part.PackSize.Value : null);
+            var effectiveMinOrderQty = sourcing?.MinOrderQty
+                ?? (part.MinOrderQty.HasValue ? (decimal?)part.MinOrderQty.Value : null);
+
             // Round up to pack size
-            if (part.PackSize is > 0)
-                orderQty = (int)(Math.Ceiling((decimal)orderQty / part.PackSize.Value) * part.PackSize.Value);
+            if (effectivePackSize is > 0)
+                orderQty = (int)(Math.Ceiling((decimal)orderQty / effectivePackSize.Value) * effectivePackSize.Value);
 
             // Ensure minimum order quantity
-            if (part.MinOrderQty is > 0 && orderQty < part.MinOrderQty.Value)
-                orderQty = part.MinOrderQty.Value;
+            if (effectiveMinOrderQty is > 0 && orderQty < effectiveMinOrderQty.Value)
+                orderQty = (int)Math.Ceiling(effectiveMinOrderQty.Value);
 
             // Determine vendor (prefer BOM entry vendor, then part preferred vendor)
             var vendorId = demand.BomEntry.VendorId ?? part.PreferredVendorId;
