@@ -63,15 +63,21 @@ public class JumpWorkflowHandler(
         if (targetIdx > currentIdx)
         {
             // Deferred materialization: no entity yet means no readiness can
-            // pass — every gate fails by definition. Surface a clean 409 so
-            // the UI shows "complete the first step first."
+            // pass. Surface a clean 409 listing only the gates of the steps
+            // we'd be jumping over — irrelevant validators (e.g. hasBom on a
+            // raw-material workflow that doesn't gate on BOM) stay hidden.
             if (run.EntityId is null)
             {
-                var allValidators = await db.EntityReadinessValidators
+                var blockingGateIds = steps
+                    .Take(targetIdx)
+                    .Skip(currentIdx)
+                    .SelectMany(s => s.CompletionGates)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var blockingValidators = await db.EntityReadinessValidators
                     .AsNoTracking()
-                    .Where(v => v.EntityType == run.EntityType)
+                    .Where(v => v.EntityType == run.EntityType && blockingGateIds.Contains(v.ValidatorId))
                     .ToListAsync(ct);
-                var payloadAll = allValidators.Select(v => new MissingValidatorResponseModel(
+                var payloadAll = blockingValidators.Select(v => new MissingValidatorResponseModel(
                     v.ValidatorId, v.DisplayNameKey, v.MissingMessageKey)).ToList();
                 throw new WorkflowMissingValidatorsException(
                     payloadAll,

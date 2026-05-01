@@ -39,16 +39,31 @@ public class CompleteWorkflowRunHandler(
         if (run.AbandonedAt is not null)
             throw new InvalidOperationException("Cannot complete an abandoned run.");
 
+        // Resolve the workflow definition so we can scope the readiness check
+        // to the gates this particular run cares about. Different definitions
+        // gate on different validator subsets — e.g. raw-material express only
+        // needs hasBasics + hasCost; assembly guided needs all four. We never
+        // want to surface validators outside the run's declared gates because
+        // those parts of the entity model don't apply to this workflow.
+        var def = await db.WorkflowDefinitions.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.DefinitionId == run.DefinitionId, ct)
+            ?? throw new InvalidOperationException(
+                $"Workflow definition '{run.DefinitionId}' missing — run is orphaned.");
+        var requiredGateIds = WorkflowStepHelper.ParseSteps(def.StepsJson)
+            .Where(s => s.Required)
+            .SelectMany(s => s.CompletionGates)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         // Deferred materialization: the entity hasn't been created yet, which
         // means the user hasn't completed the first step. Surface this as a
-        // readiness failure so the standard 409 envelope renders.
+        // readiness failure scoped to the run's required gates.
         if (run.EntityId is null)
         {
-            var allValidators = await db.EntityReadinessValidators
+            var defValidators = await db.EntityReadinessValidators
                 .AsNoTracking()
-                .Where(v => v.EntityType == run.EntityType)
+                .Where(v => v.EntityType == run.EntityType && requiredGateIds.Contains(v.ValidatorId))
                 .ToListAsync(ct);
-            var payloadAll = allValidators.Select(v => new MissingValidatorResponseModel(
+            var payloadAll = defValidators.Select(v => new MissingValidatorResponseModel(
                 v.ValidatorId, v.DisplayNameKey, v.MissingMessageKey)).ToList();
             throw new WorkflowMissingValidatorsException(
                 payloadAll,
@@ -56,9 +71,12 @@ public class CompleteWorkflowRunHandler(
         }
 
         var missing = await readiness.GetMissingValidatorsAsync(run.EntityType, run.EntityId.Value, ct);
-        if (missing.Count > 0)
+        var requiredMissing = missing
+            .Where(m => requiredGateIds.Contains(m.ValidatorId))
+            .ToList();
+        if (requiredMissing.Count > 0)
         {
-            var payload = missing.Select(m => new MissingValidatorResponseModel(
+            var payload = requiredMissing.Select(m => new MissingValidatorResponseModel(
                 m.ValidatorId, m.DisplayNameKey, m.MissingMessageKey)).ToList();
             throw new WorkflowMissingValidatorsException(
                 payload,

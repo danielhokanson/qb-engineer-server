@@ -401,6 +401,64 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     }
 
     [Fact]
+    public async Task Complete_MissingValidators_ScopedToRunDefinition()
+    {
+        var client = AuthenticatedClient();
+        // Raw-material express workflow only gates on hasBasics + hasCost.
+        // Start one with a name (so basics partially fills) but no cost
+        // override — the missing list should NOT include hasBom or hasRouting
+        // because they aren't gates of this definition.
+        var initial = JsonDocument.Parse("""{"name":"ScopeTest","partType":"RawMaterial","material":"Steel"}""").RootElement;
+        var body = new StartWorkflowRunRequestModel(
+            "Part", "part-raw-material-express-v1", "express", initial);
+        var startResp = await client.PostAsJsonAsync("/api/v1/workflows", body);
+        startResp.EnsureSuccessStatusCode();
+        var run = (await startResp.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
+
+        // Materialize via a step patch (workflow's only step is "all").
+        await client.PatchAsJsonAsync(
+            $"/api/v1/workflows/{run.Id}/step",
+            new PatchWorkflowStepRequestModel("all", initial));
+
+        var resp = await client.PostAsync($"/api/v1/workflows/{run.Id}/complete", null);
+        resp.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var jsonBody = await resp.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(jsonBody);
+        var missingIds = doc.RootElement.GetProperty("missing")
+            .EnumerateArray()
+            .Select(m => m.GetProperty("validatorId").GetString())
+            .ToList();
+        missingIds.Should().Contain("hasCost");
+        missingIds.Should().NotContain("hasBom");
+        missingIds.Should().NotContain("hasRouting");
+    }
+
+    [Fact]
+    public async Task Complete_BeforeMaterialization_MissingScopedToRunDefinition()
+    {
+        var client = AuthenticatedClient();
+        // Same as above but without a step patch — the entity isn't created
+        // yet. The pre-materialization branch should also scope to the run's
+        // gates instead of dumping the full entity-type validator catalog.
+        var initial = JsonDocument.Parse("""{"name":"NoMatHere"}""").RootElement;
+        var body = new StartWorkflowRunRequestModel(
+            "Part", "part-raw-material-express-v1", "express", initial);
+        var startResp = await client.PostAsJsonAsync("/api/v1/workflows", body);
+        var run = (await startResp.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
+        run.EntityId.Should().BeNull();
+
+        var resp = await client.PostAsync($"/api/v1/workflows/{run.Id}/complete", null);
+        resp.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var jsonBody = await resp.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(jsonBody);
+        var missingIds = doc.RootElement.GetProperty("missing")
+            .EnumerateArray()
+            .Select(m => m.GetProperty("validatorId").GetString())
+            .ToList();
+        missingIds.Should().BeEquivalentTo(new[] { "hasBasics", "hasCost" });
+    }
+
+    [Fact]
     public async Task ListActive_ReturnsOnlyCurrentUserInFlightRuns()
     {
         var client = AuthenticatedClient();
