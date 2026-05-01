@@ -22,6 +22,10 @@ public record PartDetailResponseModel(
     string? ManufacturerName,
     string? ManufacturerPartNumber,
     string? Material,
+    // Pillar 2 — Tier 2: Material specification reference (FK to reference_data,
+    // group_code = 'part.material_spec'). Replaces the free-text Material string.
+    int? MaterialSpecId,
+    string? MaterialSpecLabel,
     string? MoldToolRef,
     string? ExternalPartNumber,
     string? ExternalId,
@@ -41,6 +45,28 @@ public record PartDetailResponseModel(
     // hasCost predicate can read the part's current cost state.
     decimal? ManualCostOverride,
     int? CurrentCostCalculationId,
+    // Pillar 2 — Tier 2: measurement profile (canonical SI; *DisplayUnit columns
+    // round-trip the user's typed unit).
+    decimal? WeightEach,
+    string? WeightDisplayUnit,
+    decimal? LengthMm,
+    decimal? WidthMm,
+    decimal? HeightMm,
+    string? DimensionDisplayUnit,
+    decimal? VolumeMl,
+    string? VolumeDisplayUnit,
+    // Pillar 2 — Tier 2: valuation classification.
+    int? ValuationClassId,
+    string? ValuationClassLabel,
+    // Pillar 2 — Tier 3: compliance + classification.
+    string? HtsCode,
+    string? HazmatClass,
+    int? ShelfLifeDays,
+    BackflushPolicy? BackflushPolicy,
+    bool IsKit,
+    bool IsConfigurable,
+    int? DefaultBinId,
+    int? SourcePartId,
     List<BOMEntryResponseModel> BomEntries,
     List<BOMUsageResponseModel> UsedIn,
     DateTimeOffset CreatedAt,

@@ -23,6 +23,8 @@ public class UpdatePartCommandValidator : AbstractValidator<UpdatePartCommand>
         RuleFor(x => x.Data.Revision).MaximumLength(10).When(x => x.Data.Revision is not null);
         RuleFor(x => x.Data.Material).MaximumLength(200).When(x => x.Data.Material is not null);
         RuleFor(x => x.Data.ExternalPartNumber).MaximumLength(100).When(x => x.Data.ExternalPartNumber is not null);
+        RuleFor(x => x.Data.ManufacturerName).MaximumLength(200).When(x => x.Data.ManufacturerName is not null);
+        RuleFor(x => x.Data.ManufacturerPartNumber).MaximumLength(100).When(x => x.Data.ManufacturerPartNumber is not null);
     }
 }
 
@@ -52,6 +54,19 @@ public class UpdatePartHandler(
         if (data.Material is not null) part.Material = data.Material.Trim();
         if (data.MoldToolRef is not null) part.MoldToolRef = data.MoldToolRef.Trim();
         if (data.ExternalPartNumber is not null) part.ExternalPartNumber = data.ExternalPartNumber.Trim();
+        // Pillar 1 / Tier 0 — manufacturer + traceability + ABC class.
+        if (data.ManufacturerName is not null)
+        {
+            var trimmed = data.ManufacturerName.Trim();
+            part.ManufacturerName = trimmed.Length == 0 ? null : trimmed;
+        }
+        if (data.ManufacturerPartNumber is not null)
+        {
+            var trimmed = data.ManufacturerPartNumber.Trim();
+            part.ManufacturerPartNumber = trimmed.Length == 0 ? null : trimmed;
+        }
+        if (data.TraceabilityType.HasValue) part.TraceabilityType = data.TraceabilityType.Value;
+        if (data.AbcClass.HasValue) part.AbcClass = data.AbcClass.Value;
         if (data.ToolingAssetId.HasValue) part.ToolingAssetId = data.ToolingAssetId.Value == 0 ? null : data.ToolingAssetId.Value;
         if (data.PreferredVendorId.HasValue) part.PreferredVendorId = data.PreferredVendorId.Value == 0 ? null : data.PreferredVendorId.Value;
         if (data.MinStockThreshold.HasValue) part.MinStockThreshold = data.MinStockThreshold.Value == 0 ? null : data.MinStockThreshold.Value;

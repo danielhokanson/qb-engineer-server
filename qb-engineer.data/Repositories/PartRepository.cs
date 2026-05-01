@@ -132,6 +132,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
             .Include(p => p.PreferredVendor)
             .Include(p => p.ToolingAsset)
             .Include(p => p.ItemKind)
+            .Include(p => p.MaterialSpec)
+            .Include(p => p.ValuationClass)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
         if (part is null)
@@ -181,6 +183,9 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.ManufacturerName,
             part.ManufacturerPartNumber,
             part.Material,
+            // Pillar 2 — Tier 2 material spec FK
+            part.MaterialSpecId,
+            part.MaterialSpec?.Label,
             part.MoldToolRef,
             part.ExternalPartNumber,
             part.ExternalId,
@@ -199,6 +204,27 @@ public class PartRepository(AppDbContext db) : IPartRepository
             // Workflow Pattern Phase 5 — surfaces cost gates for the hasCost predicate.
             part.ManualCostOverride,
             part.CurrentCostCalculationId,
+            // Pillar 2 — Tier 2 measurement profile
+            part.WeightEach,
+            part.WeightDisplayUnit,
+            part.LengthMm,
+            part.WidthMm,
+            part.HeightMm,
+            part.DimensionDisplayUnit,
+            part.VolumeMl,
+            part.VolumeDisplayUnit,
+            // Pillar 2 — Tier 2 valuation
+            part.ValuationClassId,
+            part.ValuationClass?.Label,
+            // Pillar 2 — Tier 3 compliance + classification
+            part.HtsCode,
+            part.HazmatClass,
+            part.ShelfLifeDays,
+            part.BackflushPolicy,
+            part.IsKit,
+            part.IsConfigurable,
+            part.DefaultBinId,
+            part.SourcePartId,
             bomEntries,
             usedIn,
             part.CreatedAt,

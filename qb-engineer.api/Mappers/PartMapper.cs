@@ -36,6 +36,9 @@ public static partial class PartMapper
             ManufacturerName: part.ManufacturerName,
             ManufacturerPartNumber: part.ManufacturerPartNumber,
             Material: part.Material,
+            // Pillar 2 — Tier 2 material spec FK
+            MaterialSpecId: part.MaterialSpecId,
+            MaterialSpecLabel: part.MaterialSpec?.Label,
             MoldToolRef: part.MoldToolRef,
             ExternalPartNumber: part.ExternalPartNumber,
             ExternalId: part.ExternalId,
@@ -54,6 +57,27 @@ public static partial class PartMapper
             // Workflow Pattern Phase 5 — surfaces cost gates for the hasCost predicate.
             ManualCostOverride: part.ManualCostOverride,
             CurrentCostCalculationId: part.CurrentCostCalculationId,
+            // Pillar 2 — Tier 2 measurement profile
+            WeightEach: part.WeightEach,
+            WeightDisplayUnit: part.WeightDisplayUnit,
+            LengthMm: part.LengthMm,
+            WidthMm: part.WidthMm,
+            HeightMm: part.HeightMm,
+            DimensionDisplayUnit: part.DimensionDisplayUnit,
+            VolumeMl: part.VolumeMl,
+            VolumeDisplayUnit: part.VolumeDisplayUnit,
+            // Pillar 2 — Tier 2 valuation
+            ValuationClassId: part.ValuationClassId,
+            ValuationClassLabel: part.ValuationClass?.Label,
+            // Pillar 2 — Tier 3 compliance + classification
+            HtsCode: part.HtsCode,
+            HazmatClass: part.HazmatClass,
+            ShelfLifeDays: part.ShelfLifeDays,
+            BackflushPolicy: part.BackflushPolicy,
+            IsKit: part.IsKit,
+            IsConfigurable: part.IsConfigurable,
+            DefaultBinId: part.DefaultBinId,
+            SourcePartId: part.SourcePartId,
             BomEntries: bomEntries ?? [],
             UsedIn: usedIn ?? [],
             CreatedAt: part.CreatedAt,
