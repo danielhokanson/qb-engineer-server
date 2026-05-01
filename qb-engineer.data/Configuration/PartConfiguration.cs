@@ -30,6 +30,26 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.Property(e => e.Provider).HasMaxLength(50);
         builder.Property(e => e.CustomFieldValues).HasColumnType("jsonb");
 
+        // Pillar 1 — Type decomposition: three orthogonal axes replacing the
+        // overloaded PartType enum. PartType column stays for two release
+        // cycles for rollback safety; new code reads from these axes.
+        builder.Property(e => e.ProcurementSource).HasConversion<string>().HasMaxLength(32).IsRequired();
+        builder.Property(e => e.InventoryClass).HasConversion<string>().HasMaxLength(32).IsRequired();
+        builder.HasIndex(e => new { e.ProcurementSource, e.InventoryClass });
+
+        builder.HasIndex(e => e.ItemKindId);
+        builder.HasOne(e => e.ItemKind)
+            .WithMany()
+            .HasForeignKey(e => e.ItemKindId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Tier 0 additions
+        builder.Property(e => e.TraceabilityType).HasConversion<string>().HasMaxLength(16).IsRequired();
+        builder.Property(e => e.AbcClass).HasConversion<string>().HasMaxLength(2);
+        builder.Property(e => e.ManufacturerName).HasMaxLength(200);
+        builder.Property(e => e.ManufacturerPartNumber).HasMaxLength(100);
+        builder.HasIndex(e => e.ManufacturerPartNumber);
+
         // MRP planning
         builder.Property(e => e.FixedOrderQuantity).HasPrecision(18, 4);
         builder.Property(e => e.MinimumOrderQuantity).HasPrecision(18, 4);

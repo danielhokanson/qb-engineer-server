@@ -25,8 +25,65 @@ public class Part : BaseAuditableEntity, IActiveAware
 
     public string Revision { get; set; } = "A";
     public PartStatus Status { get; set; } = PartStatus.Active;
+
+    /// <summary>
+    /// Legacy overloaded type. Pillar 1 decomposed this into three orthogonal
+    /// axes — see <see cref="ProcurementSource"/>, <see cref="InventoryClass"/>,
+    /// and <see cref="ItemKindId"/>. Kept on the row for two release cycles
+    /// for rollback safety; new code should prefer the three axes.
+    /// </summary>
     public PartType PartType { get; set; } = PartType.Part;
+
+    /// <summary>
+    /// Pillar 1 — How the part is sourced (Make / Buy / Subcontract / Phantom).
+    /// </summary>
+    public ProcurementSource ProcurementSource { get; set; } = ProcurementSource.Buy;
+
+    /// <summary>
+    /// Pillar 1 — Which inventory bucket the part lives in (Raw / Component /
+    /// Subassembly / FinishedGood / Consumable / Tool).
+    /// </summary>
+    public InventoryClass InventoryClass { get; set; } = InventoryClass.Component;
+
+    /// <summary>
+    /// Pillar 1 — Descriptive admin-configurable taxonomy (Fastener,
+    /// Electronic, Packaging, Hardware, Material, etc.). FK to
+    /// <c>reference_data</c> with group_code = 'part.item_kind'.
+    /// </summary>
+    public int? ItemKindId { get; set; }
+    public ReferenceData? ItemKind { get; set; }
+
+    /// <summary>
+    /// Tier 0 — Replaces legacy <see cref="IsSerialTracked"/> boolean.
+    /// Lot tracking is now expressible.
+    /// </summary>
+    public TraceabilityType TraceabilityType { get; set; } = TraceabilityType.None;
+
+    /// <summary>
+    /// Tier 0 — Cycle-counting frequency tier and stock-movement KPI bucket.
+    /// </summary>
+    public AbcClass? AbcClass { get; set; }
+
+    /// <summary>
+    /// Tier 0 — Primary manufacturer name (the engineering OEM, distinct from
+    /// any distributor we buy through). Critical for COTS components.
+    /// Distributor-side manufacturer-part-number lives on <c>VendorPart.VendorMpn</c>.
+    /// </summary>
+    public string? ManufacturerName { get; set; }
+
+    /// <summary>
+    /// Tier 0 — Manufacturer's part number (engineering identity). Customer
+    /// drawings + datasheets reference this, not our internal SKU.
+    /// </summary>
+    public string? ManufacturerPartNumber { get; set; }
+
+    /// <summary>
+    /// Free-text material spec. Pillar 2 will replace with FK to
+    /// <c>reference_data</c> (group_code = 'part.material_spec'). Kept as
+    /// string for now to bound the Pillar 1+3 scope.
+    /// </summary>
     public string? Material { get; set; }
+    /// <summary>Pillar 1 — vestigial; superseded by <see cref="ToolingAssetId"/>. Keep for rollback.</summary>
     public string? MoldToolRef { get; set; }
     public string? ExternalPartNumber { get; set; }
 
