@@ -66,38 +66,44 @@ namespace QBEngineer.Data.Migrations
             // BOMEntries-present ⇒ Make+Subassembly; otherwise the Buy+Component
             // default already in place. Best-effort only — no edge-case chasing
             // (Open Decision #8).
+            //
+            // NB: PartType is stored as INTEGER in Postgres (EF default; no
+            // `.HasConversion<string>()` configured on the legacy enum). So
+            // the CASE matches ordinal values, not strings:
+            //   Part=0, Assembly=1, RawMaterial=2, Consumable=3, Tooling=4,
+            //   Fastener=5, Electronic=6, Packaging=7.
             migrationBuilder.Sql("""
                 UPDATE parts SET
                     procurement_source = CASE part_type
-                        WHEN 'Assembly' THEN 'Make'
-                        WHEN 'RawMaterial' THEN 'Buy'
-                        WHEN 'Consumable' THEN 'Buy'
-                        WHEN 'Tooling' THEN CASE WHEN tooling_asset_id IS NOT NULL THEN 'Make' ELSE 'Buy' END
-                        WHEN 'Fastener' THEN 'Buy'
-                        WHEN 'Electronic' THEN 'Buy'
-                        WHEN 'Packaging' THEN 'Buy'
-                        ELSE 'Buy'
+                        WHEN 1 THEN 'Make'   -- Assembly
+                        WHEN 2 THEN 'Buy'    -- RawMaterial
+                        WHEN 3 THEN 'Buy'    -- Consumable
+                        WHEN 4 THEN CASE WHEN tooling_asset_id IS NOT NULL THEN 'Make' ELSE 'Buy' END  -- Tooling
+                        WHEN 5 THEN 'Buy'    -- Fastener
+                        WHEN 6 THEN 'Buy'    -- Electronic
+                        WHEN 7 THEN 'Buy'    -- Packaging
+                        ELSE 'Buy'           -- Part (catch-all)
                     END,
                     inventory_class = CASE part_type
-                        WHEN 'Assembly' THEN 'Subassembly'
-                        WHEN 'RawMaterial' THEN 'Raw'
-                        WHEN 'Consumable' THEN 'Consumable'
-                        WHEN 'Tooling' THEN 'Tool'
-                        WHEN 'Fastener' THEN 'Component'
-                        WHEN 'Electronic' THEN 'Component'
-                        WHEN 'Packaging' THEN 'Consumable'
-                        ELSE 'Component'
+                        WHEN 1 THEN 'Subassembly'  -- Assembly
+                        WHEN 2 THEN 'Raw'          -- RawMaterial
+                        WHEN 3 THEN 'Consumable'   -- Consumable
+                        WHEN 4 THEN 'Tool'         -- Tooling
+                        WHEN 5 THEN 'Component'    -- Fastener
+                        WHEN 6 THEN 'Component'    -- Electronic
+                        WHEN 7 THEN 'Consumable'   -- Packaging
+                        ELSE 'Component'           -- Part (catch-all)
                     END,
                     traceability_type = CASE WHEN is_serial_tracked = true THEN 'Serial' ELSE 'None' END;
             """);
 
-            // Catch-all `Part` rows with a non-empty BOM are very likely
-            // in-house subassemblies. Promote them post-default.
+            // Catch-all `Part` rows (ordinal 0) with a non-empty BOM are very
+            // likely in-house subassemblies. Promote them post-default.
             migrationBuilder.Sql("""
                 UPDATE parts p SET
                     procurement_source = 'Make',
                     inventory_class = 'Subassembly'
-                WHERE p.part_type = 'Part'
+                WHERE p.part_type = 0
                   AND EXISTS (SELECT 1 FROM bom_entries b WHERE b.parent_part_id = p.id AND b.deleted_at IS NULL);
             """);
 
