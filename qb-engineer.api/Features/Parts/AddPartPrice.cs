@@ -3,35 +3,60 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Features.Parts;
 
-public record AddPartPriceCommand(int PartId, decimal UnitPrice, DateTimeOffset? EffectiveFrom, string? Notes) : IRequest<PartPriceResponseModel>;
+/// <summary>
+/// Posts a new effective-dated PartPrice row. Closes out any previously open
+/// row (one with EffectiveTo IS NULL) by setting its EffectiveTo to the new
+/// row's EffectiveFrom — keeps the history coherent with at most one open
+/// row at a time.
+/// </summary>
+public record AddPartPriceCommand(
+    int PartId,
+    decimal UnitPrice,
+    string? Currency,
+    DateTimeOffset? EffectiveFrom,
+    string? Notes) : IRequest<PartPriceResponseModel>;
 
-public class AddPartPriceHandler(AppDbContext db)
+public class AddPartPriceHandler(AppDbContext db, ICurrencyService currency, IClock clock)
     : IRequestHandler<AddPartPriceCommand, PartPriceResponseModel>
 {
     public async Task<PartPriceResponseModel> Handle(AddPartPriceCommand request, CancellationToken ct)
     {
-        var effectiveFrom = (request.EffectiveFrom ?? DateTimeOffset.UtcNow).ToUniversalTime();
+        var now = clock.UtcNow;
+        var effectiveFrom = (request.EffectiveFrom ?? now).ToUniversalTime();
 
-        // End-date any currently active price that starts before the new effective date
-        var active = await db.PartPrices
-            .Where(p => p.PartId == request.PartId && p.EffectiveTo == null && p.EffectiveFrom < effectiveFrom)
+        var currencyCode = string.IsNullOrWhiteSpace(request.Currency)
+            ? await currency.GetBaseCurrencyAsync(ct)
+            : request.Currency.Trim().ToUpperInvariant();
+
+        // Close out any currently-open row (the dispatch contract: only one
+        // row may have EffectiveTo == null at a time). We close every row
+        // whose EffectiveFrom is strictly before the new effective date —
+        // posting a row dated earlier than an existing open row is a no-op
+        // for the open row (the timeline is layered, not chained).
+        var open = await db.PartPrices
+            .Where(p => p.PartId == request.PartId
+                && p.EffectiveTo == null
+                && p.EffectiveFrom < effectiveFrom)
             .ToListAsync(ct);
 
-        foreach (var price in active)
+        foreach (var price in open)
             price.EffectiveTo = effectiveFrom;
 
         var newPrice = new PartPrice
         {
             PartId = request.PartId,
             UnitPrice = request.UnitPrice,
+            Currency = currencyCode,
             EffectiveFrom = effectiveFrom,
             EffectiveTo = null,
             Notes = request.Notes,
+            CreatedAt = now,
         };
 
         db.PartPrices.Add(newPrice);
@@ -41,9 +66,10 @@ public class AddPartPriceHandler(AppDbContext db)
             newPrice.Id,
             newPrice.PartId,
             newPrice.UnitPrice,
+            newPrice.Currency,
             newPrice.EffectiveFrom,
             newPrice.EffectiveTo,
             newPrice.Notes,
-            IsCurrent: true);
+            newPrice.CreatedAt);
     }
 }

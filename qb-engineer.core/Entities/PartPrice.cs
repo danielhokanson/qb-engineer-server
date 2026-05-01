@@ -28,5 +28,14 @@ public class PartPrice : BaseEntity
     public DateTimeOffset? EffectiveTo { get; set; }
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// Wall-clock instant the row was inserted. Distinct from
+    /// <see cref="EffectiveFrom"/> — admins may post a row dated in the
+    /// past or future, so EffectiveFrom and CreatedAt routinely differ.
+    /// Set explicitly by handlers (PartPrice extends BaseEntity, not
+    /// BaseAuditableEntity, so the auto-timestamp pipeline doesn't touch it).
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; set; }
+
     public Part Part { get; set; } = null!;
 }

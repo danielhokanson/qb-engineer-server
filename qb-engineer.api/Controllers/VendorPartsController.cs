@@ -98,4 +98,17 @@ public class VendorPartsController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteVendorPartPriceTierCommand(vendorPartId, tierId), ct);
         return NoContent();
     }
+
+    /// <summary>
+    /// Read-only history of all price-tier rows for a VendorPart — current +
+    /// closed — sorted by EffectiveFrom DESC then MinQuantity ASC. Powers the
+    /// price-tier history dialog on the Vendor catalog.
+    /// </summary>
+    [HttpGet("{vendorPartId:int}/price-tiers/history")]
+    public async Task<ActionResult<List<VendorPartPriceTierResponseModel>>> GetPriceTierHistory(
+        int vendorPartId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetVendorPartPriceTierHistoryQuery(vendorPartId), ct);
+        return Ok(result);
+    }
 }

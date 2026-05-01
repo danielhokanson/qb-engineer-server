@@ -222,8 +222,15 @@ public class PartsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<PartPriceResponseModel>> AddPrice(
         int id, [FromBody] AddPartPriceRequestModel model)
     {
-        var result = await mediator.Send(new AddPartPriceCommand(id, model.UnitPrice, model.EffectiveFrom, model.Notes));
+        var result = await mediator.Send(new AddPartPriceCommand(id, model.UnitPrice, model.Currency, model.EffectiveFrom, model.Notes));
         return CreatedAtAction(nameof(GetPrices), new { id }, result);
+    }
+
+    [HttpDelete("{id:int}/prices/{priceId:int}")]
+    public async Task<IActionResult> DeletePrice(int id, int priceId)
+    {
+        await mediator.Send(new DeletePartPriceCommand(id, priceId));
+        return NoContent();
     }
 
     // ── Alternates ───────────────────────────────────────────────────────────

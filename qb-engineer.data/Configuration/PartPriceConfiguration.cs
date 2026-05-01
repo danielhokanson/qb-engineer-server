@@ -23,6 +23,9 @@ public class PartPriceConfiguration : IEntityTypeConfiguration<PartPrice>
         builder.Property(p => p.EffectiveFrom)
             .IsRequired();
 
+        builder.Property(p => p.CreatedAt)
+            .IsRequired();
+
         builder.Property(p => p.Notes)
             .HasMaxLength(500);
 
