@@ -239,6 +239,70 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         if (TryReadInt(fields, "sourcePartId", out var srcId))
             part.SourcePartId = srcId;
 
+        // ─── Pillar 6 follow-up — step-component fields ───
+        // The new per-combo step components (PartSourcingStep,
+        // PartInventoryStep, PartQualityStep, PartToolAssetStep, etc. shipped
+        // in UI commit b8ef771) emit these fields via patchStep. Reads grouped
+        // by cluster for readability.
+
+        // Sourcing cluster (Buy* / Subcontract* combos)
+        if (TryReadInt(fields, "preferredVendorId", out var prefVendorId))
+            part.PreferredVendorId = prefVendorId;
+        if (TryReadInt(fields, "leadTimeDays", out var leadTime))
+            part.LeadTimeDays = leadTime;
+        if (TryReadDecimalAsInt(fields, "minOrderQty", out var minOrderQty))
+            part.MinOrderQty = minOrderQty;
+        if (TryReadDecimalAsInt(fields, "packSize", out var packSize))
+            part.PackSize = packSize;
+
+        // Inventory cluster (every non-Phantom combo)
+        if (TryReadDecimal(fields, "minStockThreshold", out var minStock))
+            part.MinStockThreshold = minStock;
+        if (TryReadDecimal(fields, "reorderPoint", out var reorderPt))
+            part.ReorderPoint = reorderPt;
+        if (TryReadDecimal(fields, "reorderQuantity", out var reorderQty))
+            part.ReorderQuantity = reorderQty;
+        if (TryReadInt(fields, "safetyStockDays", out var safetyDays))
+            part.SafetyStockDays = safetyDays;
+
+        // UoM cluster (FK to unit_of_measure)
+        if (TryReadInt(fields, "stockUomId", out var stockUomId))
+            part.StockUomId = stockUomId;
+        if (TryReadInt(fields, "purchaseUomId", out var purchaseUomId))
+            part.PurchaseUomId = purchaseUomId;
+        if (TryReadInt(fields, "salesUomId", out var salesUomId))
+            part.SalesUomId = salesUomId;
+
+        // Quality cluster (receiving inspection — B1-B4, M1-M3, S1, S2)
+        if (TryReadBool(fields, "requiresReceivingInspection", out var reqInsp) && reqInsp.HasValue)
+            part.RequiresReceivingInspection = reqInsp.Value;
+        if (TryReadInt(fields, "receivingInspectionTemplateId", out var inspTemplateId))
+            part.ReceivingInspectionTemplateId = inspTemplateId;
+        if (TryReadEnum<ReceivingInspectionFrequency>(fields, "inspectionFrequency", out var inspFreq))
+            part.InspectionFrequency = inspFreq;
+        if (TryReadInt(fields, "inspectionSkipAfterN", out var inspSkip))
+            part.InspectionSkipAfterN = inspSkip;
+
+        // Tooling cluster (Make+Tool / Buy+Tool)
+        if (TryReadInt(fields, "toolingAssetId", out var toolAssetId))
+            part.ToolingAssetId = toolAssetId;
+
+        // MRP cluster (Make + Subassembly/FinishedGood, Phantom combos)
+        if (TryReadBool(fields, "isMrpPlanned", out var isMrp) && isMrp.HasValue)
+            part.IsMrpPlanned = isMrp.Value;
+        if (TryReadNullableEnum<LotSizingRule>(fields, "lotSizingRule", out var lotRule))
+            part.LotSizingRule = lotRule;
+        if (TryReadDecimal(fields, "fixedOrderQuantity", out var foq))
+            part.FixedOrderQuantity = foq;
+        if (TryReadDecimal(fields, "minimumOrderQuantity", out var moq))
+            part.MinimumOrderQuantity = moq;
+        if (TryReadDecimal(fields, "orderMultiple", out var ordMult))
+            part.OrderMultiple = ordMult;
+        if (TryReadInt(fields, "planningFenceDays", out var planFence))
+            part.PlanningFenceDays = planFence;
+        if (TryReadInt(fields, "demandFenceDays", out var demFence))
+            part.DemandFenceDays = demFence;
+
         await db.SaveChangesAsync(ct);
     }
 
@@ -305,6 +369,27 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         if (!root.TryGetProperty(name, out var prop)) return false;
         if (prop.ValueKind == JsonValueKind.Null) { value = null; return true; }
         if (prop.ValueKind == JsonValueKind.Number && prop.TryGetInt32(out var i)) { value = i; return true; }
+        return false;
+    }
+
+    /// <summary>
+    /// Reads a JSON number into <c>int?</c>, accepting decimal values (e.g.
+    /// <c>5</c> or <c>5.0</c>) and truncating to int. Used for fields whose
+    /// entity type is <c>int?</c> but whose Angular form control is
+    /// <c>FormControl&lt;number | null&gt;</c> — JSON has no int/decimal
+    /// distinction, so the wire value can come through as either.
+    /// </summary>
+    private static bool TryReadDecimalAsInt(JsonElement root, string name, out int? value)
+    {
+        value = null;
+        if (root.ValueKind != JsonValueKind.Object) return false;
+        if (!root.TryGetProperty(name, out var prop)) return false;
+        if (prop.ValueKind == JsonValueKind.Null) { value = null; return true; }
+        if (prop.ValueKind == JsonValueKind.Number)
+        {
+            if (prop.TryGetInt32(out var i)) { value = i; return true; }
+            if (prop.TryGetDecimal(out var d)) { value = (int)d; return true; }
+        }
         return false;
     }
 
