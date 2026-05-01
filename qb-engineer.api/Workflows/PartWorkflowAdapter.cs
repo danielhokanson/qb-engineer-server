@@ -28,6 +28,21 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
     public async Task<int> CreateDraftAsync(JsonElement? initialData, CancellationToken ct)
     {
         var partType = ReadEnumOrDefault(initialData, "partType", PartType.Part);
+        // Pillar 1 — read the three orthogonal axes when present. Fall back to
+        // legacy partType-derived defaults so older fork-dialog payloads
+        // (still on the wire during phased rollout) keep working.
+        var procurement = ReadEnumOrDefault(
+            initialData, "procurementSource",
+            DefaultProcurementForLegacyPartType(partType));
+        var inventoryClass = ReadEnumOrDefault(
+            initialData, "inventoryClass",
+            DefaultInventoryClassForLegacyPartType(partType));
+        var traceability = ReadEnumOrDefault(initialData, "traceabilityType", TraceabilityType.None);
+        var abc = ReadNullableEnum<AbcClass>(initialData, "abcClass");
+        var itemKindId = ReadIntOrDefault(initialData, "itemKindId");
+        var manufacturerName = ReadStringOrDefault(initialData, "manufacturerName")?.Trim();
+        var manufacturerPartNumber = ReadStringOrDefault(initialData, "manufacturerPartNumber")?.Trim();
+
         // Phase-4 deferred-materialization: the workflow only calls this once
         // the user has submitted the first step's fields, so `name` should
         // always be present. If it isn't, we surface a 400 rather than save a
@@ -52,6 +67,13 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
             Revision = ReadStringOrDefault(initialData, "revision")?.Trim() ?? "A",
             PartType = partType,
+            ProcurementSource = procurement,
+            InventoryClass = inventoryClass,
+            ItemKindId = itemKindId,
+            TraceabilityType = traceability,
+            AbcClass = abc,
+            ManufacturerName = manufacturerName,
+            ManufacturerPartNumber = manufacturerPartNumber,
             Status = PartStatus.Draft,
             Material = ReadStringOrDefault(initialData, "material")?.Trim(),
             MoldToolRef = ReadStringOrDefault(initialData, "moldToolRef")?.Trim(),
@@ -62,6 +84,30 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         // Defer SaveChanges to the orchestrating handler (single transaction).
         return await SavePartAndReturnIdAsync(part, ct);
     }
+
+    private static ProcurementSource DefaultProcurementForLegacyPartType(PartType pt) => pt switch
+    {
+        PartType.Assembly => ProcurementSource.Make,
+        PartType.RawMaterial => ProcurementSource.Buy,
+        PartType.Consumable => ProcurementSource.Buy,
+        PartType.Tooling => ProcurementSource.Buy,
+        PartType.Fastener => ProcurementSource.Buy,
+        PartType.Electronic => ProcurementSource.Buy,
+        PartType.Packaging => ProcurementSource.Buy,
+        _ => ProcurementSource.Buy, // Part catch-all — ambiguous, conservative default
+    };
+
+    private static InventoryClass DefaultInventoryClassForLegacyPartType(PartType pt) => pt switch
+    {
+        PartType.Assembly => InventoryClass.Subassembly,
+        PartType.RawMaterial => InventoryClass.Raw,
+        PartType.Consumable => InventoryClass.Consumable,
+        PartType.Tooling => InventoryClass.Tool,
+        PartType.Fastener => InventoryClass.Component,
+        PartType.Electronic => InventoryClass.Component,
+        PartType.Packaging => InventoryClass.Consumable,
+        _ => InventoryClass.Component,
+    };
 
     private async Task<int> SavePartAndReturnIdAsync(Part part, CancellationToken ct)
     {
@@ -94,6 +140,22 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             part.ManualCostOverride = manual;
         if (TryReadEnum<PartType>(fields, "partType", out var pt))
             part.PartType = pt;
+        // Pillar 1 — three-axis applies. We accept either the new axes or
+        // the legacy partType; both routes converge on the same row.
+        if (TryReadEnum<ProcurementSource>(fields, "procurementSource", out var ps))
+            part.ProcurementSource = ps;
+        if (TryReadEnum<InventoryClass>(fields, "inventoryClass", out var ic))
+            part.InventoryClass = ic;
+        if (TryReadInt(fields, "itemKindId", out var ikId))
+            part.ItemKindId = ikId;
+        if (TryReadEnum<TraceabilityType>(fields, "traceabilityType", out var tt))
+            part.TraceabilityType = tt;
+        if (TryReadEnum<AbcClass>(fields, "abcClass", out var abc))
+            part.AbcClass = abc;
+        if (TryReadString(fields, "manufacturerName", out var mn))
+            part.ManufacturerName = mn?.Trim();
+        if (TryReadString(fields, "manufacturerPartNumber", out var mpn))
+            part.ManufacturerPartNumber = mpn?.Trim();
         await db.SaveChangesAsync(ct);
     }
 
@@ -134,6 +196,33 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         if (root is null || root.Value.ValueKind != JsonValueKind.Object) return null;
         if (!root.Value.TryGetProperty(name, out var prop)) return null;
         return prop.ValueKind == JsonValueKind.Number && prop.TryGetDecimal(out var d) ? d : null;
+    }
+
+    private static int? ReadIntOrDefault(JsonElement? root, string name)
+    {
+        if (root is null || root.Value.ValueKind != JsonValueKind.Object) return null;
+        if (!root.Value.TryGetProperty(name, out var prop)) return null;
+        return prop.ValueKind == JsonValueKind.Number && prop.TryGetInt32(out var i) ? i : null;
+    }
+
+    private static T? ReadNullableEnum<T>(JsonElement? root, string name) where T : struct, Enum
+    {
+        if (root is null || root.Value.ValueKind != JsonValueKind.Object) return null;
+        if (!root.Value.TryGetProperty(name, out var prop)) return null;
+        if (prop.ValueKind == JsonValueKind.Null) return null;
+        if (prop.ValueKind == JsonValueKind.String && Enum.TryParse<T>(prop.GetString(), true, out var parsed))
+            return parsed;
+        return null;
+    }
+
+    private static bool TryReadInt(JsonElement root, string name, out int? value)
+    {
+        value = null;
+        if (root.ValueKind != JsonValueKind.Object) return false;
+        if (!root.TryGetProperty(name, out var prop)) return false;
+        if (prop.ValueKind == JsonValueKind.Null) { value = null; return true; }
+        if (prop.ValueKind == JsonValueKind.Number && prop.TryGetInt32(out var i)) { value = i; return true; }
+        return false;
     }
 
     private static T ReadEnumOrDefault<T>(JsonElement? root, string name, T defaultValue) where T : struct, Enum

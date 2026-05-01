@@ -25,6 +25,16 @@ public static partial class PartMapper
             Revision: part.Revision,
             Status: part.Status,
             PartType: part.PartType,
+            // Pillar 1 — Decomposed type axes
+            ProcurementSource: part.ProcurementSource,
+            InventoryClass: part.InventoryClass,
+            ItemKindId: part.ItemKindId,
+            ItemKindLabel: part.ItemKind?.Label,
+            // Tier 0 additions
+            TraceabilityType: part.TraceabilityType,
+            AbcClass: part.AbcClass,
+            ManufacturerName: part.ManufacturerName,
+            ManufacturerPartNumber: part.ManufacturerPartNumber,
             Material: part.Material,
             MoldToolRef: part.MoldToolRef,
             ExternalPartNumber: part.ExternalPartNumber,

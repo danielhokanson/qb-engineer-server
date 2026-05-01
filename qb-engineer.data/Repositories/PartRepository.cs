@@ -131,6 +131,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
             .Include(p => p.UsedInBOM).ThenInclude(b => b.ParentPart)
             .Include(p => p.PreferredVendor)
             .Include(p => p.ToolingAsset)
+            .Include(p => p.ItemKind)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
         if (part is null)
@@ -169,6 +170,16 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.Revision,
             part.Status,
             part.PartType,
+            // Pillar 1 — Decomposed type axes
+            part.ProcurementSource,
+            part.InventoryClass,
+            part.ItemKindId,
+            part.ItemKind?.Label,
+            // Tier 0 additions
+            part.TraceabilityType,
+            part.AbcClass,
+            part.ManufacturerName,
+            part.ManufacturerPartNumber,
             part.Material,
             part.MoldToolRef,
             part.ExternalPartNumber,
