@@ -99,12 +99,14 @@ namespace QBEngineer.Data.Migrations
 
             // Catch-all `Part` rows (ordinal 0) with a non-empty BOM are very
             // likely in-house subassemblies. Promote them post-default.
+            // Table name is `bomentries` (snake_case converter doesn't split
+            // the all-caps BOM prefix from the rest of BOMEntries).
             migrationBuilder.Sql("""
                 UPDATE parts p SET
                     procurement_source = 'Make',
                     inventory_class = 'Subassembly'
                 WHERE p.part_type = 0
-                  AND EXISTS (SELECT 1 FROM bom_entries b WHERE b.parent_part_id = p.id AND b.deleted_at IS NULL);
+                  AND EXISTS (SELECT 1 FROM bomentries b WHERE b.parent_part_id = p.id AND b.deleted_at IS NULL);
             """);
 
             migrationBuilder.CreateIndex(
