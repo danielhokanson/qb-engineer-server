@@ -18,8 +18,20 @@ public class WorkflowRun : BaseAuditableEntity, IConcurrencyVersioned
     /// <summary>Primary entity type, e.g. "Part", "Customer", "Quote".</summary>
     public string EntityType { get; set; } = string.Empty;
 
-    /// <summary>Primary entity id (no FK; polymorphic).</summary>
-    public int EntityId { get; set; }
+    /// <summary>
+    /// Primary entity id (no FK; polymorphic). Nullable: the entity row is
+    /// not materialized until the workflow's first step (the materialization
+    /// step) submits valid data. While null, the in-flight initial payload
+    /// lives in <see cref="DraftPayload"/>.
+    /// </summary>
+    public int? EntityId { get; set; }
+
+    /// <summary>
+    /// In-flight initial payload (raw JSON) held until the first step
+    /// materializes the entity. Once <see cref="EntityId"/> is set, this
+    /// column is cleared.
+    /// </summary>
+    public string? DraftPayload { get; set; }
 
     /// <summary>The WorkflowDefinition.id pinned at run start (Q2).</summary>
     public string DefinitionId { get; set; } = string.Empty;

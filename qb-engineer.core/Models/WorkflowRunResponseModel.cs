@@ -9,7 +9,7 @@ namespace QBEngineer.Core.Models;
 public record WorkflowRunResponseModel(
     int Id,
     string EntityType,
-    int EntityId,
+    int? EntityId,
     string DefinitionId,
     string? CurrentStepId,
     string Mode,

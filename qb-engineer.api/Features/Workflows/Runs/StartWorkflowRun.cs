@@ -14,11 +14,13 @@ using QBEngineer.Data.Context;
 namespace QBEngineer.Api.Features.Workflows.Runs;
 
 /// <summary>
-/// Workflow Pattern Phase 3 — Start a new workflow run. Server creates the
-/// entity row in <c>status='Draft'</c> via the registered
-/// <see cref="IWorkflowEntityCreator"/> for the requested entityType, then
-/// the workflow_runs row pinned to the supplied <c>definitionId</c> (Q2
-/// versioning rule).
+/// Workflow Pattern Phase 3 — Start a new workflow run. The entity row is
+/// NOT created here; it materializes when the first step (the materialization
+/// step) submits valid data via <see cref="PatchWorkflowStepHandler"/>. Until
+/// then, <see cref="WorkflowRun.EntityId"/> is null and any initial payload
+/// supplied by the client is held in <see cref="WorkflowRun.DraftPayload"/>.
+/// This avoids creating placeholder ("(Draft)") rows for workflows that the
+/// user might abandon before filling in the basics.
 /// </summary>
 public record StartWorkflowRunCommand(StartWorkflowRunRequestModel Body)
     : IRequest<WorkflowRunResponseModel>;
@@ -37,13 +39,9 @@ public class StartWorkflowRunValidator : AbstractValidator<StartWorkflowRunComma
 
 public class StartWorkflowRunHandler(
     AppDbContext db,
-    IEnumerable<IWorkflowEntityCreator> creators,
     ISystemAuditWriter auditWriter,
     IClock clock) : IRequestHandler<StartWorkflowRunCommand, WorkflowRunResponseModel>
 {
-    private readonly Dictionary<string, IWorkflowEntityCreator> _creators =
-        creators.ToDictionary(c => c.EntityType, StringComparer.OrdinalIgnoreCase);
-
     public async Task<WorkflowRunResponseModel> Handle(StartWorkflowRunCommand request, CancellationToken ct)
     {
         var body = request.Body;
@@ -57,26 +55,23 @@ public class StartWorkflowRunHandler(
             throw new InvalidOperationException(
                 $"Definition '{def.DefinitionId}' targets entity type '{def.EntityType}', not '{body.EntityType}'.");
 
-        // Resolve creator for the entity type.
-        if (!_creators.TryGetValue(body.EntityType, out var creator))
-            throw new InvalidOperationException(
-                $"No workflow entity creator registered for entity type '{body.EntityType}'.");
-
-        // Create the draft entity. The adapter calls SaveChanges itself (single
-        // PG round-trip; cross-entity transaction not required here because
-        // the workflow_run row is independent of the entity row's existence
-        // until both succeed).
-        var entityId = await creator.CreateDraftAsync(body.InitialEntityData, ct);
-
         // Compute first step from the definition's StepsJson.
         var firstStepId = ReadFirstStepId(def.StepsJson);
         var mode = body.Mode ?? def.DefaultMode;
         var now = clock.UtcNow;
 
+        // Stash the initial payload (if any) for the first step's materialize
+        // branch to merge with its field patch. We hold the raw JSON text so
+        // the column is jsonb-shaped and the patch handler can re-parse it.
+        var draftPayload = body.InitialEntityData?.ValueKind == JsonValueKind.Object
+            ? body.InitialEntityData.Value.GetRawText()
+            : null;
+
         var run = new WorkflowRun
         {
             EntityType = body.EntityType,
-            EntityId = entityId,
+            EntityId = null,
+            DraftPayload = draftPayload,
             DefinitionId = body.DefinitionId,
             CurrentStepId = firstStepId,
             Mode = mode,
@@ -85,15 +80,8 @@ public class StartWorkflowRunHandler(
             LastActivityAt = now,
         };
         db.WorkflowRuns.Add(run);
-
-        // Junction row for the primary entity (Q3).
-        db.WorkflowRunEntities.Add(new WorkflowRunEntity
-        {
-            Run = run,
-            EntityType = body.EntityType,
-            EntityId = entityId,
-            Role = "primary",
-        });
+        // No junction row inserted yet — WorkflowRunEntity carries a non-null
+        // EntityId in its composite PK, so we wait until materialization.
 
         await db.SaveChangesAsync(ct);
 

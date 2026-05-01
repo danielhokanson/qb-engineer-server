@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Entities;
@@ -26,11 +28,19 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
     public async Task<int> CreateDraftAsync(JsonElement? initialData, CancellationToken ct)
     {
         var partType = ReadEnumOrDefault(initialData, "partType", PartType.Part);
-        // Phase-4 Name+Description split: prefer `name`, fall back to `description`
-        // for older fork-dialog payloads that haven't been redeployed yet.
+        // Phase-4 deferred-materialization: the workflow only calls this once
+        // the user has submitted the first step's fields, so `name` should
+        // always be present. If it isn't, we surface a 400 rather than save a
+        // placeholder row — the entity row should not exist until it has a
+        // real name.
         var name = ReadStringOrDefault(initialData, "name")
-                   ?? ReadStringOrDefault(initialData, "description")
-                   ?? "(Draft)";
+                   ?? ReadStringOrDefault(initialData, "description"); // backward-compat for older fork payloads
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ValidationException(
+                "Part requires a name to materialize.",
+                new[] { new ValidationFailure("name", "Name is required.") });
+        }
         var description = ReadStringOrDefault(initialData, "description");
 
         var partNumber = await repo.GetNextPartNumberAsync(partType, ct);

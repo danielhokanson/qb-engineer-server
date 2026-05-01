@@ -62,7 +62,23 @@ public class JumpWorkflowHandler(
         // target itself, inclusive of current) must satisfy its gates.
         if (targetIdx > currentIdx)
         {
-            var missing = await readiness.GetMissingValidatorsAsync(run.EntityType, run.EntityId, ct);
+            // Deferred materialization: no entity yet means no readiness can
+            // pass — every gate fails by definition. Surface a clean 409 so
+            // the UI shows "complete the first step first."
+            if (run.EntityId is null)
+            {
+                var allValidators = await db.EntityReadinessValidators
+                    .AsNoTracking()
+                    .Where(v => v.EntityType == run.EntityType)
+                    .ToListAsync(ct);
+                var payloadAll = allValidators.Select(v => new MissingValidatorResponseModel(
+                    v.ValidatorId, v.DisplayNameKey, v.MissingMessageKey)).ToList();
+                throw new WorkflowMissingValidatorsException(
+                    payloadAll,
+                    $"Cannot jump forward to '{steps[targetIdx].Id}' — entity has not been created yet.");
+            }
+
+            var missing = await readiness.GetMissingValidatorsAsync(run.EntityType, run.EntityId.Value, ct);
             var failing = missing.Select(m => m.ValidatorId).ToHashSet(StringComparer.OrdinalIgnoreCase);
             for (var i = currentIdx; i < targetIdx; i++)
             {

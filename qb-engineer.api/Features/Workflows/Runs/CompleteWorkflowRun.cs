@@ -39,7 +39,23 @@ public class CompleteWorkflowRunHandler(
         if (run.AbandonedAt is not null)
             throw new InvalidOperationException("Cannot complete an abandoned run.");
 
-        var missing = await readiness.GetMissingValidatorsAsync(run.EntityType, run.EntityId, ct);
+        // Deferred materialization: the entity hasn't been created yet, which
+        // means the user hasn't completed the first step. Surface this as a
+        // readiness failure so the standard 409 envelope renders.
+        if (run.EntityId is null)
+        {
+            var allValidators = await db.EntityReadinessValidators
+                .AsNoTracking()
+                .Where(v => v.EntityType == run.EntityType)
+                .ToListAsync(ct);
+            var payloadAll = allValidators.Select(v => new MissingValidatorResponseModel(
+                v.ValidatorId, v.DisplayNameKey, v.MissingMessageKey)).ToList();
+            throw new WorkflowMissingValidatorsException(
+                payloadAll,
+                $"Cannot complete workflow {run.Id} — entity has not been created yet.");
+        }
+
+        var missing = await readiness.GetMissingValidatorsAsync(run.EntityType, run.EntityId.Value, ct);
         if (missing.Count > 0)
         {
             var payload = missing.Select(m => new MissingValidatorResponseModel(
@@ -55,7 +71,7 @@ public class CompleteWorkflowRunHandler(
 
         // v1: promote to "Active" (the only canonical target). Future variants
         // can carry a target_status column on workflow_runs if needed.
-        await promoter.PromoteAsync(run.EntityId, "Active", ct);
+        await promoter.PromoteAsync(run.EntityId.Value, "Active", ct);
 
         run.CompletedAt = clock.UtcNow;
         run.LastActivityAt = clock.UtcNow;

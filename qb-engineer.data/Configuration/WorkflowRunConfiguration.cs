@@ -11,7 +11,12 @@ public class WorkflowRunConfiguration : IEntityTypeConfiguration<WorkflowRun>
         builder.Ignore(e => e.IsDeleted);
 
         builder.Property(e => e.EntityType).HasMaxLength(64).IsRequired();
-        builder.Property(e => e.EntityId).IsRequired();
+        // EntityId nullable: the entity row materializes when the first step
+        // submits valid data, not at workflow start. The unique index below
+        // is filtered to non-null rows so multiple in-flight runs without an
+        // entity yet don't collide.
+        builder.Property(e => e.EntityId);
+        builder.Property(e => e.DraftPayload).HasColumnType("jsonb");
 
         builder.Property(e => e.DefinitionId).HasMaxLength(64).IsRequired();
         builder.Property(e => e.CurrentStepId).HasMaxLength(64);
@@ -23,7 +28,9 @@ public class WorkflowRunConfiguration : IEntityTypeConfiguration<WorkflowRun>
         builder.Property(e => e.StartedByUserId).IsRequired();
         builder.Property(e => e.LastActivityAt).IsRequired();
 
-        builder.HasIndex(e => new { e.EntityType, e.EntityId }).IsUnique();
+        builder.HasIndex(e => new { e.EntityType, e.EntityId })
+            .IsUnique()
+            .HasFilter("\"entity_id\" IS NOT NULL");
         builder.HasIndex(e => e.DefinitionId);
         builder.HasIndex(e => e.StartedByUserId);
         builder.HasIndex(e => e.LastActivityAt);

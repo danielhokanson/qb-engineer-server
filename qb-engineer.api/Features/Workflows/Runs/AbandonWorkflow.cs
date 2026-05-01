@@ -16,6 +16,10 @@ namespace QBEngineer.Api.Features.Workflows.Runs;
 /// soft-deletes the entity if it is still in <c>status='Draft'</c>. If the
 /// entity has already been promoted (or the user opened a workflow against
 /// an existing entity), the run is abandoned but the entity stays.
+///
+/// When the run was abandoned before its first step ran, the entity row was
+/// never materialized (<see cref="WorkflowRun.EntityId"/> is null) — there
+/// is nothing to soft-delete and no orphan row left behind.
 /// </summary>
 public record AbandonWorkflowCommand(int RunId, AbandonWorkflowRequestModel Body)
     : IRequest<WorkflowRunResponseModel>;
@@ -37,10 +41,12 @@ public class AbandonWorkflowHandler(
         if (run.CompletedAt is not null)
             throw new InvalidOperationException("Cannot abandon a completed run.");
 
-        // Soft-delete the entity if still Draft.
-        if (_appliers.TryGetValue(run.EntityType, out var applier))
+        // Soft-delete the entity if still Draft. If the entity wasn't created
+        // (deferred materialization, abandoned before first step), nothing to
+        // delete — the run row alone records the abandonment.
+        if (run.EntityId is int entityId && _appliers.TryGetValue(run.EntityType, out var applier))
         {
-            await applier.SoftDeleteIfDraftAsync(run.EntityId, ct);
+            await applier.SoftDeleteIfDraftAsync(entityId, ct);
         }
 
         run.AbandonedAt = clock.UtcNow;
