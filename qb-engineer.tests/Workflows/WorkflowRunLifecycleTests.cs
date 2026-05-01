@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+using QBEngineer.Api.Workflows;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -492,6 +493,53 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
             .Where(a => a.EntityType == "WorkflowRun" && a.EntityId == run.Id && a.Action == "WorkflowStepAdvanced")
             .ToListAsync();
         audit.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task SeededCombosCount_Has14Canonical_Plus2Aliases()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var partDefinitions = await db.WorkflowDefinitions
+            .AsNoTracking()
+            .Where(d => d.EntityType == "Part")
+            .ToListAsync();
+        partDefinitions.Should().HaveCountGreaterThanOrEqualTo(16);
+        partDefinitions.Select(d => d.DefinitionId).Should().Contain([
+            "part-buy-raw-v1",
+            "part-buy-component-v1",
+            "part-buy-subassembly-v1",
+            "part-buy-finishedgood-v1",
+            "part-buy-consumable-v1",
+            "part-buy-tool-v1",
+            "part-make-component-v1",
+            "part-make-subassembly-v1",
+            "part-make-finishedgood-v1",
+            "part-make-tool-v1",
+            "part-subcontract-component-v1",
+            "part-subcontract-subassembly-v1",
+            "part-phantom-subassembly-v1",
+            "part-phantom-finishedgood-v1",
+            // legacy aliases
+            "part-assembly-guided-v1",
+            "part-raw-material-express-v1",
+        ]);
+    }
+
+    [Fact]
+    public async Task EveryComboDefinition_HasParseableStepsJson()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var partDefinitions = await db.WorkflowDefinitions
+            .AsNoTracking()
+            .Where(d => d.EntityType == "Part")
+            .ToListAsync();
+        foreach (var def in partDefinitions)
+        {
+            var steps = WorkflowStepHelper.ParseSteps(def.StepsJson);
+            steps.Should().NotBeEmpty($"{def.DefinitionId} should parse to >= 1 step");
+        }
     }
 
     private async Task<WorkflowRunResponseModel> StartRunAsync(HttpClient client, string initialJson)
