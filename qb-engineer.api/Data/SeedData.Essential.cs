@@ -388,6 +388,58 @@ public static partial class SeedData
 
         // ── Approval Workflows ────────────────────────────────────────────
         await SeedApprovalWorkflowsAsync(db);
+
+        // ── Pillar 1 — Part ItemKind taxonomy (idempotent upsert) ─────────
+        await SeedPartItemKindsAsync(db);
+    }
+
+    /// <summary>
+    /// Pillar 1 — descriptive item-kind taxonomy on parts. Independent of the
+    /// procurement_source × inventory_class axes; this is the "what kind of
+    /// thing is it" tag (Fastener, Electronic, Packaging, etc.). Admin can
+    /// extend the taxonomy via the standard reference_data CRUD; the seed
+    /// upsert never overwrites admin-edited rows because we key on
+    /// (GroupCode, Code) and skip existing entries.
+    /// </summary>
+    private static async Task SeedPartItemKindsAsync(AppDbContext db)
+    {
+        const string group = "part.item_kind";
+        var existing = await db.ReferenceData
+            .Where(r => r.GroupCode == group)
+            .Select(r => r.Code)
+            .ToListAsync();
+        var existingSet = existing.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var seeds = new (string Code, string Label, int Sort)[]
+        {
+            ("fastener", "Fastener", 1),
+            ("electronic", "Electronic", 2),
+            ("packaging", "Packaging", 3),
+            ("hardware", "Hardware", 4),
+            ("material", "Material", 5),
+            ("subassembly", "Subassembly", 6),
+            ("phantom", "Phantom", 7),
+            ("tool", "Tool", 8),
+            ("consumable", "Consumable", 9),
+            ("custom", "Custom", 10),
+        };
+
+        var added = 0;
+        foreach (var (code, label, sort) in seeds)
+        {
+            if (existingSet.Contains(code)) continue;
+            db.ReferenceData.Add(new ReferenceData
+            {
+                IsSeedData = true,
+                GroupCode = group,
+                Code = code,
+                Label = label,
+                SortOrder = sort,
+                IsActive = true,
+            });
+            added++;
+        }
+        if (added > 0) await db.SaveChangesAsync();
     }
 
     private static async Task SeedApprovalWorkflowsAsync(AppDbContext db)
