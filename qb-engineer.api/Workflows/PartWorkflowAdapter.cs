@@ -265,13 +265,22 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         if (TryReadInt(fields, "safetyStockDays", out var safetyDays))
             part.SafetyStockDays = safetyDays;
 
-        // UoM cluster (FK to unit_of_measure)
+        // UoM cluster (FK to unit_of_measure). Accept BOTH int FKs and
+        // string codes — the inventory-step + uom-cluster components emit
+        // codes ('ea' / 'kg' / 'mm' / etc.) since the user-facing dropdown
+        // labels by code, not id. Resolve codes to ids by lookup.
         if (TryReadInt(fields, "stockUomId", out var stockUomId))
             part.StockUomId = stockUomId;
+        else if (TryReadString(fields, "stockUomCode", out var stockCode))
+            part.StockUomId = await ResolveUomIdAsync(stockCode, ct);
         if (TryReadInt(fields, "purchaseUomId", out var purchaseUomId))
             part.PurchaseUomId = purchaseUomId;
+        else if (TryReadString(fields, "purchaseUomCode", out var purchaseCode))
+            part.PurchaseUomId = await ResolveUomIdAsync(purchaseCode, ct);
         if (TryReadInt(fields, "salesUomId", out var salesUomId))
             part.SalesUomId = salesUomId;
+        else if (TryReadString(fields, "salesUomCode", out var salesCode))
+            part.SalesUomId = await ResolveUomIdAsync(salesCode, ct);
 
         // Quality cluster (receiving inspection — B1-B4, M1-M3, S1, S2)
         if (TryReadBool(fields, "requiresReceivingInspection", out var reqInsp) && reqInsp.HasValue)
@@ -400,6 +409,21 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         if (prop.ValueKind == JsonValueKind.String && Enum.TryParse<T>(prop.GetString(), true, out var parsed))
             return parsed;
         return defaultValue;
+    }
+
+    /// <summary>
+    /// Resolves a UoM code (e.g. 'ea' / 'kg' / 'mm') to its FK id, or
+    /// returns null when the code is null/empty/unknown. Used by the
+    /// UoM-cluster step components which emit codes (user-facing) — the
+    /// adapter persists the FK.
+    /// </summary>
+    private async Task<int?> ResolveUomIdAsync(string? code, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return null;
+        var uom = await db.UnitsOfMeasure
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Code == code, ct);
+        return uom?.Id;
     }
 
     private static bool TryReadString(JsonElement root, string name, out string? value)
