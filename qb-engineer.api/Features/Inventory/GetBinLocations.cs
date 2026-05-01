@@ -4,10 +4,26 @@ using QBEngineer.Core.Models;
 
 namespace QBEngineer.Api.Features.Inventory;
 
-public record GetBinLocationsQuery : IRequest<List<StorageLocationFlatResponseModel>>;
+/// <summary>
+/// Paged + searchable bin-locations query. The UI uses this for both the
+/// inventory-receiving picker and the generic
+/// <c>&lt;app-entity-picker entityType="inventory/locations/bins"&gt;</c>
+/// shared component.
+///
+/// Default page size 20, capped at 100. Search filters by bin name +
+/// barcode + path (case insensitive).
+/// </summary>
+public record GetBinLocationsQuery(
+    string? Search = null,
+    int Page = 1,
+    int PageSize = 20)
+    : IRequest<PagedResponse<StorageLocationFlatResponseModel>>;
 
-public class GetBinLocationsHandler(IInventoryRepository repo) : IRequestHandler<GetBinLocationsQuery, List<StorageLocationFlatResponseModel>>
+public class GetBinLocationsHandler(IInventoryRepository repo)
+    : IRequestHandler<GetBinLocationsQuery, PagedResponse<StorageLocationFlatResponseModel>>
 {
-    public Task<List<StorageLocationFlatResponseModel>> Handle(GetBinLocationsQuery request, CancellationToken cancellationToken)
-        => repo.GetBinLocationsAsync(cancellationToken);
+    public Task<PagedResponse<StorageLocationFlatResponseModel>> Handle(
+        GetBinLocationsQuery request, CancellationToken cancellationToken)
+        => repo.GetBinLocationsPagedAsync(
+            request.Search, request.Page, request.PageSize, cancellationToken);
 }

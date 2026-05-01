@@ -54,6 +54,54 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
             .ToList();
     }
 
+    public async Task<PagedResponse<StorageLocationFlatResponseModel>> GetBinLocationsPagedAsync(
+        string? search, int page, int pageSize, CancellationToken ct)
+    {
+        const int defaultPageSize = 20;
+        const int maxPageSize = 100;
+
+        var effectivePage = page < 1 ? 1 : page;
+        var effectivePageSize = pageSize <= 0
+            ? defaultPageSize
+            : Math.Min(pageSize, maxPageSize);
+
+        // Path is a composed string (parent name / child name / …) so we
+        // materialize the bin set first then filter / page in memory. Bin
+        // counts are bounded enough for this to be cheap.
+        var allLocations = await db.StorageLocations
+            .Where(l => l.DeletedAt == null)
+            .OrderBy(l => l.SortOrder).ThenBy(l => l.Name)
+            .ToListAsync(ct);
+
+        var byId = allLocations.ToDictionary(l => l.Id);
+
+        var bins = allLocations
+            .Where(l => l.LocationType == LocationType.Bin)
+            .Select(l => new StorageLocationFlatResponseModel(
+                l.Id, l.Name, l.LocationType, l.Barcode, BuildPath(l, byId)))
+            .ToList();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            bins = bins
+                .Where(b =>
+                    b.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || (b.Barcode != null && b.Barcode.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    || b.LocationPath.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        var totalCount = bins.Count;
+        var paged = bins
+            .Skip((effectivePage - 1) * effectivePageSize)
+            .Take(effectivePageSize)
+            .ToList();
+
+        return new PagedResponse<StorageLocationFlatResponseModel>(
+            paged, totalCount, effectivePage, effectivePageSize);
+    }
+
     private static string BuildPath(StorageLocation loc, Dictionary<int, StorageLocation> byId)
     {
         var parts = new List<string> { loc.Name };

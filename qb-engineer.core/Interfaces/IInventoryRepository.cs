@@ -9,6 +9,8 @@ public interface IInventoryRepository
     // Locations
     Task<List<StorageLocationResponseModel>> GetLocationTreeAsync(CancellationToken ct);
     Task<List<StorageLocationFlatResponseModel>> GetBinLocationsAsync(CancellationToken ct);
+    Task<PagedResponse<StorageLocationFlatResponseModel>> GetBinLocationsPagedAsync(
+        string? search, int page, int pageSize, CancellationToken ct);
     Task<StorageLocation?> FindLocationAsync(int id, CancellationToken ct);
     Task<bool> BarcodeExistsAsync(string barcode, int? excludeId, CancellationToken ct);
     Task AddLocationAsync(StorageLocation location, CancellationToken ct);

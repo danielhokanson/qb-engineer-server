@@ -22,9 +22,13 @@ public class InventoryController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("locations/bins")]
-    public async Task<ActionResult<List<StorageLocationFlatResponseModel>>> GetBinLocations()
+    public async Task<ActionResult<PagedResponse<StorageLocationFlatResponseModel>>> GetBinLocations(
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetBinLocationsQuery());
+        var result = await mediator.Send(new GetBinLocationsQuery(search, page, pageSize), ct);
         return Ok(result);
     }
 
