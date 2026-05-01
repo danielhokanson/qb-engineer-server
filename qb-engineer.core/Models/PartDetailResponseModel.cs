@@ -70,4 +70,27 @@ public record PartDetailResponseModel(
     List<BOMEntryResponseModel> BomEntries,
     List<BOMUsageResponseModel> UsedIn,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    // Pillar 4 Phase 2 surface — UoM cluster
+    int? StockUomId = null,
+    string? StockUomCode = null,
+    string? StockUomLabel = null,
+    int? PurchaseUomId = null,
+    string? PurchaseUomCode = null,
+    string? PurchaseUomLabel = null,
+    int? SalesUomId = null,
+    string? SalesUomCode = null,
+    string? SalesUomLabel = null,
+    // Pillar 4 Phase 2 surface — MRP cluster
+    bool IsMrpPlanned = false,
+    LotSizingRule? LotSizingRule = null,
+    decimal? FixedOrderQuantity = null,
+    decimal? MinimumOrderQuantity = null,
+    decimal? OrderMultiple = null,
+    int? PlanningFenceDays = null,
+    int? DemandFenceDays = null,
+    // Pillar 4 Phase 2 surface — Quality cluster
+    bool RequiresReceivingInspection = false,
+    int? ReceivingInspectionTemplateId = null,
+    ReceivingInspectionFrequency? InspectionFrequency = null,
+    int? InspectionSkipAfterN = null);

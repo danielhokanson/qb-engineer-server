@@ -134,6 +134,11 @@ public class PartRepository(AppDbContext db) : IPartRepository
             .Include(p => p.ItemKind)
             .Include(p => p.MaterialSpec)
             .Include(p => p.ValuationClass)
+            // Pillar 4 Phase 2 — UoM cluster needs resolved code/label fields
+            // on the detail response so the frontend doesn't have to round-trip.
+            .Include(p => p.StockUom)
+            .Include(p => p.PurchaseUom)
+            .Include(p => p.SalesUom)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
         if (part is null)
@@ -228,7 +233,30 @@ public class PartRepository(AppDbContext db) : IPartRepository
             bomEntries,
             usedIn,
             part.CreatedAt,
-            part.UpdatedAt);
+            part.UpdatedAt,
+            // Pillar 4 Phase 2 — UoM cluster (id + resolved code/label)
+            part.StockUomId,
+            part.StockUom?.Code,
+            part.StockUom?.Name,
+            part.PurchaseUomId,
+            part.PurchaseUom?.Code,
+            part.PurchaseUom?.Name,
+            part.SalesUomId,
+            part.SalesUom?.Code,
+            part.SalesUom?.Name,
+            // Pillar 4 Phase 2 — MRP cluster
+            part.IsMrpPlanned,
+            part.LotSizingRule,
+            part.FixedOrderQuantity,
+            part.MinimumOrderQuantity,
+            part.OrderMultiple,
+            part.PlanningFenceDays,
+            part.DemandFenceDays,
+            // Pillar 4 Phase 2 — Quality cluster (receiving inspection)
+            part.RequiresReceivingInspection,
+            part.ReceivingInspectionTemplateId,
+            part.InspectionFrequency,
+            part.InspectionSkipAfterN);
     }
 
     public Task<Part?> FindAsync(int id, CancellationToken ct)

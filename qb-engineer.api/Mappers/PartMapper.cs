@@ -81,6 +81,29 @@ public static partial class PartMapper
             BomEntries: bomEntries ?? [],
             UsedIn: usedIn ?? [],
             CreatedAt: part.CreatedAt,
-            UpdatedAt: part.UpdatedAt);
+            UpdatedAt: part.UpdatedAt,
+            // Pillar 4 Phase 2 — UoM cluster (id + resolved code/label)
+            StockUomId: part.StockUomId,
+            StockUomCode: part.StockUom?.Code,
+            StockUomLabel: part.StockUom?.Name,
+            PurchaseUomId: part.PurchaseUomId,
+            PurchaseUomCode: part.PurchaseUom?.Code,
+            PurchaseUomLabel: part.PurchaseUom?.Name,
+            SalesUomId: part.SalesUomId,
+            SalesUomCode: part.SalesUom?.Code,
+            SalesUomLabel: part.SalesUom?.Name,
+            // Pillar 4 Phase 2 — MRP cluster
+            IsMrpPlanned: part.IsMrpPlanned,
+            LotSizingRule: part.LotSizingRule,
+            FixedOrderQuantity: part.FixedOrderQuantity,
+            MinimumOrderQuantity: part.MinimumOrderQuantity,
+            OrderMultiple: part.OrderMultiple,
+            PlanningFenceDays: part.PlanningFenceDays,
+            DemandFenceDays: part.DemandFenceDays,
+            // Pillar 4 Phase 2 — Quality cluster (receiving inspection)
+            RequiresReceivingInspection: part.RequiresReceivingInspection,
+            ReceivingInspectionTemplateId: part.ReceivingInspectionTemplateId,
+            InspectionFrequency: part.InspectionFrequency,
+            InspectionSkipAfterN: part.InspectionSkipAfterN);
     }
 }
