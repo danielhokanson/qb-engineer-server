@@ -15,7 +15,12 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.HasIndex(e => e.PartNumber).IsUnique();
 
         builder.Property(e => e.PartNumber).HasMaxLength(50);
-        builder.Property(e => e.Description).HasMaxLength(500);
+        // Name is the canonical short identifier (required). Indexed because
+        // parts are routinely searched/sorted by name in lists, BOM rows, and
+        // entity pickers.
+        builder.Property(e => e.Name).IsRequired().HasMaxLength(256);
+        builder.HasIndex(e => e.Name);
+        builder.Property(e => e.Description).HasMaxLength(2000).IsRequired(false);
         builder.Property(e => e.Revision).HasMaxLength(10);
         builder.Property(e => e.Material).HasMaxLength(200);
         builder.Property(e => e.MoldToolRef).HasMaxLength(100);

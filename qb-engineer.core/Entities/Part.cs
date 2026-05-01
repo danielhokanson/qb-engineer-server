@@ -6,7 +6,23 @@ namespace QBEngineer.Core.Entities;
 public class Part : BaseAuditableEntity, IActiveAware
 {
     public string PartNumber { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Short human-readable identifier (e.g., "Sheath Mudkipper"). Required —
+    /// the canonical "what is this thing" label rendered on cards, lists, and
+    /// the detail-page heading. Backfilled from <see cref="Description"/> by
+    /// migration <c>Add_Name_To_Part</c>.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Long-form notes (paragraph-length detail). Optional — fill in only when
+    /// there is something meaningful beyond the short Name. Used to be
+    /// double-duty as both name and description; that role moved to
+    /// <see cref="Name"/>.
+    /// </summary>
+    public string? Description { get; set; }
+
     public string Revision { get; set; } = "A";
     public PartStatus Status { get; set; } = PartStatus.Active;
     public PartType PartType { get; set; } = PartType.Part;
@@ -81,8 +97,8 @@ public class Part : BaseAuditableEntity, IActiveAware
     // transactions; "Obsolete" is not (treated as deactivated).
     public bool IsActiveForNewTransactions => Status != PartStatus.Obsolete;
     public string GetDisplayName() => string.IsNullOrWhiteSpace(PartNumber)
-        ? Description
-        : $"{PartNumber} ({Description})";
+        ? Name
+        : $"{PartNumber} ({Name})";
 
     public ICollection<BOMEntry> BOMEntries { get; set; } = [];
     public ICollection<BOMEntry> UsedInBOM { get; set; } = [];

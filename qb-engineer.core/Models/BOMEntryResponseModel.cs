@@ -6,7 +6,7 @@ public record BOMEntryResponseModel(
     int Id,
     int ChildPartId,
     string ChildPartNumber,
-    string ChildDescription,
+    string ChildName,
     decimal Quantity,
     string? ReferenceDesignator,
     int SortOrder,

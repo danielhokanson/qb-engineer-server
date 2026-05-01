@@ -8,7 +8,7 @@ public record PartAlternateResponseModel
     public int PartId { get; init; }
     public int AlternatePartId { get; init; }
     public string AlternatePartNumber { get; init; } = string.Empty;
-    public string AlternatePartDescription { get; init; } = string.Empty;
+    public string AlternatePartName { get; init; } = string.Empty;
     public int Priority { get; init; }
     public AlternateType Type { get; init; }
     public decimal? ConversionFactor { get; init; }

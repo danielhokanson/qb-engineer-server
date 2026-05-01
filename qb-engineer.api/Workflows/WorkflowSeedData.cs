@@ -25,9 +25,15 @@ public static class WorkflowSeedData
     [
         new(
             ValidatorId: "hasBasics",
+            // Phase-4 Name+Description split: the canonical short identifier is
+            // now `name`. Existing in-flight runs that started under the
+            // previous predicate (which checked `description`) are not
+            // disrupted because the migration backfills `name` from the old
+            // `description` value, so any part that previously satisfied the
+            // gate continues to satisfy this one.
             Predicate: """
             {"type":"all","of":[
-              {"type":"fieldPresent","field":"description"},
+              {"type":"fieldPresent","field":"name"},
               {"type":"fieldPresent","field":"partType"},
               {"type":"fieldPresent","field":"material"}
             ]}

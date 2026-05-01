@@ -5,6 +5,6 @@ public record OperationMaterialResponseModel(
     int OperationId,
     int BomEntryId,
     string ChildPartNumber,
-    string ChildPartDescription,
+    string ChildPartName,
     decimal Quantity,
     string? Notes);

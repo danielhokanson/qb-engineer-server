@@ -72,7 +72,7 @@ public class CreatePartAlternateHandler(AppDbContext db, IHttpContextAccessor ht
             PartId = alternate.PartId,
             AlternatePartId = alternate.AlternatePartId,
             AlternatePartNumber = alternatePart.PartNumber,
-            AlternatePartDescription = alternatePart.Description,
+            AlternatePartName = alternatePart.Name,
             Priority = alternate.Priority,
             Type = alternate.Type,
             ConversionFactor = alternate.ConversionFactor,

@@ -59,7 +59,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
             var term = query.Q.Trim().ToLower();
             q = q.Where(p =>
                 p.PartNumber.ToLower().Contains(term) ||
-                p.Description.ToLower().Contains(term) ||
+                p.Name.ToLower().Contains(term) ||
+                (p.Description != null && p.Description.ToLower().Contains(term)) ||
                 (p.Material != null && p.Material.ToLower().Contains(term)) ||
                 (p.ExternalPartNumber != null && p.ExternalPartNumber.ToLower().Contains(term)));
         }
@@ -78,6 +79,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
         IOrderedQueryable<Part> ordered = sortKey switch
         {
             "partnumber"         => desc ? q.OrderByDescending(p => p.PartNumber)         : q.OrderBy(p => p.PartNumber),
+            "name"               => desc ? q.OrderByDescending(p => p.Name)               : q.OrderBy(p => p.Name),
             "description"        => desc ? q.OrderByDescending(p => p.Description)        : q.OrderBy(p => p.Description),
             "revision"           => desc ? q.OrderByDescending(p => p.Revision)           : q.OrderBy(p => p.Revision),
             "status"             => desc ? q.OrderByDescending(p => p.Status)             : q.OrderBy(p => p.Status),
@@ -100,6 +102,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
             .Select(p => new PartListResponseModel(
                 p.Id,
                 p.PartNumber,
+                p.Name,
                 p.Description,
                 p.Revision,
                 p.Status,
@@ -139,7 +142,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 b.Id,
                 b.ChildPartId,
                 b.ChildPart.PartNumber,
-                b.ChildPart.Description,
+                b.ChildPart.Name,
                 b.Quantity,
                 b.ReferenceDesignator,
                 b.SortOrder,
@@ -154,13 +157,14 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 b.Id,
                 b.ParentPartId,
                 b.ParentPart.PartNumber,
-                b.ParentPart.Description,
+                b.ParentPart.Name,
                 b.Quantity))
             .ToList();
 
         return new PartDetailResponseModel(
             part.Id,
             part.PartNumber,
+            part.Name,
             part.Description,
             part.Revision,
             part.Status,
@@ -290,7 +294,7 @@ public class PartRepository(AppDbContext db) : IPartRepository
                     m.OperationId,
                     m.BomEntryId,
                     m.BomEntry.ChildPart.PartNumber,
-                    m.BomEntry.ChildPart.Description,
+                    m.BomEntry.ChildPart.Name,
                     m.Quantity,
                     m.Notes)).ToList(),
                 s.CreatedAt,

@@ -53,7 +53,7 @@ public class PartsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<PartDetailResponseModel>> CreatePart([FromBody] CreatePartRequestModel request)
     {
         var result = await mediator.Send(new CreatePartCommand(
-            request.Description, request.Revision,
+            request.Name, request.Description, request.Revision,
             request.PartType, request.Material, request.MoldToolRef, request.ExternalPartNumber));
         return Created($"/api/v1/parts/{result.Id}", result);
     }

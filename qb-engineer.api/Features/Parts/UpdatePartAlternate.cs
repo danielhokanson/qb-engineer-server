@@ -52,7 +52,7 @@ public class UpdatePartAlternateHandler(AppDbContext db, IHttpContextAccessor ht
             PartId = alternate.PartId,
             AlternatePartId = alternate.AlternatePartId,
             AlternatePartNumber = alternate.AlternatePart.PartNumber,
-            AlternatePartDescription = alternate.AlternatePart.Description,
+            AlternatePartName = alternate.AlternatePart.Name,
             Priority = alternate.Priority,
             Type = alternate.Type,
             ConversionFactor = alternate.ConversionFactor,

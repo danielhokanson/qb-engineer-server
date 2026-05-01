@@ -10,7 +10,8 @@ using QBEngineer.Core.Models;
 namespace QBEngineer.Api.Features.Parts;
 
 public record CreatePartCommand(
-    string Description,
+    string Name,
+    string? Description,
     string? Revision,
     PartType PartType,
     string? Material,
@@ -21,7 +22,8 @@ public class CreatePartCommandValidator : AbstractValidator<CreatePartCommand>
 {
     public CreatePartCommandValidator()
     {
-        RuleFor(x => x.Description).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
+        RuleFor(x => x.Description).MaximumLength(2000).When(x => x.Description is not null);
         RuleFor(x => x.Revision).MaximumLength(10).When(x => x.Revision is not null);
         RuleFor(x => x.Material).MaximumLength(200).When(x => x.Material is not null);
         RuleFor(x => x.ExternalPartNumber).MaximumLength(100).When(x => x.ExternalPartNumber is not null);
@@ -42,7 +44,8 @@ public class CreatePartHandler(
         var part = new Part
         {
             PartNumber = partNumber,
-            Description = request.Description.Trim(),
+            Name = request.Name.Trim(),
+            Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
             Revision = request.Revision?.Trim() ?? "A",
             PartType = request.PartType,
             Status = PartStatus.Draft,
@@ -66,7 +69,7 @@ public class CreatePartHandler(
                 if (syncStatus.Connected)
                 {
                     var item = new AccountingItem(
-                        null, part.PartNumber, part.Description,
+                        null, part.PartNumber, part.Name,
                         "NonInventory", null, null, part.PartNumber, true);
                     var payload = JsonSerializer.Serialize(item);
                     await syncQueue.EnqueueAsync("Part", part.Id, "CreateItem", payload, cancellationToken);

@@ -20,6 +20,7 @@ public static partial class PartMapper
         return new PartDetailResponseModel(
             Id: part.Id,
             PartNumber: part.PartNumber,
+            Name: part.Name,
             Description: part.Description,
             Revision: part.Revision,
             Status: part.Status,

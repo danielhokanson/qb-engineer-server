@@ -26,14 +26,20 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
     public async Task<int> CreateDraftAsync(JsonElement? initialData, CancellationToken ct)
     {
         var partType = ReadEnumOrDefault(initialData, "partType", PartType.Part);
-        var description = ReadStringOrDefault(initialData, "description") ?? "(Draft)";
+        // Phase-4 Name+Description split: prefer `name`, fall back to `description`
+        // for older fork-dialog payloads that haven't been redeployed yet.
+        var name = ReadStringOrDefault(initialData, "name")
+                   ?? ReadStringOrDefault(initialData, "description")
+                   ?? "(Draft)";
+        var description = ReadStringOrDefault(initialData, "description");
 
         var partNumber = await repo.GetNextPartNumberAsync(partType, ct);
 
         var part = new Part
         {
             PartNumber = partNumber,
-            Description = description.Trim(),
+            Name = name.Trim(),
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
             Revision = ReadStringOrDefault(initialData, "revision")?.Trim() ?? "A",
             PartType = partType,
             Status = PartStatus.Draft,
@@ -58,8 +64,14 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         var part = await db.Parts.FirstOrDefaultAsync(p => p.Id == entityId, ct)
             ?? throw new KeyNotFoundException($"Part id {entityId} not found.");
 
-        if (TryReadString(fields, "description", out var desc) && desc is not null)
-            part.Description = desc.Trim();
+        if (TryReadString(fields, "name", out var name) && name is not null)
+            part.Name = name.Trim();
+        if (TryReadString(fields, "description", out var desc))
+        {
+            // null / whitespace clears the optional Description; non-empty trims & sets.
+            var trimmed = desc?.Trim();
+            part.Description = string.IsNullOrEmpty(trimmed) ? null : trimmed;
+        }
         if (TryReadString(fields, "revision", out var rev) && rev is not null)
             part.Revision = rev.Trim();
         if (TryReadString(fields, "material", out var mat))

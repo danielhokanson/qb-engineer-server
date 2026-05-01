@@ -15,7 +15,11 @@ public class UpdatePartCommandValidator : AbstractValidator<UpdatePartCommand>
     public UpdatePartCommandValidator()
     {
         RuleFor(x => x.Id).GreaterThan(0);
-        RuleFor(x => x.Data.Description).MaximumLength(500).When(x => x.Data.Description is not null);
+        RuleFor(x => x.Data.Name)
+            .NotEmpty()
+            .MaximumLength(256)
+            .When(x => x.Data.Name is not null);
+        RuleFor(x => x.Data.Description).MaximumLength(2000).When(x => x.Data.Description is not null);
         RuleFor(x => x.Data.Revision).MaximumLength(10).When(x => x.Data.Revision is not null);
         RuleFor(x => x.Data.Material).MaximumLength(200).When(x => x.Data.Material is not null);
         RuleFor(x => x.Data.ExternalPartNumber).MaximumLength(100).When(x => x.Data.ExternalPartNumber is not null);
@@ -35,7 +39,13 @@ public class UpdatePartHandler(
 
         var data = request.Data;
 
-        if (data.Description is not null) part.Description = data.Description.Trim();
+        if (data.Name is not null) part.Name = data.Name.Trim();
+        if (data.Description is not null)
+        {
+            // Empty / whitespace clears the optional Description field.
+            var trimmed = data.Description.Trim();
+            part.Description = trimmed.Length == 0 ? null : trimmed;
+        }
         if (data.Revision is not null) part.Revision = data.Revision.Trim();
         if (data.Status.HasValue) part.Status = data.Status.Value;
         if (data.PartType.HasValue) part.PartType = data.PartType.Value;
@@ -67,7 +77,7 @@ public class UpdatePartHandler(
                 if (syncStatus.Connected && part.ExternalId is not null)
                 {
                     var item = new AccountingItem(
-                        part.ExternalId, part.PartNumber, part.Description,
+                        part.ExternalId, part.PartNumber, part.Name,
                         "NonInventory", null, null, part.PartNumber, part.Status == Core.Enums.PartStatus.Active);
                     var payload = JsonSerializer.Serialize(item);
                     await syncQueue.EnqueueAsync("Part", part.Id, "UpdateItem", payload, cancellationToken);

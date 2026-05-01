@@ -5,7 +5,8 @@ namespace QBEngineer.Core.Models;
 public record PartDetailResponseModel(
     int Id,
     string PartNumber,
-    string Description,
+    string Name,
+    string? Description,
     string Revision,
     PartStatus Status,
     PartType PartType,

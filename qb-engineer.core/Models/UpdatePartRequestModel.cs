@@ -3,6 +3,7 @@ using QBEngineer.Core.Enums;
 namespace QBEngineer.Core.Models;
 
 public record UpdatePartRequestModel(
+    string? Name,
     string? Description,
     string? Revision,
     PartStatus? Status,

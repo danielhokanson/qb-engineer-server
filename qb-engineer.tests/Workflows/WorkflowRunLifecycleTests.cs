@@ -29,7 +29,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task Start_CreatesDraftPart_AndRun()
     {
         var client = AuthenticatedClient();
-        var initial = JsonDocument.Parse("""{"description":"Lifecycle Test Widget","partType":"Part","material":"Steel"}""").RootElement;
+        var initial = JsonDocument.Parse("""{"name":"Lifecycle Test Widget","partType":"Part","material":"Steel"}""").RootElement;
         var body = new StartWorkflowRunRequestModel(
             "Part", "part-assembly-guided-v1", "guided", initial);
 
@@ -70,7 +70,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         var run = await StartRunAsync(client, "{}");
 
         // basics step has all three required fields. Send them and expect advance.
-        var fields = JsonDocument.Parse("""{"description":"Adv Test","material":"Steel","partType":"Part"}""").RootElement;
+        var fields = JsonDocument.Parse("""{"name":"Adv Test","material":"Steel","partType":"Part"}""").RootElement;
         var step = new PatchWorkflowStepRequestModel("basics", fields);
         var response = await client.PatchAsJsonAsync($"/api/v1/workflows/{run.Id}/step", step);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -84,9 +84,9 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         var client = AuthenticatedClient();
         var run = await StartRunAsync(client, "{}");
 
-        // Provide only description; partType and material remain unset → hasBasics fails.
+        // Provide only name; partType and material remain unset → hasBasics fails.
         // We have to clear the seed values that StartRun applies — start with empty initial.
-        var fields = JsonDocument.Parse("""{"description":"Only desc"}""").RootElement;
+        var fields = JsonDocument.Parse("""{"name":"Only name"}""").RootElement;
         var step = new PatchWorkflowStepRequestModel("basics", fields);
         var response = await client.PatchAsJsonAsync($"/api/v1/workflows/{run.Id}/step", step);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -101,7 +101,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task Jump_BackToCompletedStep_Allowed()
     {
         var client = AuthenticatedClient();
-        var initial = JsonDocument.Parse("""{"description":"Jumper","partType":"Part","material":"Steel"}""").RootElement;
+        var initial = JsonDocument.Parse("""{"name":"Jumper","partType":"Part","material":"Steel"}""").RootElement;
         var run = await StartRunAsync(client, initial.GetRawText());
 
         // Advance past basics with a gate-passing patch.
@@ -119,7 +119,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task Jump_ForwardWithFailingGate_409()
     {
         var client = AuthenticatedClient();
-        var run = await StartRunAsync(client, """{"description":"Skipper"}"""); // missing material → hasBasics fails
+        var run = await StartRunAsync(client, """{"name":"Skipper"}"""); // missing material → hasBasics fails
 
         var jumpResp = await client.PatchAsJsonAsync(
             $"/api/v1/workflows/{run.Id}/jump",
@@ -164,7 +164,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task Complete_FailsWhenReadinessUnsatisfied()
     {
         var client = AuthenticatedClient();
-        var run = await StartRunAsync(client, """{"description":"Incomplete"}""");
+        var run = await StartRunAsync(client, """{"name":"Incomplete"}""");
         var resp = await client.PostAsync($"/api/v1/workflows/{run.Id}/complete", null);
         resp.StatusCode.Should().Be(HttpStatusCode.Conflict);
         var body = await resp.Content.ReadAsStringAsync();
@@ -177,7 +177,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task PromoteStatus_FailsWhenReadinessUnsatisfied()
     {
         var client = AuthenticatedClient();
-        var run = await StartRunAsync(client, """{"description":"NotReady"}""");
+        var run = await StartRunAsync(client, """{"name":"NotReady"}""");
         var resp = await client.PostAsJsonAsync(
             $"/api/v1/parts/{run.EntityId}/promote-status",
             new PromoteEntityStatusRequestModel("Active"));
@@ -189,7 +189,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     {
         var client = AuthenticatedClient();
         var initial = JsonDocument.Parse(
-            """{"description":"Ready","partType":"Part","material":"Steel","manualCostOverride":12.5}""").RootElement;
+            """{"name":"Ready","partType":"Part","material":"Steel","manualCostOverride":12.5}""").RootElement;
         var run = await StartRunAsync(client, initial.GetRawText());
 
         // Add BOM + Operation rows directly (these are usually edited via
@@ -200,7 +200,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
             var component = new Part
             {
                 PartNumber = $"TC-{Guid.NewGuid():N}"[..16],
-                Description = "Component",
+                Name = "Component",
                 PartType = PartType.Part,
                 Status = PartStatus.Active,
             };
@@ -259,7 +259,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task StepAdvance_EmitsAuditRow()
     {
         var client = AuthenticatedClient();
-        var initial = JsonDocument.Parse("""{"description":"Auditable","partType":"Part","material":"Steel"}""").RootElement;
+        var initial = JsonDocument.Parse("""{"name":"Auditable","partType":"Part","material":"Steel"}""").RootElement;
         var run = await StartRunAsync(client, initial.GetRawText());
 
         await client.PatchAsJsonAsync(

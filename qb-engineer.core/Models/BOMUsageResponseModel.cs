@@ -4,5 +4,5 @@ public record BOMUsageResponseModel(
     int Id,
     int ParentPartId,
     string ParentPartNumber,
-    string ParentDescription,
+    string ParentName,
     decimal Quantity);

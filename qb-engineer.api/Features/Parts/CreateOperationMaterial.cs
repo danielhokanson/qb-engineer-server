@@ -48,7 +48,7 @@ public class CreateOperationMaterialHandler(AppDbContext db) : IRequestHandler<C
             material.OperationId,
             material.BomEntryId,
             bomEntry.ChildPart.PartNumber,
-            bomEntry.ChildPart.Description,
+            bomEntry.ChildPart.Name,
             material.Quantity,
             material.Notes);
     }

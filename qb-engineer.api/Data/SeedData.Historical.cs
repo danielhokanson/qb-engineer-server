@@ -53,7 +53,12 @@ public static partial class SeedData
 
         var partPairs = seedParts.Select(sp => (sp.Id, Entity: new Part
         {
-            PartNumber = sp.PartNumber, Description = sp.Description, Revision = sp.Revision,
+            // Phase-4 Name+Description split: the historical seed file still
+            // calls the short identifier "description". Mirror it to Name so
+            // the new schema's required field is populated, and leave the old
+            // Description column null (it was always doing double duty as
+            // name; new content goes through the API where the two are split).
+            PartNumber = sp.PartNumber, Name = sp.Description, Description = null, Revision = sp.Revision,
             Status = Enum.Parse<PartStatus>(sp.Status),
             PartType = Enum.Parse<PartType>(sp.PartType),
             Material = sp.Material,
