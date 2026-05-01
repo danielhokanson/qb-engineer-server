@@ -20,7 +20,7 @@ public class ReferenceDataRepository(AppDbContext db) : IReferenceDataRepository
                 g.Key,
                 g.Select(r => new ReferenceDataResponseModel(
                     r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData,
-                    r.EffectiveFrom, r.EffectiveTo, r.Metadata))
+                    r.EffectiveFrom, r.EffectiveTo, r.Metadata, r.ParentId))
                 .ToList()))
             .ToList();
     }
@@ -36,7 +36,7 @@ public class ReferenceDataRepository(AppDbContext db) : IReferenceDataRepository
             .OrderBy(r => r.SortOrder)
             .Select(r => new ReferenceDataResponseModel(
                 r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData,
-                r.EffectiveFrom, r.EffectiveTo, r.Metadata))
+                r.EffectiveFrom, r.EffectiveTo, r.Metadata, r.ParentId))
             .ToListAsync(ct);
     }
 }

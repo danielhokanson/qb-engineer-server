@@ -7,7 +7,10 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Api.Services;
 
-public class BackwardSchedulingService(AppDbContext db, IClock clock) : IBackwardSchedulingService
+public class BackwardSchedulingService(
+    AppDbContext db,
+    IClock clock,
+    IPartSourcingResolver sourcingResolver) : IBackwardSchedulingService
 {
     private const int ShippingBufferDays = 2;
     private const int QcBufferDays = 1;
@@ -87,12 +90,49 @@ public class BackwardSchedulingService(AppDbContext db, IClock clock) : IBackwar
         if (!partId.HasValue)
             return DefaultLeadTimeDays;
 
-        var buyLeadTimes = await db.BOMEntries
-            .Where(b => b.ParentPartId == partId.Value && b.SourceType == BOMSourceType.Buy && b.LeadTimeDays.HasValue)
-            .Select(b => b.LeadTimeDays!.Value)
+        // Pull every Buy BOM entry — including rows with a null per-line
+        // LeadTimeDays. The legacy implementation filtered the nulls out at
+        // the SQL level which silently dropped any child part whose buy
+        // lead-time was tracked on the part snapshot or the preferred
+        // VendorPart row instead of the BOM line.
+        var buyEntries = await db.BOMEntries
+            .Where(b => b.ParentPartId == partId.Value && b.SourceType == BOMSourceType.Buy)
+            .Select(b => new { b.ChildPartId, b.LeadTimeDays })
             .ToListAsync(ct);
 
-        return buyLeadTimes.Count > 0 ? buyLeadTimes.Max() : DefaultLeadTimeDays;
+        if (buyEntries.Count == 0)
+            return DefaultLeadTimeDays;
+
+        // Resolve the snapshot/vendor lead time for any rows whose per-line
+        // LeadTimeDays is null. Bulk-resolve in a single round trip and look
+        // up by child id in the loop.
+        var fallbackPartIds = buyEntries
+            .Where(e => !e.LeadTimeDays.HasValue)
+            .Select(e => e.ChildPartId)
+            .Distinct()
+            .ToList();
+
+        IReadOnlyDictionary<int, Core.Models.PartSourcingValues>? fallback = null;
+        if (fallbackPartIds.Count > 0)
+        {
+            fallback = await sourcingResolver.ResolveManyAsync(fallbackPartIds, ct);
+        }
+
+        var max = 0;
+        var sawAny = false;
+        foreach (var entry in buyEntries)
+        {
+            int? lead = entry.LeadTimeDays
+                ?? (fallback != null && fallback.TryGetValue(entry.ChildPartId, out var v)
+                    ? v.LeadTimeDays
+                    : null);
+
+            if (!lead.HasValue) continue;
+            sawAny = true;
+            if (lead.Value > max) max = lead.Value;
+        }
+
+        return sawAny ? max : DefaultLeadTimeDays;
     }
 
     private static ScheduleMilestone CreateMilestone(int salesOrderLineId, string milestoneType, DateTimeOffset targetDate, DateTimeOffset now)

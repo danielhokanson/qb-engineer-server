@@ -9,4 +9,5 @@ public record ReferenceDataResponseModel(
     bool IsSeedData,
     DateTimeOffset? EffectiveFrom,
     DateTimeOffset? EffectiveTo,
-    string? Metadata);
+    string? Metadata,
+    int? ParentId = null);

@@ -20,7 +20,7 @@ public class GetInternalProjectTypesHandler(AppDbContext db)
             .Where(r => r.EffectiveTo == null || r.EffectiveTo > now)
             .OrderBy(r => r.SortOrder)
             .Select(r => new ReferenceDataResponseModel(r.Id, r.Code, r.Label, r.SortOrder, r.IsActive, r.IsSeedData,
-                r.EffectiveFrom, r.EffectiveTo, r.Metadata))
+                r.EffectiveFrom, r.EffectiveTo, r.Metadata, r.ParentId))
             .ToListAsync(ct);
     }
 }

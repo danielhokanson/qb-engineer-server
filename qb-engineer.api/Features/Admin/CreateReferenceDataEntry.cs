@@ -54,6 +54,6 @@ public class CreateReferenceDataHandler(AppDbContext db)
 
         return new ReferenceDataResponseModel(
             entry.Id, entry.Code, entry.Label, entry.SortOrder, entry.IsActive, entry.IsSeedData,
-            entry.EffectiveFrom, entry.EffectiveTo, entry.Metadata);
+            entry.EffectiveFrom, entry.EffectiveTo, entry.Metadata, entry.ParentId);
     }
 }
