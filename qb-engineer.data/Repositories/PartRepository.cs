@@ -7,7 +7,7 @@ using QBEngineer.Data.Context;
 
 namespace QBEngineer.Data.Repositories;
 
-public class PartRepository(AppDbContext db) : IPartRepository
+public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolver) : IPartRepository
 {
     public async Task<List<PartListResponseModel>> GetPartsAsync(PartStatus? status, PartType? type, string? search, CancellationToken ct)
     {
@@ -94,12 +94,14 @@ public class PartRepository(AppDbContext db) : IPartRepository
         };
         ordered = ordered.ThenBy(p => p.Id);
 
-        var now = DateTimeOffset.UtcNow;
-
-        var items = await ordered
+        // Project the page rows WITHOUT the price (Pillar 5 — pricing now flows
+        // through IPartPricingResolver, not an inline projection). Pricing rows
+        // are looked up after materialization via ResolveManyAsync.
+        var rows = await ordered
             .Skip(query.Skip)
             .Take(query.EffectivePageSize)
-            .Select(p => new PartListResponseModel(
+            .Select(p => new
+            {
                 p.Id,
                 p.PartNumber,
                 p.Name,
@@ -109,13 +111,35 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 p.PartType,
                 p.Material,
                 p.ExternalPartNumber,
-                p.BOMEntries.Count,
+                BomEntryCount = p.BOMEntries.Count,
                 p.CreatedAt,
-                db.PartPrices
-                    .Where(pp => pp.PartId == p.Id && pp.EffectiveTo == null && pp.EffectiveFrom <= now)
-                    .Select(pp => (decimal?)pp.UnitPrice)
-                    .FirstOrDefault()))
+            })
             .ToListAsync(ct);
+
+        var partIds = rows.Select(r => r.Id).ToList();
+        var prices = await pricingResolver.ResolveManyAsync(partIds, ct);
+
+        var items = rows
+            .Select(r =>
+            {
+                var price = prices[r.Id];
+                return new PartListResponseModel(
+                    r.Id,
+                    r.PartNumber,
+                    r.Name,
+                    r.Description,
+                    r.Revision,
+                    r.Status,
+                    r.PartType,
+                    r.Material,
+                    r.ExternalPartNumber,
+                    r.BomEntryCount,
+                    r.CreatedAt,
+                    price.UnitPrice,
+                    price.Currency,
+                    price.Source.ToString());
+            })
+            .ToList();
 
         return new PagedResponse<PartListResponseModel>(
             items,
@@ -168,6 +192,8 @@ public class PartRepository(AppDbContext db) : IPartRepository
                 b.ParentPart.Name,
                 b.Quantity))
             .ToList();
+
+        var resolved = await pricingResolver.ResolveAsync(part.Id, customerId: null, quantity: null, ct);
 
         return new PartDetailResponseModel(
             part.Id,
@@ -256,7 +282,10 @@ public class PartRepository(AppDbContext db) : IPartRepository
             part.RequiresReceivingInspection,
             part.ReceivingInspectionTemplateId,
             part.InspectionFrequency,
-            part.InspectionSkipAfterN);
+            part.InspectionSkipAfterN,
+            resolved.UnitPrice,
+            resolved.Currency,
+            resolved.Source.ToString());
     }
 
     public Task<Part?> FindAsync(int id, CancellationToken ct)

@@ -93,4 +93,9 @@ public record PartDetailResponseModel(
     bool RequiresReceivingInspection = false,
     int? ReceivingInspectionTemplateId = null,
     ReceivingInspectionFrequency? InspectionFrequency = null,
-    int? InspectionSkipAfterN = null);
+    int? InspectionSkipAfterN = null,
+    // Pricing — resolved via IPartPricingResolver. EffectivePrice is non-nullable;
+    // when no rung resolves, EffectivePriceSource is "Default" and EffectivePrice is 0.
+    decimal EffectivePrice = 0m,
+    string EffectivePriceCurrency = "USD",
+    string EffectivePriceSource = "Default");

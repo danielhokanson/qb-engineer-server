@@ -14,4 +14,8 @@ public record PartListResponseModel(
     string? ExternalPartNumber,
     int BomEntryCount,
     DateTimeOffset CreatedAt,
-    decimal? DefaultPrice);
+    // Pricing — resolved via IPartPricingResolver. EffectivePrice is non-nullable;
+    // when no rung resolves, EffectivePriceSource is "Default" and EffectivePrice is 0.
+    decimal EffectivePrice,
+    string EffectivePriceCurrency,
+    string EffectivePriceSource);

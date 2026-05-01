@@ -1,5 +1,16 @@
 namespace QBEngineer.Core.Entities;
 
+/// <summary>
+/// Part-level effective-dated default sales price. One row per
+/// (part, effective period). Used as rung 2 of IPartPricingResolver:
+/// - <see cref="UnitPrice"/> applies when no customer-scoped PriceListEntry hits.
+/// - When multiple rows are active simultaneously, the latest EffectiveFrom wins.
+/// - History rows (EffectiveTo set) drive the price-history surfaces on Part detail.
+/// - Notes capture the rationale for a price change ("competitor matched", "raw cost up", etc.)
+///
+/// NOT a cost record. Vendor cost tiers live on <see cref="VendorPartPriceTier"/>.
+/// Customer-tiered sales pricing lives on <see cref="PriceListEntry"/>.
+/// </summary>
 public class PartPrice : BaseEntity
 {
     public int PartId { get; set; }
