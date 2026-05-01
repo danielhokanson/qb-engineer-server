@@ -73,7 +73,7 @@ public class CreatePurchaseOrderHandler(
             po.Lines.Add(new PurchaseOrderLine
             {
                 PartId = line.PartId,
-                Description = line.Description ?? part!.Description,
+                Description = line.Description ?? part!.Description ?? part.Name,
                 OrderedQuantity = line.Quantity,
                 UnitPrice = line.UnitPrice,
                 Notes = line.Notes,

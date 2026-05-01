@@ -73,7 +73,7 @@ public class CreateProductionRunHandler(AppDbContext db) : IRequestHandler<Creat
             job.JobNumber,
             productionRun.PartId,
             part.PartNumber,
-            part.Description,
+            part.Description ?? part.Name,
             productionRun.OperatorId,
             operatorName,
             productionRun.RunNumber,

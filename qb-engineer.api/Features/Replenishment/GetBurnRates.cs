@@ -30,7 +30,7 @@ public class GetBurnRatesHandler(AppDbContext db)
         if (!string.IsNullOrWhiteSpace(request.Search))
             partsQuery = partsQuery.Where(p =>
                 p.PartNumber.Contains(request.Search) ||
-                p.Description.Contains(request.Search));
+                (p.Description != null && p.Description.Contains(request.Search)));
 
         var parts = await partsQuery
             .OrderBy(p => p.PartNumber)
@@ -136,7 +136,7 @@ public class GetBurnRatesHandler(AppDbContext db)
             results.Add(new BurnRateResponseModel(
                 part.Id,
                 part.PartNumber,
-                part.Description,
+                part.Description ?? part.Name,
                 part.PreferredVendorId,
                 part.PreferredVendor?.CompanyName,
                 onHand,

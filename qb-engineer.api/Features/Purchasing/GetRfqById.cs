@@ -46,7 +46,7 @@ public class GetRfqByIdHandler(AppDbContext db)
             rfq.RfqNumber,
             rfq.PartId,
             rfq.Part.PartNumber,
-            rfq.Part.Description,
+            rfq.Part.Description ?? rfq.Part.Name,
             rfq.Quantity,
             rfq.RequiredDate,
             rfq.Status.ToString(),

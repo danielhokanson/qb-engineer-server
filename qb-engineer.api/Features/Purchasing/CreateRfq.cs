@@ -56,7 +56,7 @@ public class CreateRfqHandler(AppDbContext db, IRfqService rfqService)
             rfq.RfqNumber,
             rfq.PartId,
             part.PartNumber,
-            part.Description,
+            part.Description ?? part.Name,
             rfq.Quantity,
             rfq.RequiredDate,
             rfq.Status.ToString(),

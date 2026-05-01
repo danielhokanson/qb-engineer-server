@@ -134,7 +134,7 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
             var term = search.Trim().ToLower();
             query = query.Where(p =>
                 p.PartNumber.ToLower().Contains(term) ||
-                p.Description.ToLower().Contains(term));
+                (p.Description != null && p.Description.ToLower().Contains(term)));
         }
 
         var partsWithStock = await query
@@ -179,7 +179,7 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
                 var reserved = bins.Sum(b => b.ReservedQuantity);
 
                 return new InventoryPartSummaryResponseModel(
-                    p.Id, p.PartNumber, p.Description, p.Material,
+                    p.Id, p.PartNumber, p.Description ?? p.Name, p.Material,
                     onHand, reserved, onHand - reserved,
                     bins.Select(b =>
                     {
@@ -378,7 +378,7 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
             r.Id,
             r.PartId,
             r.Part.PartNumber,
-            r.Part.Description,
+            r.Part.Description ?? r.Part.Name,
             r.BinContentId,
             BuildPath(r.BinContent.Location, locById),
             r.JobId,

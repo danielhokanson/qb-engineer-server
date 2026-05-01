@@ -39,7 +39,7 @@ public class GetInterPlantTransfersHandler(AppDbContext db) : IRequestHandler<Ge
             t.TrackingNumber, t.Notes,
             t.Lines.Count,
             t.Lines.Select(l => new InterPlantTransferLineResponseModel(
-                l.Id, l.PartId, l.Part.PartNumber, l.Part.Description,
+                l.Id, l.PartId, l.Part.PartNumber, l.Part.Description ?? l.Part.Name,
                 l.Quantity, l.ReceivedQuantity, l.LotNumber)).ToList(),
             t.CreatedAt, t.UpdatedAt)).ToList();
     }

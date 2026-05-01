@@ -42,7 +42,7 @@ public class UpdateJobPartHandler(AppDbContext db) : IRequestHandler<UpdateJobPa
             jobPart.JobId,
             jobPart.PartId,
             jobPart.Part.PartNumber,
-            jobPart.Part.Description,
+            jobPart.Part.Description ?? jobPart.Part.Name,
             jobPart.Part.Status.ToString(),
             jobPart.Quantity,
             jobPart.Notes);

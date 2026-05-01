@@ -28,7 +28,7 @@ public class GetRfqsHandler(AppDbContext db)
             query = query.Where(r =>
                 r.RfqNumber.ToLower().Contains(term) ||
                 r.Part.PartNumber.ToLower().Contains(term) ||
-                r.Part.Description.ToLower().Contains(term) ||
+                (r.Part.Description != null && r.Part.Description.ToLower().Contains(term)) ||
                 (r.Description != null && r.Description.ToLower().Contains(term)));
         }
 
@@ -39,7 +39,7 @@ public class GetRfqsHandler(AppDbContext db)
                 r.RfqNumber,
                 r.PartId,
                 r.Part.PartNumber,
-                r.Part.Description,
+                r.Part.Description ?? r.Part.Name,
                 r.Quantity,
                 r.RequiredDate,
                 r.Status.ToString(),

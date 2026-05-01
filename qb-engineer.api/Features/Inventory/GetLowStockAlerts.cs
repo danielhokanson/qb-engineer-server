@@ -24,6 +24,7 @@ public class GetLowStockAlertsHandler(AppDbContext db)
             {
                 p.Id,
                 p.PartNumber,
+                p.Name,
                 p.Description,
                 p.MinStockThreshold,
                 p.ReorderPoint,
@@ -38,7 +39,7 @@ public class GetLowStockAlertsHandler(AppDbContext db)
             .Select(p => new LowStockAlertModel(
                 p.Id,
                 p.PartNumber,
-                p.Description,
+                p.Description ?? p.Name,
                 p.CurrentStock,
                 p.MinStockThreshold!.Value,
                 p.ReorderPoint))

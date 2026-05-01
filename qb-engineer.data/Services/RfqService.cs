@@ -120,7 +120,7 @@ public class RfqService(AppDbContext db, IClock clock) : IRfqService
         po.Lines.Add(new PurchaseOrderLine
         {
             PartId = rfq.PartId,
-            Description = rfq.Part.Description,
+            Description = rfq.Part.Description ?? rfq.Part.Name,
             OrderedQuantity = (int)rfq.Quantity,
             UnitPrice = response.UnitPrice ?? 0m,
         });

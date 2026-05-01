@@ -44,7 +44,7 @@ public class AddJobPartHandler(AppDbContext db) : IRequestHandler<AddJobPartComm
             jobPart.JobId,
             jobPart.PartId,
             part.PartNumber,
-            part.Description,
+            part.Description ?? part.Name,
             part.Status.ToString(),
             jobPart.Quantity,
             jobPart.Notes);

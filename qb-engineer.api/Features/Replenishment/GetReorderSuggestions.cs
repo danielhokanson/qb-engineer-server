@@ -48,7 +48,7 @@ public class GetReorderSuggestionsHandler(AppDbContext db)
             s.Id,
             s.PartId,
             s.Part.PartNumber,
-            s.Part.Description,
+            s.Part.Description ?? s.Part.Name,
             s.VendorId,
             s.Vendor?.CompanyName,
             s.CurrentStock,

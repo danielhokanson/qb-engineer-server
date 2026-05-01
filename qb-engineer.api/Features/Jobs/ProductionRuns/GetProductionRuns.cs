@@ -35,7 +35,7 @@ public class GetProductionRunsHandler(AppDbContext db) : IRequestHandler<GetProd
             pr.Job.JobNumber,
             pr.PartId,
             pr.Part.PartNumber,
-            pr.Part.Description,
+            pr.Part.Description ?? pr.Part.Name,
             pr.OperatorId,
             pr.OperatorId.HasValue && operators.TryGetValue(pr.OperatorId.Value, out var name) ? name : null,
             pr.RunNumber,

@@ -32,7 +32,7 @@ public class GetMrpExceptionsHandler(AppDbContext db)
                 e.MrpRunId,
                 e.PartId,
                 e.Part.PartNumber,
-                e.Part.Description,
+                e.Part.Description ?? e.Part.Name,
                 e.ExceptionType,
                 e.Message,
                 e.SuggestedAction,

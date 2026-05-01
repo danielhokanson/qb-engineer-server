@@ -524,7 +524,7 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
     {
         var part = await db.Parts.AsNoTracking()
             .Where(p => p.Id == partId)
-            .Select(p => new { p.Id, p.PartNumber, p.Description })
+            .Select(p => new { p.Id, p.PartNumber, p.Name, p.Description })
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new KeyNotFoundException($"Part {partId} not found.");
 
@@ -580,7 +580,7 @@ public class MrpService(AppDbContext db, IClock clock, ILogger<MrpService> logge
             current = weekEnd;
         }
 
-        return new MrpPartPlanResponseModel(part.Id, part.PartNumber, part.Description, buckets);
+        return new MrpPartPlanResponseModel(part.Id, part.PartNumber, part.Description ?? part.Name, buckets);
     }
 
     public async Task<List<MrpPeggingResponseModel>> GetPeggingAsync(int mrpRunId, int partId, CancellationToken cancellationToken = default)

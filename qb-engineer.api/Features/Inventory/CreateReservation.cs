@@ -82,7 +82,7 @@ public class CreateReservationHandler(
             reservation.Id,
             part.Id,
             part.PartNumber,
-            part.Description,
+            part.Description ?? part.Name,
             binContent.Id,
             BuildPath(binContent.Location),
             job?.Id,

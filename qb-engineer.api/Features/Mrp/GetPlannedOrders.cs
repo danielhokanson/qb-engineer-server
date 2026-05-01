@@ -32,7 +32,7 @@ public class GetPlannedOrdersHandler(AppDbContext db)
                 po.MrpRunId,
                 po.PartId,
                 po.Part.PartNumber,
-                po.Part.Description,
+                po.Part.Description ?? po.Part.Name,
                 po.OrderType,
                 po.Status,
                 po.Quantity,

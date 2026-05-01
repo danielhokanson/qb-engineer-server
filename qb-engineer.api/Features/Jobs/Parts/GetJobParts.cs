@@ -19,7 +19,7 @@ public class GetJobPartsHandler(AppDbContext db) : IRequestHandler<GetJobPartsQu
                 jp.JobId,
                 jp.PartId,
                 jp.Part.PartNumber,
-                jp.Part.Description,
+                jp.Part.Description ?? jp.Part.Name,
                 jp.Part.Status.ToString(),
                 jp.Quantity,
                 jp.Notes))

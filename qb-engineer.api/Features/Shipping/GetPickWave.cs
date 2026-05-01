@@ -40,7 +40,7 @@ public class GetPickWaveHandler(AppDbContext db) : IRequestHandler<GetPickWaveQu
                 ShipmentLineId = l.ShipmentLineId,
                 PartId = l.PartId,
                 PartNumber = l.Part.PartNumber,
-                PartDescription = l.Part.Description,
+                PartDescription = l.Part.Description ?? l.Part.Name,
                 FromLocationName = l.FromLocation.Name,
                 BinPath = l.BinPath,
                 RequestedQuantity = l.RequestedQuantity,

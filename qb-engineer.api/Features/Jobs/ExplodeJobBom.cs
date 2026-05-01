@@ -64,7 +64,7 @@ public class ExplodeJobBomHandler(AppDbContext db, IJobRepository jobRepo) : IRe
                     var childJob = new Job
                     {
                         JobNumber = jobNumber,
-                        Title = childPart.Description,
+                        Title = childPart.Description ?? childPart.Name,
                         TrackTypeId = parentJob.TrackTypeId,
                         CurrentStageId = firstStage.Id,
                         CustomerId = parentJob.CustomerId,
@@ -112,7 +112,7 @@ public class ExplodeJobBomHandler(AppDbContext db, IJobRepository jobRepo) : IRe
                     buyItems.Add(new BomExplosionBuyItemModel(
                         childPart.Id,
                         childPart.PartNumber,
-                        childPart.Description,
+                        childPart.Description ?? childPart.Name,
                         bomEntry.Quantity,
                         childPart.PreferredVendorId,
                         childPart.PreferredVendor?.CompanyName,
@@ -156,7 +156,7 @@ public class ExplodeJobBomHandler(AppDbContext db, IJobRepository jobRepo) : IRe
                     stockItems.Add(new BomExplosionStockItemModel(
                         childPart.Id,
                         childPart.PartNumber,
-                        childPart.Description,
+                        childPart.Description ?? childPart.Name,
                         needed,
                         reserved,
                         reserved < needed));

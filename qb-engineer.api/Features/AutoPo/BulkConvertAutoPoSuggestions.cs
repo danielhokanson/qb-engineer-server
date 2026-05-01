@@ -52,7 +52,7 @@ public class BulkConvertAutoPoSuggestionsHandler(
                 po.Lines.Add(new PurchaseOrderLine
                 {
                     PartId = suggestion.PartId,
-                    Description = suggestion.Part.Description,
+                    Description = suggestion.Part.Description ?? suggestion.Part.Name,
                     OrderedQuantity = suggestion.SuggestedQty,
                     UnitPrice = 0,
                 });

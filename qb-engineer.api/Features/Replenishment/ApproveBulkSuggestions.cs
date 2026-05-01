@@ -59,7 +59,7 @@ public class ApproveBulkSuggestionsHandler(
                 po.Lines.Add(new PurchaseOrderLine
                 {
                     PartId = s.PartId,
-                    Description = s.Part.Description,
+                    Description = s.Part.Description ?? s.Part.Name,
                     // Phase 3 / WU-10 — OrderedQuantity decimal; keep Math.Ceiling.
                     OrderedQuantity = Math.Ceiling(s.SuggestedQuantity),
                     UnitPrice = 0,

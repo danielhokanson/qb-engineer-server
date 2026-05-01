@@ -266,7 +266,7 @@ public class AutoPurchaseOrderJob(
 
             var soIds = demand.SourceSalesOrderIds.Distinct().ToList();
 
-            posToCreate.Add(new PoLineItem(vendorId.Value, mode, childPartId, part.Description, orderQty, neededBy, soIds));
+            posToCreate.Add(new PoLineItem(vendorId.Value, mode, childPartId, part.Description ?? part.Name, orderQty, neededBy, soIds));
         }
 
         if (posToCreate.Count == 0)

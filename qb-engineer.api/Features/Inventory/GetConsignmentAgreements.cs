@@ -48,7 +48,7 @@ public class GetConsignmentAgreementsHandler(AppDbContext db) : IRequestHandler<
                 CustomerName = a.Customer != null ? a.Customer.Name : null,
                 PartId = a.PartId,
                 PartNumber = a.Part.PartNumber,
-                PartDescription = a.Part.Description,
+                PartDescription = a.Part.Description ?? a.Part.Name,
                 AgreedUnitPrice = a.AgreedUnitPrice,
                 MinStockQuantity = a.MinStockQuantity,
                 MaxStockQuantity = a.MaxStockQuantity,

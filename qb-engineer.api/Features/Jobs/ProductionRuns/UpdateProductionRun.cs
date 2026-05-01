@@ -88,7 +88,7 @@ public class UpdateProductionRunHandler(AppDbContext db) : IRequestHandler<Updat
             run.Job.JobNumber,
             run.PartId,
             run.Part.PartNumber,
-            run.Part.Description,
+            run.Part.Description ?? run.Part.Name,
             run.OperatorId,
             operatorName,
             run.RunNumber,
