@@ -30,9 +30,10 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task Start_DefersEntityCreation_AndStashesPayload()
     {
         var client = AuthenticatedClient();
-        var initial = JsonDocument.Parse("""{"name":"Lifecycle Test Widget","partType":"Part","material":"Steel"}""").RootElement;
+        var initial = JsonDocument.Parse(
+            """{"name":"Lifecycle Test Widget","procurementSource":"Make","inventoryClass":"Subassembly"}""").RootElement;
         var body = new StartWorkflowRunRequestModel(
-            "Part", "part-assembly-guided-v1", "guided", initial);
+            "Part", "part-make-subassembly-v1", "guided", initial);
 
         var response = await client.PostAsJsonAsync("/api/v1/workflows", body);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -67,7 +68,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     {
         var client = AuthenticatedClient();
         var body = new StartWorkflowRunRequestModel(
-            "Customer", "part-assembly-guided-v1", null, null);
+            "Customer", "part-make-subassembly-v1", null, null);
         var response = await client.PostAsJsonAsync("/api/v1/workflows", body);
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
@@ -81,7 +82,8 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
 
         // basics step has all three required fields. Send them and expect
         // materialization + advance.
-        var fields = JsonDocument.Parse("""{"name":"Adv Test","material":"Steel","partType":"Part"}""").RootElement;
+        var fields = JsonDocument.Parse(
+            """{"name":"Adv Test","procurementSource":"Make","inventoryClass":"Subassembly"}""").RootElement;
         var step = new PatchWorkflowStepRequestModel("basics", fields);
         var response = await client.PatchAsJsonAsync($"/api/v1/workflows/{run.Id}/step", step);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -109,16 +111,17 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task PatchStep_MergesDraftPayload_WithStepFields()
     {
         var client = AuthenticatedClient();
-        // Start with material in initial payload, then patch with name+partType.
-        // Materialization should merge both halves into a single CreateDraft call.
-        var initial = JsonDocument.Parse("""{"material":"Aluminum"}""").RootElement;
+        // Start with one axis in initial payload, then patch with name + the
+        // other axis. Materialization should merge both halves into a single
+        // CreateDraft call.
+        var initial = JsonDocument.Parse("""{"procurementSource":"Make"}""").RootElement;
         var body = new StartWorkflowRunRequestModel(
-            "Part", "part-assembly-guided-v1", "guided", initial);
+            "Part", "part-make-subassembly-v1", "guided", initial);
         var startResp = await client.PostAsJsonAsync("/api/v1/workflows", body);
         var run = (await startResp.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
         run.EntityId.Should().BeNull();
 
-        var fields = JsonDocument.Parse("""{"name":"Merged","partType":"Part"}""").RootElement;
+        var fields = JsonDocument.Parse("""{"name":"Merged","inventoryClass":"Subassembly"}""").RootElement;
         var resp = await client.PatchAsJsonAsync(
             $"/api/v1/workflows/{run.Id}/step",
             new PatchWorkflowStepRequestModel("basics", fields));
@@ -131,8 +134,8 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var part = await db.Parts.FirstAsync(p => p.Id == updated.EntityId!.Value);
         part.Name.Should().Be("Merged");
-        part.Material.Should().Be("Aluminum");
-        part.PartType.Should().Be(PartType.Part);
+        part.ProcurementSource.Should().Be(ProcurementSource.Make);
+        part.InventoryClass.Should().Be(InventoryClass.Subassembly);
     }
 
     [Fact]
@@ -158,7 +161,8 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         var run = await StartRunAsync(client, "{}");
 
         // Patch basics with no name — materialization must reject with 400.
-        var fields = JsonDocument.Parse("""{"partType":"Part","material":"Steel"}""").RootElement;
+        var fields = JsonDocument.Parse(
+            """{"procurementSource":"Make","inventoryClass":"Subassembly"}""").RootElement;
         var resp = await client.PatchAsJsonAsync(
             $"/api/v1/workflows/{run.Id}/step",
             new PatchWorkflowStepRequestModel("basics", fields));
@@ -176,23 +180,36 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         var client = AuthenticatedClient();
         var run = await StartRunAsync(client, "{}");
 
-        // Provide name + partType but no material → hasBasics fails (material
-        // gate not satisfied). Materialization succeeds (name present), but
-        // pointer stays on basics.
-        var fields = JsonDocument.Parse("""{"name":"Only name","partType":"Part"}""").RootElement;
-        var step = new PatchWorkflowStepRequestModel("basics", fields);
-        var response = await client.PatchAsJsonAsync($"/api/v1/workflows/{run.Id}/step", step);
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var updated = await response.Content.ReadFromJsonAsync<WorkflowRunResponseModel>();
-        updated!.CurrentStepId.Should().Be("basics");
-        updated!.EntityId.Should().NotBeNull("entity is materialized even if gate fails — name was present");
+        // Provide name only — the materialized row has the default axis enums
+        // populated automatically, so hasBasics passes and the pointer
+        // advances. To exercise the "gate fails → no advance" path we patch
+        // the bom step with no BOM rows: hasBom requires the BOM relation
+        // count > 0, so the pointer stays on bom.
+        var nameOnly = JsonDocument.Parse("""{"name":"BomGateTest"}""").RootElement;
+        var first = await client.PatchAsJsonAsync(
+            $"/api/v1/workflows/{run.Id}/step",
+            new PatchWorkflowStepRequestModel("basics", nameOnly));
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        var afterBasics = (await first.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
+        afterBasics.CurrentStepId.Should().Be("bom");
+        afterBasics.EntityId.Should().NotBeNull();
+
+        // Patch the bom step with no rows; hasBom gate fails → stay on bom.
+        var emptyBom = JsonDocument.Parse("{}").RootElement;
+        var second = await client.PatchAsJsonAsync(
+            $"/api/v1/workflows/{run.Id}/step",
+            new PatchWorkflowStepRequestModel("bom", emptyBom));
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+        var afterBom = (await second.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
+        afterBom.CurrentStepId.Should().Be("bom", "hasBom gate is unsatisfied — pointer must not advance");
     }
 
     [Fact]
     public async Task Jump_BackToCompletedStep_Allowed()
     {
         var client = AuthenticatedClient();
-        var initial = JsonDocument.Parse("""{"name":"Jumper","partType":"Part","material":"Steel"}""").RootElement;
+        var initial = JsonDocument.Parse(
+            """{"name":"Jumper","procurementSource":"Make","inventoryClass":"Subassembly"}""").RootElement;
         var run = await StartRunAsync(client, initial.GetRawText());
 
         // Advance past basics with a gate-passing patch (also materializes).
@@ -264,7 +281,8 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         var run = await StartRunAsync(client, "{}");
 
         // Patch basics so the entity materializes.
-        var fields = JsonDocument.Parse("""{"name":"Materialized","material":"Steel","partType":"Part"}""").RootElement;
+        var fields = JsonDocument.Parse(
+            """{"name":"Materialized","procurementSource":"Make","inventoryClass":"Subassembly"}""").RootElement;
         var patchResp = await client.PatchAsJsonAsync(
             $"/api/v1/workflows/{run.Id}/step",
             new PatchWorkflowStepRequestModel("basics", fields));
@@ -306,12 +324,13 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         var client = AuthenticatedClient();
         var run = await StartRunAsync(client, "{}");
 
-        // Materialize via basics patch with name only — gate fails (no material).
+        // Materialize via basics patch with name + one axis only — gate fails
+        // because the inventoryClass axis is missing.
         await client.PatchAsJsonAsync(
             $"/api/v1/workflows/{run.Id}/step",
             new PatchWorkflowStepRequestModel(
                 "basics",
-                JsonDocument.Parse("""{"name":"OnlyName","partType":"Part"}""").RootElement));
+                JsonDocument.Parse("""{"name":"OnlyName","procurementSource":"Make"}""").RootElement));
 
         var resp = await client.PostAsync($"/api/v1/workflows/{run.Id}/complete", null);
         resp.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -331,7 +350,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
             $"/api/v1/workflows/{run.Id}/step",
             new PatchWorkflowStepRequestModel(
                 "basics",
-                JsonDocument.Parse("""{"name":"NotReady","partType":"Part"}""").RootElement));
+                JsonDocument.Parse("""{"name":"NotReady","procurementSource":"Make"}""").RootElement));
         var afterPatch = (await patchResp.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
 
         var resp = await client.PostAsJsonAsync(
@@ -345,7 +364,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     {
         var client = AuthenticatedClient();
         var initial = JsonDocument.Parse(
-            """{"name":"Ready","partType":"Part","material":"Steel","manualCostOverride":12.5}""").RootElement;
+            """{"name":"Ready","procurementSource":"Make","inventoryClass":"Subassembly","manualCostOverride":12.5}""").RootElement;
         var run = await StartRunAsync(client, initial.GetRawText());
 
         // Materialize via basics patch so the entity exists.
@@ -364,7 +383,8 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
             {
                 PartNumber = $"TC-{Guid.NewGuid():N}"[..16],
                 Name = "Component",
-                PartType = PartType.Part,
+                ProcurementSource = ProcurementSource.Buy,
+                InventoryClass = InventoryClass.Component,
                 Status = PartStatus.Active,
             };
             db.Parts.Add(component);
@@ -405,21 +425,22 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task Complete_MissingValidators_ScopedToRunDefinition()
     {
         var client = AuthenticatedClient();
-        // Raw-material express workflow only gates on hasBasics + hasCost.
+        // Buy-Raw express workflow only gates on hasBasics + hasCost.
         // Start one with a name (so basics partially fills) but no cost
         // override — the missing list should NOT include hasBom or hasRouting
         // because they aren't gates of this definition.
-        var initial = JsonDocument.Parse("""{"name":"ScopeTest","partType":"RawMaterial","material":"Steel"}""").RootElement;
+        var initial = JsonDocument.Parse(
+            """{"name":"ScopeTest","procurementSource":"Buy","inventoryClass":"Raw"}""").RootElement;
         var body = new StartWorkflowRunRequestModel(
-            "Part", "part-raw-material-express-v1", "express", initial);
+            "Part", "part-buy-raw-v1", "express", initial);
         var startResp = await client.PostAsJsonAsync("/api/v1/workflows", body);
         startResp.EnsureSuccessStatusCode();
         var run = (await startResp.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
 
-        // Materialize via a step patch (workflow's only step is "all").
+        // Materialize via the workflow's first step (basics).
         await client.PatchAsJsonAsync(
             $"/api/v1/workflows/{run.Id}/step",
-            new PatchWorkflowStepRequestModel("all", initial));
+            new PatchWorkflowStepRequestModel("basics", initial));
 
         var resp = await client.PostAsync($"/api/v1/workflows/{run.Id}/complete", null);
         resp.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -443,7 +464,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
         // gates instead of dumping the full entity-type validator catalog.
         var initial = JsonDocument.Parse("""{"name":"NoMatHere"}""").RootElement;
         var body = new StartWorkflowRunRequestModel(
-            "Part", "part-raw-material-express-v1", "express", initial);
+            "Part", "part-buy-raw-v1", "express", initial);
         var startResp = await client.PostAsJsonAsync("/api/v1/workflows", body);
         var run = (await startResp.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;
         run.EntityId.Should().BeNull();
@@ -480,7 +501,8 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     public async Task StepAdvance_EmitsAuditRow()
     {
         var client = AuthenticatedClient();
-        var initial = JsonDocument.Parse("""{"name":"Auditable","partType":"Part","material":"Steel"}""").RootElement;
+        var initial = JsonDocument.Parse(
+            """{"name":"Auditable","procurementSource":"Make","inventoryClass":"Subassembly"}""").RootElement;
         var run = await StartRunAsync(client, initial.GetRawText());
 
         await client.PatchAsJsonAsync(
@@ -496,7 +518,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     }
 
     [Fact]
-    public async Task SeededCombosCount_Has14Canonical_Plus2Aliases()
+    public async Task SeededCombosCount_Has14Canonical()
     {
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -504,7 +526,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
             .AsNoTracking()
             .Where(d => d.EntityType == "Part")
             .ToListAsync();
-        partDefinitions.Should().HaveCountGreaterThanOrEqualTo(16);
+        partDefinitions.Should().HaveCountGreaterThanOrEqualTo(14);
         partDefinitions.Select(d => d.DefinitionId).Should().Contain([
             "part-buy-raw-v1",
             "part-buy-component-v1",
@@ -520,7 +542,10 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
             "part-subcontract-subassembly-v1",
             "part-phantom-subassembly-v1",
             "part-phantom-finishedgood-v1",
-            // legacy aliases
+        ]);
+        // Pre-beta: the transitional aliases were retired and the
+        // WorkflowSubstrateSeeder soft-deletes any orphaned rows it finds.
+        partDefinitions.Select(d => d.DefinitionId).Should().NotContain([
             "part-assembly-guided-v1",
             "part-raw-material-express-v1",
         ]);
@@ -546,7 +571,7 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
     {
         var initial = JsonDocument.Parse(initialJson).RootElement;
         var body = new StartWorkflowRunRequestModel(
-            "Part", "part-assembly-guided-v1", "guided", initial);
+            "Part", "part-make-subassembly-v1", "guided", initial);
         var response = await client.PostAsJsonAsync("/api/v1/workflows", body);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<WorkflowRunResponseModel>())!;

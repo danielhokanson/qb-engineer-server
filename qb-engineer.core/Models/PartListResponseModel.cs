@@ -9,8 +9,10 @@ public record PartListResponseModel(
     string? Description,
     string Revision,
     PartStatus Status,
-    PartType PartType,
-    string? Material,
+    // Pillar 1 — Decomposed type axes. The legacy single-axis PartType was
+    // retired pre-beta; the list surface now exposes the three axes directly.
+    ProcurementSource ProcurementSource,
+    InventoryClass InventoryClass,
     string? ExternalPartNumber,
     int BomEntryCount,
     DateTimeOffset CreatedAt,

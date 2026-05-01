@@ -33,7 +33,8 @@ public class ReorderAnalysisJobMigrationTests
         {
             PartNumber = partNumber,
             Name = partNumber,
-            PartType = PartType.Part,
+            ProcurementSource = ProcurementSource.Buy,
+            InventoryClass = InventoryClass.Component,
             Status = PartStatus.Active,
             LeadTimeDays = leadTimeDays,
             SafetyStockDays = safetyStockDays,

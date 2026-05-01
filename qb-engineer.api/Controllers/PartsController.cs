@@ -54,7 +54,8 @@ public class PartsController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new CreatePartCommand(
             request.Name, request.Description, request.Revision,
-            request.PartType, request.Material, request.MoldToolRef, request.ExternalPartNumber));
+            request.ProcurementSource, request.InventoryClass,
+            request.MaterialSpecId, request.ExternalPartNumber));
         return Created($"/api/v1/parts/{result.Id}", result);
     }
 

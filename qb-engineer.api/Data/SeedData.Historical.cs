@@ -51,22 +51,32 @@ public static partial class SeedData
         var seedParts = Deserialize<List<HPart>>(
             Path.Combine(seedsDir, "historical-parts.json"), opts);
 
-        var partPairs = seedParts.Select(sp => (sp.Id, Entity: new Part
+        var partPairs = seedParts.Select(sp =>
         {
-            // Phase-4 Name+Description split: the historical seed file still
-            // calls the short identifier "description". Mirror it to Name so
-            // the new schema's required field is populated, and leave the old
-            // Description column null (it was always doing double duty as
-            // name; new content goes through the API where the two are split).
-            PartNumber = sp.PartNumber, Name = sp.Description, Description = null, Revision = sp.Revision,
-            Status = Enum.Parse<PartStatus>(sp.Status),
-            PartType = Enum.Parse<PartType>(sp.PartType),
-            Material = sp.Material,
-            PreferredVendorId = vendorIds[sp.VendorRef],
-            MinStockThreshold = sp.MinStockThreshold, ReorderPoint = sp.ReorderPoint,
-            ReorderQuantity = sp.ReorderQuantity, LeadTimeDays = sp.LeadTimeDays,
-            SafetyStockDays = sp.SafetyStockDays, CreatedAt = D(sp.CreatedAt),
-        })).ToList();
+            // Pre-beta: the historical seed file still uses the legacy
+            // single-axis partType naming ("Assembly" / "RawMaterial" / etc.).
+            // Map it onto the three orthogonal axes the live schema requires.
+            // The mapping mirrors the pre-beta legacy default-axis lookup that
+            // PartWorkflowAdapter used to do at runtime — kept here as a
+            // seed-time helper so the JSON itself can stay untouched.
+            var (procurement, inventoryClass) = MapLegacyPartType(sp.PartType);
+            return (sp.Id, Entity: new Part
+            {
+                // Phase-4 Name+Description split: the historical seed file still
+                // calls the short identifier "description". Mirror it to Name so
+                // the new schema's required field is populated, and leave the old
+                // Description column null (it was always doing double duty as
+                // name; new content goes through the API where the two are split).
+                PartNumber = sp.PartNumber, Name = sp.Description, Description = null, Revision = sp.Revision,
+                Status = Enum.Parse<PartStatus>(sp.Status),
+                ProcurementSource = procurement,
+                InventoryClass = inventoryClass,
+                PreferredVendorId = vendorIds[sp.VendorRef],
+                MinStockThreshold = sp.MinStockThreshold, ReorderPoint = sp.ReorderPoint,
+                ReorderQuantity = sp.ReorderQuantity, LeadTimeDays = sp.LeadTimeDays,
+                SafetyStockDays = sp.SafetyStockDays, CreatedAt = D(sp.CreatedAt),
+            });
+        }).ToList();
 
         db.Parts.AddRange(partPairs.Select(p => p.Entity));
         await db.SaveChangesAsync();
@@ -552,6 +562,25 @@ public static partial class SeedData
     private static T Deserialize<T>(string path, JsonSerializerOptions opts) =>
         JsonSerializer.Deserialize<T>(File.ReadAllText(path), opts)
         ?? throw new InvalidOperationException($"Failed to deserialize {path}");
+
+    /// <summary>
+    /// Pre-beta: maps the legacy single-axis <c>partType</c> string used by
+    /// the historical seed JSON to the three orthogonal axes the live schema
+    /// requires. The seed JSON predates the axis decomposition; rather than
+    /// rewrite every row by hand we keep this helper to translate at load
+    /// time. New code should never call this — produce axes directly.
+    /// </summary>
+    private static (ProcurementSource, InventoryClass) MapLegacyPartType(string legacy) => legacy switch
+    {
+        "Assembly" => (ProcurementSource.Make, InventoryClass.Subassembly),
+        "RawMaterial" => (ProcurementSource.Buy, InventoryClass.Raw),
+        "Consumable" => (ProcurementSource.Buy, InventoryClass.Consumable),
+        "Tooling" => (ProcurementSource.Buy, InventoryClass.Tool),
+        "Fastener" => (ProcurementSource.Buy, InventoryClass.Component),
+        "Electronic" => (ProcurementSource.Buy, InventoryClass.Component),
+        "Packaging" => (ProcurementSource.Buy, InventoryClass.Consumable),
+        _ => (ProcurementSource.Buy, InventoryClass.Component), // "Part" catch-all
+    };
 
     // ── Seed POCOs ───────────────────────────────────────────────────────────
 

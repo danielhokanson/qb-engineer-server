@@ -2,8 +2,8 @@ namespace QBEngineer.Core.Enums;
 
 /// <summary>
 /// Pillar 1 — What inventory bucket a part lives in. One of three orthogonal
-/// axes (with <see cref="ProcurementSource"/> and ItemKind) that decompose
-/// the legacy overloaded <see cref="PartType"/> enum.
+/// axes (with <see cref="ProcurementSource"/> and ItemKind) that replaced the
+/// legacy overloaded single-axis <c>PartType</c> enum (retired pre-beta).
 ///
 /// • <c>Raw</c> — bulk input materials (bar stock, sheet, pellets, resin,
 ///   wire spool). Issued to production; not sold.

@@ -48,12 +48,12 @@ public class AutoPurchaseOrderJobMigrationTests
         var parent = new Part
         {
             PartNumber = "PARENT-001", Name = "Parent",
-            PartType = PartType.Part, Status = PartStatus.Active,
+            ProcurementSource = ProcurementSource.Buy, InventoryClass = InventoryClass.Component, Status = PartStatus.Active,
         };
         var child = new Part
         {
             PartNumber = "CHILD-001", Name = "Child",
-            PartType = PartType.Part, Status = PartStatus.Active,
+            ProcurementSource = ProcurementSource.Buy, InventoryClass = InventoryClass.Component, Status = PartStatus.Active,
             PreferredVendorId = null,
             PackSize = snapshotPackSize,
             MinOrderQty = snapshotMinOrderQty,

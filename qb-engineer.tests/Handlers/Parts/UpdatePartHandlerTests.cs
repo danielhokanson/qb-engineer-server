@@ -31,7 +31,6 @@ public class UpdatePartHandlerTests
             Description: null,
             Revision: "A",
             Status: PartStatus.Active,
-            PartType: PartType.Part,
             ProcurementSource: ProcurementSource.Buy,
             InventoryClass: InventoryClass.Component,
             ItemKindId: null,
@@ -40,10 +39,8 @@ public class UpdatePartHandlerTests
             AbcClass: null,
             ManufacturerName: null,
             ManufacturerPartNumber: null,
-            Material: null,
             MaterialSpecId: null,
             MaterialSpecLabel: null,
-            MoldToolRef: null,
             ExternalPartNumber: null,
             ExternalId: null,
             ExternalRef: null,
@@ -55,7 +52,6 @@ public class UpdatePartHandlerTests
             ReorderQuantity: null,
             LeadTimeDays: null,
             SafetyStockDays: null,
-            IsSerialTracked: false,
             ToolingAssetId: null,
             ToolingAssetName: null,
             ManualCostOverride: null,
@@ -111,6 +107,14 @@ public class UpdatePartHandlerTests
             .ReturnsAsync(BuildDetailResponse());
     }
 
+    private static UpdatePartRequestModel EmptyUpdate() => new(
+        Name: null, Description: null, Revision: null, Status: null,
+        ProcurementSource: null, InventoryClass: null,
+        ExternalPartNumber: null,
+        ToolingAssetId: null, PreferredVendorId: null,
+        MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
+        LeadTimeDays: null, SafetyStockDays: null);
+
     [Fact]
     public async Task Handle_SetsMrpFields_PersistsThem()
     {
@@ -118,17 +122,14 @@ public class UpdatePartHandlerTests
         var part = new Part { Id = 1, PartNumber = "PRT-00001", Name = "Test", Status = PartStatus.Active };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            IsMrpPlanned: true,
-            LotSizingRule: LotSizingRule.FixedQuantity,
-            FixedOrderQuantity: 100m,
-            PlanningFenceDays: 14,
-            DemandFenceDays: 7);
+        var req = EmptyUpdate() with
+        {
+            IsMrpPlanned = true,
+            LotSizingRule = LotSizingRule.FixedQuantity,
+            FixedOrderQuantity = 100m,
+            PlanningFenceDays = 14,
+            DemandFenceDays = 7,
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -148,15 +149,12 @@ public class UpdatePartHandlerTests
         var part = new Part { Id = 1, PartNumber = "PRT-00001", Name = "Test", Status = PartStatus.Active };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            StockUomId: 5,
-            PurchaseUomId: 6,
-            SalesUomId: 7);
+        var req = EmptyUpdate() with
+        {
+            StockUomId = 5,
+            PurchaseUomId = 6,
+            SalesUomId = 7,
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -174,22 +172,19 @@ public class UpdatePartHandlerTests
         var part = new Part { Id = 1, PartNumber = "PRT-00001", Name = "Test", Status = PartStatus.Active };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            MaterialSpecId: 42,
-            WeightEach: 1500.5m,
-            WeightDisplayUnit: "kg",
-            LengthMm: 100m,
-            WidthMm: 50m,
-            HeightMm: 25m,
-            DimensionDisplayUnit: "mm",
-            VolumeMl: 250m,
-            VolumeDisplayUnit: "mL",
-            ValuationClassId: 3);
+        var req = EmptyUpdate() with
+        {
+            MaterialSpecId = 42,
+            WeightEach = 1500.5m,
+            WeightDisplayUnit = "kg",
+            LengthMm = 100m,
+            WidthMm = 50m,
+            HeightMm = 25m,
+            DimensionDisplayUnit = "mm",
+            VolumeMl = 250m,
+            VolumeDisplayUnit = "mL",
+            ValuationClassId = 3,
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -214,16 +209,13 @@ public class UpdatePartHandlerTests
         var part = new Part { Id = 1, PartNumber = "PRT-00001", Name = "Test", Status = PartStatus.Active };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            RequiresReceivingInspection: true,
-            ReceivingInspectionTemplateId: 9,
-            InspectionFrequency: ReceivingInspectionFrequency.SkipLot,
-            InspectionSkipAfterN: 5);
+        var req = EmptyUpdate() with
+        {
+            RequiresReceivingInspection = true,
+            ReceivingInspectionTemplateId = 9,
+            InspectionFrequency = ReceivingInspectionFrequency.SkipLot,
+            InspectionSkipAfterN = 5,
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -254,18 +246,15 @@ public class UpdatePartHandlerTests
         };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            StockUomId: -1,
-            ReceivingInspectionTemplateId: -1,
-            MaterialSpecId: -1,
-            ValuationClassId: -1,
-            DefaultBinId: -1,
-            SourcePartId: -1);
+        var req = EmptyUpdate() with
+        {
+            StockUomId = -1,
+            ReceivingInspectionTemplateId = -1,
+            MaterialSpecId = -1,
+            ValuationClassId = -1,
+            DefaultBinId = -1,
+            SourcePartId = -1,
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -296,16 +285,13 @@ public class UpdatePartHandlerTests
         };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            IsMrpPlanned: null,
-            IsKit: null,
-            IsConfigurable: null,
-            RequiresReceivingInspection: null);
+        var req = EmptyUpdate() with
+        {
+            IsMrpPlanned = null,
+            IsKit = null,
+            IsConfigurable = null,
+            RequiresReceivingInspection = null,
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -334,16 +320,13 @@ public class UpdatePartHandlerTests
         };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            IsMrpPlanned: false,
-            IsKit: false,
-            IsConfigurable: false,
-            RequiresReceivingInspection: false);
+        var req = EmptyUpdate() with
+        {
+            IsMrpPlanned = false,
+            IsKit = false,
+            IsConfigurable = false,
+            RequiresReceivingInspection = false,
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -370,14 +353,11 @@ public class UpdatePartHandlerTests
         };
         SetupRepoForUpdate(part);
 
-        var req = new UpdatePartRequestModel(
-            Name: null, Description: null, Revision: null, Status: null, PartType: null,
-            Material: null, MoldToolRef: null, ExternalPartNumber: null,
-            ToolingAssetId: null, PreferredVendorId: null,
-            MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-            LeadTimeDays: null, SafetyStockDays: null,
-            HazmatClass: "  ",
-            HtsCode: "");
+        var req = EmptyUpdate() with
+        {
+            HazmatClass = "  ",
+            HtsCode = "",
+        };
 
         // Act
         await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
@@ -385,5 +365,35 @@ public class UpdatePartHandlerTests
         // Assert
         part.HtsCode.Should().BeNull();
         part.HazmatClass.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_AxisChange_PersistsThem()
+    {
+        // Arrange — Pre-beta: the three orthogonal axes are the only sourcing
+        // identity. Updating procurement + inventory class swaps them on the row.
+        var part = new Part
+        {
+            Id = 1,
+            PartNumber = "PRT-00001",
+            Name = "Test",
+            Status = PartStatus.Active,
+            ProcurementSource = ProcurementSource.Buy,
+            InventoryClass = InventoryClass.Component,
+        };
+        SetupRepoForUpdate(part);
+
+        var req = EmptyUpdate() with
+        {
+            ProcurementSource = ProcurementSource.Make,
+            InventoryClass = InventoryClass.Subassembly,
+        };
+
+        // Act
+        await _handler.Handle(new UpdatePartCommand(1, req), CancellationToken.None);
+
+        // Assert
+        part.ProcurementSource.Should().Be(ProcurementSource.Make);
+        part.InventoryClass.Should().Be(InventoryClass.Subassembly);
     }
 }

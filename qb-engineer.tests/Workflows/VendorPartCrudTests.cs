@@ -40,7 +40,8 @@ public class VendorPartCrudTests(CapabilityTestWebApplicationFactory factory)
         {
             PartNumber = partNumber,
             Name = partName,
-            PartType = PartType.Part,
+            ProcurementSource = ProcurementSource.Buy,
+            InventoryClass = InventoryClass.Component,
             Status = PartStatus.Active,
         };
         db.Vendors.Add(vendor);
@@ -67,7 +68,8 @@ public class VendorPartCrudTests(CapabilityTestWebApplicationFactory factory)
         {
             PartNumber = partNumber,
             Name = partName,
-            PartType = PartType.Part,
+            ProcurementSource = ProcurementSource.Buy,
+            InventoryClass = InventoryClass.Component,
             Status = PartStatus.Active,
         };
         db.Parts.Add(part);

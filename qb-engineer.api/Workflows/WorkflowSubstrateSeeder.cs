@@ -22,12 +22,27 @@ public class WorkflowSubstrateSeeder(
     AppDbContext db,
     ILogger<WorkflowSubstrateSeeder> logger) : IWorkflowSubstrateSeeder
 {
+    /// <summary>
+    /// Pre-beta: alias workflow definitions seeded under prior versions
+    /// (<c>part-assembly-guided-v1</c> and <c>part-raw-material-express-v1</c>)
+    /// no longer exist in the canonical seed set. Soft-delete any orphaned
+    /// rows so they vanish from the runtime catalog. Once the column-drop
+    /// migration has shipped to all environments this cleanup is redundant
+    /// and can come out — but it's idempotent and cheap so we leave it.
+    /// </summary>
+    private static readonly string[] RetiredAliasDefinitionIds =
+    [
+        "part-assembly-guided-v1",
+        "part-raw-material-express-v1",
+    ];
+
     public async Task SeedAsync(CancellationToken ct = default)
     {
         var prevSuppress = db.SuppressAudit;
         db.SuppressAudit = true;
         try
         {
+            await CleanupRetiredAliasesAsync(ct);
             await SeedValidatorsAsync(ct);
             await SeedDefinitionsAsync(ct);
         }
@@ -35,6 +50,28 @@ public class WorkflowSubstrateSeeder(
         {
             db.SuppressAudit = prevSuppress;
         }
+    }
+
+    private async Task CleanupRetiredAliasesAsync(CancellationToken ct)
+    {
+        var orphaned = await db.WorkflowDefinitions
+            .Where(d => RetiredAliasDefinitionIds.Contains(d.DefinitionId)
+                        && d.IsSeedData
+                        && d.DeletedAt == null)
+            .ToListAsync(ct);
+
+        if (orphaned.Count == 0) return;
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var row in orphaned)
+        {
+            row.DeletedAt = now;
+        }
+        await db.SaveChangesAsync(ct);
+
+        logger.LogInformation(
+            "[WORKFLOW-SEED] Soft-deleted {Count} retired alias definition(s): {Ids}",
+            orphaned.Count, string.Join(", ", orphaned.Select(o => o.DefinitionId)));
     }
 
     private async Task SeedValidatorsAsync(CancellationToken ct)

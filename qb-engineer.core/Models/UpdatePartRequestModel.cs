@@ -16,9 +16,11 @@ public record UpdatePartRequestModel(
     string? Description,
     string? Revision,
     PartStatus? Status,
-    PartType? PartType,
-    string? Material,
-    string? MoldToolRef,
+    // Pillar 1 — Decomposed type axes. The legacy PartType / Material /
+    // MoldToolRef fields were retired pre-beta; new updates set the three
+    // axes (ProcurementSource / InventoryClass / ItemKindId) directly.
+    ProcurementSource? ProcurementSource,
+    InventoryClass? InventoryClass,
     string? ExternalPartNumber,
     int? ToolingAssetId,
     int? PreferredVendorId,

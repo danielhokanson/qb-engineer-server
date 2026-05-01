@@ -13,9 +13,9 @@ public record CreatePartCommand(
     string Name,
     string? Description,
     string? Revision,
-    PartType PartType,
-    string? Material,
-    string? MoldToolRef,
+    ProcurementSource ProcurementSource,
+    InventoryClass InventoryClass,
+    int? MaterialSpecId,
     string? ExternalPartNumber) : IRequest<PartDetailResponseModel>;
 
 public class CreatePartCommandValidator : AbstractValidator<CreatePartCommand>
@@ -25,7 +25,6 @@ public class CreatePartCommandValidator : AbstractValidator<CreatePartCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
         RuleFor(x => x.Description).MaximumLength(2000).When(x => x.Description is not null);
         RuleFor(x => x.Revision).MaximumLength(10).When(x => x.Revision is not null);
-        RuleFor(x => x.Material).MaximumLength(200).When(x => x.Material is not null);
         RuleFor(x => x.ExternalPartNumber).MaximumLength(100).When(x => x.ExternalPartNumber is not null);
     }
 }
@@ -39,7 +38,7 @@ public class CreatePartHandler(
 {
     public async Task<PartDetailResponseModel> Handle(CreatePartCommand request, CancellationToken cancellationToken)
     {
-        var partNumber = await repo.GetNextPartNumberAsync(request.PartType, cancellationToken);
+        var partNumber = await repo.GetNextPartNumberAsync(request.InventoryClass, cancellationToken);
 
         var part = new Part
         {
@@ -47,10 +46,10 @@ public class CreatePartHandler(
             Name = request.Name.Trim(),
             Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
             Revision = request.Revision?.Trim() ?? "A",
-            PartType = request.PartType,
+            ProcurementSource = request.ProcurementSource,
+            InventoryClass = request.InventoryClass,
+            MaterialSpecId = request.MaterialSpecId,
             Status = PartStatus.Draft,
-            Material = request.Material?.Trim(),
-            MoldToolRef = request.MoldToolRef?.Trim(),
             ExternalPartNumber = request.ExternalPartNumber?.Trim(),
         };
 

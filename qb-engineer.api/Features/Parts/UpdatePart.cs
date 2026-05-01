@@ -21,7 +21,6 @@ public class UpdatePartCommandValidator : AbstractValidator<UpdatePartCommand>
             .When(x => x.Data.Name is not null);
         RuleFor(x => x.Data.Description).MaximumLength(2000).When(x => x.Data.Description is not null);
         RuleFor(x => x.Data.Revision).MaximumLength(10).When(x => x.Data.Revision is not null);
-        RuleFor(x => x.Data.Material).MaximumLength(200).When(x => x.Data.Material is not null);
         RuleFor(x => x.Data.ExternalPartNumber).MaximumLength(100).When(x => x.Data.ExternalPartNumber is not null);
         RuleFor(x => x.Data.ManufacturerName).MaximumLength(200).When(x => x.Data.ManufacturerName is not null);
         RuleFor(x => x.Data.ManufacturerPartNumber).MaximumLength(100).When(x => x.Data.ManufacturerPartNumber is not null);
@@ -57,9 +56,8 @@ public class UpdatePartHandler(
         }
         if (data.Revision is not null) part.Revision = data.Revision.Trim();
         if (data.Status.HasValue) part.Status = data.Status.Value;
-        if (data.PartType.HasValue) part.PartType = data.PartType.Value;
-        if (data.Material is not null) part.Material = data.Material.Trim();
-        if (data.MoldToolRef is not null) part.MoldToolRef = data.MoldToolRef.Trim();
+        if (data.ProcurementSource.HasValue) part.ProcurementSource = data.ProcurementSource.Value;
+        if (data.InventoryClass.HasValue) part.InventoryClass = data.InventoryClass.Value;
         if (data.ExternalPartNumber is not null) part.ExternalPartNumber = data.ExternalPartNumber.Trim();
         // Pillar 1 / Tier 0 — manufacturer + traceability + ABC class.
         if (data.ManufacturerName is not null)

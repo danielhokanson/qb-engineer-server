@@ -119,8 +119,9 @@ public class IndexDocumentHandler(
             fields.Add(("PartNumber", part.PartNumber));
         if (!string.IsNullOrWhiteSpace(part.Description))
             fields.Add(("Description", part.Description));
-        if (!string.IsNullOrWhiteSpace(part.Material))
-            fields.Add(("Material", part.Material));
+        // Pre-beta: Material free-text was retired. The MaterialSpec FK is
+        // loaded into the projection elsewhere — when needed, the AI indexer
+        // can switch to it via Include(p => p.MaterialSpec).
 
         if (part.Operations.Count > 0)
         {

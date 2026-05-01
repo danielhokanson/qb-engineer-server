@@ -34,8 +34,8 @@ public class CreatePartHandlerTests
         string? description = null,
         string revision = "A",
         PartStatus status = PartStatus.Draft,
-        PartType partType = PartType.Part,
-        string? material = null,
+        ProcurementSource procurementSource = ProcurementSource.Buy,
+        InventoryClass inventoryClass = InventoryClass.Component,
         string? externalPartNumber = null) =>
         new(
             Id: id,
@@ -44,19 +44,16 @@ public class CreatePartHandlerTests
             Description: description,
             Revision: revision,
             Status: status,
-            PartType: partType,
-            ProcurementSource: ProcurementSource.Buy,
-            InventoryClass: InventoryClass.Component,
+            ProcurementSource: procurementSource,
+            InventoryClass: inventoryClass,
             ItemKindId: null,
             ItemKindLabel: null,
             TraceabilityType: TraceabilityType.None,
             AbcClass: null,
             ManufacturerName: null,
             ManufacturerPartNumber: null,
-            Material: material,
             MaterialSpecId: null,
             MaterialSpecLabel: null,
-            MoldToolRef: null,
             ExternalPartNumber: externalPartNumber,
             ExternalId: null,
             ExternalRef: null,
@@ -68,7 +65,6 @@ public class CreatePartHandlerTests
             ReorderQuantity: null,
             LeadTimeDays: null,
             SafetyStockDays: null,
-            IsSerialTracked: false,
             ToolingAssetId: null,
             ToolingAssetName: null,
             ManualCostOverride: null,
@@ -124,15 +120,17 @@ public class CreatePartHandlerTests
     {
         // Arrange
         var name = _faker.Commerce.ProductName();
-        var material = _faker.Commerce.ProductMaterial();
 
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(PartType.Part, It.IsAny<CancellationToken>()))
+        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Component, It.IsAny<CancellationToken>()))
             .ReturnsAsync("PRT-00001");
 
         _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(BuildDetailResponse(name: name, material: material));
+            .ReturnsAsync(BuildDetailResponse(name: name));
 
-        var command = new CreatePartCommand(name, null, null, PartType.Part, material, null, null);
+        var command = new CreatePartCommand(
+            name, null, null,
+            ProcurementSource.Buy, InventoryClass.Component,
+            MaterialSpecId: null, ExternalPartNumber: null);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -147,8 +145,8 @@ public class CreatePartHandlerTests
             p.Description == null &&
             p.Revision == "A" &&
             p.Status == PartStatus.Draft &&
-            p.PartType == PartType.Part &&
-            p.Material == material.Trim()
+            p.ProcurementSource == ProcurementSource.Buy &&
+            p.InventoryClass == InventoryClass.Component
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -156,13 +154,16 @@ public class CreatePartHandlerTests
     public async Task Handle_NoRevision_DefaultsToA()
     {
         // Arrange
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(PartType.Part, It.IsAny<CancellationToken>()))
+        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Component, It.IsAny<CancellationToken>()))
             .ReturnsAsync("PRT-00001");
 
         _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildDetailResponse(name: "Test Part"));
 
-        var command = new CreatePartCommand("Test Part", null, null, PartType.Part, null, null, null);
+        var command = new CreatePartCommand(
+            "Test Part", null, null,
+            ProcurementSource.Buy, InventoryClass.Component,
+            MaterialSpecId: null, ExternalPartNumber: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -177,13 +178,19 @@ public class CreatePartHandlerTests
     public async Task Handle_WithRevision_UsesProvidedRevision()
     {
         // Arrange
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(PartType.Assembly, It.IsAny<CancellationToken>()))
+        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Subassembly, It.IsAny<CancellationToken>()))
             .ReturnsAsync("ASM-00001");
 
         _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(BuildDetailResponse(partNumber: "ASM-00001", name: "Test Part", revision: "C", partType: PartType.Assembly));
+            .ReturnsAsync(BuildDetailResponse(
+                partNumber: "ASM-00001", name: "Test Part", revision: "C",
+                procurementSource: ProcurementSource.Make,
+                inventoryClass: InventoryClass.Subassembly));
 
-        var command = new CreatePartCommand("Test Part", null, "C", PartType.Assembly, null, null, null);
+        var command = new CreatePartCommand(
+            "Test Part", null, "C",
+            ProcurementSource.Make, InventoryClass.Subassembly,
+            MaterialSpecId: null, ExternalPartNumber: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -191,7 +198,8 @@ public class CreatePartHandlerTests
         // Assert
         _partRepo.Verify(r => r.AddAsync(It.Is<Part>(p =>
             p.Revision == "C" &&
-            p.PartType == PartType.Assembly
+            p.ProcurementSource == ProcurementSource.Make &&
+            p.InventoryClass == InventoryClass.Subassembly
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -199,13 +207,19 @@ public class CreatePartHandlerTests
     public async Task Handle_StatusAlwaysDraft()
     {
         // Arrange
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(PartType.Assembly, It.IsAny<CancellationToken>()))
+        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Subassembly, It.IsAny<CancellationToken>()))
             .ReturnsAsync("ASM-00001");
 
         _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(BuildDetailResponse(partNumber: "ASM-00001", name: "Test", partType: PartType.Assembly));
+            .ReturnsAsync(BuildDetailResponse(
+                partNumber: "ASM-00001", name: "Test",
+                procurementSource: ProcurementSource.Make,
+                inventoryClass: InventoryClass.Subassembly));
 
-        var command = new CreatePartCommand("Test", null, null, PartType.Assembly, null, null, null);
+        var command = new CreatePartCommand(
+            "Test", null, null,
+            ProcurementSource.Make, InventoryClass.Subassembly,
+            MaterialSpecId: null, ExternalPartNumber: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -220,13 +234,16 @@ public class CreatePartHandlerTests
     public async Task Handle_TrimsWhitespace()
     {
         // Arrange
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(PartType.Part, It.IsAny<CancellationToken>()))
+        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Component, It.IsAny<CancellationToken>()))
             .ReturnsAsync("PRT-00001");
 
         _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(BuildDetailResponse(name: "Trimmed", description: "Long form", revision: "B", material: "Steel"));
+            .ReturnsAsync(BuildDetailResponse(name: "Trimmed", description: "Long form", revision: "B"));
 
-        var command = new CreatePartCommand("  Trimmed  ", "  Long form  ", "  B  ", PartType.Part, "  Steel  ", "  M-100  ", null);
+        var command = new CreatePartCommand(
+            "  Trimmed  ", "  Long form  ", "  B  ",
+            ProcurementSource.Buy, InventoryClass.Component,
+            MaterialSpecId: null, ExternalPartNumber: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -236,9 +253,7 @@ public class CreatePartHandlerTests
             p.PartNumber == "PRT-00001" &&
             p.Name == "Trimmed" &&
             p.Description == "Long form" &&
-            p.Revision == "B" &&
-            p.Material == "Steel" &&
-            p.MoldToolRef == "M-100"
+            p.Revision == "B"
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -246,15 +261,20 @@ public class CreatePartHandlerTests
     public async Task Handle_WithExternalPartNumber_SetsField()
     {
         // Arrange
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(PartType.RawMaterial, It.IsAny<CancellationToken>()))
+        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Raw, It.IsAny<CancellationToken>()))
             .ReturnsAsync("RAW-00001");
 
         _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildDetailResponse(
-                partNumber: "RAW-00001", name: "Steel Bar", partType: PartType.RawMaterial,
-                material: "Steel", externalPartNumber: "VENDOR-12345"));
+                partNumber: "RAW-00001", name: "Steel Bar",
+                procurementSource: ProcurementSource.Buy,
+                inventoryClass: InventoryClass.Raw,
+                externalPartNumber: "VENDOR-12345"));
 
-        var command = new CreatePartCommand("Steel Bar", null, null, PartType.RawMaterial, "Steel", null, "  VENDOR-12345  ");
+        var command = new CreatePartCommand(
+            "Steel Bar", null, null,
+            ProcurementSource.Buy, InventoryClass.Raw,
+            MaterialSpecId: null, ExternalPartNumber: "  VENDOR-12345  ");
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -269,14 +289,17 @@ public class CreatePartHandlerTests
     public async Task Handle_EmptyDescription_SavesNull()
     {
         // Arrange
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(PartType.Part, It.IsAny<CancellationToken>()))
+        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Component, It.IsAny<CancellationToken>()))
             .ReturnsAsync("PRT-00001");
 
         _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildDetailResponse(name: "Sheath Mudkipper"));
 
         // Whitespace-only Description should normalize to null on the entity.
-        var command = new CreatePartCommand("Sheath Mudkipper", "   ", null, PartType.Part, null, null, null);
+        var command = new CreatePartCommand(
+            "Sheath Mudkipper", "   ", null,
+            ProcurementSource.Buy, InventoryClass.Component,
+            MaterialSpecId: null, ExternalPartNumber: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

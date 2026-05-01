@@ -28,7 +28,6 @@ public static partial class PartMapper
             Description: part.Description,
             Revision: part.Revision,
             Status: part.Status,
-            PartType: part.PartType,
             // Pillar 1 — Decomposed type axes
             ProcurementSource: part.ProcurementSource,
             InventoryClass: part.InventoryClass,
@@ -39,11 +38,9 @@ public static partial class PartMapper
             AbcClass: part.AbcClass,
             ManufacturerName: part.ManufacturerName,
             ManufacturerPartNumber: part.ManufacturerPartNumber,
-            Material: part.Material,
             // Pillar 2 — Tier 2 material spec FK
             MaterialSpecId: part.MaterialSpecId,
             MaterialSpecLabel: part.MaterialSpec?.Label,
-            MoldToolRef: part.MoldToolRef,
             ExternalPartNumber: part.ExternalPartNumber,
             ExternalId: part.ExternalId,
             ExternalRef: part.ExternalRef,
@@ -55,7 +52,6 @@ public static partial class PartMapper
             ReorderQuantity: part.ReorderQuantity,
             LeadTimeDays: part.LeadTimeDays,
             SafetyStockDays: part.SafetyStockDays,
-            IsSerialTracked: part.IsSerialTracked,
             ToolingAssetId: part.ToolingAssetId,
             ToolingAssetName: part.ToolingAsset?.Name,
             // Workflow Pattern Phase 5 — surfaces cost gates for the hasCost predicate.

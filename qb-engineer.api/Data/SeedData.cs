@@ -648,7 +648,7 @@ public static partial class SeedData
                     Name = "Quality / Scrap Rate",
                     Description = "Parts and jobs with quality inspection outcomes",
                     EntitySource = "Parts",
-                    ColumnsJson = """["PartNumber","Description","Status","PartType","Material","Revision","CreatedAt"]""",
+                    ColumnsJson = """["PartNumber","Description","Status","ProcurementSource","InventoryClass","Revision","CreatedAt"]""",
                     GroupByField = "Status",
                     SortField = "PartNumber", SortDirection = "asc",
                     ChartType = "pie", ChartLabelField = "Status", ChartValueField = "Id",
@@ -668,7 +668,7 @@ public static partial class SeedData
                     Name = "Parts Catalog",
                     Description = "Complete parts listing with revision and stock info",
                     EntitySource = "Parts",
-                    ColumnsJson = """["PartNumber","Description","Revision","Status","PartType","Material","MinStockThreshold","ReorderPoint"]""",
+                    ColumnsJson = """["PartNumber","Description","Revision","Status","ProcurementSource","InventoryClass","MinStockThreshold","ReorderPoint"]""",
                     SortField = "PartNumber", SortDirection = "asc",
                     IsShared = true, UserId = adminId,
                 }

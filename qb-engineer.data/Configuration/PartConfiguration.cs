@@ -22,17 +22,16 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.HasIndex(e => e.Name);
         builder.Property(e => e.Description).HasMaxLength(2000).IsRequired(false);
         builder.Property(e => e.Revision).HasMaxLength(10);
-        builder.Property(e => e.Material).HasMaxLength(200);
-        builder.Property(e => e.MoldToolRef).HasMaxLength(100);
         builder.Property(e => e.ExternalPartNumber).HasMaxLength(100);
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
         builder.Property(e => e.CustomFieldValues).HasColumnType("jsonb");
 
-        // Pillar 1 — Type decomposition: three orthogonal axes replacing the
-        // overloaded PartType enum. PartType column stays for two release
-        // cycles for rollback safety; new code reads from these axes.
+        // Pillar 1 — Type decomposition: three orthogonal axes (procurement
+        // source, inventory class, item kind) are the canonical answer to
+        // "what kind of part is this?". The legacy single-axis PartType enum
+        // was retired pre-beta in favour of these three axes.
         builder.Property(e => e.ProcurementSource).HasConversion<string>().HasMaxLength(32).IsRequired();
         builder.Property(e => e.InventoryClass).HasConversion<string>().HasMaxLength(32).IsRequired();
         builder.HasIndex(e => new { e.ProcurementSource, e.InventoryClass });

@@ -293,7 +293,6 @@ public class MrpService(
                     p.MinimumOrderQuantity,
                     p.OrderMultiple,
                     p.SafetyStockDays,
-                    p.PartType,
                 })
                 .ToDictionaryAsync(p => p.Id, cancellationToken);
 

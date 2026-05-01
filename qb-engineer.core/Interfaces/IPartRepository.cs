@@ -10,7 +10,7 @@ public interface IPartRepository
     /// Legacy (non-paged) list. Kept for any internal caller that still needs
     /// the full flat array. New work should call <see cref="GetPagedAsync"/>.
     /// </summary>
-    Task<List<PartListResponseModel>> GetPartsAsync(PartStatus? status, PartType? type, string? search, CancellationToken ct);
+    Task<List<PartListResponseModel>> GetPartsAsync(PartStatus? status, string? search, CancellationToken ct);
 
     /// <summary>
     /// Paged list per the Phase 3 F7-partial / WU-17 standard contract.
@@ -21,7 +21,7 @@ public interface IPartRepository
     Task<PartDetailResponseModel?> GetDetailAsync(int id, CancellationToken ct);
     Task<Part?> FindAsync(int id, CancellationToken ct);
     Task<bool> PartNumberExistsAsync(string partNumber, int? excludeId, CancellationToken ct);
-    Task<string> GetNextPartNumberAsync(PartType partType, CancellationToken ct);
+    Task<string> GetNextPartNumberAsync(InventoryClass inventoryClass, CancellationToken ct);
     Task AddAsync(Part part, CancellationToken ct);
     Task<BOMEntry?> FindBomEntryAsync(int bomEntryId, int parentPartId, CancellationToken ct);
     Task<int> GetMaxBomSortOrderAsync(int parentPartId, CancellationToken ct);

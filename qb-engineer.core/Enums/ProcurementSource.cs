@@ -2,8 +2,8 @@ namespace QBEngineer.Core.Enums;
 
 /// <summary>
 /// Pillar 1 — How a part is sourced. One of three orthogonal axes (with
-/// <see cref="InventoryClass"/> and ItemKind) that decompose the legacy
-/// overloaded <see cref="PartType"/> enum.
+/// <see cref="InventoryClass"/> and ItemKind) that replaced the legacy
+/// overloaded single-axis <c>PartType</c> enum (retired pre-beta).
 ///
 /// • <c>Make</c> — produced in-house from a routing + BOM (or single-step
 ///   from raw stock). The shop owns the production.

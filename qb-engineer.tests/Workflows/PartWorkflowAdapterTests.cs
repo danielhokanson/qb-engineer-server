@@ -37,7 +37,8 @@ public class PartWorkflowAdapterTests(CapabilityTestWebApplicationFactory factor
             PartNumber = $"WA-{Guid.NewGuid():N}"[..16],
             Name = "Adapter Test",
             Status = PartStatus.Draft,
-            PartType = PartType.Part,
+            ProcurementSource = ProcurementSource.Buy,
+            InventoryClass = InventoryClass.Component,
         };
         db.Parts.Add(part);
         await db.SaveChangesAsync();

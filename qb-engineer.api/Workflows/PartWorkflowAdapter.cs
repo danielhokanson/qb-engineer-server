@@ -14,11 +14,11 @@ namespace QBEngineer.Api.Workflows;
 /// <summary>
 /// Workflow Pattern Phase 3 — Part-specific creator + field-applier wired
 /// into the workflow runtime. The applier reads a small known set of
-/// scalar fields (description, partType, material, moldToolRef,
-/// externalPartNumber, manualCostOverride). BOM / Operations remain edited
-/// via their existing dedicated endpoints; the workflow's BOM and routing
-/// step components call those endpoints directly (no need to duplicate
-/// nested-entity edits through this applier).
+/// scalar fields (description, three axes, externalPartNumber,
+/// manualCostOverride). BOM / Operations remain edited via their existing
+/// dedicated endpoints; the workflow's BOM and routing step components call
+/// those endpoints directly (no need to duplicate nested-entity edits
+/// through this applier).
 /// </summary>
 public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
     : IWorkflowEntityCreator, IWorkflowFieldApplier, IWorkflowEntityPromoter
@@ -27,16 +27,14 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
 
     public async Task<int> CreateDraftAsync(JsonElement? initialData, CancellationToken ct)
     {
-        var partType = ReadEnumOrDefault(initialData, "partType", PartType.Part);
-        // Pillar 1 — read the three orthogonal axes when present. Fall back to
-        // legacy partType-derived defaults so older fork-dialog payloads
-        // (still on the wire during phased rollout) keep working.
+        // Pillar 1 — three orthogonal axes are the only sourcing/inventory
+        // identity. The legacy single-axis partType + default-axis fallback
+        // helpers were retired pre-beta; fork-dialog payloads now always
+        // carry the axes directly.
         var procurement = ReadEnumOrDefault(
-            initialData, "procurementSource",
-            DefaultProcurementForLegacyPartType(partType));
+            initialData, "procurementSource", ProcurementSource.Buy);
         var inventoryClass = ReadEnumOrDefault(
-            initialData, "inventoryClass",
-            DefaultInventoryClassForLegacyPartType(partType));
+            initialData, "inventoryClass", InventoryClass.Component);
         var traceability = ReadEnumOrDefault(initialData, "traceabilityType", TraceabilityType.None);
         var abc = ReadNullableEnum<AbcClass>(initialData, "abcClass");
         var itemKindId = ReadIntOrDefault(initialData, "itemKindId");
@@ -80,7 +78,7 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         }
         var description = ReadStringOrDefault(initialData, "description");
 
-        var partNumber = await repo.GetNextPartNumberAsync(partType, ct);
+        var partNumber = await repo.GetNextPartNumberAsync(inventoryClass, ct);
 
         var part = new Part
         {
@@ -88,7 +86,6 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             Name = name.Trim(),
             Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
             Revision = ReadStringOrDefault(initialData, "revision")?.Trim() ?? "A",
-            PartType = partType,
             ProcurementSource = procurement,
             InventoryClass = inventoryClass,
             ItemKindId = itemKindId,
@@ -97,9 +94,7 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             ManufacturerName = manufacturerName,
             ManufacturerPartNumber = manufacturerPartNumber,
             Status = PartStatus.Draft,
-            Material = ReadStringOrDefault(initialData, "material")?.Trim(),
             MaterialSpecId = materialSpecId,
-            MoldToolRef = ReadStringOrDefault(initialData, "moldToolRef")?.Trim(),
             ExternalPartNumber = ReadStringOrDefault(initialData, "externalPartNumber")?.Trim(),
             ManualCostOverride = ReadDecimalOrDefault(initialData, "manualCostOverride"),
             // Pillar 2 — Tier 2 measurement profile + valuation.
@@ -127,30 +122,6 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         return await SavePartAndReturnIdAsync(part, ct);
     }
 
-    private static ProcurementSource DefaultProcurementForLegacyPartType(PartType pt) => pt switch
-    {
-        PartType.Assembly => ProcurementSource.Make,
-        PartType.RawMaterial => ProcurementSource.Buy,
-        PartType.Consumable => ProcurementSource.Buy,
-        PartType.Tooling => ProcurementSource.Buy,
-        PartType.Fastener => ProcurementSource.Buy,
-        PartType.Electronic => ProcurementSource.Buy,
-        PartType.Packaging => ProcurementSource.Buy,
-        _ => ProcurementSource.Buy, // Part catch-all — ambiguous, conservative default
-    };
-
-    private static InventoryClass DefaultInventoryClassForLegacyPartType(PartType pt) => pt switch
-    {
-        PartType.Assembly => InventoryClass.Subassembly,
-        PartType.RawMaterial => InventoryClass.Raw,
-        PartType.Consumable => InventoryClass.Consumable,
-        PartType.Tooling => InventoryClass.Tool,
-        PartType.Fastener => InventoryClass.Component,
-        PartType.Electronic => InventoryClass.Component,
-        PartType.Packaging => InventoryClass.Consumable,
-        _ => InventoryClass.Component,
-    };
-
     private async Task<int> SavePartAndReturnIdAsync(Part part, CancellationToken ct)
     {
         await db.SaveChangesAsync(ct);
@@ -172,18 +143,12 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         }
         if (TryReadString(fields, "revision", out var rev) && rev is not null)
             part.Revision = rev.Trim();
-        if (TryReadString(fields, "material", out var mat))
-            part.Material = mat?.Trim();
-        if (TryReadString(fields, "moldToolRef", out var mold))
-            part.MoldToolRef = mold?.Trim();
         if (TryReadString(fields, "externalPartNumber", out var ext))
             part.ExternalPartNumber = ext?.Trim();
         if (TryReadDecimal(fields, "manualCostOverride", out var manual))
             part.ManualCostOverride = manual;
-        if (TryReadEnum<PartType>(fields, "partType", out var pt))
-            part.PartType = pt;
-        // Pillar 1 — three-axis applies. We accept either the new axes or
-        // the legacy partType; both routes converge on the same row.
+        // Pillar 1 — three-axis applies. The legacy partType field is gone;
+        // workflow patches set the axes directly.
         if (TryReadEnum<ProcurementSource>(fields, "procurementSource", out var ps))
             part.ProcurementSource = ps;
         if (TryReadEnum<InventoryClass>(fields, "inventoryClass", out var ic))

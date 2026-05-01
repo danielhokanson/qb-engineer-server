@@ -9,7 +9,7 @@ namespace QBEngineer.Data.Repositories;
 
 public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolver) : IPartRepository
 {
-    public async Task<List<PartListResponseModel>> GetPartsAsync(PartStatus? status, PartType? type, string? search, CancellationToken ct)
+    public async Task<List<PartListResponseModel>> GetPartsAsync(PartStatus? status, string? search, CancellationToken ct)
     {
         // Legacy non-paged path. Routes through GetPagedAsync with a wide page
         // so existing internal callers behave unchanged. New work should call
@@ -17,7 +17,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
         var paged = await GetPagedAsync(new PartListQuery
         {
             Status = status,
-            Type = type,
             Q = search,
             PageSize = 200,
             // Legacy callers expected partNumber-asc ordering — preserve that.
@@ -48,8 +47,10 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
                 : q.Where(p => p.Status == PartStatus.Obsolete);
         }
 
-        if (query.Type.HasValue)
-            q = q.Where(p => p.PartType == query.Type.Value);
+        if (query.ProcurementSource.HasValue)
+            q = q.Where(p => p.ProcurementSource == query.ProcurementSource.Value);
+        if (query.InventoryClass.HasValue)
+            q = q.Where(p => p.InventoryClass == query.InventoryClass.Value);
 
         if (query.DefaultVendorId.HasValue)
             q = q.Where(p => p.PreferredVendorId == query.DefaultVendorId.Value);
@@ -61,7 +62,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
                 p.PartNumber.ToLower().Contains(term) ||
                 p.Name.ToLower().Contains(term) ||
                 (p.Description != null && p.Description.ToLower().Contains(term)) ||
-                (p.Material != null && p.Material.ToLower().Contains(term)) ||
                 (p.ExternalPartNumber != null && p.ExternalPartNumber.ToLower().Contains(term)));
         }
 
@@ -83,9 +83,8 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             "description"        => desc ? q.OrderByDescending(p => p.Description)        : q.OrderBy(p => p.Description),
             "revision"           => desc ? q.OrderByDescending(p => p.Revision)           : q.OrderBy(p => p.Revision),
             "status"             => desc ? q.OrderByDescending(p => p.Status)             : q.OrderBy(p => p.Status),
-            "parttype"           => desc ? q.OrderByDescending(p => p.PartType)           : q.OrderBy(p => p.PartType),
-            "type"               => desc ? q.OrderByDescending(p => p.PartType)           : q.OrderBy(p => p.PartType),
-            "material"           => desc ? q.OrderByDescending(p => p.Material)           : q.OrderBy(p => p.Material),
+            "procurementsource"  => desc ? q.OrderByDescending(p => p.ProcurementSource)  : q.OrderBy(p => p.ProcurementSource),
+            "inventoryclass"     => desc ? q.OrderByDescending(p => p.InventoryClass)     : q.OrderBy(p => p.InventoryClass),
             "externalpartnumber" => desc ? q.OrderByDescending(p => p.ExternalPartNumber) : q.OrderBy(p => p.ExternalPartNumber),
             "createdat"          => desc ? q.OrderByDescending(p => p.CreatedAt)          : q.OrderBy(p => p.CreatedAt),
             "updatedat"          => desc ? q.OrderByDescending(p => p.UpdatedAt)          : q.OrderBy(p => p.UpdatedAt),
@@ -108,8 +107,8 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
                 p.Description,
                 p.Revision,
                 p.Status,
-                p.PartType,
-                p.Material,
+                p.ProcurementSource,
+                p.InventoryClass,
                 p.ExternalPartNumber,
                 BomEntryCount = p.BOMEntries.Count,
                 p.CreatedAt,
@@ -130,8 +129,8 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
                     r.Description,
                     r.Revision,
                     r.Status,
-                    r.PartType,
-                    r.Material,
+                    r.ProcurementSource,
+                    r.InventoryClass,
                     r.ExternalPartNumber,
                     r.BomEntryCount,
                     r.CreatedAt,
@@ -202,7 +201,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             part.Description,
             part.Revision,
             part.Status,
-            part.PartType,
             // Pillar 1 — Decomposed type axes
             part.ProcurementSource,
             part.InventoryClass,
@@ -213,11 +211,9 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             part.AbcClass,
             part.ManufacturerName,
             part.ManufacturerPartNumber,
-            part.Material,
             // Pillar 2 — Tier 2 material spec FK
             part.MaterialSpecId,
             part.MaterialSpec?.Label,
-            part.MoldToolRef,
             part.ExternalPartNumber,
             part.ExternalId,
             part.ExternalRef,
@@ -229,7 +225,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             part.ReorderQuantity,
             part.LeadTimeDays,
             part.SafetyStockDays,
-            part.IsSerialTracked,
             part.ToolingAssetId,
             part.ToolingAsset?.Name,
             // Workflow Pattern Phase 5 — surfaces cost gates for the hasCost predicate.
@@ -299,18 +294,20 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
         return query.AnyAsync(ct);
     }
 
-    public async Task<string> GetNextPartNumberAsync(PartType partType, CancellationToken ct)
+    public async Task<string> GetNextPartNumberAsync(InventoryClass inventoryClass, CancellationToken ct)
     {
-        var prefix = partType switch
+        // Pre-beta: numbering prefix is now driven by the InventoryClass axis
+        // (replacing the legacy single PartType enum). The 11 viable
+        // procurement × inventory combos collapse onto inventory-class for
+        // numbering — most prefixes are unchanged from the legacy mapping.
+        var prefix = inventoryClass switch
         {
-            PartType.Part => "PRT-",
-            PartType.Assembly => "ASM-",
-            PartType.RawMaterial => "RAW-",
-            PartType.Consumable => "CON-",
-            PartType.Tooling => "TLG-",
-            PartType.Fastener => "FST-",
-            PartType.Electronic => "ELC-",
-            PartType.Packaging => "PKG-",
+            InventoryClass.Raw => "RAW-",
+            InventoryClass.Component => "PRT-",
+            InventoryClass.Subassembly => "ASM-",
+            InventoryClass.FinishedGood => "FG-",
+            InventoryClass.Consumable => "CON-",
+            InventoryClass.Tool => "TLG-",
             _ => "PRT-",
         };
 

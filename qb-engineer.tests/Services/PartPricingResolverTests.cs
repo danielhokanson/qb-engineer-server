@@ -19,7 +19,8 @@ public class PartPricingResolverTests
     {
         PartNumber = partNumber,
         Name = partNumber,
-        PartType = PartType.Part,
+        ProcurementSource = ProcurementSource.Buy,
+        InventoryClass = InventoryClass.Component,
         Status = PartStatus.Active,
     };
 

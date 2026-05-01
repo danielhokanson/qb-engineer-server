@@ -27,14 +27,6 @@ public class Part : BaseAuditableEntity, IActiveAware
     public PartStatus Status { get; set; } = PartStatus.Active;
 
     /// <summary>
-    /// Legacy overloaded type. Pillar 1 decomposed this into three orthogonal
-    /// axes — see <see cref="ProcurementSource"/>, <see cref="InventoryClass"/>,
-    /// and <see cref="ItemKindId"/>. Kept on the row for two release cycles
-    /// for rollback safety; new code should prefer the three axes.
-    /// </summary>
-    public PartType PartType { get; set; } = PartType.Part;
-
-    /// <summary>
     /// Pillar 1 — How the part is sourced (Make / Buy / Subcontract / Phantom).
     /// </summary>
     public ProcurementSource ProcurementSource { get; set; } = ProcurementSource.Buy;
@@ -54,7 +46,7 @@ public class Part : BaseAuditableEntity, IActiveAware
     public ReferenceData? ItemKind { get; set; }
 
     /// <summary>
-    /// Tier 0 — Replaces legacy <see cref="IsSerialTracked"/> boolean.
+    /// Tier 0 — Replaces the legacy <c>IsSerialTracked</c> boolean.
     /// Lot tracking is now expressible.
     /// </summary>
     public TraceabilityType TraceabilityType { get; set; } = TraceabilityType.None;
@@ -78,26 +70,14 @@ public class Part : BaseAuditableEntity, IActiveAware
     public string? ManufacturerPartNumber { get; set; }
 
     /// <summary>
-    /// Free-text material spec. Pillar 2 superseded by
-    /// <see cref="MaterialSpecId"/> (FK to <c>reference_data</c>, group_code
-    /// = 'part.material_spec'). Kept on the row for two release cycles for
-    /// rollback safety; new code reads <see cref="MaterialSpecId"/> first
-    /// and falls back to <see cref="Material"/>. Migration of existing
-    /// string values to FK ids is its own concern (admin tool, future).
-    /// </summary>
-    public string? Material { get; set; }
-
-    /// <summary>
-    /// Pillar 2 — Material specification reference. Replaces the free-text
-    /// <see cref="Material"/> string. FK to <c>reference_data</c> with
+    /// Pillar 2 — Material specification reference. Replaces the legacy
+    /// free-text <c>Material</c> string. FK to <c>reference_data</c> with
     /// group_code = 'part.material_spec'. See
     /// <c>phase-4-output/part-type-field-relevance.md</c> § 8 (Tier 2).
     /// </summary>
     public int? MaterialSpecId { get; set; }
     public ReferenceData? MaterialSpec { get; set; }
 
-    /// <summary>Pillar 1 — vestigial; superseded by <see cref="ToolingAssetId"/>. Keep for rollback.</summary>
-    public string? MoldToolRef { get; set; }
     public string? ExternalPartNumber { get; set; }
 
     // ─── Pillar 2 / Tier 2 — Measurement profile + valuation ───
@@ -246,9 +226,6 @@ public class Part : BaseAuditableEntity, IActiveAware
     public int? ReceivingInspectionTemplateId { get; set; }
     public ReceivingInspectionFrequency InspectionFrequency { get; set; } = ReceivingInspectionFrequency.Every;
     public int? InspectionSkipAfterN { get; set; }
-
-    // Serial tracking
-    public bool IsSerialTracked { get; set; }
 
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }

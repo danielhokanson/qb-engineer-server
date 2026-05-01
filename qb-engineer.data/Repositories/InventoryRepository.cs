@@ -179,7 +179,7 @@ public class InventoryRepository(AppDbContext db) : IInventoryRepository
                 var reserved = bins.Sum(b => b.ReservedQuantity);
 
                 return new InventoryPartSummaryResponseModel(
-                    p.Id, p.PartNumber, p.Description ?? p.Name, p.Material,
+                    p.Id, p.PartNumber, p.Description ?? p.Name,
                     onHand, reserved, onHand - reserved,
                     bins.Select(b =>
                     {

@@ -30,7 +30,7 @@ public class WorkflowDefinitionsApiTests(CapabilityTestWebApplicationFactory fac
         var rows = await client.GetFromJsonAsync<List<WorkflowDefinitionResponseModel>>(
             "/api/v1/workflow-definitions?entityType=Part");
         rows!.Select(r => r.DefinitionId).Should().Contain(
-            ["part-assembly-guided-v1", "part-raw-material-express-v1"]);
+            ["part-make-subassembly-v1", "part-buy-raw-v1"]);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class WorkflowDefinitionsApiTests(CapabilityTestWebApplicationFactory fac
     {
         var client = AuthenticatedClient();
         var resp = await client.GetFromJsonAsync<WorkflowDefinitionResponseModel>(
-            "/api/v1/workflow-definitions/part-assembly-guided-v1");
+            "/api/v1/workflow-definitions/part-make-subassembly-v1");
         resp!.EntityType.Should().Be("Part");
         resp!.DefaultMode.Should().Be("guided");
     }
@@ -52,15 +52,15 @@ public class WorkflowDefinitionsApiTests(CapabilityTestWebApplicationFactory fac
         // the Capabilities test collection runs sequentially and other
         // workflow lifecycle tests assume the seed shape.
         var original = await client.GetFromJsonAsync<WorkflowDefinitionResponseModel>(
-            "/api/v1/workflow-definitions/part-assembly-guided-v1");
+            "/api/v1/workflow-definitions/part-make-subassembly-v1");
         try
         {
             var body = new UpsertWorkflowDefinitionRequestModel(
-                "part-assembly-guided-v1", "Part", "guided",
+                "part-make-subassembly-v1", "Part", "guided",
                 """[{"id":"basics","labelKey":"k","componentName":"c","required":true,"completionGates":["hasBasics"]}]""",
                 "PartExpressFormComponent");
             var response = await client.PutAsJsonAsync(
-                "/api/v1/workflow-definitions/part-assembly-guided-v1", body);
+                "/api/v1/workflow-definitions/part-make-subassembly-v1", body);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var updated = await response.Content.ReadFromJsonAsync<WorkflowDefinitionResponseModel>();
             updated!.StepsJson.Should().Contain("basics");
@@ -68,7 +68,7 @@ public class WorkflowDefinitionsApiTests(CapabilityTestWebApplicationFactory fac
         finally
         {
             await client.PutAsJsonAsync(
-                "/api/v1/workflow-definitions/part-assembly-guided-v1",
+                "/api/v1/workflow-definitions/part-make-subassembly-v1",
                 new UpsertWorkflowDefinitionRequestModel(
                     original!.DefinitionId, original.EntityType, original.DefaultMode,
                     original.StepsJson, original.ExpressTemplateComponent));
@@ -87,8 +87,8 @@ public class WorkflowDefinitionsApiTests(CapabilityTestWebApplicationFactory fac
             {
                 EntityType = "Part",
                 EntityId = 999_001,
-                DefinitionId = "part-raw-material-express-v1",
-                CurrentStepId = "all",
+                DefinitionId = "part-buy-raw-v1",
+                CurrentStepId = "basics",
                 Mode = "express",
                 StartedAt = DateTimeOffset.UtcNow,
                 StartedByUserId = 1,
@@ -98,7 +98,7 @@ public class WorkflowDefinitionsApiTests(CapabilityTestWebApplicationFactory fac
         }
 
         var client = AuthenticatedClient();
-        var response = await client.DeleteAsync("/api/v1/workflow-definitions/part-raw-material-express-v1");
+        var response = await client.DeleteAsync("/api/v1/workflow-definitions/part-buy-raw-v1");
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
 
         // Cleanup so other tests in the collection are unaffected.

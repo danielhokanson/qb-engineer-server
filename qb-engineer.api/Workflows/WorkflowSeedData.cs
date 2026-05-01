@@ -7,10 +7,10 @@ namespace QBEngineer.Api.Workflows;
 /// <c>docs/workflow-pattern.md</c>.
 ///
 /// <para>Pillar 6 (per the audit at <c>phase-4-output/part-type-field-relevance.md §5</c>)
-/// replaces the original 2-definition seed with 14 combo-specific definitions
-/// + 2 transitional aliases. Each combo carries both an express template and
-/// a guided steps list per resolved decision #10 (user-pickable mode at
-/// runtime, with a per-combo recommended default).</para>
+/// authors 14 combo-specific definitions covering the 11 viable
+/// (procurement × inventory) combos. Each combo carries both an express
+/// template and a guided steps list per resolved decision #10 (user-pickable
+/// mode at runtime, with a per-combo recommended default).</para>
 ///
 /// <para>Step <c>componentName</c> values reference existing Angular step
 /// components today. Combos that reference <c>PartSourcingStepComponent</c>,
@@ -40,17 +40,17 @@ public static class WorkflowSeedData
     [
         new(
             ValidatorId: "hasBasics",
-            // Phase-4 Name+Description split: the canonical short identifier is
-            // now `name`. Existing in-flight runs that started under the
-            // previous predicate (which checked `description`) are not
-            // disrupted because the migration backfills `name` from the old
-            // `description` value, so any part that previously satisfied the
-            // gate continues to satisfy this one.
+            // Pre-beta: the legacy `partType` + `material` text fields were
+            // dropped along with the single-axis enum. Basics now requires the
+            // three orthogonal axes' answer (procurement source + inventory
+            // class) to be present — they are emitted by the fork dialog
+            // before the workflow even starts, so this gate is always
+            // satisfied when name is set.
             Predicate: """
             {"type":"all","of":[
               {"type":"fieldPresent","field":"name"},
-              {"type":"fieldPresent","field":"partType"},
-              {"type":"fieldPresent","field":"material"}
+              {"type":"fieldPresent","field":"procurementSource"},
+              {"type":"fieldPresent","field":"inventoryClass"}
             ]}
             """.Replace("\r", "").Replace("\n", "").Replace(" ", ""),
             DisplayNameKey: "validators.parts.hasBasics",
@@ -169,24 +169,6 @@ public static class WorkflowSeedData
             EntityType: "Part",
             DefaultMode: "express",
             StepsJson: BuildPhantomFinishedGoodStepsJson(),
-            ExpressTemplateComponent: "PartExpressFormComponent"),
-
-        // -------- Transitional aliases (Pillar 4 axis-aware picker will
-        // retire these). The fork dialog still references both ids via
-        // `workflowDefinitionForPartType`; keeping them seeded — with their
-        // original step shapes — preserves in-flight runs and prevents UI
-        // breakage. Once the axis-aware picker ships these can be deleted. --------
-        new(
-            DefinitionId: "part-assembly-guided-v1",
-            EntityType: "Part",
-            DefaultMode: "guided",
-            StepsJson: BuildLegacyAssemblyGuidedStepsJson(),
-            ExpressTemplateComponent: "PartExpressFormComponent"),
-        new(
-            DefinitionId: "part-raw-material-express-v1",
-            EntityType: "Part",
-            DefaultMode: "express",
-            StepsJson: BuildLegacyRawMaterialExpressStepsJson(),
             ExpressTemplateComponent: "PartExpressFormComponent"),
     ];
 
@@ -381,27 +363,8 @@ public static class WorkflowSeedData
     ]
     """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
 
-    // ---------- Legacy alias step builders ----------
-    // Preserve the exact step shapes that the original 2-definition seed
-    // used. The Angular fork dialog and the WorkflowRunLifecycleTests still
-    // assume these step ids ("basics","bom","routing","costing","alternates"
-    // for the guided alias; single "all" step for the express alias). Pillar
-    // 4 will swap the fork dialog over to the axis-aware picker, after which
-    // these aliases — and their builders — can be removed.
-
-    private static string BuildLegacyAssemblyGuidedStepsJson() => """
-    [
-      {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"bom","labelKey":"workflow.parts.steps.bom","componentName":"PartBomStepComponent","required":true,"completionGates":["hasBom"]},
-      {"id":"routing","labelKey":"workflow.parts.steps.routing","componentName":"PartRoutingStepComponent","required":true,"completionGates":["hasRouting"]},
-      {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
-      {"id":"alternates","labelKey":"workflow.parts.steps.alternates","componentName":"PartAlternatesStepComponent","required":false,"completionGates":[]}
-    ]
-    """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
-
-    private static string BuildLegacyRawMaterialExpressStepsJson() => """
-    [
-      {"id":"all","labelKey":"workflow.parts.steps.expressForm","componentName":"PartExpressFormComponent","required":true,"completionGates":["hasBasics","hasCost"]}
-    ]
-    """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
+    // (Pre-beta: the legacy `part-assembly-guided-v1` and
+    // `part-raw-material-express-v1` transitional alias builders were
+    // retired along with the single-axis fork dialog. New runs always go
+    // through one of the 14 canonical combo definitions above.)
 }

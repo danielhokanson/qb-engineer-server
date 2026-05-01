@@ -9,9 +9,8 @@ public record PartDetailResponseModel(
     string? Description,
     string Revision,
     PartStatus Status,
-    PartType PartType,
-    // Pillar 1 — Decomposed type axes. Replaces the overloaded PartType
-    // for new code; PartType stays on the wire two release cycles for rollback.
+    // Pillar 1 — Decomposed type axes. The single canonical answer to
+    // "what kind of part is this?" — replaces the legacy overloaded PartType.
     ProcurementSource ProcurementSource,
     InventoryClass InventoryClass,
     int? ItemKindId,
@@ -21,12 +20,11 @@ public record PartDetailResponseModel(
     AbcClass? AbcClass,
     string? ManufacturerName,
     string? ManufacturerPartNumber,
-    string? Material,
     // Pillar 2 — Tier 2: Material specification reference (FK to reference_data,
-    // group_code = 'part.material_spec'). Replaces the free-text Material string.
+    // group_code = 'part.material_spec'). The legacy free-text Material string
+    // was dropped pre-beta — MaterialSpecId is the only material identity.
     int? MaterialSpecId,
     string? MaterialSpecLabel,
-    string? MoldToolRef,
     string? ExternalPartNumber,
     string? ExternalId,
     string? ExternalRef,
@@ -38,7 +36,6 @@ public record PartDetailResponseModel(
     decimal? ReorderQuantity,
     int? LeadTimeDays,
     int? SafetyStockDays,
-    bool IsSerialTracked,
     int? ToolingAssetId,
     string? ToolingAssetName,
     // Workflow Pattern Phase 5 — surfaces cost gates so the workflow shell's

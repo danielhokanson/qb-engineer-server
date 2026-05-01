@@ -26,7 +26,10 @@ public class CreateSerialNumberHandler(AppDbContext db, IClock clock) : IRequest
         var part = await db.Parts.AsNoTracking().FirstOrDefaultAsync(p => p.Id == request.PartId, cancellationToken)
             ?? throw new KeyNotFoundException($"Part {request.PartId} not found");
 
-        if (!part.IsSerialTracked)
+        // Pre-beta: replaced legacy `IsSerialTracked` boolean with the
+        // TraceabilityType enum. Only the Serial flavour permits creating
+        // SerialNumber rows; Lot-only and untraced parts route elsewhere.
+        if (part.TraceabilityType != TraceabilityType.Serial)
             throw new InvalidOperationException($"Part {part.PartNumber} is not configured for serial tracking");
 
         var exists = await db.SerialNumbers.AnyAsync(s => s.SerialValue == request.Request.SerialValue, cancellationToken);
