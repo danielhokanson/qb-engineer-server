@@ -78,14 +78,140 @@ public class Part : BaseAuditableEntity, IActiveAware
     public string? ManufacturerPartNumber { get; set; }
 
     /// <summary>
-    /// Free-text material spec. Pillar 2 will replace with FK to
-    /// <c>reference_data</c> (group_code = 'part.material_spec'). Kept as
-    /// string for now to bound the Pillar 1+3 scope.
+    /// Free-text material spec. Pillar 2 superseded by
+    /// <see cref="MaterialSpecId"/> (FK to <c>reference_data</c>, group_code
+    /// = 'part.material_spec'). Kept on the row for two release cycles for
+    /// rollback safety; new code reads <see cref="MaterialSpecId"/> first
+    /// and falls back to <see cref="Material"/>. Migration of existing
+    /// string values to FK ids is its own concern (admin tool, future).
     /// </summary>
     public string? Material { get; set; }
+
+    /// <summary>
+    /// Pillar 2 — Material specification reference. Replaces the free-text
+    /// <see cref="Material"/> string. FK to <c>reference_data</c> with
+    /// group_code = 'part.material_spec'. See
+    /// <c>phase-4-output/part-type-field-relevance.md</c> § 8 (Tier 2).
+    /// </summary>
+    public int? MaterialSpecId { get; set; }
+    public ReferenceData? MaterialSpec { get; set; }
+
     /// <summary>Pillar 1 — vestigial; superseded by <see cref="ToolingAssetId"/>. Keep for rollback.</summary>
     public string? MoldToolRef { get; set; }
     public string? ExternalPartNumber { get; set; }
+
+    // ─── Pillar 2 / Tier 2 — Measurement profile + valuation ───
+    // See phase-4-output/part-type-field-relevance.md § 8 (Tier 2). All
+    // canonical magnitudes are stored in SI units (g, mm, mL); the matching
+    // *DisplayUnit column captures the unit the user originally typed in,
+    // so the UI can round-trip the same string the user entered.
+
+    /// <summary>
+    /// Mass per unit, in grams (canonical SI). Drives shipping-rate quoting
+    /// and weight-based capacity checks.
+    /// </summary>
+    public decimal? WeightEach { get; set; }
+
+    /// <summary>
+    /// Display unit the user typed in for <see cref="WeightEach"/> — one of
+    /// "g", "kg", "lb", "oz". Null = the stored value is in g and the UI
+    /// may pick a default.
+    /// </summary>
+    public string? WeightDisplayUnit { get; set; }
+
+    /// <summary>Primary dimension, mm.</summary>
+    public decimal? LengthMm { get; set; }
+
+    /// <summary>Secondary dimension, mm.</summary>
+    public decimal? WidthMm { get; set; }
+
+    /// <summary>Tertiary dimension, mm.</summary>
+    public decimal? HeightMm { get; set; }
+
+    /// <summary>
+    /// Display unit the user typed in for the dimension columns — one of
+    /// "mm", "cm", "m", "in", "ft".
+    /// </summary>
+    public string? DimensionDisplayUnit { get; set; }
+
+    /// <summary>Bulk volume per unit, mL (canonical SI).</summary>
+    public decimal? VolumeMl { get; set; }
+
+    /// <summary>
+    /// Display unit the user typed in for <see cref="VolumeMl"/> — one of
+    /// "mL", "L", "gal".
+    /// </summary>
+    public string? VolumeDisplayUnit { get; set; }
+
+    /// <summary>
+    /// Pillar 2 — Inventory valuation class (FIFO / LIFO / Average /
+    /// Standard etc.). FK to <c>reference_data</c>, group_code =
+    /// 'part.valuation_class'. Gated behind <c>CAP-ACCT-BUILTIN</c>
+    /// capability — admin UI to set this should later check the capability,
+    /// but the column itself is unconditional. See
+    /// <c>phase-4-output/part-type-field-relevance.md</c> § 8 (Tier 2).
+    /// </summary>
+    public int? ValuationClassId { get; set; }
+    public ReferenceData? ValuationClass { get; set; }
+
+    // ─── Pillar 2 / Tier 3 — Compliance + classification ───
+    // See phase-4-output/part-type-field-relevance.md § 8 (Tier 3).
+    // Gated by capability CAP-MD-PART-COMPLIANCE for UI exposure; the
+    // columns themselves exist unconditionally.
+
+    /// <summary>
+    /// Default tariff classification (Harmonized Tariff Schedule code) for
+    /// the part. Per-vendor variant lives on <c>VendorPart.HtsCode</c>;
+    /// this is the part-level fallback used when no vendor-specific code is
+    /// configured.
+    /// </summary>
+    public string? HtsCode { get; set; }
+
+    /// <summary>
+    /// UN/DOT hazmat class (e.g., "Class 3 Flammable"). Free-text for now —
+    /// could later become a <c>reference_data</c> lookup.
+    /// </summary>
+    public string? HazmatClass { get; set; }
+
+    /// <summary>
+    /// For lot-tracked items with expiration. Drives expiry warnings on
+    /// receipts when populated. Null = no shelf-life tracking.
+    /// </summary>
+    public int? ShelfLifeDays { get; set; }
+
+    /// <summary>
+    /// Per-item override of the global backflush default (Auto / Manual /
+    /// None). Null = follow global default.
+    /// </summary>
+    public BackflushPolicy? BackflushPolicy { get; set; }
+
+    /// <summary>
+    /// True when the part ships as a kit (a fixed assortment of components
+    /// shipped together), as opposed to a phantom assembly that explodes
+    /// at MRP and is never picked as a single unit.
+    /// </summary>
+    public bool IsKit { get; set; }
+
+    /// <summary>
+    /// Marks a parent template that drives the configurator wizard. When
+    /// true, the part itself isn't transactional — derived configured
+    /// children are.
+    /// </summary>
+    public bool IsConfigurable { get; set; }
+
+    /// <summary>
+    /// Default put-away bin for receiving. FK to <c>storage_locations</c>.
+    /// Speeds receiving / put-away by pre-filling the suggested bin.
+    /// </summary>
+    public int? DefaultBinId { get; set; }
+    public StorageLocation? DefaultBin { get; set; }
+
+    /// <summary>
+    /// For Subcontract combos — points at the pre-finishing in-house part
+    /// (raw / blank / unfinished) that gets sent out for the subcontracted
+    /// step. Self-FK on <c>parts</c>.
+    /// </summary>
+    public int? SourcePartId { get; set; }
 
     // Accounting integration
     public string? ExternalId { get; set; }

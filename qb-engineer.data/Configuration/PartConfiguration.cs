@@ -50,6 +50,51 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.Property(e => e.ManufacturerPartNumber).HasMaxLength(100);
         builder.HasIndex(e => e.ManufacturerPartNumber);
 
+        // Pillar 2 — Tier 2: Measurement profile + valuation.
+        // See phase-4-output/part-type-field-relevance.md § 8 (Tier 2).
+        builder.HasIndex(e => e.MaterialSpecId);
+        builder.HasOne(e => e.MaterialSpec)
+            .WithMany()
+            .HasForeignKey(e => e.MaterialSpecId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Property(e => e.WeightEach).HasPrecision(18, 4);
+        builder.Property(e => e.WeightDisplayUnit).HasMaxLength(8);
+        builder.Property(e => e.LengthMm).HasPrecision(18, 4);
+        builder.Property(e => e.WidthMm).HasPrecision(18, 4);
+        builder.Property(e => e.HeightMm).HasPrecision(18, 4);
+        builder.Property(e => e.DimensionDisplayUnit).HasMaxLength(8);
+        builder.Property(e => e.VolumeMl).HasPrecision(18, 4);
+        builder.Property(e => e.VolumeDisplayUnit).HasMaxLength(8);
+
+        builder.HasIndex(e => e.ValuationClassId);
+        builder.HasOne(e => e.ValuationClass)
+            .WithMany()
+            .HasForeignKey(e => e.ValuationClassId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Pillar 2 — Tier 3: Compliance + classification.
+        // See phase-4-output/part-type-field-relevance.md § 8 (Tier 3).
+        builder.Property(e => e.HtsCode).HasMaxLength(20);
+        builder.Property(e => e.HazmatClass).HasMaxLength(20);
+        builder.Property(e => e.BackflushPolicy).HasConversion<string>().HasMaxLength(16);
+        builder.Property(e => e.IsKit).HasDefaultValue(false);
+        builder.Property(e => e.IsConfigurable).HasDefaultValue(false);
+
+        builder.HasIndex(e => e.DefaultBinId);
+        builder.HasOne(e => e.DefaultBin)
+            .WithMany()
+            .HasForeignKey(e => e.DefaultBinId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // SourcePartId: self-FK without a navigation property to avoid EF
+        // cycle issues. SetNull so deleting the source doesn't cascade.
+        builder.HasIndex(e => e.SourcePartId);
+        builder.HasOne<Part>()
+            .WithMany()
+            .HasForeignKey(e => e.SourcePartId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // MRP planning
         builder.Property(e => e.FixedOrderQuantity).HasPrecision(18, 4);
         builder.Property(e => e.MinimumOrderQuantity).HasPrecision(18, 4);

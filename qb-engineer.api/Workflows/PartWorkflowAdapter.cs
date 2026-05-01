@@ -43,6 +43,28 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         var manufacturerName = ReadStringOrDefault(initialData, "manufacturerName")?.Trim();
         var manufacturerPartNumber = ReadStringOrDefault(initialData, "manufacturerPartNumber")?.Trim();
 
+        // Pillar 2 — Tier 2: measurement profile + valuation.
+        var materialSpecId = ReadIntOrDefault(initialData, "materialSpecId");
+        var weightEach = ReadDecimalOrDefault(initialData, "weightEach");
+        var weightDisplayUnit = ReadStringOrDefault(initialData, "weightDisplayUnit")?.Trim();
+        var lengthMm = ReadDecimalOrDefault(initialData, "lengthMm");
+        var widthMm = ReadDecimalOrDefault(initialData, "widthMm");
+        var heightMm = ReadDecimalOrDefault(initialData, "heightMm");
+        var dimensionDisplayUnit = ReadStringOrDefault(initialData, "dimensionDisplayUnit")?.Trim();
+        var volumeMl = ReadDecimalOrDefault(initialData, "volumeMl");
+        var volumeDisplayUnit = ReadStringOrDefault(initialData, "volumeDisplayUnit")?.Trim();
+        var valuationClassId = ReadIntOrDefault(initialData, "valuationClassId");
+
+        // Pillar 2 — Tier 3: compliance + classification.
+        var htsCode = ReadStringOrDefault(initialData, "htsCode")?.Trim();
+        var hazmatClass = ReadStringOrDefault(initialData, "hazmatClass")?.Trim();
+        var shelfLifeDays = ReadIntOrDefault(initialData, "shelfLifeDays");
+        var backflushPolicy = ReadNullableEnum<BackflushPolicy>(initialData, "backflushPolicy");
+        var isKit = ReadBoolOrDefault(initialData, "isKit") ?? false;
+        var isConfigurable = ReadBoolOrDefault(initialData, "isConfigurable") ?? false;
+        var defaultBinId = ReadIntOrDefault(initialData, "defaultBinId");
+        var sourcePartId = ReadIntOrDefault(initialData, "sourcePartId");
+
         // Phase-4 deferred-materialization: the workflow only calls this once
         // the user has submitted the first step's fields, so `name` should
         // always be present. If it isn't, we surface a 400 rather than save a
@@ -76,9 +98,29 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             ManufacturerPartNumber = manufacturerPartNumber,
             Status = PartStatus.Draft,
             Material = ReadStringOrDefault(initialData, "material")?.Trim(),
+            MaterialSpecId = materialSpecId,
             MoldToolRef = ReadStringOrDefault(initialData, "moldToolRef")?.Trim(),
             ExternalPartNumber = ReadStringOrDefault(initialData, "externalPartNumber")?.Trim(),
             ManualCostOverride = ReadDecimalOrDefault(initialData, "manualCostOverride"),
+            // Pillar 2 — Tier 2 measurement profile + valuation.
+            WeightEach = weightEach,
+            WeightDisplayUnit = weightDisplayUnit,
+            LengthMm = lengthMm,
+            WidthMm = widthMm,
+            HeightMm = heightMm,
+            DimensionDisplayUnit = dimensionDisplayUnit,
+            VolumeMl = volumeMl,
+            VolumeDisplayUnit = volumeDisplayUnit,
+            ValuationClassId = valuationClassId,
+            // Pillar 2 — Tier 3 compliance + classification.
+            HtsCode = htsCode,
+            HazmatClass = hazmatClass,
+            ShelfLifeDays = shelfLifeDays,
+            BackflushPolicy = backflushPolicy,
+            IsKit = isKit,
+            IsConfigurable = isConfigurable,
+            DefaultBinId = defaultBinId,
+            SourcePartId = sourcePartId,
         };
         db.Parts.Add(part);
         // Defer SaveChanges to the orchestrating handler (single transaction).
@@ -156,6 +198,47 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             part.ManufacturerName = mn?.Trim();
         if (TryReadString(fields, "manufacturerPartNumber", out var mpn))
             part.ManufacturerPartNumber = mpn?.Trim();
+
+        // Pillar 2 — Tier 2: measurement profile + valuation.
+        if (TryReadInt(fields, "materialSpecId", out var msId))
+            part.MaterialSpecId = msId;
+        if (TryReadDecimal(fields, "weightEach", out var weightEach))
+            part.WeightEach = weightEach;
+        if (TryReadString(fields, "weightDisplayUnit", out var wdu))
+            part.WeightDisplayUnit = wdu?.Trim();
+        if (TryReadDecimal(fields, "lengthMm", out var lengthMm))
+            part.LengthMm = lengthMm;
+        if (TryReadDecimal(fields, "widthMm", out var widthMm))
+            part.WidthMm = widthMm;
+        if (TryReadDecimal(fields, "heightMm", out var heightMm))
+            part.HeightMm = heightMm;
+        if (TryReadString(fields, "dimensionDisplayUnit", out var ddu))
+            part.DimensionDisplayUnit = ddu?.Trim();
+        if (TryReadDecimal(fields, "volumeMl", out var volumeMl))
+            part.VolumeMl = volumeMl;
+        if (TryReadString(fields, "volumeDisplayUnit", out var vdu))
+            part.VolumeDisplayUnit = vdu?.Trim();
+        if (TryReadInt(fields, "valuationClassId", out var vcId))
+            part.ValuationClassId = vcId;
+
+        // Pillar 2 — Tier 3: compliance + classification.
+        if (TryReadString(fields, "htsCode", out var hts))
+            part.HtsCode = hts?.Trim();
+        if (TryReadString(fields, "hazmatClass", out var hazmat))
+            part.HazmatClass = hazmat?.Trim();
+        if (TryReadInt(fields, "shelfLifeDays", out var shelfLife))
+            part.ShelfLifeDays = shelfLife;
+        if (TryReadNullableEnum<BackflushPolicy>(fields, "backflushPolicy", out var bp))
+            part.BackflushPolicy = bp;
+        if (TryReadBool(fields, "isKit", out var isKit) && isKit.HasValue)
+            part.IsKit = isKit.Value;
+        if (TryReadBool(fields, "isConfigurable", out var isCfg) && isCfg.HasValue)
+            part.IsConfigurable = isCfg.Value;
+        if (TryReadInt(fields, "defaultBinId", out var binId))
+            part.DefaultBinId = binId;
+        if (TryReadInt(fields, "sourcePartId", out var srcId))
+            part.SourcePartId = srcId;
+
         await db.SaveChangesAsync(ct);
     }
 
@@ -265,5 +348,45 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             return true;
         }
         return false;
+    }
+
+    private static bool TryReadNullableEnum<T>(JsonElement root, string name, out T? value) where T : struct, Enum
+    {
+        value = null;
+        if (root.ValueKind != JsonValueKind.Object) return false;
+        if (!root.TryGetProperty(name, out var prop)) return false;
+        if (prop.ValueKind == JsonValueKind.Null) { value = null; return true; }
+        if (prop.ValueKind == JsonValueKind.String && Enum.TryParse<T>(prop.GetString(), true, out var parsed))
+        {
+            value = parsed;
+            return true;
+        }
+        return false;
+    }
+
+    private static bool? ReadBoolOrDefault(JsonElement? root, string name)
+    {
+        if (root is null || root.Value.ValueKind != JsonValueKind.Object) return null;
+        if (!root.Value.TryGetProperty(name, out var prop)) return null;
+        return prop.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => null,
+        };
+    }
+
+    private static bool TryReadBool(JsonElement root, string name, out bool? value)
+    {
+        value = null;
+        if (root.ValueKind != JsonValueKind.Object) return false;
+        if (!root.TryGetProperty(name, out var prop)) return false;
+        switch (prop.ValueKind)
+        {
+            case JsonValueKind.Null: value = null; return true;
+            case JsonValueKind.True: value = true; return true;
+            case JsonValueKind.False: value = false; return true;
+            default: return false;
+        }
     }
 }
