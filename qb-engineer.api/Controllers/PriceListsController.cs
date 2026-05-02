@@ -80,6 +80,29 @@ public class PriceListsController(IMediator mediator) : ControllerBase
             routeValues: new { id = result.Id },
             value: result);
     }
+
+    // --- CSV bulk import: dry-run preview + apply -------------------------
+    // Two-step flow per the universal ERP convention surveyed in
+    // phase-4-output/pricelist-entry-edit-ux.md. Preview is read-only; apply
+    // commits via upsert by (partId, minQuantity).
+
+    [HttpPost("{id:int}/entries/import-preview")]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    public async Task<ActionResult<BulkImportPreviewResponseModel>> PreviewImport(
+        int id, IFormFile file)
+    {
+        var result = await mediator.Send(new PreviewPriceListEntryImportCommand(id, file));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/entries/import-apply")]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    public async Task<ActionResult<BulkImportResultResponseModel>> ApplyImport(
+        int id, IFormFile file)
+    {
+        var result = await mediator.Send(new ApplyPriceListEntryImportCommand(id, file));
+        return Ok(result);
+    }
 }
 
 /// <summary>
