@@ -33,9 +33,19 @@ public class PriceListsController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new CreatePriceListCommand(
             request.Name, request.Description, request.CustomerId,
-            request.IsDefault, request.EffectiveFrom, request.EffectiveTo,
+            request.IsDefault, request.IsActive, request.EffectiveFrom, request.EffectiveTo,
             request.Entries));
         return CreatedAtAction(nameof(GetPriceList), new { id = result.Id }, result);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<PriceListListItemModel>> UpdatePriceList(
+        int id, UpdatePriceListRequestModel request)
+    {
+        var result = await mediator.Send(new UpdatePriceListCommand(
+            id, request.Name, request.Description, request.IsDefault, request.IsActive,
+            request.EffectiveFrom, request.EffectiveTo));
+        return Ok(result);
     }
 
     [HttpDelete("{id:int}")]

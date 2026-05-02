@@ -58,6 +58,22 @@ public class PriceListRepository(AppDbContext db) : IPriceListRepository
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task UnsetDefaultForScopeAsync(int? customerId, int? excludePriceListId, CancellationToken ct)
+    {
+        // Scope check: customerId-bounded vs. system-wide. Equality on a
+        // nullable int doesn't translate cleanly across providers, so split
+        // the predicate explicitly.
+        var query = customerId.HasValue
+            ? db.PriceLists.Where(pl => pl.CustomerId == customerId.Value)
+            : db.PriceLists.Where(pl => pl.CustomerId == null);
+
+        if (excludePriceListId.HasValue)
+            query = query.Where(pl => pl.Id != excludePriceListId.Value);
+
+        var defaults = await query.Where(pl => pl.IsDefault).ToListAsync(ct);
+        foreach (var pl in defaults) pl.IsDefault = false;
+    }
+
     public async Task<bool> PriceListExistsAsync(int priceListId, CancellationToken ct)
     {
         return await db.PriceLists.AnyAsync(pl => pl.Id == priceListId, ct);

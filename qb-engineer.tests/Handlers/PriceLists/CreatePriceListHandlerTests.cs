@@ -21,7 +21,7 @@ public class CreatePriceListHandlerTests
             .Callback<PriceList, CancellationToken>((pl, _) => captured = pl);
 
         var command = new CreatePriceListCommand(
-            "Standard Pricing", "Default price list", null, true, null, null,
+            "Standard Pricing", "Default price list", null, true, true, null, null,
             [
                 new CreatePriceListEntryModel(1, 10.50m, 1),
                 new CreatePriceListEntryModel(2, 9.00m, 100),
@@ -55,7 +55,7 @@ public class CreatePriceListHandlerTests
         var to = from.AddMonths(6);
 
         var command = new CreatePriceListCommand(
-            "Acme Special", null, 42, false, from, to,
+            "Acme Special", null, 42, false, true, from, to,
             [new CreatePriceListEntryModel(1, 8.00m, 500)]);
 
         var handler = new CreatePriceListHandler(_repo.Object);
@@ -80,7 +80,7 @@ public class CreatePriceListHandlerTests
             .Callback<PriceList, CancellationToken>((pl, _) => captured = pl);
 
         var command = new CreatePriceListCommand(
-            "Quantity Breaks", null, null, false, null, null,
+            "Quantity Breaks", null, null, false, true, null, null,
             [
                 new CreatePriceListEntryModel(5, 20.00m, 1),
                 new CreatePriceListEntryModel(5, 18.00m, 50),
