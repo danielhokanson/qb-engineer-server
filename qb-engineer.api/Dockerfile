@@ -27,7 +27,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 
-# Install Chromium (PuppeteerSharp fallback) + ffmpeg (AI video muxing)
+# Install Chromium (PuppeteerSharp fallback) + ffmpeg (AI video muxing).
+# wget is required by the HEALTHCHECK below — aspnet:9.0 base image doesn't
+# ship it and Docker's container-level probe was reporting "unhealthy" on
+# every interval despite the API responding 200 to /api/v1/health.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
@@ -42,6 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpangocairo-1.0-0 \
     libgtk-3-0 \
     ffmpeg \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
