@@ -15,6 +15,12 @@ on:
 permissions:
   contents: read
 
+env:
+  # Force JavaScript-based actions (checkout, etc.) to run on the runner's
+  # Node.js 24 binary. Node 20 is deprecated on GitHub-hosted runners
+  # (forced default June 2026, removed September 2026).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest

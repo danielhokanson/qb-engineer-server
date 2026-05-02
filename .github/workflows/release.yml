@@ -42,6 +42,12 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  # Force JavaScript-based actions (checkout, build-push, etc.) to run on
+  # the runner's Node.js 24 binary instead of the default Node 20. Node 20
+  # is deprecated on GitHub-hosted runners (forced default June 2026,
+  # removed September 2026). The action publishers haven't all retagged
+  # yet, but the runtime override flag works on every action.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test:
