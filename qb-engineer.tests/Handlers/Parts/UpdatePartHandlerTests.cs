@@ -47,7 +47,6 @@ public class UpdatePartHandlerTests
             MinStockThreshold: null,
             ReorderPoint: null,
             ReorderQuantity: null,
-            LeadTimeDays: null,
             SafetyStockDays: null,
             ToolingAssetId: null,
             ToolingAssetName: null,
@@ -109,7 +108,7 @@ public class UpdatePartHandlerTests
         ProcurementSource: null, InventoryClass: null,
         ToolingAssetId: null, PreferredVendorId: null,
         MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
-        LeadTimeDays: null, SafetyStockDays: null);
+        SafetyStockDays: null);
 
     [Fact]
     public async Task Handle_SetsMrpFields_PersistsThem()

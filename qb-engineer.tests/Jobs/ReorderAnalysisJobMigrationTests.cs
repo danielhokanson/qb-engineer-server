@@ -12,9 +12,12 @@ using QBEngineer.Tests.Helpers;
 namespace QBEngineer.Tests.Jobs;
 
 /// <summary>
-/// Pillar 3 — proves the ReorderAnalysisJob migration didn't regress
-/// back-compat behavior when no VendorPart is configured AND that the
-/// new path is taken when a preferred VendorPart override exists.
+/// Pillar 3 — proves the ReorderAnalysisJob reads lead time from the
+/// preferred VendorPart row via IPartSourcingResolver. Vendor-specific
+/// terms live exclusively on VendorPart now (the legacy Part snapshot
+/// columns were dropped post-OEM-on-VendorPart move) — when no preferred
+/// VendorPart is configured the job falls back to a default 14-day lead
+/// time inside its cover-window math.
 /// </summary>
 public class ReorderAnalysisJobMigrationTests
 {
@@ -27,7 +30,6 @@ public class ReorderAnalysisJobMigrationTests
 
     private static Part NewPart(
         string partNumber,
-        int? leadTimeDays,
         int? safetyStockDays = null,
         decimal? minStockThreshold = null) => new()
         {
@@ -36,7 +38,6 @@ public class ReorderAnalysisJobMigrationTests
             ProcurementSource = ProcurementSource.Buy,
             InventoryClass = InventoryClass.Component,
             Status = PartStatus.Active,
-            LeadTimeDays = leadTimeDays,
             SafetyStockDays = safetyStockDays,
             MinStockThreshold = minStockThreshold,
         };
@@ -60,16 +61,17 @@ public class ReorderAnalysisJobMigrationTests
     }
 
     [Fact]
-    public async Task RunAnalysis_NoVendorPart_UsesPartSnapshotLeadTime()
+    public async Task RunAnalysis_NoPreferredVendorPart_FallsBackToDefaultLeadTime()
     {
-        // Arrange — Part snapshot LeadTime=30 with a high burn rate that
-        // falls below the cover threshold of (30 + 7) * burnRate.
+        // Arrange — no VendorPart at all. Job's NeedsReorder defaults the
+        // unresolved lead time to 14 days. With burn rate 5/day and safety
+        // stock 7 days, cover threshold = (14+7)*5 = 105 units. We seed
+        // zero stock so a suggestion is unconditionally created.
         using var db = TestDbContextFactory.Create();
-        var part = NewPart("REORDER-SNAP", leadTimeDays: 30, safetyStockDays: 7);
+        var part = NewPart("REORDER-NO-VP", safetyStockDays: 7);
         db.Parts.Add(part);
         await db.SaveChangesAsync();
 
-        // Burn rate ~5/day across 90 days (deterministic).
         await SeedConsumption(db, part.Id, qtyPerDay: 5m, days: 90);
 
         var job = new ReorderAnalysisJob(
@@ -79,25 +81,26 @@ public class ReorderAnalysisJobMigrationTests
         // Act
         await job.RunAnalysisAsync();
 
-        // Assert — the cover-days uses 30 (snapshot), so a suggestion is
-        // created. We just verify it exists for back-compat.
+        // Assert — proves the resolver is called and returns null without
+        // crashing the job; the default 14-day fallback drives the reorder.
         db.ReorderSuggestions.Should().Contain(s => s.PartId == part.Id);
     }
 
     [Fact]
-    public async Task RunAnalysis_PreferredVendorPartLeadTime_TakesPrecedence()
+    public async Task RunAnalysis_PreferredVendorPartLeadTime_DrivesCoverThreshold()
     {
-        // Arrange — Part snapshot says leadTime=30 (would trigger reorder).
-        // VendorPart override says leadTime=1 (would NOT trigger reorder
-        // for the same stock + burn rate). Verify the override is honored.
+        // Arrange — preferred VendorPart with LeadTimeDays=1. With burn
+        // rate 5/day and safety stock 7 days, cover threshold drops to
+        // (1+7)*5=40 units. We seed 100 units of stock — plenty above the
+        // threshold, so NO suggestion is created. (With the default 14-day
+        // fallback the threshold would be 105 and a suggestion would fire.)
         using var db = TestDbContextFactory.Create();
         var vendor = new Vendor { CompanyName = "Fast Vendor" };
         db.Vendors.Add(vendor);
-        var part = NewPart("REORDER-OVR", leadTimeDays: 30, safetyStockDays: 7);
+        var part = NewPart("REORDER-FAST-VP", safetyStockDays: 7);
         db.Parts.Add(part);
         await db.SaveChangesAsync();
 
-        // Seed a VendorPart that overrides the lead time DOWN to 1 day.
         db.VendorParts.Add(new VendorPart
         {
             VendorId = vendor.Id,
@@ -107,11 +110,8 @@ public class ReorderAnalysisJobMigrationTests
         });
         await db.SaveChangesAsync();
 
-        // Burn rate ~5/day for 90 days.
         await SeedConsumption(db, part.Id, qtyPerDay: 5m, days: 90);
 
-        // Seed a stock that's enough for cover at leadTime=1 (1+7)*5=40
-        // but would be insufficient for leadTime=30 ((30+7)*5=185).
         db.BinContents.Add(new BinContent
         {
             EntityType = "part",
@@ -129,10 +129,7 @@ public class ReorderAnalysisJobMigrationTests
         // Act
         await job.RunAnalysisAsync();
 
-        // Assert — VendorPart override (leadTime=1) means stock is
-        // sufficient for cover, so NO suggestion is created. With the
-        // pre-migration snapshot read (leadTime=30), a suggestion would
-        // have been created. This proves the resolver is being used.
+        // Assert — VendorPart's 1-day lead time means stock is sufficient.
         db.ReorderSuggestions.Should().NotContain(s => s.PartId == part.Id);
     }
 }

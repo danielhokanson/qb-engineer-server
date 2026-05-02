@@ -31,7 +31,6 @@ public record PartDetailResponseModel(
     decimal? MinStockThreshold,
     decimal? ReorderPoint,
     decimal? ReorderQuantity,
-    int? LeadTimeDays,
     int? SafetyStockDays,
     int? ToolingAssetId,
     string? ToolingAssetName,

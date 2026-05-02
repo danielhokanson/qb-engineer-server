@@ -57,7 +57,6 @@ public class MrpService(
                     p.Id,
                     p.PartNumber,
                     p.Description,
-                    p.LeadTimeDays,
                     p.LotSizingRule,
                     p.FixedOrderQuantity,
                     p.MinimumOrderQuantity,
@@ -287,7 +286,6 @@ public class MrpService(
                     p.Id,
                     p.PartNumber,
                     p.Description,
-                    p.LeadTimeDays,
                     p.LotSizingRule,
                     p.FixedOrderQuantity,
                     p.MinimumOrderQuantity,
@@ -352,10 +350,11 @@ public class MrpService(
                         : [];
 
                     var part = allParts.GetValueOrDefault(partId);
-                    // Pillar 3: prefer per-vendor lead time from the resolver.
+                    // Lead time comes from the preferred VendorPart row;
+                    // default 14 days when no preferred VendorPart is set.
                     var resolvedLeadTime = sourcingByPart.TryGetValue(partId, out var sv)
                         ? sv.LeadTimeDays
-                        : part?.LeadTimeDays;
+                        : null;
                     var leadTime = resolvedLeadTime ?? 14;
                     var lotRule = part?.LotSizingRule ?? LotSizingRule.LotForLot;
 
@@ -427,10 +426,10 @@ public class MrpService(
                                 foreach (var child in children)
                                 {
                                     var childQty = orderQty * child.Quantity;
-                                    // Pillar 3: BOM-level override wins, then preferred VendorPart, then Part snapshot.
+                                    // BOM-level override wins, then preferred VendorPart, then default 14 days.
                                     var childResolvedLeadTime = sourcingByPart.TryGetValue(child.ChildPartId, out var csv)
                                         ? csv.LeadTimeDays
-                                        : allParts.GetValueOrDefault(child.ChildPartId)?.LeadTimeDays;
+                                        : null;
                                     var childLeadTime = child.LeadTimeDays ?? childResolvedLeadTime ?? 14;
                                     var childRequiredDate = startDate;
 

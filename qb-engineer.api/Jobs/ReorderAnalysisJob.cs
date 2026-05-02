@@ -79,9 +79,10 @@ public class ReorderAnalysisJob(
 
             var partIds = parts.Select(p => p.Id).ToList();
 
-            // Pillar 3 — bulk-resolve effective sourcing values for this
-            // chunk. Prefers the preferred VendorPart row's LeadTimeDays
-            // when one exists, falls back to the Part snapshot otherwise.
+            // Bulk-resolve effective sourcing values for this chunk. Reads
+            // come from the preferred VendorPart row only — the Part-level
+            // LeadTimeDays snapshot was dropped along with the OEM-on-
+            // VendorPart move.
             var sourcingByPart = await sourcingResolver.ResolveManyAsync(partIds, ct);
 
             // Current stock per part (for this chunk)
@@ -154,7 +155,7 @@ public class ReorderAnalysisJob(
 
                 var effectiveLeadTime = sourcingByPart.TryGetValue(part.Id, out var sv)
                     ? sv.LeadTimeDays
-                    : part.LeadTimeDays;
+                    : null;
 
                 if (!NeedsReorder(part, effectiveLeadTime, available, incomingQty, pending.BurnRateDailyAvg))
                 {
@@ -199,7 +200,7 @@ public class ReorderAnalysisJob(
 
                 var effectiveLeadTime = sourcingByPart.TryGetValue(part.Id, out var sv)
                     ? sv.LeadTimeDays
-                    : part.LeadTimeDays;
+                    : null;
 
                 if (!NeedsReorder(part, effectiveLeadTime, available, incomingQty, bestBurnRate))
                     continue;

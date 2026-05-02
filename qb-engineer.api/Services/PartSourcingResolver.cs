@@ -8,10 +8,13 @@ namespace QBEngineer.Api.Services;
 
 /// <summary>
 /// Pillar 3 — default <see cref="IPartSourcingResolver"/> implementation.
-/// Reads from <c>VendorPart</c> with <c>IsPreferred=true</c> and falls back
-/// to the <c>Part</c> snapshot columns. Soft-deleted VendorPart rows are
-/// skipped via the global query filter on BaseEntity. All queries use
-/// <see cref="EntityFrameworkQueryableExtensions.AsNoTracking{T}"/>.
+/// Reads vendor-specific sourcing terms (lead time / MOQ / pack size) from
+/// the part's preferred VendorPart row. The Part-level snapshot columns
+/// were dropped along with the OEM-on-VendorPart move — there is no
+/// fallback to <c>Part</c> here. When no preferred VendorPart exists for
+/// a part, all three values come back as null and consumers must apply
+/// their own defaults (e.g. AutoPO uses 14 days when no lead time
+/// resolves; reorder analysis treats null as "no cover-window data").
 /// </summary>
 public class PartSourcingResolver(AppDbContext db) : IPartSourcingResolver
 {
@@ -29,30 +32,12 @@ public class PartSourcingResolver(AppDbContext db) : IPartSourcingResolver
             })
             .FirstOrDefaultAsync(ct);
 
-        var snapshot = await db.Parts
-            .AsNoTracking()
-            .Where(p => p.Id == partId)
-            .Select(p => new
-            {
-                p.LeadTimeDays,
-                p.MinOrderQty,
-                p.PackSize,
-            })
-            .FirstOrDefaultAsync(ct);
-
-        // Coalesce per-column: prefer VendorPart override, then Part snapshot.
-        var leadTime = preferred?.LeadTimeDays ?? snapshot?.LeadTimeDays;
-        var minOrderQty = preferred?.MinOrderQty
-            ?? (snapshot?.MinOrderQty.HasValue == true ? (decimal?)snapshot.MinOrderQty.Value : null);
-        var packSize = preferred?.PackSize
-            ?? (snapshot?.PackSize.HasValue == true ? (decimal?)snapshot.PackSize.Value : null);
-
         return new PartSourcingValues(
             PartId: partId,
             PreferredVendorId: preferred?.VendorId,
-            LeadTimeDays: leadTime,
-            MinOrderQty: minOrderQty,
-            PackSize: packSize,
+            LeadTimeDays: preferred?.LeadTimeDays,
+            MinOrderQty: preferred?.MinOrderQty,
+            PackSize: preferred?.PackSize,
             ResolvedFromVendorPart: preferred is not null);
     }
 
@@ -65,7 +50,7 @@ public class PartSourcingResolver(AppDbContext db) : IPartSourcingResolver
         // De-dup defensively — callers may not always pass a HashSet.
         var idList = partIds.Distinct().ToList();
 
-        // One query for all preferred VendorPart rows.
+        // Single query for all preferred VendorPart rows in the batch.
         var preferredRows = await db.VendorParts
             .AsNoTracking()
             .Where(vp => idList.Contains(vp.PartId) && vp.IsPreferred)
@@ -81,40 +66,18 @@ public class PartSourcingResolver(AppDbContext db) : IPartSourcingResolver
 
         var preferredByPart = preferredRows.ToDictionary(r => r.PartId);
 
-        // One query for the Part snapshot columns.
-        var snapshotRows = await db.Parts
-            .AsNoTracking()
-            .Where(p => idList.Contains(p.Id))
-            .Select(p => new
-            {
-                p.Id,
-                p.LeadTimeDays,
-                p.MinOrderQty,
-                p.PackSize,
-            })
-            .ToListAsync(ct);
-
-        var snapshotByPart = snapshotRows.ToDictionary(r => r.Id);
-
         var result = new Dictionary<int, PartSourcingValues>(idList.Count);
 
         foreach (var id in idList)
         {
             preferredByPart.TryGetValue(id, out var preferred);
-            snapshotByPart.TryGetValue(id, out var snapshot);
-
-            var leadTime = preferred?.LeadTimeDays ?? snapshot?.LeadTimeDays;
-            var minOrderQty = preferred?.MinOrderQty
-                ?? (snapshot?.MinOrderQty.HasValue == true ? (decimal?)snapshot.MinOrderQty.Value : null);
-            var packSize = preferred?.PackSize
-                ?? (snapshot?.PackSize.HasValue == true ? (decimal?)snapshot.PackSize.Value : null);
 
             result[id] = new PartSourcingValues(
                 PartId: id,
                 PreferredVendorId: preferred?.VendorId,
-                LeadTimeDays: leadTime,
-                MinOrderQty: minOrderQty,
-                PackSize: packSize,
+                LeadTimeDays: preferred?.LeadTimeDays,
+                MinOrderQty: preferred?.MinOrderQty,
+                PackSize: preferred?.PackSize,
                 ResolvedFromVendorPart: preferred is not null);
         }
 

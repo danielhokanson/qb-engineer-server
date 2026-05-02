@@ -54,11 +54,14 @@ public class PartWorkflowAdapterTests(CapabilityTestWebApplicationFactory factor
     }
 
     [Fact]
-    public async Task ApplyAsync_PersistsSourcingClusterFields()
+    public async Task ApplyAsync_SourcingCluster_PersistsPreferredVendorIdOnly()
     {
+        // The Sourcing step's cluster payload is allowed to carry per-vendor
+        // values for back-compat with older clients, but the only field that
+        // lands on Part is preferredVendorId — lead time / MOQ / pack size
+        // are vendor-specific and live on the VendorPart row now.
         var partId = await CreateDraftPartAsync();
 
-        // Seed a vendor row so PreferredVendorId is meaningful.
         int vendorId;
         using (var seed = factory.Services.CreateScope())
         {
@@ -88,9 +91,11 @@ public class PartWorkflowAdapterTests(CapabilityTestWebApplicationFactory factor
         var ctx = verify.ServiceProvider.GetRequiredService<AppDbContext>();
         var part = await ctx.Parts.AsNoTracking().FirstAsync(p => p.Id == partId);
         part.PreferredVendorId.Should().Be(vendorId);
-        part.LeadTimeDays.Should().Be(14);
-        part.MinOrderQty.Should().Be(25);
-        part.PackSize.Should().Be(10);
+
+        // No VendorPart row was created — vendor-specific terms must reach
+        // the part through the Vendor Parts workflow step, not Sourcing.
+        var hasVendorPartRow = await ctx.VendorParts.AnyAsync(vp => vp.PartId == partId);
+        hasVendorPartRow.Should().BeFalse();
     }
 
     [Fact]
@@ -249,7 +254,6 @@ public class PartWorkflowAdapterTests(CapabilityTestWebApplicationFactory factor
         {
             var db = seed.ServiceProvider.GetRequiredService<AppDbContext>();
             var p = await db.Parts.FirstAsync(x => x.Id == partId);
-            p.LeadTimeDays = 99;
             p.MinStockThreshold = 42m;
             p.ToolingAssetId = null; // already null but keep for symmetry
             p.PlanningFenceDays = 14;
@@ -258,7 +262,6 @@ public class PartWorkflowAdapterTests(CapabilityTestWebApplicationFactory factor
 
         var fields = JsonDocument.Parse("""
         {
-          "leadTimeDays": null,
           "minStockThreshold": null,
           "planningFenceDays": null
         }
@@ -273,7 +276,6 @@ public class PartWorkflowAdapterTests(CapabilityTestWebApplicationFactory factor
         using var verify = factory.Services.CreateScope();
         var ctx = verify.ServiceProvider.GetRequiredService<AppDbContext>();
         var part = await ctx.Parts.AsNoTracking().FirstAsync(p => p.Id == partId);
-        part.LeadTimeDays.Should().BeNull();
         part.MinStockThreshold.Should().BeNull();
         part.PlanningFenceDays.Should().BeNull();
     }

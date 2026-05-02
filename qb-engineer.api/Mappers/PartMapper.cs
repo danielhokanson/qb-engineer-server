@@ -47,7 +47,6 @@ public static partial class PartMapper
             MinStockThreshold: part.MinStockThreshold,
             ReorderPoint: part.ReorderPoint,
             ReorderQuantity: part.ReorderQuantity,
-            LeadTimeDays: part.LeadTimeDays,
             SafetyStockDays: part.SafetyStockDays,
             ToolingAssetId: part.ToolingAssetId,
             ToolingAssetName: part.ToolingAsset?.Name,

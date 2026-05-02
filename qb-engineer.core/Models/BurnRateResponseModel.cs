@@ -18,6 +18,12 @@ public record BurnRateResponseModel(
     decimal? MinStockThreshold,
     decimal? ReorderPoint,
     decimal? ReorderQuantity,
+    /// <summary>
+    /// Effective lead time as resolved from the preferred VendorPart row, or
+    /// null if the part has no preferred VendorPart configured. Vendor-
+    /// specific now — Part-level snapshot was retired with the OEM-on-
+    /// VendorPart move.
+    /// </summary>
     int? LeadTimeDays,
     int? SafetyStockDays,
     bool NeedsReorder);

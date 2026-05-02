@@ -73,7 +73,7 @@ public static partial class SeedData
                 InventoryClass = inventoryClass,
                 PreferredVendorId = vendorIds[sp.VendorRef],
                 MinStockThreshold = sp.MinStockThreshold, ReorderPoint = sp.ReorderPoint,
-                ReorderQuantity = sp.ReorderQuantity, LeadTimeDays = sp.LeadTimeDays,
+                ReorderQuantity = sp.ReorderQuantity,
                 SafetyStockDays = sp.SafetyStockDays, CreatedAt = D(sp.CreatedAt),
             });
         }).ToList();
@@ -83,6 +83,25 @@ public static partial class SeedData
 
         var partIds = partPairs.ToDictionary(p => p.Id, p => p.Entity.Id);
         Log.Information("Seeded {Count} parts", partPairs.Count);
+
+        // Seed a preferred VendorPart row for each historical part — carries
+        // the per-vendor lead time the JSON had under the legacy schema. OEM
+        // identity / pricing tiers are left empty; the live UI will surface
+        // them as "no manufacturer reported yet" / "no price configured".
+        var vendorParts = seedParts
+            .Where(sp => vendorIds.ContainsKey(sp.VendorRef))
+            .Select(sp => new VendorPart
+            {
+                PartId = partIds[sp.Id],
+                VendorId = vendorIds[sp.VendorRef],
+                LeadTimeDays = sp.LeadTimeDays,
+                IsApproved = true,
+                IsPreferred = true,
+            })
+            .ToList();
+        db.VendorParts.AddRange(vendorParts);
+        await db.SaveChangesAsync();
+        Log.Information("Seeded {Count} preferred vendor-parts", vendorParts.Count);
 
         // ── 3. Customers (new + existing extras) ─────────────────────────────
         var seedCustomers = Deserialize<HCustomersFile>(

@@ -9,34 +9,29 @@ namespace QBEngineer.Tests.Services;
 
 /// <summary>
 /// Pillar 3 — coverage for the IPartSourcingResolver implementation.
-/// Verifies the per-column coalescing rules: prefer VendorPart when
-/// configured, fall back to Part snapshot for any column the preferred
-/// VendorPart leaves null.
+/// Vendor-specific terms (lead time / MOQ / pack size) live exclusively
+/// on the preferred VendorPart row; the per-column Part-snapshot fallback
+/// was retired alongside the OEM-on-VendorPart move. When no preferred
+/// VendorPart exists for a part the resolver returns null for every
+/// vendor-specific value and consumers apply their own defaults.
 /// </summary>
 public class PartSourcingResolverTests
 {
-    private static Part NewPart(
-        string partNumber,
-        int? leadTimeDays = null,
-        int? minOrderQty = null,
-        int? packSize = null) => new()
-        {
-            PartNumber = partNumber,
-            Name = partNumber,
-            ProcurementSource = ProcurementSource.Buy,
-            InventoryClass = InventoryClass.Component,
-            Status = PartStatus.Active,
-            LeadTimeDays = leadTimeDays,
-            MinOrderQty = minOrderQty,
-            PackSize = packSize,
-        };
+    private static Part NewPart(string partNumber) => new()
+    {
+        PartNumber = partNumber,
+        Name = partNumber,
+        ProcurementSource = ProcurementSource.Buy,
+        InventoryClass = InventoryClass.Component,
+        Status = PartStatus.Active,
+    };
 
     [Fact]
-    public async Task ResolveAsync_NoVendorPart_FallsBackToPartSnapshot()
+    public async Task ResolveAsync_NoVendorPart_ReturnsNullsAndUnresolvedFlag()
     {
-        // Arrange — Part snapshot only
+        // Arrange — Part with no VendorPart rows at all.
         using var db = TestDbContextFactory.Create();
-        var part = NewPart("SNAP-001", leadTimeDays: 21, minOrderQty: 50, packSize: 10);
+        var part = NewPart("NO-VP-001");
         db.Parts.Add(part);
         await db.SaveChangesAsync();
 
@@ -48,20 +43,20 @@ public class PartSourcingResolverTests
         // Assert
         result.PartId.Should().Be(part.Id);
         result.PreferredVendorId.Should().BeNull();
-        result.LeadTimeDays.Should().Be(21);
-        result.MinOrderQty.Should().Be(50m);
-        result.PackSize.Should().Be(10m);
+        result.LeadTimeDays.Should().BeNull();
+        result.MinOrderQty.Should().BeNull();
+        result.PackSize.Should().BeNull();
         result.ResolvedFromVendorPart.Should().BeFalse();
     }
 
     [Fact]
-    public async Task ResolveAsync_PreferredVendorPart_OverridesPartSnapshot()
+    public async Task ResolveAsync_PreferredVendorPart_ReturnsItsValues()
     {
-        // Arrange — preferred VendorPart with non-null overrides on every column
+        // Arrange — preferred VendorPart with explicit values.
         using var db = TestDbContextFactory.Create();
         var vendor = new Vendor { CompanyName = "Acme Supply" };
         db.Vendors.Add(vendor);
-        var part = NewPart("OVR-001", leadTimeDays: 21, minOrderQty: 50, packSize: 10);
+        var part = NewPart("PREF-001");
         db.Parts.Add(part);
         await db.SaveChangesAsync();
 
@@ -90,14 +85,14 @@ public class PartSourcingResolverTests
     }
 
     [Fact]
-    public async Task ResolveAsync_PreferredVendorPartWithNulls_CoalescesPerColumn()
+    public async Task ResolveAsync_PreferredVendorPartWithNulls_ReturnsNullsForUnsetColumns()
     {
-        // Arrange — preferred VendorPart with NULL overrides; the per-column
-        // coalesce should fall back to the Part snapshot for each null column.
+        // Arrange — preferred VendorPart row exists but only sets one column.
+        // The resolver reflects exactly what's on the row (no fallback path).
         using var db = TestDbContextFactory.Create();
         var vendor = new Vendor { CompanyName = "Partial Supply" };
         db.Vendors.Add(vendor);
-        var part = NewPart("MIX-001", leadTimeDays: 14, minOrderQty: 25, packSize: 5);
+        var part = NewPart("MIX-001");
         db.Parts.Add(part);
         await db.SaveChangesAsync();
 
@@ -106,9 +101,9 @@ public class PartSourcingResolverTests
             VendorId = vendor.Id,
             PartId = part.Id,
             IsPreferred = true,
-            LeadTimeDays = 3,        // override
-            MinOrderQty = null,      // fall back to snapshot
-            PackSize = null,         // fall back to snapshot
+            LeadTimeDays = 3,
+            MinOrderQty = null,
+            PackSize = null,
         });
         await db.SaveChangesAsync();
 
@@ -119,21 +114,21 @@ public class PartSourcingResolverTests
 
         // Assert
         result.PreferredVendorId.Should().Be(vendor.Id);
-        result.LeadTimeDays.Should().Be(3);          // from VendorPart override
-        result.MinOrderQty.Should().Be(25m);         // fell back to Part
-        result.PackSize.Should().Be(5m);             // fell back to Part
+        result.LeadTimeDays.Should().Be(3);
+        result.MinOrderQty.Should().BeNull();
+        result.PackSize.Should().BeNull();
         result.ResolvedFromVendorPart.Should().BeTrue();
     }
 
     [Fact]
     public async Task ResolveAsync_NonPreferredVendorPart_IsIgnored()
     {
-        // Arrange — there's a VendorPart row but it's NOT preferred. Should
-        // behave as if there was no VendorPart at all.
+        // Arrange — VendorPart row exists but IsPreferred=false. The resolver
+        // only looks at preferred rows, so this part has no resolved values.
         using var db = TestDbContextFactory.Create();
         var vendor = new Vendor { CompanyName = "Alt Vendor" };
         db.Vendors.Add(vendor);
-        var part = NewPart("NONPREF-001", leadTimeDays: 14, minOrderQty: 25, packSize: 5);
+        var part = NewPart("NONPREF-001");
         db.Parts.Add(part);
         await db.SaveChangesAsync();
 
@@ -153,37 +148,38 @@ public class PartSourcingResolverTests
         // Act
         var result = await resolver.ResolveAsync(part.Id, CancellationToken.None);
 
-        // Assert — non-preferred row is ignored, snapshot wins.
+        // Assert
         result.PreferredVendorId.Should().BeNull();
-        result.LeadTimeDays.Should().Be(14);
-        result.MinOrderQty.Should().Be(25m);
-        result.PackSize.Should().Be(5m);
+        result.LeadTimeDays.Should().BeNull();
+        result.MinOrderQty.Should().BeNull();
+        result.PackSize.Should().BeNull();
         result.ResolvedFromVendorPart.Should().BeFalse();
     }
 
     [Fact]
     public async Task ResolveManyAsync_MixedParts_ResolvesEachIndependently()
     {
-        // Arrange — three parts: one snapshot-only, one fully overridden, one mixed.
+        // Arrange — three parts: one with no VendorPart, one with a preferred
+        // VendorPart, one with only a non-preferred VendorPart.
         using var db = TestDbContextFactory.Create();
         var vendor = new Vendor { CompanyName = "Multi" };
         db.Vendors.Add(vendor);
-        var snapOnly = NewPart("BULK-SNAP", leadTimeDays: 30, minOrderQty: 10, packSize: 2);
-        var fullOver = NewPart("BULK-OVR", leadTimeDays: 30, minOrderQty: 10, packSize: 2);
-        var mixed = NewPart("BULK-MIX", leadTimeDays: 30, minOrderQty: 10, packSize: 2);
-        db.Parts.AddRange(snapOnly, fullOver, mixed);
+        var noVp = NewPart("BULK-NONE");
+        var pref = NewPart("BULK-PREF");
+        var nonPref = NewPart("BULK-NONPREF");
+        db.Parts.AddRange(noVp, pref, nonPref);
         await db.SaveChangesAsync();
 
         db.VendorParts.AddRange(
             new VendorPart
             {
-                VendorId = vendor.Id, PartId = fullOver.Id, IsPreferred = true,
+                VendorId = vendor.Id, PartId = pref.Id, IsPreferred = true,
                 LeadTimeDays = 4, MinOrderQty = 99m, PackSize = 11m,
             },
             new VendorPart
             {
-                VendorId = vendor.Id, PartId = mixed.Id, IsPreferred = true,
-                LeadTimeDays = null, MinOrderQty = 7m, PackSize = null,
+                VendorId = vendor.Id, PartId = nonPref.Id, IsPreferred = false,
+                LeadTimeDays = 99, MinOrderQty = 999m, PackSize = 999m,
             });
         await db.SaveChangesAsync();
 
@@ -191,23 +187,24 @@ public class PartSourcingResolverTests
 
         // Act
         var result = await resolver.ResolveManyAsync(
-            new[] { snapOnly.Id, fullOver.Id, mixed.Id },
+            new[] { noVp.Id, pref.Id, nonPref.Id },
             CancellationToken.None);
 
         // Assert
-        result.Should().ContainKey(snapOnly.Id).WhoseValue.LeadTimeDays.Should().Be(30);
-        result[snapOnly.Id].ResolvedFromVendorPart.Should().BeFalse();
-        result[snapOnly.Id].PackSize.Should().Be(2m);
+        result.Should().ContainKey(noVp.Id);
+        result[noVp.Id].LeadTimeDays.Should().BeNull();
+        result[noVp.Id].PackSize.Should().BeNull();
+        result[noVp.Id].ResolvedFromVendorPart.Should().BeFalse();
 
-        result[fullOver.Id].LeadTimeDays.Should().Be(4);
-        result[fullOver.Id].MinOrderQty.Should().Be(99m);
-        result[fullOver.Id].PackSize.Should().Be(11m);
-        result[fullOver.Id].ResolvedFromVendorPart.Should().BeTrue();
+        result[pref.Id].LeadTimeDays.Should().Be(4);
+        result[pref.Id].MinOrderQty.Should().Be(99m);
+        result[pref.Id].PackSize.Should().Be(11m);
+        result[pref.Id].ResolvedFromVendorPart.Should().BeTrue();
 
-        result[mixed.Id].LeadTimeDays.Should().Be(30);   // null on VP -> snapshot
-        result[mixed.Id].MinOrderQty.Should().Be(7m);    // override
-        result[mixed.Id].PackSize.Should().Be(2m);       // null on VP -> snapshot
-        result[mixed.Id].ResolvedFromVendorPart.Should().BeTrue();
+        result[nonPref.Id].LeadTimeDays.Should().BeNull();
+        result[nonPref.Id].MinOrderQty.Should().BeNull();
+        result[nonPref.Id].PackSize.Should().BeNull();
+        result[nonPref.Id].ResolvedFromVendorPart.Should().BeFalse();
     }
 
     [Fact]

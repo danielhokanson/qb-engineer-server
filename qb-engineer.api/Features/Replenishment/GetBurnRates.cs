@@ -135,7 +135,7 @@ public class GetBurnRatesHandler(AppDbContext db, IPartSourcingResolver sourcing
 
             var effectiveLeadTime = sourcingByPart.TryGetValue(part.Id, out var sv)
                 ? sv.LeadTimeDays
-                : part.LeadTimeDays;
+                : null;
             var needsReorder = DetermineNeedsReorder(part, effectiveLeadTime, available, incomingQty, bestBurnRate);
 
             if (request.NeedsReorderOnly && !needsReorder)
@@ -159,7 +159,7 @@ public class GetBurnRatesHandler(AppDbContext db, IPartSourcingResolver sourcing
                 part.MinStockThreshold,
                 part.ReorderPoint,
                 part.ReorderQuantity,
-                part.LeadTimeDays,
+                effectiveLeadTime,
                 part.SafetyStockDays,
                 needsReorder));
         }

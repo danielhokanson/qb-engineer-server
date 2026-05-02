@@ -199,15 +199,12 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         // in UI commit b8ef771) emit these fields via patchStep. Reads grouped
         // by cluster for readability.
 
-        // Sourcing cluster (Buy* / Subcontract* combos)
+        // Sourcing cluster (Buy* / Subcontract* combos). Per-vendor terms
+        // (lead time / MOQ / pack size) live on the VendorPart row now —
+        // the user enters them in the Vendor Parts step. The Sourcing
+        // step only writes preferredVendorId.
         if (TryReadInt(fields, "preferredVendorId", out var prefVendorId))
             part.PreferredVendorId = prefVendorId;
-        if (TryReadInt(fields, "leadTimeDays", out var leadTime))
-            part.LeadTimeDays = leadTime;
-        if (TryReadDecimalAsInt(fields, "minOrderQty", out var minOrderQty))
-            part.MinOrderQty = minOrderQty;
-        if (TryReadDecimalAsInt(fields, "packSize", out var packSize))
-            part.PackSize = packSize;
 
         // Inventory cluster (every non-Phantom combo)
         if (TryReadDecimal(fields, "minStockThreshold", out var minStock))
@@ -338,24 +335,6 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
     /// <summary>
     /// Reads a JSON number into <c>int?</c>, accepting decimal values (e.g.
     /// <c>5</c> or <c>5.0</c>) and truncating to int. Used for fields whose
-    /// entity type is <c>int?</c> but whose Angular form control is
-    /// <c>FormControl&lt;number | null&gt;</c> — JSON has no int/decimal
-    /// distinction, so the wire value can come through as either.
-    /// </summary>
-    private static bool TryReadDecimalAsInt(JsonElement root, string name, out int? value)
-    {
-        value = null;
-        if (root.ValueKind != JsonValueKind.Object) return false;
-        if (!root.TryGetProperty(name, out var prop)) return false;
-        if (prop.ValueKind == JsonValueKind.Null) { value = null; return true; }
-        if (prop.ValueKind == JsonValueKind.Number)
-        {
-            if (prop.TryGetInt32(out var i)) { value = i; return true; }
-            if (prop.TryGetDecimal(out var d)) { value = (int)d; return true; }
-        }
-        return false;
-    }
-
     private static T ReadEnumOrDefault<T>(JsonElement? root, string name, T defaultValue) where T : struct, Enum
     {
         if (root is null || root.Value.ValueKind != JsonValueKind.Object) return defaultValue;

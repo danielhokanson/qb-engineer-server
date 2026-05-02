@@ -63,7 +63,6 @@ public class UpdatePartHandler(
         if (data.MinStockThreshold.HasValue) part.MinStockThreshold = data.MinStockThreshold.Value == 0 ? null : data.MinStockThreshold.Value;
         if (data.ReorderPoint.HasValue) part.ReorderPoint = data.ReorderPoint.Value == 0 ? null : data.ReorderPoint.Value;
         if (data.ReorderQuantity.HasValue) part.ReorderQuantity = data.ReorderQuantity.Value == 0 ? null : data.ReorderQuantity.Value;
-        if (data.LeadTimeDays.HasValue) part.LeadTimeDays = data.LeadTimeDays.Value == 0 ? null : data.LeadTimeDays.Value;
         if (data.SafetyStockDays.HasValue) part.SafetyStockDays = data.SafetyStockDays.Value;
         // Workflow Pattern Phase 5 — manual cost override (Tier 1). -1 sentinel clears.
         if (data.ManualCostOverride.HasValue)

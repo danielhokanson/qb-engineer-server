@@ -59,7 +59,6 @@ public class CreatePartHandlerTests
             MinStockThreshold: null,
             ReorderPoint: null,
             ReorderQuantity: null,
-            LeadTimeDays: null,
             SafetyStockDays: null,
             ToolingAssetId: null,
             ToolingAssetName: null,

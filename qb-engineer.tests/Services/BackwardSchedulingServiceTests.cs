@@ -9,39 +9,50 @@ using QBEngineer.Tests.Helpers;
 namespace QBEngineer.Tests.Services;
 
 /// <summary>
-/// Polish-pass follow-up — covers the latent gap flagged by the reader
-/// migration agent (b8cf818): when a Buy BOMEntry has a NULL per-line
-/// LeadTimeDays, the service must fall back to <see cref="IPartSourcingResolver"/>
-/// for the child part's effective lead time rather than silently dropping
-/// the row.
+/// When a Buy BOMEntry has a NULL per-line LeadTimeDays, the backward
+/// scheduler must fall back to <see cref="IPartSourcingResolver"/> for
+/// the child part's effective lead time (preferred VendorPart row) rather
+/// than silently dropping the row from the maxLead computation.
 /// </summary>
 public class BackwardSchedulingServiceTests
 {
-    private static Part NewPart(
-        string partNumber,
-        int? leadTimeDays = null) => new()
-        {
-            PartNumber = partNumber,
-            Name = partNumber,
-            ProcurementSource = ProcurementSource.Buy,
-            InventoryClass = InventoryClass.Component,
-            Status = PartStatus.Active,
-            LeadTimeDays = leadTimeDays,
-        };
+    private static Part NewPart(string partNumber) => new()
+    {
+        PartNumber = partNumber,
+        Name = partNumber,
+        ProcurementSource = ProcurementSource.Buy,
+        InventoryClass = InventoryClass.Component,
+        Status = PartStatus.Active,
+    };
 
     [Fact]
-    public async Task CalculateSchedule_BomLineWithNullLeadTime_FallsBackToPartSnapshot()
+    public async Task CalculateSchedule_BomLineWithNullLeadTime_FallsBackToPreferredVendorPart()
     {
         // Arrange — parent part with two Buy BOM children. One child carries
-        // a per-line LeadTimeDays; the other has NULL on the line but its
-        // Part snapshot tracks LeadTimeDays = 21. Pre-fix the service would
-        // drop the null row entirely and report MaxLead = 5 → poOrderBy
-        // 5 days before MaterialsNeededBy. With the fix it resolves to 21.
+        // a per-line LeadTimeDays = 5; the other has NULL on the line but
+        // its preferred VendorPart row tracks LeadTimeDays = 21. The
+        // scheduler should resolve maxLead to 21, not silently drop the
+        // null row and report 5.
         using var db = TestDbContextFactory.Create();
         var parent = NewPart("PARENT");
-        var childWithLine = NewPart("CHILD-LINE", leadTimeDays: 5);
-        var childFromSnapshot = NewPart("CHILD-SNAP", leadTimeDays: 21);
-        db.Parts.AddRange(parent, childWithLine, childFromSnapshot);
+        var childWithLine = NewPart("CHILD-LINE");
+        var childFromVendorPart = NewPart("CHILD-VP");
+        db.Parts.AddRange(parent, childWithLine, childFromVendorPart);
+        await db.SaveChangesAsync();
+
+        // Seed a preferred VendorPart for the second child to provide the
+        // 21-day lead-time fallback.
+        var vendor = new Vendor { CompanyName = "Slow Vendor" };
+        db.Vendors.Add(vendor);
+        await db.SaveChangesAsync();
+
+        db.VendorParts.Add(new VendorPart
+        {
+            VendorId = vendor.Id,
+            PartId = childFromVendorPart.Id,
+            IsPreferred = true,
+            LeadTimeDays = 21,
+        });
         await db.SaveChangesAsync();
 
         db.BOMEntries.AddRange(
@@ -56,7 +67,7 @@ public class BackwardSchedulingServiceTests
             new BOMEntry
             {
                 ParentPartId = parent.Id,
-                ChildPartId = childFromSnapshot.Id,
+                ChildPartId = childFromVendorPart.Id,
                 Quantity = 1,
                 SourceType = BOMSourceType.Buy,
                 LeadTimeDays = null, // ← The fall-back trigger

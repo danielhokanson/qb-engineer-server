@@ -216,7 +216,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             part.MinStockThreshold,
             part.ReorderPoint,
             part.ReorderQuantity,
-            part.LeadTimeDays,
             part.SafetyStockDays,
             part.ToolingAssetId,
             part.ToolingAsset?.Name,

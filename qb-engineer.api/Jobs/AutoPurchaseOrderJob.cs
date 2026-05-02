@@ -104,8 +104,9 @@ public class AutoPurchaseOrderJob(
             .ToDictionary(g => g.Key, g => g.ToList());
 
         // Pillar 3 — bulk-resolve effective sourcing values for every child
-        // part referenced by these Buy BOM entries. Falls back to the Part
-        // snapshot when no preferred VendorPart is configured.
+        // part referenced by these Buy BOM entries. Reads come from the
+        // preferred VendorPart row (Part snapshot columns were dropped post-
+        // OEM-on-VendorPart move; vendor-specific terms only live there now).
         var bomChildPartIds = buyBomEntries.Select(b => b.ChildPartId).Distinct().ToList();
         var sourcingByChildPart = await sourcingResolver.ResolveManyAsync(bomChildPartIds, ct);
 
@@ -140,12 +141,11 @@ public class AutoPurchaseOrderJob(
 
                 if (deliveryDate.HasValue)
                 {
-                    // Pillar 3: prefer per-vendor lead time from preferred
-                    // VendorPart row over the Part snapshot. BOM-level
-                    // override (bom.LeadTimeDays) still wins over both.
+                    // BOM-level override wins; otherwise the preferred
+                    // VendorPart row's lead time; otherwise default 14 days.
                     var resolvedLeadTime = sourcingByChildPart.TryGetValue(bom.ChildPartId, out var resolved)
                         ? resolved.LeadTimeDays
-                        : bom.ChildPart.LeadTimeDays;
+                        : null;
                     var leadTimeDays = bom.LeadTimeDays ?? resolvedLeadTime ?? 14;
                     var neededBy = deliveryDate.Value.AddDays(-leadTimeDays - bufferDays);
                     if (info.EarliestNeededBy is null || neededBy < info.EarliestNeededBy)
@@ -245,15 +245,14 @@ public class AutoPurchaseOrderJob(
             // Determine order quantity with rounding
             var orderQty = (int)Math.Ceiling(shortfall);
 
-            // Pillar 3: prefer per-vendor PackSize / MinOrderQty from the
-            // preferred VendorPart row, fall back to the Part snapshot.
+            // PackSize / MinOrderQty come from the preferred VendorPart row.
+            // Null = no per-vendor override configured; PO sizing falls back
+            // to the raw shortfall quantity without rounding.
             var sourcing = sourcingByChildPart.TryGetValue(childPartId, out var partSourcing)
                 ? partSourcing
                 : null;
-            var effectivePackSize = sourcing?.PackSize
-                ?? (part.PackSize.HasValue ? (decimal?)part.PackSize.Value : null);
-            var effectiveMinOrderQty = sourcing?.MinOrderQty
-                ?? (part.MinOrderQty.HasValue ? (decimal?)part.MinOrderQty.Value : null);
+            var effectivePackSize = sourcing?.PackSize;
+            var effectiveMinOrderQty = sourcing?.MinOrderQty;
 
             // Round up to pack size
             if (effectivePackSize is > 0)

@@ -50,10 +50,12 @@ public class ExecuteMrpRunHandlerTests
             Description = "Test MRP Part",
             Status = PartStatus.Active,
             IsMrpPlanned = true,
-            LeadTimeDays = 14,
             LotSizingRule = LotSizingRule.LotForLot,
         };
         db.Parts.Add(part);
+        // Lead time lives on the preferred VendorPart row now; the MRP
+        // service falls back to a 14-day default when no VendorPart is
+        // configured, which is fine for this test.
 
         var customer = new Customer { Name = "Test Customer" };
         db.Customers.Add(customer);

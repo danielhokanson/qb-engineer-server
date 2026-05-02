@@ -183,18 +183,18 @@ public class Part : BaseAuditableEntity, IActiveAware
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
 
-    // Preferred vendor & auto-PO
+    // Preferred vendor & auto-PO. Per-vendor sourcing terms (lead time,
+    // MOQ, pack size) live on the VendorPart row — IPartSourcingResolver
+    // reads them from the preferred VendorPart for sourcing-decision contexts.
     public int? PreferredVendorId { get; set; }
     public int SafetyStockQty { get; set; }
     public bool ExcludeFromAutoPo { get; set; }
-    public int? MinOrderQty { get; set; }
-    public int? PackSize { get; set; }
 
-    // Inventory thresholds & replenishment
+    // Inventory thresholds & replenishment (Part-level — these are the
+    // shop's own stocking policy, not a vendor characteristic).
     public decimal? MinStockThreshold { get; set; }
     public decimal? ReorderPoint { get; set; }
     public decimal? ReorderQuantity { get; set; }
-    public int? LeadTimeDays { get; set; }
     public int? SafetyStockDays { get; set; }
 
     // MRP planning
