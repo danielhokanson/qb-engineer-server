@@ -10,20 +10,21 @@
 #   patch    = BASE + (commits since VERSION was last touched)
 #   version  = MAJOR.MINOR.patch
 #
-# So patch increments automatically on every main build; minor and major
-# bumps are an explicit `VERSION` edit + commit (next CI build picks them
-# up because the distance count resets to 0). No git tag pushing happens
-# from inside the workflow, so no recursive build loop.
+# Patch increments automatically on every main build; minor and major bumps
+# are an explicit `VERSION` edit + commit (next CI build picks them up
+# because the distance count resets to 0). No git tag pushing happens from
+# inside the workflow, so no recursive build loop.
 #
-# Image goes to GHCR (ghcr.io/danielhokanson/qb-engineer-server) for
-# linux/arm64 only — the Raspberry Pi production target. The amd64 leg
-# was previously included for developer convenience but the Dockerfile
-# installs chromium + ffmpeg + playwright (~250MB of Debian packages
-# plus 270MB of playwright downloads), which under QEMU emulation
-# routinely blew past the 30-minute job timeout. Devs running x86_64
-# can build locally from source via docker compose. To re-enable amd64
-# in the future, prefer a matrix strategy with a native amd64 runner
-# rather than QEMU on the arm64 runner.
+# Multi-arch model: linux/arm64 (Raspberry Pi production target) and
+# linux/amd64 (x86_64 server-hardware deployments by testers/contributors).
+# Both legs build NATIVELY on their own runners in parallel — no QEMU
+# emulation. The previous single-job multi-arch build with QEMU regularly
+# blew past the 30-minute timeout on the amd64 leg because the runtime
+# image installs chromium + ffmpeg + playwright (~250MB Debian packages
+# plus 270MB playwright downloads) and QEMU-emulated apt+chromium-install
+# is 5-10x slower than native. The matrix split below runs each arch on
+# its own native runner, then a final job merges the per-arch digests
+# into a single manifest list under the published tags.
 #
 # Tests gate the image push: a failing test means no image is published.
 
@@ -82,21 +83,18 @@ jobs:
       - name: Unit + integration tests
         run: dotnet test --no-build --configuration Release
 
-  build-and-push:
+  # Compute the version once on the test runner so both arch legs of the
+  # build matrix tag identically. (Each matrix leg pushes by-digest only;
+  # the merge job below applies the named tags to the manifest list.)
+  compute-version:
     needs: test
-    runs-on: ubuntu-24.04-arm
-    # 60 min — arm64-only build of the chromium+playwright runtime image
-    # historically lands around 12-15 min from cold cache. Bumped from the
-    # pre-existing 30 min to give safety margin for cache misses or
-    # transient registry slowness without re-introducing the QEMU amd64
-    # leg that used to time out.
-    timeout-minutes: 60
-
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      minor: ${{ steps.version.outputs.minor }}
     steps:
       - uses: actions/checkout@v4
         with:
-          # Need the full history so the version-compute step can count
-          # commits since VERSION was last touched.
           fetch-depth: 0
 
       - name: Compute version (auto-bump patch on main)
@@ -106,8 +104,6 @@ jobs:
           set -euo pipefail
           base=$(tr -d '[:space:]' < VERSION 2>/dev/null || echo "0.0.0")
           IFS='.' read -r major minor base_patch <<< "$base"
-          # Most-recent commit that touched VERSION (or the root commit if
-          # VERSION has only ever existed in one commit / was just added).
           anchor=$(git log -1 --format=%H -- VERSION 2>/dev/null || echo "")
           if [[ -z "$anchor" ]]; then
             distance=0
@@ -120,9 +116,74 @@ jobs:
           echo "minor=${major}.${minor}" >> "$GITHUB_OUTPUT"
           echo "Computed image version: ${version} (base=${base}, distance=${distance})"
 
-      # QEMU setup removed — single-arch arm64 build runs natively on the
-      # arm64 runner and needs no emulation. Re-add this step if amd64 ever
-      # comes back into the platforms list.
+  build-and-push:
+    needs: [test, compute-version]
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push by digest (no tags yet)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./qb-engineer.api/Dockerfile
+          platforms: ${{ matrix.platform }}
+          # Push by-digest only; the merge job below applies the named tags
+          # (semver, latest, main-<sha>) to the manifest list that combines
+          # both arch digests.
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          # Per-arch GHA cache scope so amd64 and arm64 caches don't collide.
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,scope=${{ matrix.arch }},mode=max
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-manifests:
+    needs: [compute-version, build-and-push]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -141,8 +202,8 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             # Main-push path: auto-bumped semver from VERSION file.
-            type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=${{ steps.version.outputs.minor }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ needs.compute-version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ needs.compute-version.outputs.minor }},enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha,prefix=main-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
             # Tag-push path: explicit milestone tag (manual git tag vX.Y.Z).
@@ -150,14 +211,12 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./qb-engineer.api/Dockerfile
-          push: true
-          platforms: linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Create + push manifest list
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Inspect resulting manifest
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.compute-version.outputs.version || steps.meta.outputs.version }}
