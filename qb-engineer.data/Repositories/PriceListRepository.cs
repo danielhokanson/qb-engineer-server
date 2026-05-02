@@ -57,4 +57,61 @@ public class PriceListRepository(AppDbContext db) : IPriceListRepository
     {
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task<bool> PriceListExistsAsync(int priceListId, CancellationToken ct)
+    {
+        return await db.PriceLists.AnyAsync(pl => pl.Id == priceListId, ct);
+    }
+
+    public async Task<PagedResponse<PriceListEntryResponseModel>> GetEntriesAsync(
+        int priceListId, string? search, int page, int pageSize, CancellationToken ct)
+    {
+        var query = db.PriceListEntries
+            .AsNoTracking()
+            .Include(e => e.Part)
+            .Where(e => e.PriceListId == priceListId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(e =>
+                e.Part.PartNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                e.Part.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var totalCount = await query.CountAsync(ct);
+
+        var effectivePage = page < 1 ? 1 : page;
+        var effectivePageSize = pageSize < 1 ? 50 : (pageSize > 200 ? 200 : pageSize);
+
+        var items = await query
+            .OrderBy(e => e.Part.PartNumber)
+            .ThenBy(e => e.MinQuantity)
+            .Skip((effectivePage - 1) * effectivePageSize)
+            .Take(effectivePageSize)
+            .Select(e => new PriceListEntryResponseModel(
+                e.Id, e.PriceListId, e.PartId, e.Part.PartNumber, e.Part.Name,
+                e.UnitPrice, e.MinQuantity, e.Currency, e.Notes,
+                e.CreatedAt, e.UpdatedAt))
+            .ToListAsync(ct);
+
+        return new PagedResponse<PriceListEntryResponseModel>(items, totalCount, effectivePage, effectivePageSize);
+    }
+
+    public async Task<PriceListEntry?> FindEntryAsync(int entryId, CancellationToken ct)
+    {
+        return await db.PriceListEntries.FirstOrDefaultAsync(e => e.Id == entryId, ct);
+    }
+
+    public async Task<PriceListEntry?> FindEntryWithPartAsync(int entryId, CancellationToken ct)
+    {
+        return await db.PriceListEntries
+            .Include(e => e.Part)
+            .FirstOrDefaultAsync(e => e.Id == entryId, ct);
+    }
+
+    public async Task AddEntryAsync(PriceListEntry entry, CancellationToken ct)
+    {
+        await db.PriceListEntries.AddAsync(entry, ct);
+    }
 }

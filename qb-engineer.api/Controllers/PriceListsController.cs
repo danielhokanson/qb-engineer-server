@@ -44,4 +44,80 @@ public class PriceListsController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeletePriceListCommand(id));
         return NoContent();
     }
+
+    // --- Entry endpoints scoped under the parent list -----------------------
+
+    [HttpGet("{id:int}/entries")]
+    public async Task<ActionResult<PagedResponse<PriceListEntryResponseModel>>> GetEntries(
+        int id,
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        var result = await mediator.Send(new GetPriceListEntriesQuery(id, search, page, pageSize));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/entries")]
+    public async Task<ActionResult<PriceListEntryResponseModel>> CreateEntry(
+        int id, CreatePriceListEntryRequestModel request)
+    {
+        var result = await mediator.Send(new CreatePriceListEntryCommand(
+            id, request.PartId, request.UnitPrice, request.MinQuantity,
+            request.Currency, request.Notes));
+        return CreatedAtAction(nameof(PriceListEntriesController.GetEntry),
+            controllerName: "PriceListEntries",
+            routeValues: new { id = result.Id },
+            value: result);
+    }
 }
+
+/// <summary>
+/// Flat-URL controller for individual <see cref="QBEngineer.Core.Entities.PriceListEntry"/>
+/// rows. Per the dispatch decision, GET-list and POST live under the parent
+/// (<c>/price-lists/{id}/entries</c>) but PUT / DELETE live here at the flat
+/// <c>/price-list-entries/{id}</c> path because the entry id is globally
+/// unique.
+/// </summary>
+[ApiController]
+[Route("api/v1")]
+[Authorize(Roles = "Admin,Manager,OfficeManager")]
+[RequiresCapability("CAP-MD-PRICELIST")]
+public class PriceListEntriesController(IMediator mediator) : ControllerBase
+{
+    [HttpGet("price-list-entries/{id:int}")]
+    public async Task<ActionResult<PriceListEntryResponseModel>> GetEntry(int id)
+    {
+        // Reused by the CreatedAtAction redirect on POST. We don't ship a
+        // separate GET-by-id query handler; reuse the repo's FindEntryWithPart
+        // to keep the surface small.
+        var result = await mediator.Send(new GetPriceListEntryByIdQuery(id));
+        return Ok(result);
+    }
+
+    [HttpPut("price-list-entries/{id:int}")]
+    public async Task<ActionResult<PriceListEntryResponseModel>> UpdateEntry(
+        int id, UpdatePriceListEntryRequestModel request)
+    {
+        var result = await mediator.Send(new UpdatePriceListEntryCommand(
+            id, request.UnitPrice, request.MinQuantity, request.Currency, request.Notes));
+        return Ok(result);
+    }
+
+    [HttpDelete("price-list-entries/{id:int}")]
+    public async Task<IActionResult> DeleteEntry(int id)
+    {
+        await mediator.Send(new DeletePriceListEntryCommand(id));
+        return NoContent();
+    }
+
+    // --- Customer-scoped read for the Customer detail Pricing tab ----------
+
+    [HttpGet("customers/{customerId:int}/price-lists")]
+    public async Task<ActionResult<List<PriceListListItemModel>>> GetForCustomer(int customerId)
+    {
+        var result = await mediator.Send(new GetPriceListsQuery(customerId));
+        return Ok(result);
+    }
+}
+

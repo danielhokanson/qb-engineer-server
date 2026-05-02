@@ -1,6 +1,6 @@
 namespace QBEngineer.Core.Entities;
 
-public class PriceListEntry : BaseEntity
+public class PriceListEntry : BaseAuditableEntity
 {
     public int PriceListId { get; set; }
     public int PartId { get; set; }

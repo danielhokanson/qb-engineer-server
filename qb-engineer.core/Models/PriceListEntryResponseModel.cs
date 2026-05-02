@@ -2,8 +2,13 @@ namespace QBEngineer.Core.Models;
 
 public record PriceListEntryResponseModel(
     int Id,
+    int PriceListId,
     int PartId,
     string PartNumber,
-    string PartDescription,
+    string PartName,
     decimal UnitPrice,
-    int MinQuantity);
+    int MinQuantity,
+    string Currency,
+    string? Notes,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);

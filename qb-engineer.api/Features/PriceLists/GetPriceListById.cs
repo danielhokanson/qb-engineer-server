@@ -20,8 +20,9 @@ public class GetPriceListByIdHandler(IPriceListRepository repo)
             pl.EffectiveFrom, pl.EffectiveTo,
             pl.Entries.OrderBy(e => e.Part.PartNumber).ThenBy(e => e.MinQuantity)
                 .Select(e => new PriceListEntryResponseModel(
-                    e.Id, e.PartId, e.Part.PartNumber, e.Part.Description ?? e.Part.Name,
-                    e.UnitPrice, e.MinQuantity)).ToList(),
+                    e.Id, e.PriceListId, e.PartId, e.Part.PartNumber, e.Part.Name,
+                    e.UnitPrice, e.MinQuantity, e.Currency, e.Notes,
+                    e.CreatedAt, e.UpdatedAt)).ToList(),
             pl.CreatedAt, pl.UpdatedAt);
     }
 }
