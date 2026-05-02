@@ -13,6 +13,7 @@ public record VendorPartResponseModel(
     string PartNumber,
     string PartName,
     string? VendorPartNumber,
+    string? ManufacturerName,
     string? VendorMpn,
     int? LeadTimeDays,
     decimal? MinOrderQty,

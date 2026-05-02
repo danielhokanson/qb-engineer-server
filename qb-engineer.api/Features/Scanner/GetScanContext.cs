@@ -17,12 +17,32 @@ public class GetScanContextHandler(AppDbContext db)
     {
         var identifier = request.PartIdentifier.Trim();
 
-        // Look up part by PartNumber or barcode
+        // Look up part by PartNumber, then fall back to any vendor's catalog
+        // SKU (vendor_part_number) — OEM/distributor identity moved off Part
+        // onto VendorPart, so external scans hit that intersection table.
         var part = await db.Parts
             .AsNoTracking()
-            .Where(p => p.PartNumber == identifier || p.ExternalPartNumber == identifier)
+            .Where(p => p.PartNumber == identifier)
             .Select(p => new { p.Id, p.PartNumber, p.Description })
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (part == null)
+        {
+            var vendorMatch = await db.VendorParts
+                .AsNoTracking()
+                .Where(vp => vp.VendorPartNumber == identifier || vp.VendorMpn == identifier)
+                .Select(vp => new { vp.PartId })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (vendorMatch != null)
+            {
+                part = await db.Parts
+                    .AsNoTracking()
+                    .Where(p => p.Id == vendorMatch.PartId)
+                    .Select(p => new { p.Id, p.PartNumber, p.Description })
+                    .FirstOrDefaultAsync(cancellationToken);
+            }
+        }
 
         // Also check barcode registry if part not found by part number
         if (part == null)

@@ -27,6 +27,7 @@ public class CreateVendorPartValidator : AbstractValidator<CreateVendorPartComma
         RuleFor(x => x.Body.VendorId).GreaterThan(0);
         RuleFor(x => x.Body.PartId).GreaterThan(0);
         RuleFor(x => x.Body.VendorPartNumber).MaximumLength(100);
+        RuleFor(x => x.Body.ManufacturerName).MaximumLength(200);
         RuleFor(x => x.Body.VendorMpn).MaximumLength(100);
         RuleFor(x => x.Body.CountryOfOrigin).MaximumLength(2);
         RuleFor(x => x.Body.HtsCode).MaximumLength(20);
@@ -67,6 +68,7 @@ public class CreateVendorPartHandler(AppDbContext db)
             VendorId = body.VendorId,
             PartId = body.PartId,
             VendorPartNumber = body.VendorPartNumber?.Trim(),
+            ManufacturerName = body.ManufacturerName?.Trim(),
             VendorMpn = body.VendorMpn?.Trim(),
             LeadTimeDays = body.LeadTimeDays,
             MinOrderQty = body.MinOrderQty,

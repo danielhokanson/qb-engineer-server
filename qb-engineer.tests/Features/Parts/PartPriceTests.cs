@@ -199,6 +199,7 @@ public class PartPriceTests(CapabilityTestWebApplicationFactory factory)
             VendorId: vendorId,
             PartId: partId,
             VendorPartNumber: "TV-1",
+            ManufacturerName: null,
             VendorMpn: null,
             LeadTimeDays: 7,
             MinOrderQty: 1m,

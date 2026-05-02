@@ -176,36 +176,40 @@ public static class WorkflowSeedData
 
     // B1 — Buy + Raw. Audit §5.B1: 4 guided steps (Identity, Sourcing,
     // Inventory, Quality). No BOM, no Routing. Gates on hasBasics + hasCost.
+    // VendorParts step inserted post-Sourcing — captures OEM identity (mfr
+    // name, mfr PN, vendor SKU) + per-vendor pricing per (Part, Vendor) row.
     private static string BuildBuyRawStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
       {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":false,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
     """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
 
-    // B2 — Buy + Component. Audit §5.B2: 5 guided steps (Identity,
-    // Manufacturer, Sourcing, Inventory, Cost). Gates on hasBasics + hasCost.
+    // B2 — Buy + Component. Audit §5.B2: 5 guided steps. Pre-beta: the
+    // standalone Manufacturer step was retired — OEM identity moved onto
+    // VendorPart, captured in the new VendorParts step after Sourcing.
     private static string BuildBuyComponentStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"manufacturer","labelKey":"workflow.parts.steps.manufacturer","componentName":"PartManufacturerStepComponent","required":true,"completionGates":[]},
       {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
     """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
 
     // B3 — Buy + Subassembly. Audit §5.B3: same as B2 + Quality step. Gates
-    // on hasBasics + hasCost. Manufacturer step gathers physical attributes
-    // (WeightEach, Dimensions) too.
+    // on hasBasics + hasCost. Manufacturer step retired pre-beta — OEM
+    // identity now captured per-vendor in the VendorParts step.
     private static string BuildBuySubassemblyStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"manufacturer","labelKey":"workflow.parts.steps.manufacturer","componentName":"PartManufacturerStepComponent","required":true,"completionGates":[]},
       {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":true,"completionGates":[]}
@@ -213,12 +217,13 @@ public static class WorkflowSeedData
     """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
 
     // B4 — Buy + FinishedGood (resold). Audit §5.B4: 5 guided steps.
-    // Adds Shipping step (WeightEach, Dimensions). Gates on hasBasics + hasCost.
+    // Adds Shipping step (WeightEach, Dimensions). Manufacturer step retired
+    // pre-beta; VendorParts step (post-Sourcing) carries OEM identity.
     private static string BuildBuyFinishedGoodStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"manufacturer","labelKey":"workflow.parts.steps.manufacturer","componentName":"PartManufacturerStepComponent","required":true,"completionGates":[]},
       {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
       {"id":"shipping","labelKey":"workflow.parts.steps.shipping","componentName":"PartShippingStepComponent","required":true,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
@@ -233,6 +238,7 @@ public static class WorkflowSeedData
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
       {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
@@ -245,6 +251,7 @@ public static class WorkflowSeedData
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
       {"id":"toolAsset","labelKey":"workflow.parts.steps.toolAsset","componentName":"PartToolAssetStepComponent","required":true,"completionGates":[]},
       {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
@@ -319,6 +326,7 @@ public static class WorkflowSeedData
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
       {"id":"sourcePart","labelKey":"workflow.parts.steps.sourcePart","componentName":"PartSourcePartStepComponent","required":true,"completionGates":[]},
       {"id":"vendor","labelKey":"workflow.parts.steps.vendor","componentName":"PartVendorStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":true,"completionGates":[]}
     ]
@@ -333,6 +341,7 @@ public static class WorkflowSeedData
       {"id":"sourcePart","labelKey":"workflow.parts.steps.sourcePart","componentName":"PartSourcePartStepComponent","required":true,"completionGates":[]},
       {"id":"bom","labelKey":"workflow.parts.steps.bom","componentName":"PartBomStepComponent","required":true,"completionGates":["hasBom"]},
       {"id":"vendor","labelKey":"workflow.parts.steps.vendor","componentName":"PartVendorStepComponent","required":true,"completionGates":[]},
+      {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":true,"completionGates":[]}
     ]

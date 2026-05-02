@@ -21,6 +21,7 @@ public class UpdateVendorPartValidator : AbstractValidator<UpdateVendorPartComma
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.Body.VendorPartNumber).MaximumLength(100);
+        RuleFor(x => x.Body.ManufacturerName).MaximumLength(200);
         RuleFor(x => x.Body.VendorMpn).MaximumLength(100);
         RuleFor(x => x.Body.CountryOfOrigin).MaximumLength(2);
         RuleFor(x => x.Body.HtsCode).MaximumLength(20);
@@ -46,6 +47,11 @@ public class UpdateVendorPartHandler(AppDbContext db)
         // Per-field patch — null means "leave alone". Trimming on string
         // fields mirrors CreateVendorPartHandler.
         if (body.VendorPartNumber is not null) vp.VendorPartNumber = body.VendorPartNumber.Trim();
+        if (body.ManufacturerName is not null)
+        {
+            var trimmed = body.ManufacturerName.Trim();
+            vp.ManufacturerName = trimmed.Length == 0 ? null : trimmed;
+        }
         if (body.VendorMpn is not null) vp.VendorMpn = body.VendorMpn.Trim();
         if (body.LeadTimeDays.HasValue) vp.LeadTimeDays = body.LeadTimeDays.Value;
         if (body.MinOrderQty.HasValue) vp.MinOrderQty = body.MinOrderQty.Value;

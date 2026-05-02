@@ -21,7 +21,6 @@ public record UpdatePartRequestModel(
     // axes (ProcurementSource / InventoryClass / ItemKindId) directly.
     ProcurementSource? ProcurementSource,
     InventoryClass? InventoryClass,
-    string? ExternalPartNumber,
     int? ToolingAssetId,
     int? PreferredVendorId,
     decimal? MinStockThreshold,
@@ -32,10 +31,6 @@ public record UpdatePartRequestModel(
     // Workflow Pattern Phase 5 — manual cost override (Tier 1 single-rate).
     // Sentinel value -1 means "clear to null".
     decimal? ManualCostOverride = null,
-    // Pillar 1 / Tier 0 — manufacturer identity (engineering OEM, distinct
-    // from the distributor-side MPN that lives on VendorPart).
-    string? ManufacturerName = null,
-    string? ManufacturerPartNumber = null,
     // Tier 0 — replaces legacy IsSerialTracked boolean.
     TraceabilityType? TraceabilityType = null,
     // Tier 0 — cycle-counting frequency tier. Empty string clears.

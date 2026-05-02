@@ -36,12 +36,9 @@ public static partial class PartMapper
             // Tier 0 additions
             TraceabilityType: part.TraceabilityType,
             AbcClass: part.AbcClass,
-            ManufacturerName: part.ManufacturerName,
-            ManufacturerPartNumber: part.ManufacturerPartNumber,
             // Pillar 2 — Tier 2 material spec FK
             MaterialSpecId: part.MaterialSpecId,
             MaterialSpecLabel: part.MaterialSpec?.Label,
-            ExternalPartNumber: part.ExternalPartNumber,
             ExternalId: part.ExternalId,
             ExternalRef: part.ExternalRef,
             Provider: part.Provider,

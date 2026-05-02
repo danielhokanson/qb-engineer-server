@@ -18,14 +18,11 @@ public record PartDetailResponseModel(
     // Tier 0 additions
     TraceabilityType TraceabilityType,
     AbcClass? AbcClass,
-    string? ManufacturerName,
-    string? ManufacturerPartNumber,
     // Pillar 2 — Tier 2: Material specification reference (FK to reference_data,
     // group_code = 'part.material_spec'). The legacy free-text Material string
     // was dropped pre-beta — MaterialSpecId is the only material identity.
     int? MaterialSpecId,
     string? MaterialSpecLabel,
-    string? ExternalPartNumber,
     string? ExternalId,
     string? ExternalRef,
     string? Provider,

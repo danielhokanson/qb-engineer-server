@@ -18,7 +18,9 @@ public class VendorPartConfiguration : IEntityTypeConfiguration<VendorPart>
         builder.HasIndex(e => e.PartId);
 
         builder.Property(e => e.VendorPartNumber).HasMaxLength(100);
+        builder.Property(e => e.ManufacturerName).HasMaxLength(200);
         builder.Property(e => e.VendorMpn).HasMaxLength(100);
+        builder.HasIndex(e => e.VendorMpn);
         builder.Property(e => e.CountryOfOrigin).HasMaxLength(2);
         builder.Property(e => e.HtsCode).HasMaxLength(20);
         builder.Property(e => e.Notes).HasMaxLength(2000);

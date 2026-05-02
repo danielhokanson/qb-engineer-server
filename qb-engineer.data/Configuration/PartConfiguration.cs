@@ -22,7 +22,6 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.HasIndex(e => e.Name);
         builder.Property(e => e.Description).HasMaxLength(2000).IsRequired(false);
         builder.Property(e => e.Revision).HasMaxLength(10);
-        builder.Property(e => e.ExternalPartNumber).HasMaxLength(100);
         builder.Property(e => e.ExternalId).HasMaxLength(100);
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
@@ -45,9 +44,6 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         // Tier 0 additions
         builder.Property(e => e.TraceabilityType).HasConversion<string>().HasMaxLength(16).IsRequired();
         builder.Property(e => e.AbcClass).HasConversion<string>().HasMaxLength(2);
-        builder.Property(e => e.ManufacturerName).HasMaxLength(200);
-        builder.Property(e => e.ManufacturerPartNumber).HasMaxLength(100);
-        builder.HasIndex(e => e.ManufacturerPartNumber);
 
         // Pillar 2 — Tier 2: Measurement profile + valuation.
         // See phase-4-output/part-type-field-relevance.md § 8 (Tier 2).

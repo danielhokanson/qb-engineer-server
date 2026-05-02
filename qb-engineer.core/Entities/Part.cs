@@ -57,19 +57,6 @@ public class Part : BaseAuditableEntity, IActiveAware
     public AbcClass? AbcClass { get; set; }
 
     /// <summary>
-    /// Tier 0 — Primary manufacturer name (the engineering OEM, distinct from
-    /// any distributor we buy through). Critical for COTS components.
-    /// Distributor-side manufacturer-part-number lives on <c>VendorPart.VendorMpn</c>.
-    /// </summary>
-    public string? ManufacturerName { get; set; }
-
-    /// <summary>
-    /// Tier 0 — Manufacturer's part number (engineering identity). Customer
-    /// drawings + datasheets reference this, not our internal SKU.
-    /// </summary>
-    public string? ManufacturerPartNumber { get; set; }
-
-    /// <summary>
     /// Pillar 2 — Material specification reference. Replaces the legacy
     /// free-text <c>Material</c> string. FK to <c>reference_data</c> with
     /// group_code = 'part.material_spec'. See
@@ -77,8 +64,6 @@ public class Part : BaseAuditableEntity, IActiveAware
     /// </summary>
     public int? MaterialSpecId { get; set; }
     public ReferenceData? MaterialSpec { get; set; }
-
-    public string? ExternalPartNumber { get; set; }
 
     // ─── Pillar 2 / Tier 2 — Measurement profile + valuation ───
     // See phase-4-output/part-type-field-relevance.md § 8 (Tier 2). All

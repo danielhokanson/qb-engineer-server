@@ -19,6 +19,7 @@ internal static class VendorPartMapper
             PartNumber: vp.Part?.PartNumber ?? string.Empty,
             PartName: vp.Part?.Name ?? string.Empty,
             VendorPartNumber: vp.VendorPartNumber,
+            ManufacturerName: vp.ManufacturerName,
             VendorMpn: vp.VendorMpn,
             LeadTimeDays: vp.LeadTimeDays,
             MinOrderQty: vp.MinOrderQty,

@@ -15,8 +15,7 @@ public record CreatePartCommand(
     string? Revision,
     ProcurementSource ProcurementSource,
     InventoryClass InventoryClass,
-    int? MaterialSpecId,
-    string? ExternalPartNumber) : IRequest<PartDetailResponseModel>;
+    int? MaterialSpecId) : IRequest<PartDetailResponseModel>;
 
 public class CreatePartCommandValidator : AbstractValidator<CreatePartCommand>
 {
@@ -25,7 +24,6 @@ public class CreatePartCommandValidator : AbstractValidator<CreatePartCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
         RuleFor(x => x.Description).MaximumLength(2000).When(x => x.Description is not null);
         RuleFor(x => x.Revision).MaximumLength(10).When(x => x.Revision is not null);
-        RuleFor(x => x.ExternalPartNumber).MaximumLength(100).When(x => x.ExternalPartNumber is not null);
     }
 }
 
@@ -50,7 +48,6 @@ public class CreatePartHandler(
             InventoryClass = request.InventoryClass,
             MaterialSpecId = request.MaterialSpecId,
             Status = PartStatus.Draft,
-            ExternalPartNumber = request.ExternalPartNumber?.Trim(),
         };
 
         await repo.AddAsync(part, cancellationToken);

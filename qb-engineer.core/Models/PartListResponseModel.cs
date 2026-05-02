@@ -13,7 +13,6 @@ public record PartListResponseModel(
     // retired pre-beta; the list surface now exposes the three axes directly.
     ProcurementSource ProcurementSource,
     InventoryClass InventoryClass,
-    string? ExternalPartNumber,
     int BomEntryCount,
     DateTimeOffset CreatedAt,
     // Pricing — resolved via IPartPricingResolver. EffectivePrice is non-nullable;

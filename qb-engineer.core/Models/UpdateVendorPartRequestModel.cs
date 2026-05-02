@@ -8,6 +8,7 @@ namespace QBEngineer.Core.Models;
 /// </summary>
 public record UpdateVendorPartRequestModel(
     string? VendorPartNumber,
+    string? ManufacturerName,
     string? VendorMpn,
     int? LeadTimeDays,
     decimal? MinOrderQty,

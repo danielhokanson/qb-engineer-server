@@ -61,8 +61,7 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             q = q.Where(p =>
                 p.PartNumber.ToLower().Contains(term) ||
                 p.Name.ToLower().Contains(term) ||
-                (p.Description != null && p.Description.ToLower().Contains(term)) ||
-                (p.ExternalPartNumber != null && p.ExternalPartNumber.ToLower().Contains(term)));
+                (p.Description != null && p.Description.ToLower().Contains(term)));
         }
 
         if (query.DateFrom.HasValue)
@@ -85,7 +84,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             "status"             => desc ? q.OrderByDescending(p => p.Status)             : q.OrderBy(p => p.Status),
             "procurementsource"  => desc ? q.OrderByDescending(p => p.ProcurementSource)  : q.OrderBy(p => p.ProcurementSource),
             "inventoryclass"     => desc ? q.OrderByDescending(p => p.InventoryClass)     : q.OrderBy(p => p.InventoryClass),
-            "externalpartnumber" => desc ? q.OrderByDescending(p => p.ExternalPartNumber) : q.OrderBy(p => p.ExternalPartNumber),
             "createdat"          => desc ? q.OrderByDescending(p => p.CreatedAt)          : q.OrderBy(p => p.CreatedAt),
             "updatedat"          => desc ? q.OrderByDescending(p => p.UpdatedAt)          : q.OrderBy(p => p.UpdatedAt),
             "id"                 => desc ? q.OrderByDescending(p => p.Id)                 : q.OrderBy(p => p.Id),
@@ -109,7 +107,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
                 p.Status,
                 p.ProcurementSource,
                 p.InventoryClass,
-                p.ExternalPartNumber,
                 BomEntryCount = p.BOMEntries.Count,
                 p.CreatedAt,
             })
@@ -131,7 +128,6 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
                     r.Status,
                     r.ProcurementSource,
                     r.InventoryClass,
-                    r.ExternalPartNumber,
                     r.BomEntryCount,
                     r.CreatedAt,
                     price.UnitPrice,
@@ -209,12 +205,9 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
             // Tier 0 additions
             part.TraceabilityType,
             part.AbcClass,
-            part.ManufacturerName,
-            part.ManufacturerPartNumber,
             // Pillar 2 — Tier 2 material spec FK
             part.MaterialSpecId,
             part.MaterialSpec?.Label,
-            part.ExternalPartNumber,
             part.ExternalId,
             part.ExternalRef,
             part.Provider,

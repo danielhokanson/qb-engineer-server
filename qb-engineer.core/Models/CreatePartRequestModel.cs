@@ -16,5 +16,4 @@ public record CreatePartRequestModel(
     string? Revision,
     ProcurementSource ProcurementSource,
     InventoryClass InventoryClass,
-    int? MaterialSpecId,
-    string? ExternalPartNumber);
+    int? MaterialSpecId);

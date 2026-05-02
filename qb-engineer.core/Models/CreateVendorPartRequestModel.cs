@@ -8,6 +8,7 @@ public record CreateVendorPartRequestModel(
     int VendorId,
     int PartId,
     string? VendorPartNumber,
+    string? ManufacturerName,
     string? VendorMpn,
     int? LeadTimeDays,
     decimal? MinOrderQty,

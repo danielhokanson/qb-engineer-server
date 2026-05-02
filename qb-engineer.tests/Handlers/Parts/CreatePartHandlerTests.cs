@@ -35,8 +35,7 @@ public class CreatePartHandlerTests
         string revision = "A",
         PartStatus status = PartStatus.Draft,
         ProcurementSource procurementSource = ProcurementSource.Buy,
-        InventoryClass inventoryClass = InventoryClass.Component,
-        string? externalPartNumber = null) =>
+        InventoryClass inventoryClass = InventoryClass.Component) =>
         new(
             Id: id,
             PartNumber: partNumber,
@@ -50,11 +49,8 @@ public class CreatePartHandlerTests
             ItemKindLabel: null,
             TraceabilityType: TraceabilityType.None,
             AbcClass: null,
-            ManufacturerName: null,
-            ManufacturerPartNumber: null,
             MaterialSpecId: null,
             MaterialSpecLabel: null,
-            ExternalPartNumber: externalPartNumber,
             ExternalId: null,
             ExternalRef: null,
             Provider: null,
@@ -130,7 +126,7 @@ public class CreatePartHandlerTests
         var command = new CreatePartCommand(
             name, null, null,
             ProcurementSource.Buy, InventoryClass.Component,
-            MaterialSpecId: null, ExternalPartNumber: null);
+            MaterialSpecId: null);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -163,7 +159,7 @@ public class CreatePartHandlerTests
         var command = new CreatePartCommand(
             "Test Part", null, null,
             ProcurementSource.Buy, InventoryClass.Component,
-            MaterialSpecId: null, ExternalPartNumber: null);
+            MaterialSpecId: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -190,7 +186,7 @@ public class CreatePartHandlerTests
         var command = new CreatePartCommand(
             "Test Part", null, "C",
             ProcurementSource.Make, InventoryClass.Subassembly,
-            MaterialSpecId: null, ExternalPartNumber: null);
+            MaterialSpecId: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -219,7 +215,7 @@ public class CreatePartHandlerTests
         var command = new CreatePartCommand(
             "Test", null, null,
             ProcurementSource.Make, InventoryClass.Subassembly,
-            MaterialSpecId: null, ExternalPartNumber: null);
+            MaterialSpecId: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -243,7 +239,7 @@ public class CreatePartHandlerTests
         var command = new CreatePartCommand(
             "  Trimmed  ", "  Long form  ", "  B  ",
             ProcurementSource.Buy, InventoryClass.Component,
-            MaterialSpecId: null, ExternalPartNumber: null);
+            MaterialSpecId: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -254,34 +250,6 @@ public class CreatePartHandlerTests
             p.Name == "Trimmed" &&
             p.Description == "Long form" &&
             p.Revision == "B"
-        ), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_WithExternalPartNumber_SetsField()
-    {
-        // Arrange
-        _partRepo.Setup(r => r.GetNextPartNumberAsync(InventoryClass.Raw, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("RAW-00001");
-
-        _partRepo.Setup(r => r.GetDetailAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(BuildDetailResponse(
-                partNumber: "RAW-00001", name: "Steel Bar",
-                procurementSource: ProcurementSource.Buy,
-                inventoryClass: InventoryClass.Raw,
-                externalPartNumber: "VENDOR-12345"));
-
-        var command = new CreatePartCommand(
-            "Steel Bar", null, null,
-            ProcurementSource.Buy, InventoryClass.Raw,
-            MaterialSpecId: null, ExternalPartNumber: "  VENDOR-12345  ");
-
-        // Act
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        _partRepo.Verify(r => r.AddAsync(It.Is<Part>(p =>
-            p.ExternalPartNumber == "VENDOR-12345"
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -299,7 +267,7 @@ public class CreatePartHandlerTests
         var command = new CreatePartCommand(
             "Sheath Mudkipper", "   ", null,
             ProcurementSource.Buy, InventoryClass.Component,
-            MaterialSpecId: null, ExternalPartNumber: null);
+            MaterialSpecId: null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

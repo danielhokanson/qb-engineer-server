@@ -38,8 +38,6 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         var traceability = ReadEnumOrDefault(initialData, "traceabilityType", TraceabilityType.None);
         var abc = ReadNullableEnum<AbcClass>(initialData, "abcClass");
         var itemKindId = ReadIntOrDefault(initialData, "itemKindId");
-        var manufacturerName = ReadStringOrDefault(initialData, "manufacturerName")?.Trim();
-        var manufacturerPartNumber = ReadStringOrDefault(initialData, "manufacturerPartNumber")?.Trim();
 
         // Pillar 2 — Tier 2: measurement profile + valuation.
         var materialSpecId = ReadIntOrDefault(initialData, "materialSpecId");
@@ -91,11 +89,8 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             ItemKindId = itemKindId,
             TraceabilityType = traceability,
             AbcClass = abc,
-            ManufacturerName = manufacturerName,
-            ManufacturerPartNumber = manufacturerPartNumber,
             Status = PartStatus.Draft,
             MaterialSpecId = materialSpecId,
-            ExternalPartNumber = ReadStringOrDefault(initialData, "externalPartNumber")?.Trim(),
             ManualCostOverride = ReadDecimalOrDefault(initialData, "manualCostOverride"),
             // Pillar 2 — Tier 2 measurement profile + valuation.
             WeightEach = weightEach,
@@ -143,8 +138,6 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
         }
         if (TryReadString(fields, "revision", out var rev) && rev is not null)
             part.Revision = rev.Trim();
-        if (TryReadString(fields, "externalPartNumber", out var ext))
-            part.ExternalPartNumber = ext?.Trim();
         if (TryReadDecimal(fields, "manualCostOverride", out var manual))
             part.ManualCostOverride = manual;
         // Pillar 1 — three-axis applies. The legacy partType field is gone;
@@ -159,10 +152,6 @@ public class PartWorkflowAdapter(AppDbContext db, IPartRepository repo)
             part.TraceabilityType = tt;
         if (TryReadEnum<AbcClass>(fields, "abcClass", out var abc))
             part.AbcClass = abc;
-        if (TryReadString(fields, "manufacturerName", out var mn))
-            part.ManufacturerName = mn?.Trim();
-        if (TryReadString(fields, "manufacturerPartNumber", out var mpn))
-            part.ManufacturerPartNumber = mpn?.Trim();
 
         // Pillar 2 — Tier 2: measurement profile + valuation.
         if (TryReadInt(fields, "materialSpecId", out var msId))

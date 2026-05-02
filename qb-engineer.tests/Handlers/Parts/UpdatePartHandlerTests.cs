@@ -37,11 +37,8 @@ public class UpdatePartHandlerTests
             ItemKindLabel: null,
             TraceabilityType: TraceabilityType.None,
             AbcClass: null,
-            ManufacturerName: null,
-            ManufacturerPartNumber: null,
             MaterialSpecId: null,
             MaterialSpecLabel: null,
-            ExternalPartNumber: null,
             ExternalId: null,
             ExternalRef: null,
             Provider: null,
@@ -110,7 +107,6 @@ public class UpdatePartHandlerTests
     private static UpdatePartRequestModel EmptyUpdate() => new(
         Name: null, Description: null, Revision: null, Status: null,
         ProcurementSource: null, InventoryClass: null,
-        ExternalPartNumber: null,
         ToolingAssetId: null, PreferredVendorId: null,
         MinStockThreshold: null, ReorderPoint: null, ReorderQuantity: null,
         LeadTimeDays: null, SafetyStockDays: null);

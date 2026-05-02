@@ -87,6 +87,7 @@ public class VendorPartCrudTests(CapabilityTestWebApplicationFactory factory)
             VendorId: vendorId,
             PartId: partId,
             VendorPartNumber: vendorPartNumber,
+            ManufacturerName: null,
             VendorMpn: null,
             LeadTimeDays: 14,
             MinOrderQty: 1m,

@@ -19,14 +19,27 @@ public class VendorPart : BaseAuditableEntity
     public int VendorId { get; set; }
     public int PartId { get; set; }
 
-    /// <summary>The vendor's SKU for this part (their internal identifier).</summary>
+    /// <summary>
+    /// The vendor's SKU for this part (the catalog/order number you'd put on
+    /// a PO line — what users call the "external part number").
+    /// </summary>
     public string? VendorPartNumber { get; set; }
 
     /// <summary>
-    /// Manufacturer Part Number when the vendor is a distributor and the
-    /// actual OEM differs from the vendor itself. Distinct from
-    /// <c>Part.ManufacturerPartNumber</c> which is the part's primary OEM
-    /// identity.
+    /// OEM company name as reported by this vendor (the brand name on the
+    /// part). Lives on VendorPart rather than Part because the OEM may
+    /// differ between distributors of the same logical part (counterfeit
+    /// vs. authentic, alternate manufacturers, etc.).
+    /// </summary>
+    public string? ManufacturerName { get; set; }
+
+    /// <summary>
+    /// Manufacturer Part Number — the OEM's identifier for the part as
+    /// reported by this vendor. Customer drawings + datasheets reference
+    /// this value, not the in-house SKU. Lives on VendorPart so each
+    /// distributor can carry its own manufacturer identity (legacy column
+    /// name on the row is <c>vendor_mpn</c>; the conceptual rename to
+    /// "manufacturer part number" landed when OEM identity moved off Part).
     /// </summary>
     public string? VendorMpn { get; set; }
 

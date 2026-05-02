@@ -21,9 +21,6 @@ public class UpdatePartCommandValidator : AbstractValidator<UpdatePartCommand>
             .When(x => x.Data.Name is not null);
         RuleFor(x => x.Data.Description).MaximumLength(2000).When(x => x.Data.Description is not null);
         RuleFor(x => x.Data.Revision).MaximumLength(10).When(x => x.Data.Revision is not null);
-        RuleFor(x => x.Data.ExternalPartNumber).MaximumLength(100).When(x => x.Data.ExternalPartNumber is not null);
-        RuleFor(x => x.Data.ManufacturerName).MaximumLength(200).When(x => x.Data.ManufacturerName is not null);
-        RuleFor(x => x.Data.ManufacturerPartNumber).MaximumLength(100).When(x => x.Data.ManufacturerPartNumber is not null);
         // Pillar 4 Phase 2 — mirror the entity-config max lengths for the new
         // editable string fields (see PartConfiguration.cs).
         RuleFor(x => x.Data.HtsCode).MaximumLength(20).When(x => x.Data.HtsCode is not null);
@@ -58,18 +55,7 @@ public class UpdatePartHandler(
         if (data.Status.HasValue) part.Status = data.Status.Value;
         if (data.ProcurementSource.HasValue) part.ProcurementSource = data.ProcurementSource.Value;
         if (data.InventoryClass.HasValue) part.InventoryClass = data.InventoryClass.Value;
-        if (data.ExternalPartNumber is not null) part.ExternalPartNumber = data.ExternalPartNumber.Trim();
-        // Pillar 1 / Tier 0 — manufacturer + traceability + ABC class.
-        if (data.ManufacturerName is not null)
-        {
-            var trimmed = data.ManufacturerName.Trim();
-            part.ManufacturerName = trimmed.Length == 0 ? null : trimmed;
-        }
-        if (data.ManufacturerPartNumber is not null)
-        {
-            var trimmed = data.ManufacturerPartNumber.Trim();
-            part.ManufacturerPartNumber = trimmed.Length == 0 ? null : trimmed;
-        }
+        // Tier 0 — traceability + ABC class. (OEM identity moved to VendorPart.)
         if (data.TraceabilityType.HasValue) part.TraceabilityType = data.TraceabilityType.Value;
         if (data.AbcClass.HasValue) part.AbcClass = data.AbcClass.Value;
         if (data.ToolingAssetId.HasValue) part.ToolingAssetId = data.ToolingAssetId.Value == 0 ? null : data.ToolingAssetId.Value;
