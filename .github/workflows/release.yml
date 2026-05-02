@@ -1,8 +1,19 @@
 # Release workflow for qb-engineer-server
 #
 # Triggers:
-#   - push to main             -> :main-<sha> + :latest
-#   - push of a v*.*.* tag     -> :X.Y.Z + :X.Y + :X
+#   - push to main             -> auto-bumped semver: :X.Y.Z + :X.Y + :latest + :main-<sha>
+#   - push of a v*.*.* tag     -> :X.Y.Z + :X.Y + :X (manual milestone, fully overrides VERSION)
+#
+# Versioning model (alpha): the repo's VERSION file holds MAJOR.MINOR.BASE
+# manually (e.g. "0.0.0", "0.1.0", "1.0.0"). On every main push, CI computes:
+#
+#   patch    = BASE + (commits since VERSION was last touched)
+#   version  = MAJOR.MINOR.patch
+#
+# So patch increments automatically on every main build; minor and major
+# bumps are an explicit `VERSION` edit + commit (next CI build picks them
+# up because the distance count resets to 0). No git tag pushing happens
+# from inside the workflow, so no recursive build loop.
 #
 # Image goes to GHCR (ghcr.io/danielhokanson/qb-engineer-server) as a
 # multi-arch manifest covering linux/arm64 (Raspberry Pi production target)
@@ -75,6 +86,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Need the full history so the version-compute step can count
+          # commits since VERSION was last touched.
+          fetch-depth: 0
+
+      - name: Compute version (auto-bump patch on main)
+        id: version
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          base=$(tr -d '[:space:]' < VERSION 2>/dev/null || echo "0.0.0")
+          IFS='.' read -r major minor base_patch <<< "$base"
+          # Most-recent commit that touched VERSION (or the root commit if
+          # VERSION has only ever existed in one commit / was just added).
+          anchor=$(git log -1 --format=%H -- VERSION 2>/dev/null || echo "")
+          if [[ -z "$anchor" ]]; then
+            distance=0
+          else
+            distance=$(git rev-list --count "${anchor}..HEAD")
+          fi
+          patch=$((base_patch + distance))
+          version="${major}.${minor}.${patch}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "minor=${major}.${minor}" >> "$GITHUB_OUTPUT"
+          echo "Computed image version: ${version} (base=${base}, distance=${distance})"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -97,8 +133,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            # Main-push path: auto-bumped semver from VERSION file.
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.version.outputs.minor }},enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha,prefix=main-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
+            # Tag-push path: explicit milestone tag (manual git tag vX.Y.Z).
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
