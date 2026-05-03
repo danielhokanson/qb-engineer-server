@@ -477,7 +477,8 @@ public class WorkflowRunLifecycleTests(CapabilityTestWebApplicationFactory facto
             .EnumerateArray()
             .Select(m => m.GetProperty("validatorId").GetString())
             .ToList();
-        missingIds.Should().BeEquivalentTo(new[] { "hasBasics", "hasCost" });
+        // Buy-Raw (B1) gates on hasBasics + hasSourcing + hasInventory + hasCost.
+        missingIds.Should().BeEquivalentTo(new[] { "hasBasics", "hasSourcing", "hasInventory", "hasCost" });
     }
 
     [Fact]

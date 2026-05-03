@@ -50,8 +50,34 @@ public class PromotePartStatusHandler(
     public async Task<PartDetailResponseModel> Handle(PromotePartStatusCommand request, CancellationToken ct)
     {
         const string EntityType = "Part";
-        // Run readiness gate.
+
+        // If a workflow run is in flight against this part, scope the readiness
+        // check to that run's required gates — same shape CompleteWorkflowRun
+        // uses. This keeps the two completion paths (Mark Complete in the
+        // workflow vs. Promote on the entity page) in lockstep, and prevents
+        // global validators outside the run's gates (e.g. hasSourcing on a
+        // Make+Subassembly part) from blocking promotion.
+        var run = await db.WorkflowRuns
+            .FirstOrDefaultAsync(r => r.EntityType == EntityType
+                                      && r.EntityId == request.PartId
+                                      && r.CompletedAt == null
+                                      && r.AbandonedAt == null, ct);
+
         var missing = await readiness.GetMissingValidatorsAsync(EntityType, request.PartId, ct);
+        if (run is not null)
+        {
+            var def = await db.WorkflowDefinitions.AsNoTracking()
+                .FirstOrDefaultAsync(d => d.DefinitionId == run.DefinitionId, ct);
+            if (def is not null)
+            {
+                var requiredGateIds = WorkflowStepHelper.ParseSteps(def.StepsJson)
+                    .Where(s => s.Required)
+                    .SelectMany(s => s.CompletionGates)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                missing = [.. missing.Where(m => requiredGateIds.Contains(m.ValidatorId))];
+            }
+        }
+
         if (missing.Count > 0)
         {
             var payload = missing.Select(m => new MissingValidatorResponseModel(
@@ -67,14 +93,8 @@ public class PromotePartStatusHandler(
 
         await promoter.PromoteAsync(request.PartId, request.Body.TargetStatus, ct);
 
-        // Best-effort: if a workflow run is in flight against this part and the
-        // promotion landed us on the canonical "Active" target, mark the run
-        // complete in the same operation so callers see one fewer race.
-        var run = await db.WorkflowRuns
-            .FirstOrDefaultAsync(r => r.EntityType == EntityType
-                                      && r.EntityId == request.PartId
-                                      && r.CompletedAt == null
-                                      && r.AbandonedAt == null, ct);
+        // Best-effort: if the run is in flight and we landed on Active, mark
+        // the run complete in the same operation so callers see one fewer race.
         if (run is not null)
         {
             run.CompletedAt = clock.UtcNow;
