@@ -420,6 +420,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<WorkflowRunEntity> WorkflowRunEntities => Set<WorkflowRunEntity>();
     public DbSet<WorkflowDefinition> WorkflowDefinitions => Set<WorkflowDefinition>();
     public DbSet<EntityReadinessValidator> EntityReadinessValidators => Set<EntityReadinessValidator>();
+    public DbSet<EntityCapabilityRequirement> EntityCapabilityRequirements => Set<EntityCapabilityRequirement>();
     public DbSet<CostingProfile> CostingProfiles => Set<CostingProfile>();
     public DbSet<CostCalculation> CostCalculations => Set<CostCalculation>();
     public DbSet<CostCalculationInputs> CostCalculationInputs => Set<CostCalculationInputs>();
