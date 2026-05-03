@@ -75,6 +75,36 @@ public static class WorkflowSeedData
             """.Replace("\r", "").Replace("\n", "").Replace(" ", ""),
             DisplayNameKey: "validators.parts.hasCost",
             MissingMessageKey: "validators.parts.hasCostMissing"),
+        // Sourcing — the user has picked a preferred vendor for the part.
+        // Optional in some flows (Make/Phantom parts may not have a single
+        // preferred vendor); the workflow definitions decide whether the
+        // sourcing step is required. The validator only answers "is it
+        // satisfied?" — it doesn't dictate whether the step must pass.
+        new(
+            ValidatorId: "hasSourcing",
+            Predicate: """{"type":"fieldPresent","field":"preferredVendorId"}""",
+            DisplayNameKey: "validators.parts.hasSourcing",
+            MissingMessageKey: "validators.parts.hasSourcingMissing"),
+        // Inventory — the user has picked the part's primary unit of
+        // measure for stock tracking. Threshold/reorder fields stay
+        // optional (can be set later or driven by ABC analysis); UoM
+        // is the minimum to enable any inventory transactions.
+        new(
+            ValidatorId: "hasInventory",
+            Predicate: """{"type":"fieldPresent","field":"stockUomId"}""",
+            DisplayNameKey: "validators.parts.hasInventory",
+            MissingMessageKey: "validators.parts.hasInventoryMissing"),
+        // NOTE: hasVendorParts and hasQuality are NOT defined here today.
+        //   • vendorParts: Part doesn't expose a navigation collection to
+        //     VendorPart in the entity model (PartReadinessLoader doesn't
+        //     Include it), so `relationExists` would always return false.
+        //     Adding the navigation is a separate refactor.
+        //   • quality: TraceabilityType is non-nullable enum defaulting
+        //     to None; `fieldPresent` can't distinguish "user picked None
+        //     intentionally" from "untouched default". Needs a different
+        //     evaluator approach (e.g. fieldEquals for non-default).
+        // Both steps remain on the pointer-based completion fallback in
+        // the WorkflowComponent shell — visited == complete.
     ];
 
     public static IReadOnlyList<DefinitionSeed> PartWorkflowDefinitions { get; } =
@@ -181,9 +211,9 @@ public static class WorkflowSeedData
     private static string BuildBuyRawStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
-      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
+      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":["hasInventory"]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":false,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
@@ -195,9 +225,9 @@ public static class WorkflowSeedData
     private static string BuildBuyComponentStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
-      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
+      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":["hasInventory"]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
     """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
@@ -208,9 +238,9 @@ public static class WorkflowSeedData
     private static string BuildBuySubassemblyStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
-      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
+      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":["hasInventory"]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":true,"completionGates":[]}
     ]
@@ -222,9 +252,9 @@ public static class WorkflowSeedData
     private static string BuildBuyFinishedGoodStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
-      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
+      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":["hasInventory"]},
       {"id":"shipping","labelKey":"workflow.parts.steps.shipping","componentName":"PartShippingStepComponent","required":true,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
@@ -237,9 +267,9 @@ public static class WorkflowSeedData
     private static string BuildBuyConsumableStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
-      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
+      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":["hasInventory"]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
     """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
@@ -250,9 +280,9 @@ public static class WorkflowSeedData
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
       {"id":"toolAsset","labelKey":"workflow.parts.steps.toolAsset","componentName":"PartToolAssetStepComponent","required":true,"completionGates":[]},
-      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":[]},
+      {"id":"sourcing","labelKey":"workflow.parts.steps.sourcing","componentName":"PartSourcingStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
-      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
+      {"id":"inventory","labelKey":"workflow.parts.steps.inventory","componentName":"PartInventoryStepComponent","required":true,"completionGates":["hasInventory"]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]}
     ]
     """.Replace("\r", "").Replace("\n", "").Replace("  ", "");
@@ -266,7 +296,7 @@ public static class WorkflowSeedData
     private static string BuildMakeComponentStepsJson() => """
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
-      {"id":"manufacturing","labelKey":"workflow.parts.steps.manufacturing","componentName":"PartInventoryStepComponent","required":true,"completionGates":[]},
+      {"id":"manufacturing","labelKey":"workflow.parts.steps.manufacturing","componentName":"PartInventoryStepComponent","required":true,"completionGates":["hasInventory"]},
       {"id":"bom","labelKey":"workflow.parts.steps.bom","componentName":"PartBomStepComponent","required":false,"completionGates":[]},
       {"id":"routing","labelKey":"workflow.parts.steps.routing","componentName":"PartRoutingStepComponent","required":true,"completionGates":["hasRouting"]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
@@ -325,7 +355,7 @@ public static class WorkflowSeedData
     [
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
       {"id":"sourcePart","labelKey":"workflow.parts.steps.sourcePart","componentName":"PartSourcePartStepComponent","required":true,"completionGates":[]},
-      {"id":"vendor","labelKey":"workflow.parts.steps.vendor","componentName":"PartVendorStepComponent","required":true,"completionGates":[]},
+      {"id":"vendor","labelKey":"workflow.parts.steps.vendor","componentName":"PartVendorStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":true,"completionGates":[]}
@@ -340,7 +370,7 @@ public static class WorkflowSeedData
       {"id":"basics","labelKey":"workflow.parts.steps.basics","componentName":"PartBasicsStepComponent","required":true,"completionGates":["hasBasics"]},
       {"id":"sourcePart","labelKey":"workflow.parts.steps.sourcePart","componentName":"PartSourcePartStepComponent","required":true,"completionGates":[]},
       {"id":"bom","labelKey":"workflow.parts.steps.bom","componentName":"PartBomStepComponent","required":true,"completionGates":["hasBom"]},
-      {"id":"vendor","labelKey":"workflow.parts.steps.vendor","componentName":"PartVendorStepComponent","required":true,"completionGates":[]},
+      {"id":"vendor","labelKey":"workflow.parts.steps.vendor","componentName":"PartVendorStepComponent","required":true,"completionGates":["hasSourcing"]},
       {"id":"vendorParts","labelKey":"workflow.parts.steps.vendorParts","componentName":"PartVendorPartsStepComponent","required":false,"completionGates":[]},
       {"id":"costing","labelKey":"workflow.parts.steps.costing","componentName":"PartCostingStepComponent","required":true,"completionGates":["hasCost"]},
       {"id":"quality","labelKey":"workflow.parts.steps.quality","componentName":"PartQualityStepComponent","required":true,"completionGates":[]}
