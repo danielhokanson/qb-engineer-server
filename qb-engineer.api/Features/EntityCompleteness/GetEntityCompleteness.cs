@@ -60,15 +60,12 @@ public class GetEntityCompletenessHandler(
         foreach (var group in enabledRequirements)
         {
             var missing = new List<EntityCompletenessMissingField>();
-            foreach (var requirement in group)
+            foreach (var requirement in group.Where(requirement => !evaluator.Evaluate(requirement.Predicate, entity)))
             {
-                if (!evaluator.Evaluate(requirement.Predicate, entity))
-                {
-                    missing.Add(new EntityCompletenessMissingField(
-                        requirement.RequirementId,
-                        requirement.DisplayNameKey,
-                        requirement.MissingMessageKey));
-                }
+                missing.Add(new EntityCompletenessMissingField(
+                    requirement.RequirementId,
+                    requirement.DisplayNameKey,
+                    requirement.MissingMessageKey));
             }
             capabilities.Add(new EntityCompletenessCapability(
                 group.Key,
