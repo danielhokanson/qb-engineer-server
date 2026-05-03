@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pwsh /app/publish/playwright.ps1 install ffmpeg
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 # Install Chromium (PuppeteerSharp fallback) + ffmpeg (AI video muxing).
 # wget is required by the HEALTHCHECK below — aspnet:9.0 base image doesn't
