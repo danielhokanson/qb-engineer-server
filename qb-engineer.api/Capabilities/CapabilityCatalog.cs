@@ -78,6 +78,16 @@ public static class CapabilityCatalog
         new("CAP-MFG-MULTIOP", "MFG", @"Multi-operation routing execution", @"WO progresses through multiple sequenced operations across work centers, with op-by-op completion and queue tracking. Distinct from single-op completion.", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-MFG-COMPLETE", "MFG", @"WO completion + scrap + rework", @"Report completed quantity, scrap quantity, rework quantity at WO close. Moves WIP to FG, expenses scrap.", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-MFG-WOVARIANCE", "MFG", @"WO variance review", @"Compare actual vs. planned cost (material, labor, overhead) at WO close, surface exceptions.", IsDefaultOn: false, RequiresRoles: null),
+        // Costing tiers (Phase 4F follow-on, 2026-05-03). The radios are
+        // present in part-costing-step.component.html but were hardcoded
+        // disabled because no capability flag existed to gate them. These
+        // entries make them admin-toggleable; the actual rate/driver/
+        // allocation engines are still pending separate implementation
+        // efforts. UI capability-gates the radios so enabling them at
+        // least removes the disable + reveals "configuration coming soon"
+        // content rather than the placeholder tooltip.
+        new("CAP-COSTING-TIER2-DEPTRATES", "MFG", @"Tier 2 — Departmental cost rates", @"Per-cost-center percentage applied to direct cost based on routing. Aspirational placeholder — when enabled, the part workflow's costing step exposes the Tier 2 radio but the calculation engine is not yet implemented; configuration screens (cost centers, rates) will land in a separate effort.", IsDefaultOn: false, RequiresRoles: null),
+        new("CAP-COSTING-TIER3-ABC", "MFG", @"Tier 3 — Activity-based costing", @"Cost pools allocated by drivers (machine hours, square footage, etc). Aspirational placeholder — when enabled, the part workflow's costing step exposes the Tier 3 radio but the engine is not yet implemented; cost pools, drivers, and allocation rules will land in a separate effort.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-MFG-SHOPFLOOR", "MFG", @"Shop-floor execution surface", @"Floor-side WO execution: operator starts a WO, reports progress, completes ops. Distinct from kiosk auth (which is the access path) and from kanban (which is the visualization).", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-MFG-STOPPAGE", "MFG", @"Stoppage / downtime tracking", @"Floor-side stoppage event capture (machine down, material out, breakdown), feeds OEE.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-MFG-MACHINE-CONNECT", "MFG", @"Machine data ingest (IoT)", @"Connect physical machines to ingest run/idle/down telemetry. Feeds OEE and predictive maintenance.", IsDefaultOn: false, RequiresRoles: null),
