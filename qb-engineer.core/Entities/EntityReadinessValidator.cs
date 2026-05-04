@@ -21,6 +21,23 @@ public class EntityReadinessValidator : BaseAuditableEntity
     /// <summary>The DSL predicate (JSON), evaluated by PredicateEvaluator.</summary>
     public string Predicate { get; set; } = "{}";
 
+    /// <summary>
+    /// Optional applicability check (JSON DSL, same evaluator). When non-null
+    /// and the predicate against the entity returns FALSE, this validator is
+    /// skipped entirely — neither evaluated nor reported as missing. Enables
+    /// per-record / per-profile readiness: a validator applies only to the
+    /// records that actually need it.
+    ///
+    /// Examples:
+    ///   • <c>{"type":"fieldEquals","field":"requiresEngineeringAttention","value":true}</c>
+    ///     — only fires for records that opted into engineering review.
+    ///   • <c>{"type":"fieldEquals","field":"internationalShipping","value":true}</c>
+    ///     — HTS-code validator that only matters for international shipments.
+    ///
+    /// NULL (default) = always-applicable, matching pre-applicability behavior.
+    /// </summary>
+    public string? ApplicabilityPredicate { get; set; }
+
     /// <summary>i18n key — canonical noun (e.g. "validators.parts.hasBom").</summary>
     public string DisplayNameKey { get; set; } = string.Empty;
 

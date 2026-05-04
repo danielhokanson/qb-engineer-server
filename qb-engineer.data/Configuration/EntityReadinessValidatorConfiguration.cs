@@ -22,6 +22,9 @@ public class EntityReadinessValidatorConfiguration : IEntityTypeConfiguration<En
             .HasColumnType("jsonb")
             .IsRequired();
 
+        builder.Property(e => e.ApplicabilityPredicate)
+            .HasColumnType("jsonb");
+
         builder.Property(e => e.DisplayNameKey).HasMaxLength(128).IsRequired();
         builder.Property(e => e.MissingMessageKey).HasMaxLength(128).IsRequired();
         builder.Property(e => e.IsSeedData).IsRequired();
