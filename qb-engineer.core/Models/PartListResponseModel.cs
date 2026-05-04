@@ -19,4 +19,9 @@ public record PartListResponseModel(
     // when no rung resolves, EffectivePriceSource is "Default" and EffectivePrice is 0.
     decimal EffectivePrice,
     string EffectivePriceCurrency,
-    string EffectivePriceSource);
+    string EffectivePriceSource,
+    // Workflow draft indicator. Non-null when an in-progress (uncomp,
+    // unabandoned) workflow_run exists for this part — drives the
+    // row-level "resume workflow" affordance in the parts list. Null
+    // means no draft in flight.
+    PendingWorkflowSummary? PendingWorkflow);
