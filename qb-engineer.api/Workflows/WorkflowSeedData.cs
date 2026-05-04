@@ -12,14 +12,12 @@ namespace QBEngineer.Api.Workflows;
 /// template and a guided steps list per resolved decision #10 (user-pickable
 /// mode at runtime, with a per-combo recommended default).</para>
 ///
-/// <para>Step <c>componentName</c> values reference existing Angular step
-/// components today. Combos that reference <c>PartSourcingStepComponent</c>,
-/// <c>PartManufacturerStepComponent</c>, <c>PartInventoryStepComponent</c>,
-/// <c>PartQualityStepComponent</c>, <c>PartShippingStepComponent</c>,
-/// <c>PartSourcePartStepComponent</c>, <c>PartVendorStepComponent</c>,
-/// <c>PartToolAssetStepComponent</c>, <c>PartFlagsStepComponent</c>, or
-/// <c>PartSalesHooksStepComponent</c> are placeholder names — Pillar 4 will
-/// build those step components and adopt the steps without re-seeding.</para>
+/// <para>Step <c>componentName</c> values map 1:1 to Angular components
+/// registered in <c>register-part-workflow-steps.ts</c>. All combo-specific
+/// step components (Sourcing, Inventory, Quality, Shipping, SourcePart,
+/// Vendor, ToolAsset, Flags, SalesHooks, VendorParts) are built and wired —
+/// the legacy <c>PartManufacturerStepComponent</c> was retired pre-beta when
+/// OEM identity moved off Part onto VendorPart.</para>
 /// </summary>
 public static class WorkflowSeedData
 {
