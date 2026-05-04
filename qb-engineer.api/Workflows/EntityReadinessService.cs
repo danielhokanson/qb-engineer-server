@@ -52,6 +52,19 @@ public class EntityReadinessService(
         var missing = new List<EntityReadinessValidator>();
         foreach (var v in validators)
         {
+            // Per-record applicability: if the validator carries an
+            // applicability predicate, evaluate it FIRST. False ⇒ this
+            // validator doesn't apply to this record (e.g. hasIncoterms
+            // skipped on a domestic-only customer) and is excluded from
+            // both the evaluation pass and the missing-validators reply.
+            // NULL applicability ⇒ always-applicable, preserves the
+            // pre-applicability behavior on every shipped validator.
+            if (!string.IsNullOrWhiteSpace(v.ApplicabilityPredicate)
+                && !evaluator.Evaluate(v.ApplicabilityPredicate, entity))
+            {
+                continue;
+            }
+
             if (!evaluator.Evaluate(v.Predicate, entity))
                 missing.Add(v);
         }
