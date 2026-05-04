@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.VendorParts;
 
@@ -38,34 +39,82 @@ public class UpdateVendorPartHandler(AppDbContext db)
     public async Task<VendorPartResponseModel> Handle(UpdateVendorPartCommand request, CancellationToken ct)
     {
         var vp = await db.VendorParts
+            .Include(x => x.Vendor)
             .Include(x => x.PriceTiers)
             .FirstOrDefaultAsync(x => x.Id == request.Id, ct)
             ?? throw new KeyNotFoundException($"VendorPart {request.Id} not found");
 
         var body = request.Body;
+        var changedFields = new List<string>();
 
         // Per-field patch — null means "leave alone". Trimming on string
         // fields mirrors CreateVendorPartHandler.
-        if (body.VendorPartNumber is not null) vp.VendorPartNumber = body.VendorPartNumber.Trim();
+        if (body.VendorPartNumber is not null && body.VendorPartNumber.Trim() != (vp.VendorPartNumber ?? ""))
+        {
+            vp.VendorPartNumber = body.VendorPartNumber.Trim();
+            changedFields.Add("vendorPartNumber");
+        }
         if (body.ManufacturerName is not null)
         {
             var trimmed = body.ManufacturerName.Trim();
-            vp.ManufacturerName = trimmed.Length == 0 ? null : trimmed;
+            var newVal = trimmed.Length == 0 ? null : trimmed;
+            if (newVal != vp.ManufacturerName) { vp.ManufacturerName = newVal; changedFields.Add("manufacturerName"); }
         }
-        if (body.VendorMpn is not null) vp.VendorMpn = body.VendorMpn.Trim();
-        if (body.LeadTimeDays.HasValue) vp.LeadTimeDays = body.LeadTimeDays.Value;
-        if (body.MinOrderQty.HasValue) vp.MinOrderQty = body.MinOrderQty.Value;
-        if (body.PackSize.HasValue) vp.PackSize = body.PackSize.Value;
-        if (body.CountryOfOrigin is not null) vp.CountryOfOrigin = body.CountryOfOrigin.Trim().ToUpperInvariant();
-        if (body.HtsCode is not null) vp.HtsCode = body.HtsCode.Trim();
-        if (body.Certifications is not null) vp.Certifications = body.Certifications;
-        if (body.LastQuotedDate.HasValue) vp.LastQuotedDate = body.LastQuotedDate.Value;
-        if (body.Notes is not null) vp.Notes = body.Notes;
+        if (body.VendorMpn is not null && body.VendorMpn.Trim() != (vp.VendorMpn ?? ""))
+        {
+            vp.VendorMpn = body.VendorMpn.Trim();
+            changedFields.Add("vendorMpn");
+        }
+        if (body.LeadTimeDays.HasValue && body.LeadTimeDays.Value != vp.LeadTimeDays)
+        {
+            vp.LeadTimeDays = body.LeadTimeDays.Value;
+            changedFields.Add("leadTimeDays");
+        }
+        if (body.MinOrderQty.HasValue && body.MinOrderQty.Value != vp.MinOrderQty)
+        {
+            vp.MinOrderQty = body.MinOrderQty.Value;
+            changedFields.Add("minOrderQty");
+        }
+        if (body.PackSize.HasValue && body.PackSize.Value != vp.PackSize)
+        {
+            vp.PackSize = body.PackSize.Value;
+            changedFields.Add("packSize");
+        }
+        if (body.CountryOfOrigin is not null)
+        {
+            var newVal = body.CountryOfOrigin.Trim().ToUpperInvariant();
+            if (newVal != (vp.CountryOfOrigin ?? "")) { vp.CountryOfOrigin = newVal; changedFields.Add("countryOfOrigin"); }
+        }
+        if (body.HtsCode is not null && body.HtsCode.Trim() != (vp.HtsCode ?? ""))
+        {
+            vp.HtsCode = body.HtsCode.Trim();
+            changedFields.Add("htsCode");
+        }
+        if (body.Certifications is not null && body.Certifications != (vp.Certifications ?? ""))
+        {
+            vp.Certifications = body.Certifications;
+            changedFields.Add("certifications");
+        }
+        if (body.LastQuotedDate.HasValue && body.LastQuotedDate.Value != vp.LastQuotedDate)
+        {
+            vp.LastQuotedDate = body.LastQuotedDate.Value;
+            changedFields.Add("lastQuotedDate");
+        }
+        if (body.Notes is not null && body.Notes != (vp.Notes ?? ""))
+        {
+            vp.Notes = body.Notes;
+            changedFields.Add("notes");
+        }
 
-        vp.IsApproved = body.IsApproved;
+        if (body.IsApproved != vp.IsApproved)
+        {
+            vp.IsApproved = body.IsApproved;
+            changedFields.Add("isApproved");
+        }
 
         // Preferred-flip guard — only when transitioning false → true do we
         // need to clear siblings; otherwise leave the rest of the AVL alone.
+        var preferredFlipped = body.IsPreferred != vp.IsPreferred;
         if (body.IsPreferred && !vp.IsPreferred)
         {
             var siblings = await db.VendorParts
@@ -77,6 +126,19 @@ public class UpdateVendorPartHandler(AppDbContext db)
                 sib.IsPreferred = false;
         }
         vp.IsPreferred = body.IsPreferred;
+        if (preferredFlipped) changedFields.Add("isPreferred");
+
+        // Indexing-points rule: a VendorPart row sits between Part and
+        // Vendor — log on both. Rollup rule: one row per request, summarizing
+        // all changes (don't emit per-field rows here).
+        if (changedFields.Count > 0)
+        {
+            db.LogActivityAt(
+                "vendor-source-updated",
+                $"Updated vendor source {vp.Vendor?.CompanyName ?? "(unknown)"}: {string.Join(", ", changedFields)}",
+                ("Part", vp.PartId),
+                ("Vendor", vp.VendorId));
+        }
 
         await db.SaveChangesAsync(ct);
 
