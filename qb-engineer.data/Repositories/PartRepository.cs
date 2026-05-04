@@ -115,10 +115,41 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
         var partIds = rows.Select(r => r.Id).ToList();
         var prices = await pricingResolver.ResolveManyAsync(partIds, ct);
 
+        // Pre-load any in-progress workflow runs for the page's parts so the
+        // row-level "resume workflow" indicator can render without a per-row
+        // round-trip. Single query, indexed by entity_id; build a dict keyed
+        // on entity id so the per-row Select stays O(1).
+        var pendingRuns = await db.WorkflowRuns
+            .AsNoTracking()
+            .Where(r => r.EntityType == "Part"
+                && r.EntityId != null
+                && partIds.Contains(r.EntityId.Value)
+                && r.CompletedAt == null
+                && r.AbandonedAt == null)
+            .Select(r => new
+            {
+                r.Id,
+                EntityId = r.EntityId!.Value,
+                r.DefinitionId,
+                r.CurrentStepId,
+                r.Mode,
+                r.LastActivityAt,
+            })
+            .ToListAsync(ct);
+        var pendingByPartId = pendingRuns
+            .GroupBy(r => r.EntityId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.LastActivityAt).First());
+
         var items = rows
             .Select(r =>
             {
                 var price = prices[r.Id];
+                PendingWorkflowSummary? pending = null;
+                if (pendingByPartId.TryGetValue(r.Id, out var pr))
+                {
+                    pending = new PendingWorkflowSummary(
+                        pr.Id, pr.DefinitionId, pr.CurrentStepId, pr.Mode, pr.LastActivityAt);
+                }
                 return new PartListResponseModel(
                     r.Id,
                     r.PartNumber,
@@ -132,7 +163,8 @@ public class PartRepository(AppDbContext db, IPartPricingResolver pricingResolve
                     r.CreatedAt,
                     price.UnitPrice,
                     price.Currency,
-                    price.Source.ToString());
+                    price.Source.ToString(),
+                    pending);
             })
             .ToList();
 

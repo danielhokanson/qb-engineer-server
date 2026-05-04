@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.VendorParts;
 
@@ -104,6 +105,16 @@ public class CreateVendorPartHandler(AppDbContext db)
             .Include(x => x.PriceTiers)
             .AsNoTracking()
             .FirstAsync(x => x.Id == vp.Id, ct);
+
+        // Indexing-points rule: this row sits between Part and Vendor — log on
+        // both so the change is visible from either entity's Activity tab.
+        var preferredSuffix = body.IsPreferred ? " (preferred)" : "";
+        db.LogActivityAt(
+            "vendor-source-added",
+            $"Added vendor source: {loaded.Vendor.CompanyName}{preferredSuffix}",
+            ("Part", body.PartId),
+            ("Vendor", body.VendorId));
+        await db.SaveChangesAsync(ct);
 
         return VendorPartMapper.ToResponse(loaded);
     }

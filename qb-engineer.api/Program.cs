@@ -648,6 +648,7 @@ try
     builder.Services.AddScoped<OverdueMaintenanceJob>();
     builder.Services.AddScoped<ComplianceFormSyncJob>();
     builder.Services.AddScoped<ReorderAnalysisJob>();
+    builder.Services.AddScoped<StaleWorkflowRunCleanupJob>();
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -1247,6 +1248,10 @@ try
         "database-backup",
         job => job.RunBackupAsync(CancellationToken.None),
         Cron.Daily(3)); // 3 AM UTC daily
+    RecurringJob.AddOrUpdate<StaleWorkflowRunCleanupJob>(
+        "cleanup-stale-workflow-runs",
+        job => job.CleanupStaleEntitylessRunsAsync(CancellationToken.None),
+        Cron.Daily(4)); // 4 AM UTC daily — auto-abandon entity-less drafts >24h idle
 
     // Accounting sync jobs
     RecurringJob.AddOrUpdate<SyncQueueProcessorJob>(

@@ -6,12 +6,15 @@ using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+using QBEngineer.Tests.Helpers;
 
 namespace QBEngineer.Tests.Handlers.Parts;
 
 public class UpdatePartHandlerTests
 {
     private readonly Mock<IPartRepository> _partRepo = new();
+    private readonly AppDbContext _db = TestDbContextFactory.Create();
     private readonly UpdatePartHandler _handler;
 
     public UpdatePartHandlerTests()
@@ -20,6 +23,7 @@ public class UpdatePartHandlerTests
             _partRepo.Object,
             Mock.Of<ISyncQueueRepository>(),
             Mock.Of<IAccountingProviderFactory>(),
+            _db,
             Mock.Of<ILogger<UpdatePartHandler>>());
     }
 

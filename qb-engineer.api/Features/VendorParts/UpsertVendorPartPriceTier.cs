@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.VendorParts;
 
@@ -37,9 +38,10 @@ public class UpsertVendorPartPriceTierHandler(AppDbContext db)
 {
     public async Task<VendorPartPriceTierResponseModel> Handle(UpsertVendorPartPriceTierCommand request, CancellationToken ct)
     {
-        var vendorPartExists = await db.VendorParts.AnyAsync(x => x.Id == request.VendorPartId, ct);
-        if (!vendorPartExists)
-            throw new KeyNotFoundException($"VendorPart {request.VendorPartId} not found");
+        var vp = await db.VendorParts
+            .Include(x => x.Vendor)
+            .FirstOrDefaultAsync(x => x.Id == request.VendorPartId, ct)
+            ?? throw new KeyNotFoundException($"VendorPart {request.VendorPartId} not found");
 
         var body = request.Body;
 
@@ -50,6 +52,7 @@ public class UpsertVendorPartPriceTierHandler(AppDbContext db)
             ct);
 
         VendorPartPriceTier tier;
+        bool isNew;
         if (existing is null)
         {
             tier = new VendorPartPriceTier
@@ -63,6 +66,7 @@ public class UpsertVendorPartPriceTierHandler(AppDbContext db)
                 Notes = body.Notes,
             };
             db.VendorPartPriceTiers.Add(tier);
+            isNew = true;
         }
         else
         {
@@ -71,7 +75,21 @@ public class UpsertVendorPartPriceTierHandler(AppDbContext db)
             existing.EffectiveTo = body.EffectiveTo;
             existing.Notes = body.Notes;
             tier = existing;
+            isNew = false;
         }
+
+        // Indexing-points rule: a price tier is data on the VendorPart, which
+        // bridges Part ↔ Vendor — log on both. Description includes the
+        // tier's defining triple so future readers can match the audit row
+        // back to the data point without joining.
+        var vendorName = vp.Vendor?.CompanyName ?? "(unknown vendor)";
+        var verb = isNew ? "added" : "updated";
+        var summary = $"Price tier {verb} for {vendorName}: qty ≥ {tier.MinQuantity} @ {tier.UnitPrice:0.##} {tier.Currency} (effective {tier.EffectiveFrom:yyyy-MM-dd})";
+        db.LogActivityAt(
+            isNew ? "price-tier-added" : "price-tier-updated",
+            summary,
+            ("Part", vp.PartId),
+            ("Vendor", vp.VendorId));
 
         await db.SaveChangesAsync(ct);
 

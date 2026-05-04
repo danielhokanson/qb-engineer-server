@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.VendorParts;
 
@@ -19,10 +20,19 @@ public class DeleteVendorPartHandler(AppDbContext db, IClock clock)
 {
     public async Task Handle(DeleteVendorPartCommand request, CancellationToken ct)
     {
-        var vp = await db.VendorParts.FirstOrDefaultAsync(x => x.Id == request.Id, ct)
+        var vp = await db.VendorParts
+            .Include(x => x.Vendor)
+            .FirstOrDefaultAsync(x => x.Id == request.Id, ct)
             ?? throw new KeyNotFoundException($"VendorPart {request.Id} not found");
 
         vp.DeletedAt = clock.UtcNow;
+
+        db.LogActivityAt(
+            "vendor-source-removed",
+            $"Removed vendor source: {vp.Vendor?.CompanyName ?? "(unknown)"}",
+            ("Part", vp.PartId),
+            ("Vendor", vp.VendorId));
+
         await db.SaveChangesAsync(ct);
     }
 }
