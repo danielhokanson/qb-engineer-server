@@ -81,6 +81,9 @@ public class CreateVendorPartHandler(AppDbContext db)
             Certifications = body.Certifications,
             LastQuotedDate = body.LastQuotedDate,
             Notes = body.Notes,
+            Currency = string.IsNullOrWhiteSpace(body.Currency)
+                ? "USD"
+                : body.Currency.Trim().ToUpperInvariant(),
         };
 
         // At-most-one-preferred-per-Part — atomically clear preferred on any

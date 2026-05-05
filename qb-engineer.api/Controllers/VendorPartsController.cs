@@ -31,9 +31,12 @@ public class VendorPartsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<VendorPartResponseModel>> GetVendorPart(int id, CancellationToken ct)
+    public async Task<ActionResult<VendorPartResponseModel>> GetVendorPart(
+        int id,
+        [FromQuery] bool showHistory,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetVendorPartQuery(id), ct);
+        var result = await mediator.Send(new GetVendorPartQuery(id, showHistory), ct);
         return Ok(result);
     }
 
@@ -62,9 +65,11 @@ public class VendorPartsController(IMediator mediator) : ControllerBase
     /// </summary>
     [HttpGet("/api/v1/parts/{partId:int}/vendor-parts")]
     public async Task<ActionResult<List<VendorPartResponseModel>>> ListByPart(
-        int partId, CancellationToken ct)
+        int partId,
+        [FromQuery] bool showHistory,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new ListVendorPartsByPartQuery(partId), ct);
+        var result = await mediator.Send(new ListVendorPartsByPartQuery(partId, showHistory), ct);
         return Ok(result);
     }
 

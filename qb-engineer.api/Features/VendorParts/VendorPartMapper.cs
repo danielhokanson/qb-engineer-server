@@ -33,10 +33,12 @@ internal static class VendorPartMapper
             Notes: vp.Notes,
             PriceTiers: vp.PriceTiers
                 .OrderBy(t => t.MinQuantity)
+                .ThenByDescending(t => t.EffectiveFrom)
                 .Select(ToTierResponse)
                 .ToList(),
             CreatedAt: vp.CreatedAt,
-            UpdatedAt: vp.UpdatedAt);
+            UpdatedAt: vp.UpdatedAt,
+            Currency: vp.Currency);
 
     public static VendorPartPriceTierResponseModel ToTierResponse(VendorPartPriceTier t) =>
         new(

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
 using QBEngineer.Data.Context;
 
@@ -8,11 +9,12 @@ namespace QBEngineer.Api.Features.VendorParts;
 
 /// <summary>
 /// Pillar 3 — Single VendorPart read with PriceTiers + denormalized vendor
-/// company name + part number/name.
+/// company name + part number/name. Tier filter mirrors the list query:
+/// currently-effective by default, all rows when <c>ShowHistory = true</c>.
 /// </summary>
-public record GetVendorPartQuery(int Id) : IRequest<VendorPartResponseModel>;
+public record GetVendorPartQuery(int Id, bool ShowHistory = false) : IRequest<VendorPartResponseModel>;
 
-public class GetVendorPartHandler(AppDbContext db)
+public class GetVendorPartHandler(AppDbContext db, IClock clock)
     : IRequestHandler<GetVendorPartQuery, VendorPartResponseModel>
 {
     public async Task<VendorPartResponseModel> Handle(GetVendorPartQuery request, CancellationToken ct)
@@ -24,6 +26,15 @@ public class GetVendorPartHandler(AppDbContext db)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.Id, ct)
             ?? throw new KeyNotFoundException($"VendorPart {request.Id} not found");
+
+        if (!request.ShowHistory)
+        {
+            var now = clock.UtcNow;
+            vp.PriceTiers = vp.PriceTiers
+                .Where(t => t.EffectiveFrom <= now
+                    && (t.EffectiveTo == null || t.EffectiveTo >= now))
+                .ToList();
+        }
 
         return VendorPartMapper.ToResponse(vp);
     }
