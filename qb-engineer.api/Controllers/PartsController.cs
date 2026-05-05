@@ -274,4 +274,20 @@ public class PartsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetPartInventorySummaryQuery(id));
         return Ok(result);
     }
+
+    // ── Purchase Order history (backward-from-part view) ─────────────────────
+    //
+    // Capped at 50 rows server-side (see GetPartPurchaseHistoryHandler.MaxRows).
+    // Optional `search` term filters on PO #, vendor name, line description.
+    // Capability-gated by CAP-P2P-PO so installs with PO disabled don't
+    // surface a tab that would always be empty + confuse the user.
+
+    [HttpGet("{id:int}/purchase-history")]
+    [RequiresCapability("CAP-P2P-PO")]
+    public async Task<ActionResult<List<PartPurchaseHistoryItemResponseModel>>> GetPurchaseHistory(
+        int id, [FromQuery] string? search = null)
+    {
+        var result = await mediator.Send(new GetPartPurchaseHistoryQuery(id, search));
+        return Ok(result);
+    }
 }
