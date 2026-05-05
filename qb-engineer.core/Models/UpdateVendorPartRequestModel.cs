@@ -19,4 +19,6 @@ public record UpdateVendorPartRequestModel(
     bool IsPreferred,
     string? Certifications,
     DateTimeOffset? LastQuotedDate,
-    string? Notes);
+    string? Notes,
+    /// <summary>ISO-4217 currency code. Null = leave existing unchanged.</summary>
+    string? Currency = null);

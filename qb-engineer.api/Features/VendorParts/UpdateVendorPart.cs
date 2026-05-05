@@ -105,6 +105,15 @@ public class UpdateVendorPartHandler(AppDbContext db)
             vp.Notes = body.Notes;
             changedFields.Add("notes");
         }
+        if (body.Currency is not null)
+        {
+            var newCurrency = body.Currency.Trim().ToUpperInvariant();
+            if (newCurrency.Length > 0 && newCurrency != vp.Currency)
+            {
+                vp.Currency = newCurrency;
+                changedFields.Add("currency");
+            }
+        }
 
         if (body.IsApproved != vp.IsApproved)
         {

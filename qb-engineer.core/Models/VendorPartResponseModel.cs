@@ -27,4 +27,6 @@ public record VendorPartResponseModel(
     string? Notes,
     List<VendorPartPriceTierResponseModel> PriceTiers,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    /// <summary>ISO-4217 currency this vendor quotes in. Tier rows snapshot this value at insert time.</summary>
+    string Currency);

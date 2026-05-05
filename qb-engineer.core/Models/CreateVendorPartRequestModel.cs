@@ -19,4 +19,6 @@ public record CreateVendorPartRequestModel(
     bool IsPreferred,
     string? Certifications,
     DateTimeOffset? LastQuotedDate,
-    string? Notes);
+    string? Notes,
+    /// <summary>ISO-4217 currency code. Optional; defaults to "USD".</summary>
+    string? Currency = null);
