@@ -238,10 +238,10 @@ public class VendorPartCrudTests(CapabilityTestWebApplicationFactory factory)
         var vp = (await createResp.Content.ReadFromJsonAsync<VendorPartResponseModel>())!;
         vp.PriceTiers.Should().BeEmpty();
 
+        // Currency is no longer per-tier — lives on VendorPart, server snapshots.
         var tierBody = new UpsertVendorPartPriceTierRequestModel(
             MinQuantity: 100m,
             UnitPrice: 4.50m,
-            Currency: "USD",
             EffectiveFrom: new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
             EffectiveTo: null,
             Notes: "Volume break");

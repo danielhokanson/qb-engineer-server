@@ -222,10 +222,11 @@ public class PartPriceTests(CapabilityTestWebApplicationFactory factory)
 
         async Task PostTier(decimal minQty, decimal unit, DateTimeOffset eff, DateTimeOffset? expiry, string note)
         {
+            // Currency is no longer per-tier — it lives on VendorPart and the
+            // server snapshots into the tier row at insert time.
             var body = new UpsertVendorPartPriceTierRequestModel(
                 MinQuantity: minQty,
                 UnitPrice: unit,
-                Currency: "USD",
                 EffectiveFrom: eff,
                 EffectiveTo: expiry,
                 Notes: note);
