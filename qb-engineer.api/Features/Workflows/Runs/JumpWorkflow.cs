@@ -66,6 +66,12 @@ public class JumpWorkflowHandler(
             // pass. Surface a clean 409 listing only the gates of the steps
             // we'd be jumping over — irrelevant validators (e.g. hasBom on a
             // raw-material workflow that doesn't gate on BOM) stay hidden.
+            //
+            // Message text is intentionally generic — internal step IDs
+            // ('sourcing', 'vendorParts', etc.) are NOT user-facing. The
+            // carousel already shows the user where they are and what's
+            // locked; the missing-validators list gives the actionable detail
+            // via translated DisplayNameKey + MissingMessageKey.
             if (run.EntityId is null)
             {
                 var blockingGateIds = steps
@@ -81,7 +87,7 @@ public class JumpWorkflowHandler(
                     v.ValidatorId, v.DisplayNameKey, v.MissingMessageKey)).ToList();
                 throw new WorkflowMissingValidatorsException(
                     payloadAll,
-                    $"Cannot jump forward to '{steps[targetIdx].Id}' — entity has not been created yet.");
+                    "Can't move forward yet — finish the current step first.");
             }
 
             var missing = await readiness.GetMissingValidatorsAsync(run.EntityType, run.EntityId.Value, ct);
@@ -95,7 +101,7 @@ public class JumpWorkflowHandler(
                                 .Select(m => new MissingValidatorResponseModel(
                                     m.ValidatorId, m.DisplayNameKey, m.MissingMessageKey))
                                 .ToList(),
-                            $"Cannot jump forward to '{steps[targetIdx].Id}' — step '{steps[i].Id}' is not yet complete.");
+                            "Can't jump ahead — an earlier required step is still incomplete.");
             }
         }
 
