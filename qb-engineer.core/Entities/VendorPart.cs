@@ -84,6 +84,16 @@ public class VendorPart : BaseAuditableEntity
     /// <summary>Most recent quote date — drives "quote may be stale" UI hints.</summary>
     public DateTimeOffset? LastQuotedDate { get; set; }
 
+    /// <summary>
+    /// ISO-4217 currency this vendor quotes in (USD/EUR/GBP/CAD/etc.).
+    /// Promoted from the per-tier level — multi-currency tier tables for a
+    /// single vendor source are an analytical edge case best modeled as
+    /// separate VendorPart rows. Defaults to USD; new tier inserts snapshot
+    /// this value at insert time so historical rows preserve the currency
+    /// they were quoted at if the source's currency later changes.
+    /// </summary>
+    public string Currency { get; set; } = "USD";
+
     public string? Notes { get; set; }
 
     public Vendor Vendor { get; set; } = null!;

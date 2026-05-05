@@ -25,6 +25,7 @@ public class VendorPartConfiguration : IEntityTypeConfiguration<VendorPart>
         builder.Property(e => e.HtsCode).HasMaxLength(20);
         builder.Property(e => e.Notes).HasMaxLength(2000);
         builder.Property(e => e.Certifications).HasColumnType("jsonb");
+        builder.Property(e => e.Currency).HasMaxLength(3).HasDefaultValue("USD").IsRequired();
 
         builder.Property(e => e.MinOrderQty).HasPrecision(18, 4);
         builder.Property(e => e.PackSize).HasPrecision(18, 4);
