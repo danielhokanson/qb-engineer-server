@@ -831,10 +831,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     /// </summary>
     private void NormalizeDateTimes()
     {
-        foreach (var entry in ChangeTracker.Entries())
+        foreach (var entry in ChangeTracker.Entries()
+                     .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified))
         {
-            if (entry.State != EntityState.Added && entry.State != EntityState.Modified) continue;
-
             var props = GetDateTimeProperties(entry.Entity.GetType());
             foreach (var prop in props)
             {
