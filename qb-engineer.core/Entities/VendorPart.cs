@@ -94,6 +94,19 @@ public class VendorPart : BaseAuditableEntity
     /// </summary>
     public string Currency { get; set; } = "USD";
 
+    /// <summary>
+    /// Default Incoterm (commercial term) for this vendor's quote on this
+    /// part. Bought-parts effort PR2. Drives downstream defaults: most
+    /// freight-paid-by-seller terms (CFR/CIF/CPT/CIP/DAP/DPU) default the
+    /// price tier's FreightIncluded flag to true; DDP also defaults
+    /// duty-included. Defaults are pre-fills, not invariants — overridable
+    /// per PurchaseOrder.
+    ///
+    /// <para>Defaults to FOB-Origin (the most common US-domestic case)
+    /// when the vendor doesn't specify.</para>
+    /// </summary>
+    public Enums.Incoterm Incoterm { get; set; } = Enums.Incoterm.FOB_Origin;
+
     public string? Notes { get; set; }
 
     public Vendor Vendor { get; set; } = null!;

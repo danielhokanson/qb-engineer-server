@@ -25,6 +25,12 @@ public class PurchaseOrderConfiguration : IEntityTypeConfiguration<PurchaseOrder
         builder.Property(e => e.ExternalRef).HasMaxLength(100);
         builder.Property(e => e.Provider).HasMaxLength(50);
 
+        // Bought-parts effort PR2 — landed cost foundation.
+        builder.Property(e => e.EstimatedFreight).HasPrecision(18, 4);
+        builder.Property(e => e.QuoteCurrency).HasMaxLength(3).HasDefaultValue("USD");
+        builder.Property(e => e.FxRate).HasPrecision(18, 8);
+        builder.Property(e => e.FxRateSource).HasMaxLength(200);
+
         builder.HasIndex(e => e.PONumber).IsUnique();
         builder.HasIndex(e => e.VendorId);
         builder.HasIndex(e => e.JobId);

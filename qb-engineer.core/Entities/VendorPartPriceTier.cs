@@ -25,5 +25,15 @@ public class VendorPartPriceTier : BaseEntity
 
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// True when the vendor's quoted price already includes freight (i.e.,
+    /// "door-to-door" pricing). Bought-parts effort PR2. When true, the
+    /// landed-cost calculation skips the freight component for this tier
+    /// and the cost tab renders freight as "—" (not $0) so the distinction
+    /// is visible. Lives on the tier (not the VendorPart) so a vendor can
+    /// have free shipping above qty N but not below.
+    /// </summary>
+    public bool FreightIncluded { get; set; }
+
     public VendorPart VendorPart { get; set; } = null!;
 }

@@ -36,6 +36,46 @@ public class PurchaseOrder : BaseAuditableEntity, IConcurrencyVersioned
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
 
+    // ─── Bought-parts effort PR2 — landed cost foundation ──────────────
+    /// <summary>
+    /// Commercial term governing this PO's freight + insurance + duty
+    /// allocation. Defaults from the preferred VendorPart's Incoterm at
+    /// PO creation; overridable per PO when a vendor offers a one-off
+    /// arrangement. See <see cref="Enums.Incoterm"/>.
+    /// </summary>
+    public Enums.Incoterm Incoterm { get; set; } = Enums.Incoterm.FOB_Origin;
+
+    /// <summary>
+    /// Buyer's freight estimate at PO time — drives PO total + cash-flow
+    /// forecast. Actual freight is captured per-receipt in
+    /// <c>ReceivingRecord.ActualFreight</c> (PR3) and feeds landed cost.
+    /// Null = "no freight estimate captured" (distinct from $0.00 freight,
+    /// which means "vendor confirmed free shipping").
+    /// </summary>
+    public decimal? EstimatedFreight { get; set; }
+
+    /// <summary>
+    /// Currency the vendor quoted in. Defaults from the preferred
+    /// VendorPart's Currency at PO creation. May differ from the tenant's
+    /// functional currency for international purchases.
+    /// </summary>
+    public string QuoteCurrency { get; set; } = "USD";
+
+    /// <summary>
+    /// Locked FX rate (quote currency → tenant functional currency)
+    /// captured at PO confirmation (Draft → Confirmed transition). Used
+    /// by the cost tab + landed cost calc. Pre-confirm POs have this
+    /// null — quoted total is informational only until lock.
+    /// </summary>
+    public decimal? FxRate { get; set; }
+
+    /// <summary>
+    /// Free-text source/reference for the FxRate snapshot (e.g.,
+    /// "ECB 2026-05-06" or "manual entry"). Helpful for audit when an FX
+    /// variance is investigated post-payment.
+    /// </summary>
+    public string? FxRateSource { get; set; }
+
     public Vendor Vendor { get; set; } = null!;
     public Job? Job { get; set; }
     public ICollection<PurchaseOrderLine> Lines { get; set; } = [];
