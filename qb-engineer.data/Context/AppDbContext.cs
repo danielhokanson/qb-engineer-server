@@ -85,6 +85,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
     public DbSet<PurchaseOrderRelease> PurchaseOrderReleases => Set<PurchaseOrderRelease>();
     public DbSet<ReceivingRecord> ReceivingRecords => Set<ReceivingRecord>();
+    // Bought-parts effort PR3 — landed cost foundation. Tariff rates are
+    // SCD-2 keyed on (HtsCode, CountryOfOrigin) and consumed by the
+    // landed-cost resolver. Today the table ships empty.
+    public DbSet<TariffRate> TariffRates => Set<TariffRate>();
 
     // RFQ (Request for Quote)
     public DbSet<RequestForQuote> RequestForQuotes => Set<RequestForQuote>();

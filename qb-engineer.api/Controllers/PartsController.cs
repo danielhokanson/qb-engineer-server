@@ -290,4 +290,16 @@ public class PartsController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetPartPurchaseHistoryQuery(id, search));
         return Ok(result);
     }
+
+    // Bought-parts effort PR3 — landed cost surface. Capability-gated by
+    // CAP-P2P-PO since landed cost is a PO-derived view; no PO history =
+    // an empty result anyway, but this keeps the route family consistent.
+    [HttpGet("{id:int}/landed-cost")]
+    [RequiresCapability("CAP-P2P-PO")]
+    public async Task<ActionResult<PartLandedCostResponseModel>> GetLandedCost(
+        int id, [FromQuery] int maxReceipts = 3)
+    {
+        var result = await mediator.Send(new GetPartLandedCostQuery(id, maxReceipts));
+        return Ok(result);
+    }
 }
