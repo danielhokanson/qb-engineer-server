@@ -79,7 +79,11 @@ public class PurchaseOrdersController(IMediator mediator) : ControllerBase
     [HttpPost("{id:int}/receive")]
     public async Task<IActionResult> ReceiveItems(int id, ReceiveItemsRequestModel request)
     {
-        await mediator.Send(new ReceiveItemsCommand(id, request.Lines));
+        await mediator.Send(new ReceiveItemsCommand(
+            id,
+            request.Lines,
+            request.ActualFreight,
+            request.FreightAllocationMethod));
         return NoContent();
     }
 
