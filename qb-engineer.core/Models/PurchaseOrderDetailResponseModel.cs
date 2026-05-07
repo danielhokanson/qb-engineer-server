@@ -24,4 +24,14 @@ public record PurchaseOrderDetailResponseModel(
     DateTimeOffset UpdatedAt,
     // Phase 3 / WU-14 / H3 — short-close audit fields.
     string? ShortCloseReason = null,
-    DateTimeOffset? ShortClosedAt = null);
+    DateTimeOffset? ShortClosedAt = null,
+    // Bought-parts effort PR2 — landed cost foundation.
+    string Incoterm = "FOB_Origin",
+    decimal? EstimatedFreight = null,
+    string QuoteCurrency = "USD",
+    decimal? FxRate = null,
+    string? FxRateSource = null,
+    // Soft-warning surface: when true, the vendor's MinOrderAmount is set
+    // and the PO total falls below it. UI shows a non-blocking banner.
+    bool BelowVendorMinimum = false,
+    decimal? VendorMinimumOrderAmount = null);

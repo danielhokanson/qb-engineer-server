@@ -14,6 +14,15 @@ public class GetPurchaseOrderByIdHandler(IPurchaseOrderRepository repo)
         var po = await repo.FindWithDetailsAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Purchase order {request.Id} not found");
 
+        // Bought-parts effort PR2 — surface the vendor-minimum warning so
+        // the UI can render a non-blocking banner. Pre-compute here rather
+        // than in the UI so the rule lives in one place.
+        var lineTotal = po.Lines.Sum(l => l.OrderedQuantity * l.UnitPrice);
+        var poTotal = lineTotal + (po.EstimatedFreight ?? 0m);
+        var belowMin = po.Vendor.MinOrderAmount.HasValue
+            && po.Vendor.MinOrderAmount.Value > 0
+            && poTotal < po.Vendor.MinOrderAmount.Value;
+
         return new PurchaseOrderDetailResponseModel(
             po.Id,
             po.PONumber,
@@ -48,6 +57,13 @@ public class GetPurchaseOrderByIdHandler(IPurchaseOrderRepository repo)
             po.CreatedAt,
             po.UpdatedAt,
             po.ShortCloseReason,
-            po.ShortClosedAt);
+            po.ShortClosedAt,
+            po.Incoterm.ToString(),
+            po.EstimatedFreight,
+            po.QuoteCurrency,
+            po.FxRate,
+            po.FxRateSource,
+            BelowVendorMinimum: belowMin,
+            VendorMinimumOrderAmount: po.Vendor.MinOrderAmount);
     }
 }
