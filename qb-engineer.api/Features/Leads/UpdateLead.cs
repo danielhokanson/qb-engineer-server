@@ -2,6 +2,8 @@ using FluentValidation;
 using MediatR;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.Leads;
 
@@ -18,7 +20,7 @@ public class UpdateLeadCommandValidator : AbstractValidator<UpdateLeadCommand>
     }
 }
 
-public class UpdateLeadHandler(ILeadRepository repo) : IRequestHandler<UpdateLeadCommand, LeadResponseModel>
+public class UpdateLeadHandler(ILeadRepository repo, AppDbContext db) : IRequestHandler<UpdateLeadCommand, LeadResponseModel>
 {
     public async Task<LeadResponseModel> Handle(UpdateLeadCommand request, CancellationToken cancellationToken)
     {
@@ -26,16 +28,64 @@ public class UpdateLeadHandler(ILeadRepository repo) : IRequestHandler<UpdateLea
             ?? throw new KeyNotFoundException("Lead not found.");
 
         var data = request.Data;
+        var changedFields = new List<string>();
 
-        if (data.CompanyName is not null) lead.CompanyName = data.CompanyName.Trim();
-        if (data.ContactName is not null) lead.ContactName = data.ContactName.Trim();
-        if (data.Email is not null) lead.Email = data.Email.Trim();
-        if (data.Phone is not null) lead.Phone = data.Phone.Trim();
-        if (data.Source is not null) lead.Source = data.Source.Trim();
-        if (data.Status.HasValue) lead.Status = data.Status.Value;
-        if (data.Notes is not null) lead.Notes = data.Notes.Trim();
-        if (data.FollowUpDate.HasValue) lead.FollowUpDate = data.FollowUpDate;
-        if (data.LostReason is not null) lead.LostReason = data.LostReason.Trim();
+        if (data.CompanyName is not null && data.CompanyName.Trim() != lead.CompanyName)
+        {
+            lead.CompanyName = data.CompanyName.Trim();
+            changedFields.Add("companyName");
+        }
+        if (data.ContactName is not null && data.ContactName.Trim() != lead.ContactName)
+        {
+            lead.ContactName = data.ContactName.Trim();
+            changedFields.Add("contactName");
+        }
+        if (data.Email is not null && data.Email.Trim() != lead.Email)
+        {
+            lead.Email = data.Email.Trim();
+            changedFields.Add("email");
+        }
+        if (data.Phone is not null && data.Phone.Trim() != lead.Phone)
+        {
+            lead.Phone = data.Phone.Trim();
+            changedFields.Add("phone");
+        }
+        if (data.Source is not null && data.Source.Trim() != lead.Source)
+        {
+            lead.Source = data.Source.Trim();
+            changedFields.Add("source");
+        }
+        if (data.Status.HasValue && data.Status.Value != lead.Status)
+        {
+            lead.Status = data.Status.Value;
+            // Status transitions are the most-watched lead event — call out
+            // the new status by name in the rollup so the activity tab is
+            // legible at a glance ("status: Contacted" vs just "status").
+            changedFields.Add($"status: {lead.Status}");
+        }
+        if (data.Notes is not null && data.Notes.Trim() != lead.Notes)
+        {
+            lead.Notes = data.Notes.Trim();
+            changedFields.Add("notes");
+        }
+        if (data.FollowUpDate.HasValue && data.FollowUpDate != lead.FollowUpDate)
+        {
+            lead.FollowUpDate = data.FollowUpDate;
+            changedFields.Add("followUpDate");
+        }
+        if (data.LostReason is not null && data.LostReason.Trim() != lead.LostReason)
+        {
+            lead.LostReason = data.LostReason.Trim();
+            changedFields.Add("lostReason");
+        }
+
+        if (changedFields.Count > 0)
+        {
+            db.LogActivityAt(
+                "updated",
+                $"Updated {changedFields.Count} field{(changedFields.Count == 1 ? "" : "s")}: {string.Join(", ", changedFields)}",
+                ("Lead", lead.Id));
+        }
 
         await repo.SaveChangesAsync(cancellationToken);
 

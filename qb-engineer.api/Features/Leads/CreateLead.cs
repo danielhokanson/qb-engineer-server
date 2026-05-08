@@ -1,10 +1,10 @@
-using System.Security.Claims;
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.Leads;
 
@@ -21,12 +21,13 @@ public class CreateLeadCommandValidator : AbstractValidator<CreateLeadCommand>
     }
 }
 
-public class CreateLeadHandler(ILeadRepository repo, IHttpContextAccessor httpContext) : IRequestHandler<CreateLeadCommand, LeadResponseModel>
+public class CreateLeadHandler(ILeadRepository repo, AppDbContext db) : IRequestHandler<CreateLeadCommand, LeadResponseModel>
 {
     public async Task<LeadResponseModel> Handle(CreateLeadCommand request, CancellationToken cancellationToken)
     {
         var data = request.Data;
-        var userId = int.Parse(httpContext.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = db.CurrentUserId
+            ?? throw new InvalidOperationException("CreateLead requires an authenticated caller.");
 
         var lead = new Lead
         {
@@ -41,6 +42,13 @@ public class CreateLeadHandler(ILeadRepository repo, IHttpContextAccessor httpCo
         };
 
         await repo.AddAsync(lead, cancellationToken);
+
+        // Repo.AddAsync already saved (gives us lead.Id). Log + flush.
+        db.LogActivityAt(
+            "created",
+            $"Created lead: {lead.CompanyName}{(string.IsNullOrEmpty(lead.ContactName) ? "" : $" — {lead.ContactName}")}{(string.IsNullOrEmpty(lead.Source) ? "" : $" (source: {lead.Source})")}",
+            ("Lead", lead.Id));
+        await db.SaveChangesAsync(cancellationToken);
 
         return (await repo.GetByIdAsync(lead.Id, cancellationToken))!;
     }

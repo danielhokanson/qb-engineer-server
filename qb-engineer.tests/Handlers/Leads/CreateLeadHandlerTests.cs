@@ -1,8 +1,5 @@
-using System.Security.Claims;
-
 using Bogus;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
 using Moq;
 
 using QBEngineer.Api.Features.Leads;
@@ -10,13 +7,15 @@ using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+using QBEngineer.Tests.Helpers;
 
 namespace QBEngineer.Tests.Handlers.Leads;
 
 public class CreateLeadHandlerTests
 {
     private readonly Mock<ILeadRepository> _leadRepo = new();
-    private readonly Mock<IHttpContextAccessor> _httpContextAccessor = new();
+    private readonly AppDbContext _db = TestDbContextFactory.Create();
     private readonly CreateLeadHandler _handler;
 
     private readonly Faker _faker = new();
@@ -25,15 +24,8 @@ public class CreateLeadHandlerTests
     public CreateLeadHandlerTests()
     {
         _userId = _faker.Random.Int(1, 100);
-
-        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, _userId.ToString()) };
-        var identity = new ClaimsIdentity(claims);
-        var principal = new ClaimsPrincipal(identity);
-        var httpContext = new DefaultHttpContext { User = principal };
-
-        _httpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
-
-        _handler = new CreateLeadHandler(_leadRepo.Object, _httpContextAccessor.Object);
+        _db.CurrentUserId = _userId;
+        _handler = new CreateLeadHandler(_leadRepo.Object, _db);
     }
 
     [Fact]
