@@ -19,9 +19,18 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(e => e.LostReason).HasMaxLength(500);
         builder.Property(e => e.CustomFieldValues).HasColumnType("jsonb");
 
+        // Lead → Customer 1:1 with the inverse nav on the customer side
+        // (Customer.SourceLead). FK lives on Lead.ConvertedCustomerId.
+        // SetNull on customer delete preserves the lead row's history of
+        // having been converted, even if the customer is later soft-deleted.
+        // Note: HasOne/WithOne enforces uniqueness on the FK at the EF model
+        // level (one lead per converted customer). If a use case emerges
+        // for multiple leads collapsing into one customer, revisit and
+        // model that explicitly via a Lead-merge entity rather than
+        // loosening this constraint.
         builder.HasOne(e => e.ConvertedCustomer)
-            .WithMany()
-            .HasForeignKey(e => e.ConvertedCustomerId)
+            .WithOne(c => c.SourceLead)
+            .HasForeignKey<Lead>(e => e.ConvertedCustomerId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

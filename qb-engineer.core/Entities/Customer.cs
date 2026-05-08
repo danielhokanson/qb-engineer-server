@@ -49,6 +49,16 @@ public class Customer : BaseAuditableEntity, IActiveAware
     public string? ExternalRef { get; set; }
     public string? Provider { get; set; }
 
+    /// <summary>
+    /// Reverse navigation to the lead this customer was converted from, if
+    /// any. The FK lives on <see cref="Lead.ConvertedCustomerId"/> — no
+    /// duplicate column on the customer table. Lets the Customer detail
+    /// surface "Converted from Lead #N" and the Activity tab carry
+    /// conversion-time provenance forward rather than treating the
+    /// customer as having appeared from nowhere.
+    /// </summary>
+    public Lead? SourceLead { get; set; }
+
     public ICollection<Contact> Contacts { get; set; } = [];
     public ICollection<Job> Jobs { get; set; } = [];
     public ICollection<CustomerAddress> Addresses { get; set; } = [];

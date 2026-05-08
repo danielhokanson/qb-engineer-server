@@ -37,5 +37,10 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasForeignKey(e => e.DefaultTaxCodeId)
             .OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(e => e.DefaultTaxCodeId);
+
+        // SourceLead inverse nav is configured from the Lead side
+        // (LeadConfiguration's HasOne(ConvertedCustomer).WithOne(SourceLead)).
+        // No additional Customer-side wiring required — EF Core resolves
+        // the back-link from the FK on Lead.ConvertedCustomerId.
     }
 }

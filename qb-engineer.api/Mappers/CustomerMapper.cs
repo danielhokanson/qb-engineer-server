@@ -38,6 +38,7 @@ public static partial class CustomerMapper
     [MapperIgnoreSource(nameof(Customer.DefaultTaxCodeId))]
     [MapperIgnoreSource(nameof(Customer.DefaultTaxCode))]
     [MapperIgnoreSource(nameof(Customer.DefaultCurrency))]
+    [MapperIgnoreSource(nameof(Customer.SourceLead))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.CreatedAt))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.UpdatedAt))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.DeletedAt))]
