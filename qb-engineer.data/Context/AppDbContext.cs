@@ -874,6 +874,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     {
         var entries = ChangeTracker.Entries<BaseAuditableEntity>();
         var now = _clock.UtcNow;
+        var currentUserId = GetCurrentUserId()?.ToString();
 
         foreach (var entry in entries)
         {
@@ -885,6 +886,19 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
                     break;
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
+                    // Auto-stamp DeletedBy when a soft delete is being committed:
+                    // DeletedAt was modified to a non-null value this save AND
+                    // DeletedBy hasn't been explicitly set by the handler. Centralizing
+                    // here means soft-delete handlers only have to stamp DeletedAt;
+                    // DeletedBy follows from CurrentUserId (set by middleware).
+                    // Stored as the stringified user id, matching the convention in
+                    // the handlers that already set DeletedBy explicitly.
+                    if (entry.Entity.DeletedAt.HasValue
+                        && entry.Entity.DeletedBy is null
+                        && entry.Property(nameof(BaseAuditableEntity.DeletedAt)).IsModified)
+                    {
+                        entry.Entity.DeletedBy = currentUserId;
+                    }
                     break;
             }
         }
