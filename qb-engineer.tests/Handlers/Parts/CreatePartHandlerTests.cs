@@ -7,12 +7,15 @@ using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+using QBEngineer.Tests.Helpers;
 
 namespace QBEngineer.Tests.Handlers.Parts;
 
 public class CreatePartHandlerTests
 {
     private readonly Mock<IPartRepository> _partRepo = new();
+    private readonly AppDbContext _db = TestDbContextFactory.Create();
     private readonly CreatePartHandler _handler;
 
     private readonly Faker _faker = new();
@@ -24,6 +27,7 @@ public class CreatePartHandlerTests
             Mock.Of<ISyncQueueRepository>(),
             Mock.Of<IAccountingProviderFactory>(),
             Mock.Of<IBarcodeService>(),
+            _db,
             Mock.Of<ILogger<CreatePartHandler>>());
     }
 

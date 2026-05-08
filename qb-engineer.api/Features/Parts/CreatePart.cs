@@ -6,6 +6,8 @@ using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Interfaces;
 using QBEngineer.Core.Models;
+using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.Parts;
 
@@ -32,6 +34,7 @@ public class CreatePartHandler(
     ISyncQueueRepository syncQueue,
     IAccountingProviderFactory providerFactory,
     IBarcodeService barcodeService,
+    AppDbContext db,
     ILogger<CreatePartHandler> logger) : IRequestHandler<CreatePartCommand, PartDetailResponseModel>
 {
     public async Task<PartDetailResponseModel> Handle(CreatePartCommand request, CancellationToken cancellationToken)
@@ -51,6 +54,12 @@ public class CreatePartHandler(
         };
 
         await repo.AddAsync(part, cancellationToken);
+
+        db.LogActivityAt(
+            "created",
+            $"Created part: {part.PartNumber} — {part.Name} ({part.ProcurementSource} / {part.InventoryClass})",
+            ("Part", part.Id));
+        await db.SaveChangesAsync(cancellationToken);
 
         await barcodeService.CreateBarcodeAsync(
             BarcodeEntityType.Part, part.Id, part.PartNumber, cancellationToken);

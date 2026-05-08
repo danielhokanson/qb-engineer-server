@@ -1,11 +1,13 @@
 using MediatR;
 using QBEngineer.Core.Interfaces;
+using QBEngineer.Data.Context;
+using QBEngineer.Data.Extensions;
 
 namespace QBEngineer.Api.Features.Parts;
 
 public sealed record DeletePartCommand(int Id) : IRequest;
 
-public sealed class DeletePartHandler(IPartRepository repo)
+public sealed class DeletePartHandler(IPartRepository repo, AppDbContext db, IClock clock)
     : IRequestHandler<DeletePartCommand>
 {
     public async Task Handle(DeletePartCommand request, CancellationToken cancellationToken)
@@ -13,7 +15,13 @@ public sealed class DeletePartHandler(IPartRepository repo)
         var part = await repo.FindAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Part {request.Id} not found");
 
-        part.DeletedAt = DateTimeOffset.UtcNow;
+        part.DeletedAt = clock.UtcNow;
+
+        db.LogActivityAt(
+            "deleted",
+            $"Deleted part: {part.PartNumber} — {part.Name}",
+            ("Part", part.Id));
+
         await repo.SaveChangesAsync(cancellationToken);
     }
 }
