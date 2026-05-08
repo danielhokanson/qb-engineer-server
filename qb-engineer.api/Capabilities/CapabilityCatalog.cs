@@ -6,11 +6,13 @@ namespace QBEngineer.Api.Capabilities;
 /// (e:/dev/qb-engineer/phase-4-output/4A-capability-catalog/capability-catalog.md).
 /// 
 /// 128 rows from the catalog body + 1 (CAP-IDEN-CAPABILITY-ADMIN) per 4E-
-/// decisions-log #9 / 4F-decisions-log #1 = 129 total. The catalog header
-/// claims 121 because three INV/QC/MD entries are listed in two areas; the
-/// Phase A implementation treats every distinct code as one row and accepts
-/// the count-discrepancy. See _catalog-rows.cs.txt and the 4F implementation-
-/// decisions doc for the parse / count discussion.
+/// decisions-log #9 / 4F-decisions-log #1 + 4 (CAP-MD-CUSTOMER-CONTACTS,
+/// CAP-MD-CUSTOMER-ADDRESSES, CAP-MD-CUSTOMER-INTERACTIONS,
+/// CAP-O2C-CREDIT-LIMITS) per the Customer/Lead parity audit = 133 total.
+/// The catalog header claims 121 because three INV/QC/MD entries are listed
+/// in two areas; the Phase A implementation treats every distinct code as
+/// one row and accepts the count-discrepancy. See _catalog-rows.cs.txt and
+/// the 4F implementation-decisions doc for the parse / count discussion.
 /// 
 /// The seeder (<see cref="Seeding.CapabilityCatalogSeeder"/>) upserts these
 /// into the <c>capabilities</c> table on startup. Per 4F decision #4 the
@@ -31,6 +33,9 @@ public static class CapabilityCatalog
         new("CAP-IDEN-TENANT-CONFIG", "IDEN", @"Company / tenant configuration", @"Single-tenant identity: company name, address, locale, time zone, fiscal year start, primary currency, costing model. Configured once at install; rarely changed afterward. Single-tenant per database (no multi-tenancy).", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-IDEN-AUDIT-SYSTEM-LOG", "IDEN", @"System-wide audit log", @"Cross-entity event log for compliance and security review: logins, role changes, MFA events, period close, system configuration changes, deactivation sweeps, bulk role assignment. Distinct from per-entity activity logs; immutable.", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-MD-CUSTOMERS", "MD", @"Customer master", @"Customer records (B2B accounts) with contacts, addresses, payment terms, credit limits, and per-customer pricing eligibility. The anchor of the order-to-cash flow.", IsDefaultOn: true, RequiresRoles: null),
+        new("CAP-MD-CUSTOMER-CONTACTS", "MD", @"Customer — multiple contacts", @"Surfaces the Contacts tab + Contact CRUD on a customer (multiple named people per account, with role / primary flag / per-contact email + phone). Disable for shops that only deal with a single buyer per company — the customer record's primary email/phone is sufficient there.", IsDefaultOn: true, RequiresRoles: null),
+        new("CAP-MD-CUSTOMER-ADDRESSES", "MD", @"Customer — multiple addresses", @"Surfaces the Addresses tab + CustomerAddress CRUD (separate billing / shipping / ship-to-multiple-locations addresses). Disable for shops where every customer has one address that's both billed and shipped to.", IsDefaultOn: true, RequiresRoles: null),
+        new("CAP-MD-CUSTOMER-INTERACTIONS", "MD", @"Customer — interaction log (CRM)", @"Surfaces the Interactions tab + ContactInteraction CRUD: chronological log of calls, emails, meetings, and notes per contact / per customer. Disable for shops that don't track sales activity at this granularity (most small shops).", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-MD-VENDORS", "MD", @"Vendor master", @"Vendor / supplier records with addresses, terms, tax-form tracking, scorecards. The anchor of procure-to-pay.", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-MD-PARTS", "MD", @"Part / item master", @"Part records covering raw, WIP, and finished goods, with attributes for type, UoM, default cost, lead time, lot/serial flags, hazmat flag, ABC class. The anchor of all material flows.", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-MD-BOM", "MD", @"Bill of materials", @"Component lists for produced items, with quantity-per, UoM, alternates, and revision history. References parts. Required for any company that produces multi-component goods.", IsDefaultOn: true, RequiresRoles: null),
@@ -60,6 +65,7 @@ public static class CapabilityCatalog
         new("CAP-P2P-SUBCONTRACT", "P2P", @"Subcontract send-out and receive-back", @"Send WIP material to an external vendor for an operation (heat treat, plating, paint), receive it back, continue the WO. Routing-level subcontract metadata.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-P2P-APPROVALS", "P2P", @"PO / requisition approval workflow", @"Multi-step approval routing on POs or requisitions over a threshold. Required by mid-market and enterprise companies for control.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-O2C-LEAD", "O2C", @"Lead management", @"Pre-customer prospect tracking: inquiries, qualification, source attribution. Required by shops that do active sales prospecting.", IsDefaultOn: false, RequiresRoles: null),
+        new("CAP-O2C-CREDIT-LIMITS", "O2C", @"Credit limits / hold / terms enforcement", @"Surfaces credit-limit + credit-terms fields on the customer, the Credit Status card, and the place / release credit-hold actions that gate sales-order entry. Disable for shops that operate COD or prepaid only — the credit policy UI and hold workflow disappear, simplifying the customer detail.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-O2C-QUOTE", "O2C", @"Quote / estimate", @"Customer-facing pricing document, with line items, validity period, version history, conversion to SO. The pre-SO funnel step.", IsDefaultOn: true, RequiresRoles: null),
         new("CAP-O2C-CPQ", "O2C", @"Configure-price-quote", @"Product configurator with feature options, price rules, and quote generation. Used by configure-to-order shops with parameterized products.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-O2C-SO", "O2C", @"Sales orders", @"Customer-confirmed order document, with lines, ship-to, terms, fulfillment plan. The trigger for production / picking / shipping. Per Phase 3 WU-18 Option A: SO is a query-side projection over Job stages, not a standalone entity.", IsDefaultOn: true, RequiresRoles: null),

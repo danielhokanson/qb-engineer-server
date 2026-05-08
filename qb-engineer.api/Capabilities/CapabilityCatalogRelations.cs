@@ -20,6 +20,10 @@ namespace QBEngineer.Api.Capabilities;
 ///      at startup; the seeder logs a warning and skips the bad edge rather
 ///      than crashing. This keeps the install bootable when 4A drifts.
 ///
+/// Customer/Lead parity audit (post-4F) added 4 dependency edges for the
+/// new CAP-MD-CUSTOMER-CONTACTS / -ADDRESSES / -INTERACTIONS and
+/// CAP-O2C-CREDIT-LIMITS capabilities, all rooted at CAP-MD-CUSTOMERS.
+///
 /// "OR" dependencies in 4A (e.g. CAP-O2C-INVOICE depends on
 /// CAP-ACCT-BUILTIN OR CAP-ACCT-EXTERNAL) are NOT modelled here — Phase C's
 /// gate is "all dependencies must be enabled" (AND semantics). 4D §8.2 names
@@ -69,6 +73,12 @@ public static class CapabilityCatalogRelations
         new("CAP-MD-CONTRACTS-CONSIGNMENT", "CAP-MD-CUSTOMERS"),
         new("CAP-MD-CONTRACTS-CONSIGNMENT", "CAP-MD-PARTS"),
         new("CAP-MD-ECO", "CAP-MD-BOM"),
+        new("CAP-MD-CUSTOMER-CONTACTS", "CAP-MD-CUSTOMERS"),
+        new("CAP-MD-CUSTOMER-ADDRESSES", "CAP-MD-CUSTOMERS"),
+        // Interactions hang off contacts — an interaction has a contact
+        // counter-party, so toggling contacts off would orphan the log.
+        new("CAP-MD-CUSTOMER-INTERACTIONS", "CAP-MD-CUSTOMERS"),
+        new("CAP-MD-CUSTOMER-INTERACTIONS", "CAP-MD-CUSTOMER-CONTACTS"),
 
         // ── P2P ─────────────────────────────────────────────────────────────
         new("CAP-P2P-PO", "CAP-MD-VENDORS"),
@@ -89,6 +99,7 @@ public static class CapabilityCatalogRelations
 
         // ── O2C ─────────────────────────────────────────────────────────────
         new("CAP-O2C-LEAD", "CAP-MD-CUSTOMERS"),
+        new("CAP-O2C-CREDIT-LIMITS", "CAP-MD-CUSTOMERS"),
         new("CAP-O2C-QUOTE", "CAP-MD-CUSTOMERS"),
         new("CAP-O2C-QUOTE", "CAP-MD-PARTS"),
         new("CAP-O2C-CPQ", "CAP-O2C-QUOTE"),
