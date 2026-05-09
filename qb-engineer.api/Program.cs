@@ -431,11 +431,9 @@ try
     builder.Services.AddScoped<QBEngineer.Core.Settings.ISettingsService,
         QBEngineer.Api.Features.Settings.SettingsService>();
 
-    // Wave 8 — Twilio webhook signature verifier. Reads Twilio:AuthToken
-    // from appsettings; when null the verifier accepts anything (dev /
-    // mock posture matching the rest of the integration adapters).
-    builder.Services.Configure<QBEngineer.Core.Models.TwilioOptions>(
-        builder.Configuration.GetSection("Twilio"));
+    // Wave 8 + Phase 1m — Twilio webhook signature verifier. AuthToken
+    // now comes from ISettingsService (admin-managed); when unset the
+    // verifier accepts anything.
     builder.Services.AddScoped<
         QBEngineer.Api.Features.Communications.ITwilioSignatureVerifier,
         QBEngineer.Api.Features.Communications.TwilioSignatureVerifier>();

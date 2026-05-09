@@ -173,7 +173,8 @@ public class CommunicationsController(IMediator mediator, ICapabilitySnapshotPro
         var fullUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}{Request.QueryString}";
         var signature = Request.Headers["X-Twilio-Signature"].ToString();
 
-        if (verifier.IsConfigured && !verifier.Verify(fullUrl, fields, signature))
+        var configured = await verifier.IsConfiguredAsync(ct);
+        if (configured && !await verifier.VerifyAsync(fullUrl, fields, signature, ct))
         {
             log.LogWarning(
                 "Twilio webhook signature verification FAILED for CallSid={CallSid}",

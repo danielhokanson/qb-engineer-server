@@ -6,6 +6,7 @@ using QBEngineer.Api.Features.Communications;
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
+using QBEngineer.Core.Settings;
 using QBEngineer.Data.Context;
 using QBEngineer.Tests.Helpers;
 
@@ -154,21 +155,18 @@ public class IngestTwilioWebhookHandlerTests
     }
 
     [Fact]
-    public void SignatureVerifier_AcceptsAnything_WhenAuthTokenUnset()
+    public async Task SignatureVerifier_AcceptsAnything_WhenAuthTokenUnset()
     {
-        var options = Options.Create(new TwilioOptions { AuthToken = null });
-        var verifier = new TwilioSignatureVerifier(options);
+        var verifier = new TwilioSignatureVerifier(new StubSettingsService());
 
-        verifier.IsConfigured.Should().BeFalse();
-        verifier.Verify("https://x.com/webhook", new Dictionary<string, string>(), null).Should().BeTrue();
+        (await verifier.IsConfiguredAsync(CancellationToken.None)).Should().BeFalse();
+        (await verifier.VerifyAsync("https://x.com/webhook", new Dictionary<string, string>(), null, CancellationToken.None))
+            .Should().BeTrue();
     }
 
     [Fact]
-    public void SignatureVerifier_VerifiesHmacWhenConfigured()
+    public async Task SignatureVerifier_VerifiesHmacWhenConfigured()
     {
-        // Twilio sample from
-        // https://www.twilio.com/docs/usage/webhooks/webhooks-security#example
-        // (synthesised here with a known token to lock the algorithm).
         const string token = "12345";
         const string url = "https://example.com/callback";
         var fields = new Dictionary<string, string>
@@ -179,10 +177,31 @@ public class IngestTwilioWebhookHandlerTests
         };
         var expectedSig = TwilioSignatureVerifier.ComputeSignature(url, fields, token);
 
-        var verifier = new TwilioSignatureVerifier(Options.Create(new TwilioOptions { AuthToken = token }));
+        var verifier = new TwilioSignatureVerifier(new StubSettingsService(
+            new() { [TwilioSettings.KeyAuthToken] = token }));
 
-        verifier.Verify(url, fields, expectedSig).Should().BeTrue();
-        verifier.Verify(url, fields, "wrong-signature").Should().BeFalse();
-        verifier.Verify(url, fields, null).Should().BeFalse();
+        (await verifier.VerifyAsync(url, fields, expectedSig, CancellationToken.None)).Should().BeTrue();
+        (await verifier.VerifyAsync(url, fields, "wrong-signature", CancellationToken.None)).Should().BeFalse();
+        (await verifier.VerifyAsync(url, fields, null, CancellationToken.None)).Should().BeFalse();
+    }
+
+    /// <summary>Phase 1m — minimal in-memory <see cref="ISettingsService"/>
+    /// for the verifier tests.</summary>
+    private sealed class StubSettingsService(Dictionary<string, string?>? bag = null) : QBEngineer.Core.Settings.ISettingsService
+    {
+        private readonly Dictionary<string, string?> _bag = bag ?? new();
+
+        public Task<string?> GetStringAsync(string key, CancellationToken ct = default)
+            => Task.FromResult(_bag.TryGetValue(key, out var v) ? v : null);
+        public async Task<bool> GetBoolAsync(string key, CancellationToken ct = default)
+            => string.Equals(await GetStringAsync(key, ct), "true", StringComparison.OrdinalIgnoreCase);
+        public async Task<int> GetIntAsync(string key, CancellationToken ct = default)
+            => int.TryParse(await GetStringAsync(key, ct), out var v) ? v : 0;
+        public Task SetAsync(string key, string? value, CancellationToken ct = default)
+        {
+            _bag[key] = value; return Task.CompletedTask;
+        }
+        public Task<IReadOnlyDictionary<string, string?>> GetGroupAsync(string group, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyDictionary<string, string?>>(_bag);
     }
 }

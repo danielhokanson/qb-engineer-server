@@ -1,9 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-using Microsoft.Extensions.Options;
-
-using QBEngineer.Core.Models;
+using QBEngineer.Core.Settings;
 
 namespace QBEngineer.Api.Features.Communications;
 
@@ -28,23 +26,26 @@ public interface ITwilioSignatureVerifier
     /// <summary>
     /// Returns true when verification passes OR when no AuthToken is
     /// configured (dev / mock posture). Returns false ONLY when an
-    /// AuthToken is present and the signature does not match.
+    /// AuthToken is present and the signature does not match. Async
+    /// because phase 1m moved AuthToken from <c>IOptions</c> to
+    /// <c>ISettingsService</c> (admin-managed).
     /// </summary>
-    bool Verify(string fullUrl, IReadOnlyDictionary<string, string> formFields, string? signatureHeader);
+    Task<bool> VerifyAsync(string fullUrl, IReadOnlyDictionary<string, string> formFields, string? signatureHeader, CancellationToken ct);
 
     /// <summary>True when an auth token is configured; controls whether failures should hard-reject.</summary>
-    bool IsConfigured { get; }
+    Task<bool> IsConfiguredAsync(CancellationToken ct);
 }
 
-public class TwilioSignatureVerifier(IOptions<TwilioOptions> options) : ITwilioSignatureVerifier
+public class TwilioSignatureVerifier(ISettingsService settings) : ITwilioSignatureVerifier
 {
-    private readonly TwilioOptions _options = options.Value;
+    public async Task<bool> IsConfiguredAsync(CancellationToken ct)
+        => !string.IsNullOrEmpty(await settings.GetStringAsync(TwilioSettings.KeyAuthToken, ct));
 
-    public bool IsConfigured => !string.IsNullOrEmpty(_options.AuthToken);
-
-    public bool Verify(string fullUrl, IReadOnlyDictionary<string, string> formFields, string? signatureHeader)
+    public async Task<bool> VerifyAsync(
+        string fullUrl, IReadOnlyDictionary<string, string> formFields, string? signatureHeader, CancellationToken ct)
     {
-        if (!IsConfigured)
+        var authToken = await settings.GetStringAsync(TwilioSettings.KeyAuthToken, ct);
+        if (string.IsNullOrEmpty(authToken))
         {
             // Dev / mock posture — accept anything.
             return true;
@@ -55,7 +56,7 @@ public class TwilioSignatureVerifier(IOptions<TwilioOptions> options) : ITwilioS
             return false;
         }
 
-        var expected = ComputeSignature(fullUrl, formFields, _options.AuthToken!);
+        var expected = ComputeSignature(fullUrl, formFields, authToken);
         // Constant-time compare to avoid timing-attack leakage.
         return CryptographicOperations.FixedTimeEquals(
             Encoding.ASCII.GetBytes(expected),
