@@ -67,6 +67,22 @@ public class CommunicationsController(IMediator mediator, ICapabilitySnapshotPro
     }
 
     /// <summary>
+    /// IMAP-specific connect endpoint. Test-authenticates against the live
+    /// server before persisting, encrypts the password server-side, builds
+    /// the canonical ConfigJson shape. Distinct from the generic
+    /// <see cref="CreateConnection"/> path so client mistakes can't poison
+    /// the JSON or land a broken row.
+    /// </summary>
+    [HttpPost("connections/imap")]
+    public async Task<ActionResult<CommunicationSyncConfigResponseModel>> ConnectImap(
+        ConnectImapCommand request, CancellationToken ct)
+    {
+        EnsureKindEnabled(CommunicationKind.Email);
+        var result = await mediator.Send(request, ct);
+        return CreatedAtAction(nameof(GetConnections), null, result);
+    }
+
+    /// <summary>
     /// Trigger a one-shot sync for the user's connection. The Hangfire
     /// recurring job (every 15 min) handles the unattended path; this
     /// endpoint is the "Sync now" affordance for impatient users right
