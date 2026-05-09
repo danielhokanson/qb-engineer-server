@@ -69,4 +69,17 @@ public class CommunicationSyncConfig : BaseAuditableEntity
     /// folder filter, etc.). JSONB; provider adapters interpret the shape.
     /// Null means use install-wide defaults.</summary>
     public string? ConfigJson { get; set; }
+
+    /// <summary>
+    /// Wave 8 phase 1i — last sync error message, surfaced on the user's
+    /// connections panel so failures are visible (broken creds, expired
+    /// token, host unreachable). Cleared on the next successful sync.
+    /// Null when the connection has never failed OR has succeeded since
+    /// its last failure.
+    /// </summary>
+    public string? LastError { get; set; }
+
+    /// <summary>Timestamp of the last sync failure. Paired with
+    /// <see cref="LastError"/>; rendered alongside it on the UI.</summary>
+    public DateTimeOffset? LastErrorAt { get; set; }
 }

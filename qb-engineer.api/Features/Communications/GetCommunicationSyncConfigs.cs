@@ -29,6 +29,7 @@ public class GetCommunicationSyncConfigsHandler(AppDbContext db)
             .Select(c => new CommunicationSyncConfigResponseModel(
                 c.Id, c.UserId, c.Kind, c.ProviderId, c.DisplayLabel,
                 c.IsConnected, c.ExternalAccountId, c.LastSyncedAt,
+                c.LastError, c.LastErrorAt,
                 c.CreatedAt, c.UpdatedAt))
             .ToListAsync(cancellationToken);
     }

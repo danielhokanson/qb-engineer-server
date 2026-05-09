@@ -86,6 +86,7 @@ public class CreateCommunicationSyncConfigHandler(AppDbContext db)
         return new CommunicationSyncConfigResponseModel(
             config.Id, config.UserId, config.Kind, config.ProviderId, config.DisplayLabel,
             config.IsConnected, config.ExternalAccountId, config.LastSyncedAt,
+            config.LastError, config.LastErrorAt,
             config.CreatedAt, config.UpdatedAt);
     }
 }

@@ -40,5 +40,11 @@ public class CommunicationSyncConfigConfiguration : IEntityTypeConfiguration<Com
         builder.Property(e => e.RefreshToken).HasMaxLength(4000);
 
         builder.Property(e => e.ConfigJson).HasColumnType("jsonb");
+
+        // Phase 1i — last-error pair for UI diagnostics. 1024 chars covers
+        // typical exception messages plus a stack-trace-free wrapper; we
+        // intentionally store only the message, not the trace, to keep
+        // PII / token leakage risk low in shared mailbox scenarios.
+        builder.Property(e => e.LastError).HasMaxLength(1024);
     }
 }

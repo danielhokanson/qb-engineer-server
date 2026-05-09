@@ -60,6 +60,7 @@ public class SyncCommunicationConnectionHandler(
                 $"No registered ICommunicationSyncProvider matches providerId={connection.ProviderId} kind={connection.Kind}. "
                 + "Adapter may not be implemented yet (planned providers list it as 'Coming soon').");
 
+        var now = clock.UtcNow;
         int eventCount;
         try
         {
@@ -67,14 +68,25 @@ public class SyncCommunicationConnectionHandler(
         }
         catch (Exception ex)
         {
+            // Phase 1i — capture the error onto the row so the user-facing
+            // connections panel can surface it. We re-load the entity here
+            // because the provider may have already mutated and saved
+            // (e.g. updated LastSyncedExternalId on partial success). If
+            // provider didn't save, our connection ref is the same row.
             logger.LogError(ex,
                 "Communication sync failed for connection {ConnectionId} ({Provider}/{Kind})",
                 connection.Id, connection.ProviderId, connection.Kind);
+
+            connection.LastError = TrimErrorMessage(ex.Message);
+            connection.LastErrorAt = now;
+            await db.SaveChangesAsync(CancellationToken.None);
             throw;
         }
 
-        var now = clock.UtcNow;
+        // Success — clear any previous error and stamp LastSyncedAt.
         connection.LastSyncedAt = now;
+        connection.LastError = null;
+        connection.LastErrorAt = null;
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
@@ -82,5 +94,12 @@ public class SyncCommunicationConnectionHandler(
             connection.Id, connection.ProviderId, connection.Kind, eventCount);
 
         return new SyncCommunicationConnectionResult(connection.Id, eventCount, now);
+    }
+
+    private static string TrimErrorMessage(string message)
+    {
+        // Column is varchar(1024); leave headroom for the truncation marker.
+        if (string.IsNullOrEmpty(message)) return string.Empty;
+        return message.Length <= 1000 ? message : message[..1000] + "…";
     }
 }

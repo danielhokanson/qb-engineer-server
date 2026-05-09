@@ -123,6 +123,7 @@ public class ConnectImapHandler(
         return new CommunicationSyncConfigResponseModel(
             row.Id, row.UserId, row.Kind, row.ProviderId, row.DisplayLabel,
             row.IsConnected, row.ExternalAccountId, row.LastSyncedAt,
+            row.LastError, row.LastErrorAt,
             row.CreatedAt, row.UpdatedAt);
     }
 

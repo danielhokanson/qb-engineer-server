@@ -130,9 +130,82 @@ public class SyncCommunicationConnectionHandlerTests
             .WithMessage("*No registered ICommunicationSyncProvider*");
     }
 
+    [Fact]
+    public async Task Sync_PersistsLastError_OnProviderException()
+    {
+        var config = await SeedConnectionAsync(42, CommunicationKind.Email, "stub");
+        _db.CurrentUserId = 42;
+
+        var failing = new ThrowingProvider("stub", CommunicationKind.Email,
+            new InvalidOperationException("IMAP authentication failed — bad password"));
+        var handler = MakeHandler(failing);
+
+        var act = async () => await handler.Handle(
+            new SyncCommunicationConnectionCommand(config.Id), CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+
+        var refreshed = _db.CommunicationSyncConfigs.Find(config.Id)!;
+        refreshed.LastError.Should().Contain("authentication failed");
+        refreshed.LastErrorAt.Should().Be(_clock.UtcNow);
+        // Successful-sync timestamp is NOT bumped on failure — that would
+        // hide the issue from a "last sync was 3 hours ago" indicator.
+        refreshed.LastSyncedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Sync_ClearsLastError_OnNextSuccess()
+    {
+        // Seed a row that already has a stale error message, then run a
+        // successful sync. The error should be cleared so the UI doesn't
+        // show a permanent red chip after the user fixed the issue.
+        var config = await SeedConnectionAsync(42, CommunicationKind.Email, "stub");
+        config.LastError = "stale: bad creds";
+        config.LastErrorAt = DateTimeOffset.UtcNow.AddMinutes(-10);
+        await _db.SaveChangesAsync();
+
+        _db.CurrentUserId = 42;
+        var handler = MakeHandler(new StubProvider("stub", CommunicationKind.Email, eventCount: 1));
+
+        await handler.Handle(new SyncCommunicationConnectionCommand(config.Id), CancellationToken.None);
+
+        var refreshed = _db.CommunicationSyncConfigs.Find(config.Id)!;
+        refreshed.LastError.Should().BeNull();
+        refreshed.LastErrorAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Sync_TruncatesOverlongErrorMessage()
+    {
+        var config = await SeedConnectionAsync(42, CommunicationKind.Email, "stub");
+        _db.CurrentUserId = 42;
+
+        var bigMessage = new string('x', 5000);
+        var handler = MakeHandler(new ThrowingProvider("stub", CommunicationKind.Email,
+            new InvalidOperationException(bigMessage)));
+
+        var act = async () => await handler.Handle(
+            new SyncCommunicationConnectionCommand(config.Id), CancellationToken.None);
+        await act.Should().ThrowAsync<InvalidOperationException>();
+
+        var refreshed = _db.CommunicationSyncConfigs.Find(config.Id)!;
+        refreshed.LastError!.Length.Should().BeLessThanOrEqualTo(1024);
+    }
+
     private sealed class FixedClock : IClock
     {
         public DateTimeOffset UtcNow { get; } = new(2026, 5, 9, 12, 0, 0, TimeSpan.Zero);
+    }
+
+    private sealed class ThrowingProvider(string providerId, CommunicationKind kind, Exception toThrow) : ICommunicationSyncProvider
+    {
+        public string ProviderId { get; } = providerId;
+        public CommunicationKind Kind { get; } = kind;
+
+        public Task<string?> StartAuthAsync(int userId, CancellationToken ct) => Task.FromResult<string?>(null);
+        public Task<bool> CompleteAuthAsync(int userId, string code, CancellationToken ct) => Task.FromResult(true);
+        public Task<int> SyncRecentAsync(int connectionId, CancellationToken ct) => Task.FromException<int>(toThrow);
+        public Task IngestWebhookEventAsync(string rawPayload, CancellationToken ct) => Task.CompletedTask;
     }
 
     private sealed class StubProvider(string providerId, CommunicationKind kind, int eventCount = 0) : ICommunicationSyncProvider

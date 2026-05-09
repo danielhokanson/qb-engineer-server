@@ -16,5 +16,9 @@ public record CommunicationSyncConfigResponseModel(
     bool IsConnected,
     string? ExternalAccountId,
     DateTimeOffset? LastSyncedAt,
+    /// <summary>Last sync error message (phase 1i). Null when the
+    /// connection is healthy or has never failed. Cleared on next success.</summary>
+    string? LastError,
+    DateTimeOffset? LastErrorAt,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
