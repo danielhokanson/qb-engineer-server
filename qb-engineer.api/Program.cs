@@ -395,6 +395,20 @@ try
     // within-shift checks). Database-only, registered unconditionally.
     builder.Services.AddScoped<IShiftService, ShiftService>();
 
+    // Wave 8 — communication sync. Matcher is the single shared implementation
+    // across all provider adapters; scoped because it depends on AppDbContext.
+    // Provider adapters are scoped (Mock today; IMAP / Gmail / Microsoft Graph /
+    // Twilio / etc. land as additional scoped registrations as they're built).
+    // Both Mock providers register unconditionally for now since no real
+    // adapter exists yet — once IMAP lands they'll move under the useMocks
+    // branch like the rest of the integration adapters.
+    builder.Services.AddScoped<QBEngineer.Core.Interfaces.Communications.ICommunicationMatcher,
+        QBEngineer.Api.Features.Communications.CommunicationMatcher>();
+    builder.Services.AddScoped<QBEngineer.Core.Interfaces.Communications.ICommunicationSyncProvider,
+        QBEngineer.Integrations.Communications.MockEmailSyncProvider>();
+    builder.Services.AddScoped<QBEngineer.Core.Interfaces.Communications.ICommunicationSyncProvider,
+        QBEngineer.Integrations.Communications.MockVoiceSyncProvider>();
+
     var storageProvider = builder.Configuration.GetValue<string>("Storage:Provider") ?? "minio";
     builder.Services.Configure<LocalStorageOptions>(builder.Configuration.GetSection(LocalStorageOptions.SectionName));
 

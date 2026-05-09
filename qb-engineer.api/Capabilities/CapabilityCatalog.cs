@@ -8,7 +8,9 @@ namespace QBEngineer.Api.Capabilities;
 /// 128 rows from the catalog body + 1 (CAP-IDEN-CAPABILITY-ADMIN) per 4E-
 /// decisions-log #9 / 4F-decisions-log #1 + 4 (CAP-MD-CUSTOMER-CONTACTS,
 /// CAP-MD-CUSTOMER-ADDRESSES, CAP-MD-CUSTOMER-INTERACTIONS,
-/// CAP-O2C-CREDIT-LIMITS) per the Customer/Lead parity audit = 133 total.
+/// CAP-O2C-CREDIT-LIMITS) per the Customer/Lead parity audit + 2
+/// (CAP-EXT-EMAIL-SYNC, CAP-EXT-VOIP-SYNC) per Wave 8 communication
+/// sync skeleton = 135 total.
 /// The catalog header claims 121 because three INV/QC/MD entries are listed
 /// in two areas; the Phase A implementation treats every distinct code as
 /// one row and accepts the count-discrepancy. See _catalog-rows.cs.txt and
@@ -170,6 +172,13 @@ public static class CapabilityCatalog
         new("CAP-EXT-ANDON", "EXT", @"Andon-style visual signaling", @"Floor visual-signaling alerts for line stoppage, quality issues, material shortage. Lean / TPS pattern.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-EXT-PROJECTS", "EXT", @"Project / sprint backlog tooling", @"Project entity for sprint-style work organization, separate from production WOs. Used by R&D / engineering teams.", IsDefaultOn: false, RequiresRoles: null),
         new("CAP-EXT-ANNOUNCEMENTS", "EXT", @"Company announcements (broadcast + acknowledgment)", @"Broadcast company news with per-user acknowledgment tracking and per-team scoping.", IsDefaultOn: false, RequiresRoles: null),
+        // ── Wave 8 — communication sync. Inbound email / VoIP tracking with
+        // automatic match against Lead.Email/Phone or Contact.Email/Phone.
+        // Pluggable per-provider adapters (IMAP universal, Gmail/Graph
+        // upgrades, Twilio/RingCentral/etc. for voice). Default OFF — privacy
+        // posture means each install opts in deliberately.
+        new("CAP-EXT-EMAIL-SYNC", "EXT", @"Email sync — track inbound/outbound communications", @"Connects user mailboxes (IMAP universally, Gmail / Microsoft Graph as native upgrades) so messages to/from a lead's or contact's email automatically log as ContactInteraction rows. Default OFF — each install opts in deliberately given the privacy posture (we see message metadata + body content for matched recipients).", IsDefaultOn: false, RequiresRoles: null),
+        new("CAP-EXT-VOIP-SYNC", "EXT", @"VoIP sync — track call communications", @"Webhook-based call event ingestion from VoIP platforms (Twilio, RingCentral, Aircall, Dialpad, OpenPhone, 8x8). Calls to/from a lead's or contact's phone log as ContactInteraction rows; optional STT + LLM summary attaches as the interaction body. Default OFF — recording calls is legally fraught (one-party / two-party consent) so each install opts in deliberately.", IsDefaultOn: false, RequiresRoles: null),
         // ── 4E-decisions-log #9 amendment (Phase A) — admin's own capability ──
         // Default-on, role-restricted to Admin. Bootstrap-exempt in Phase B/C.
         new("CAP-IDEN-CAPABILITY-ADMIN", "IDEN", @"Capability administration", @"Administer capability gating: enable / disable capabilities, edit per-capability config, apply presets. Bootstrap-exempt: even when this capability is disabled, the admin endpoints that mutate capabilities remain reachable to Administrator role members so the install cannot brick itself.", IsDefaultOn: true, RequiresRoles: "Admin"),

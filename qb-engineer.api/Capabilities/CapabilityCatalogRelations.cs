@@ -253,6 +253,13 @@ public static class CapabilityCatalogRelations
         new("CAP-EXT-ANDON", "CAP-MFG-SHOPFLOOR"),
         new("CAP-EXT-PROJECTS", "CAP-IDEN-USERS"),
         new("CAP-EXT-ANNOUNCEMENTS", "CAP-IDEN-USERS"),
+        // Wave 8 — communication sync. Both channels need user accounts
+        // (per-user OAuth / token storage) and the customer master that
+        // anchors the matched ContactInteraction rows.
+        new("CAP-EXT-EMAIL-SYNC", "CAP-IDEN-USERS"),
+        new("CAP-EXT-EMAIL-SYNC", "CAP-MD-CUSTOMERS"),
+        new("CAP-EXT-VOIP-SYNC", "CAP-IDEN-USERS"),
+        new("CAP-EXT-VOIP-SYNC", "CAP-MD-CUSTOMERS"),
     };
 
     /// <summary>
