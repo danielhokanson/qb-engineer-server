@@ -353,8 +353,22 @@ try
         .PersistKeysToDbContext<AppDbContext>()
         .SetApplicationName("qb-engineer");
 
-    // Integration services (mock or real based on config)
+    // Integration services (mock or real based on config).
+    //
+    // Phase 1m.4 — per-integration Mock/Real/Disabled toggle. The global
+    // MockIntegrations flag still drives the legacy ~30 services (PDF,
+    // EDI, CPQ, projection layers, etc.) since those don't have admin-
+    // managed descriptors yet. The 5 cluster-B services that DO have
+    // descriptors (storage/SMTP/AI/USPS/DocuSeal) consult the bootstrap
+    // helper for their per-integration mode.
+    //
+    // Mode resolution: read at startup from system_settings via plain
+    // ADO.NET. Admin saves persist; restart picks up new modes. (Live
+    // mode-switching would require factory-based service resolution
+    // which is a deeper refactor — admins get a "restart required"
+    // toast in the meantime.)
     var useMocks = builder.Configuration.GetValue<bool>("MockIntegrations");
+    var integrationMode = QBEngineer.Api.Bootstrap.IntegrationModeBootstrap.Load(builder.Configuration);
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection(MinioOptions.SectionName));
     builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
     builder.Services.Configure<QuickBooksOptions>(builder.Configuration.GetSection(QuickBooksOptions.SectionName));
@@ -554,6 +568,78 @@ try
         builder.Services.AddSingleton<ICopqService, MockCopqService>();
         builder.Services.AddSingleton<IPredictiveMaintenanceService, MockPredictiveMaintenanceService>();
     }
+
+    // Phase 1m.4 — per-integration Mock/Real override. Applied AFTER the
+    // global if/else block, so per-integration modes set in the admin
+    // UI (Admin → Integrations → {provider} → Mode) take precedence over
+    // the global MockIntegrations flag for the 5 cluster-B services that
+    // have descriptor entries.
+    //
+    // Storage / Email / AI / Address Validation / DocuSeal each get
+    // their stored mode resolved (with fallback to the global flag),
+    // existing registrations are removed, and the resolved impl is
+    // registered. RemoveAll on a missing service is a no-op so this
+    // block is safe regardless of which branch ran above.
+    Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions
+        .RemoveAll<IEmailService>(builder.Services);
+    builder.Services.AddSingleton<IEmailService>(integrationMode.IsMock("smtp")
+        ? sp => new MockEmailService(sp.GetRequiredService<ILogger<MockEmailService>>())
+        : sp => new SmtpEmailService(sp.GetRequiredService<QBEngineer.Core.Settings.ISettingsService>(),
+                                     sp.GetRequiredService<ILogger<SmtpEmailService>>()));
+
+    Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions
+        .RemoveAll<IAddressValidationService>(builder.Services);
+    if (integrationMode.IsMock("usps"))
+    {
+        builder.Services.AddSingleton<IAddressValidationService, MockAddressValidationService>();
+    }
+    else
+    {
+        builder.Services.AddHttpClient<IAddressValidationService, UspsAddressValidationService>();
+    }
+
+    Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions
+        .RemoveAll<IDocumentSigningService>(builder.Services);
+    if (integrationMode.IsMock("docuseal"))
+    {
+        builder.Services.AddSingleton<IDocumentSigningService, MockDocumentSigningService>();
+    }
+    else
+    {
+        builder.Services.AddHttpClient<IDocumentSigningService, DocuSealSigningService>();
+    }
+
+    Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions
+        .RemoveAll<IAiService>(builder.Services);
+    if (integrationMode.IsMock("ai"))
+    {
+        builder.Services.AddSingleton<IAiService, MockAiService>();
+    }
+    else
+    {
+        builder.Services.AddHttpClient<IAiService, OllamaAiService>();
+    }
+
+    // Storage: don't override when storageProvider == "local" (separate
+    // hard-coded selection — local storage isn't an integration mode).
+    if (storageProvider != "local")
+    {
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions
+            .RemoveAll<IStorageService>(builder.Services);
+        if (integrationMode.IsMock("minio"))
+        {
+            builder.Services.AddSingleton<IStorageService, MockStorageService>();
+        }
+        else
+        {
+            builder.Services.AddSingleton<IStorageService, MinioStorageService>();
+        }
+    }
+
+    Log.Information("Integration modes: smtp={Smtp}, usps={Usps}, docuseal={Doc}, ai={Ai}, minio={Minio}",
+        integrationMode.Resolve("smtp"), integrationMode.Resolve("usps"),
+        integrationMode.Resolve("docuseal"), integrationMode.Resolve("ai"),
+        integrationMode.Resolve("minio"));
 
     // Integration outbox (always real — provides durable queue + idempotency for all outbound integrations)
     builder.Services.AddScoped<IIntegrationOutboxService, IntegrationOutboxService>();
