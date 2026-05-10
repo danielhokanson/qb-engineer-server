@@ -125,6 +125,39 @@ public class ConvertLeadHandler(
             db.Contacts.Add(primaryContact);
         }
 
+        // Phase 1r / Batch 12 — Account → Customer propagation. If the
+        // lead hung off an Account with multi-stakeholder contacts, roll
+        // them forward as Contact rows on the new Customer. The lead's
+        // own contact (created above) stays the IsPrimary; account
+        // contacts join as non-primary unless they share an email/phone
+        // identity with the primary (in which case we skip the
+        // duplicate). Same SaveChanges as the primary so EF resolves FKs.
+        if (lead.AccountId.HasValue)
+        {
+            var accountContacts = await db.AccountContacts
+                .AsNoTracking()
+                .Where(ac => ac.AccountId == lead.AccountId.Value)
+                .ToListAsync(cancellationToken);
+            foreach (var ac in accountContacts)
+            {
+                var dupEmail = primaryContact?.Email != null && !string.IsNullOrWhiteSpace(ac.Email)
+                    && string.Equals(primaryContact.Email, ac.Email, StringComparison.OrdinalIgnoreCase);
+                var dupPhone = primaryContact?.Phone != null && !string.IsNullOrWhiteSpace(ac.Phone)
+                    && primaryContact.Phone == ac.Phone;
+                if (dupEmail || dupPhone) continue;
+                db.Contacts.Add(new Contact
+                {
+                    CustomerId = customer.Id,
+                    FirstName = ac.FirstName,
+                    LastName = ac.LastName,
+                    Email = ac.Email,
+                    Phone = ac.Phone,
+                    Role = ac.Role,
+                    IsPrimary = false,
+                });
+            }
+        }
+
         // Phase 1r — outreach-preference carryover. If the lead has a
         // suppression sidecar (per-channel opt-outs, cooldown), create
         // a parallel row on the new primary contact so the suppression
