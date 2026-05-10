@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -5,6 +7,7 @@ using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Leads;
 using QBEngineer.Api.Features.Leads.BulkIntake;
+using QBEngineer.Api.Features.Leads.Queue;
 using QBEngineer.Api.Features.OutreachPreferences;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -109,5 +112,26 @@ public class LeadsController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new BulkLeadIntakeCommand(request, Commit: true));
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Phase 1r / Batch 6 — pull next N leads off the worker queue.
+    /// Postgres FOR UPDATE SKIP LOCKED prevents two reps from getting
+    /// the same lead. Returned leads have OutreachState flipped to
+    /// InProgress; subsequent disposition POSTs advance from there.
+    /// </summary>
+    [HttpPost("queue/pull")]
+    public async Task<ActionResult<List<QueueLeadResponseModel>>> PullQueue([FromBody] PullQueueRequest request)
+    {
+        var userId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : 0;
+        var result = await mediator.Send(new PullQueueCommand(userId, request));
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/queue/disposition")]
+    public async Task<IActionResult> DispositionLead(int id, [FromBody] DispositionLeadRequest request)
+    {
+        await mediator.Send(new DispositionLeadCommand(id, request));
+        return NoContent();
     }
 }
