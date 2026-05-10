@@ -121,6 +121,16 @@ public class CustomersController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Phase 1r — flat cross-customer contact listing for
+    /// /customers/contacts. Pulls every Contact + parent Customer +
+    /// suppression-prefs summary in one query.
+    /// </summary>
+    [HttpGet("all-contacts")]
+    [RequiresCapability("CAP-MD-CUSTOMER-CONTACTS")]
+    public async Task<ActionResult<List<FlatContactRowModel>>> GetAllContactsFlat()
+        => Ok(await mediator.Send(new GetAllContactsFlatQuery()));
+
     // ─── Phase 1r — Contact outreach preferences ───
     // 0..1:1 sidecar carrying per-channel opt-outs + cooldown windows.
     // GET returns null when no row exists (default "no opt-outs"); PUT
