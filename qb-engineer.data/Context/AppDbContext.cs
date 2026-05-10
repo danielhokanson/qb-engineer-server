@@ -69,6 +69,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<BinMovement> BinMovements => Set<BinMovement>();
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<LeadOutreachPreferences> LeadOutreachPreferences => Set<LeadOutreachPreferences>();
+    public DbSet<OutreachCampaign> OutreachCampaigns => Set<OutreachCampaign>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<RecurringExpense> RecurringExpenses => Set<RecurringExpense>();
     public DbSet<Asset> Assets => Set<Asset>();

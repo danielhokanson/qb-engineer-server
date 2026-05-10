@@ -32,4 +32,10 @@ public record LeadResponseModel(
     /// <summary>True when the lead is in an active status (not Lost /
     /// Converted) AND has had no activity in the past 14 days. Server-
     /// computed so the threshold stays consistent across UI surfaces.</summary>
-    bool IsStale = false);
+    bool IsStale = false,
+    /// <summary>Phase 1r / Batch 5 — optional FK to the bulk-marketing
+    /// campaign that produced this lead. Null on single-entry leads.</summary>
+    int? CampaignId = null,
+    /// <summary>Phase 1r / Batch 5 — orthogonal-to-Status outreach
+    /// substate (Queued / NoAnswer / VoicemailLeft / Engaged / etc.).</summary>
+    OutreachState OutreachState = OutreachState.Queued);

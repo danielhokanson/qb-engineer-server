@@ -202,6 +202,11 @@ public class BulkLeadIntakeHandler(AppDbContext db, IClock clock)
                     : DefaultSourceForStrategy(strategy, request.Request.CampaignTag),
                 Notes = row.Notes?.Trim(),
                 Status = LeadStatus.New,
+                // Phase 1r / Batch 5 — Campaign FK + initial OutreachState
+                // (Queued — workers pull from the queue; until then the
+                // lead waits in this state).
+                CampaignId = request.Request.CampaignId,
+                OutreachState = OutreachState.Queued,
             };
             leadsToCreate.Add(lead);
 

@@ -17,6 +17,7 @@ namespace QBEngineer.Core.Models;
 public record BulkLeadIntakeRequest(
     BulkLeadIntakeStrategy Strategy,
     string? CampaignTag,
+    int? CampaignId,
     List<BulkLeadIntakeRow> Rows);
 
 public record BulkLeadIntakeRow(

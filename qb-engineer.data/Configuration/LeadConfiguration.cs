@@ -32,5 +32,17 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
             .WithOne(c => c.SourceLead)
             .HasForeignKey<Lead>(e => e.ConvertedCustomerId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Phase 1r / Batch 5 — optional campaign FK. SetNull preserves
+        // the lead row when a campaign gets soft-deleted; outreach-state
+        // is a plain enum stored as string for forward-compat.
+        builder.HasOne(e => e.Campaign)
+            .WithMany()
+            .HasForeignKey(e => e.CampaignId)
+            .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(e => e.CampaignId);
+
+        builder.Property(e => e.OutreachState).HasConversion<string>().HasMaxLength(40);
+        builder.HasIndex(e => e.OutreachState);
     }
 }

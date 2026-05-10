@@ -25,5 +25,21 @@ public class Lead : BaseAuditableEntity
     /// </summary>
     public LeadEngagementShape EngagementShape { get; set; } = LeadEngagementShape.Unknown;
 
+    /// <summary>
+    /// Phase 1r / Batch 5 — optional FK to the bulk-marketing campaign
+    /// that produced this lead. Single-entry leads (manual + new-lead
+    /// fork) leave it null.
+    /// </summary>
+    public int? CampaignId { get; set; }
+
+    /// <summary>
+    /// Phase 1r / Batch 5 — orthogonal to <see cref="Status"/>. Tracks
+    /// where the lead is in the *outreach attempt* lifecycle (queued /
+    /// no-answer / voicemail-left / etc.) without overloading the
+    /// funnel enum.
+    /// </summary>
+    public OutreachState OutreachState { get; set; } = OutreachState.Queued;
+
     public Customer? ConvertedCustomer { get; set; }
+    public OutreachCampaign? Campaign { get; set; }
 }
