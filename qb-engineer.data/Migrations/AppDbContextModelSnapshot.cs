@@ -329,6 +329,172 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("abc_classification_runs");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Account", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Industry")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("industry");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("OwnerUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_user_id");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("postal_code");
+
+                    b.Property<string>("SizeBracket")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("size_bracket");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("state");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("website");
+
+                    b.HasKey("Id")
+                        .HasName("pk_accounts");
+
+                    b.HasIndex("Industry")
+                        .HasDatabaseName("ix_accounts_industry");
+
+                    b.HasIndex("OwnerUserId")
+                        .HasDatabaseName("ix_accounts_owner_user_id");
+
+                    b.ToTable("accounts");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.AccountContact", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("first_name");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_primary");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("last_name");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("Role")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("role");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_account_contacts");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_account_contacts_account_id");
+
+                    b.ToTable("account_contacts");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.ActivityLog", b =>
                 {
                     b.Property<int>("Id")
@@ -1190,6 +1356,64 @@ namespace QBEngineer.Data.Migrations
                         .HasDatabaseName("ix_assets_work_center_id");
 
                     b.ToTable("assets");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.AssignmentRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer")
+                        .HasColumnName("priority");
+
+                    b.Property<string>("Spec")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("spec");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_assignment_rules");
+
+                    b.HasIndex("IsActive", "Priority")
+                        .HasDatabaseName("ix_assignment_rules_is_active_priority");
+
+                    b.ToTable("assignment_rules");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.AuditLogEntry", b =>
@@ -4196,9 +4420,29 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("IsAerospace")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_aerospace");
+
+                    b.Property<bool>("IsAutomotive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_automotive");
+
+                    b.Property<bool>("IsFdaRegulated")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_fda_regulated");
+
+                    b.Property<bool>("IsItarControlled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_itar_controlled");
+
                     b.Property<bool>("IsOnCreditHold")
                         .HasColumnType("boolean")
                         .HasColumnName("is_on_credit_hold");
+
+                    b.Property<bool>("IsReferenceOk")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_reference_ok");
 
                     b.Property<bool>("IsTaxExempt")
                         .HasColumnType("boolean")
@@ -4223,6 +4467,10 @@ namespace QBEngineer.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("provider");
+
+                    b.Property<string>("ReferenceNotes")
+                        .HasColumnType("text")
+                        .HasColumnName("reference_notes");
 
                     b.Property<string>("TaxExemptionId")
                         .HasMaxLength(50)
@@ -7180,6 +7428,121 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("holidays");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.IcpDimension", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("FieldKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("field_key");
+
+                    b.Property<int>("IcpRubricId")
+                        .HasColumnType("integer")
+                        .HasColumnName("icp_rubric_id");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label");
+
+                    b.Property<string>("MatchSpec")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("match_spec");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Weight")
+                        .HasColumnType("integer")
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id")
+                        .HasName("pk_icp_dimensions");
+
+                    b.HasIndex("IcpRubricId")
+                        .HasDatabaseName("ix_icp_dimensions_icp_rubric_id");
+
+                    b.ToTable("icp_dimensions");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.IcpRubric", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_icp_rubrics");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_icp_rubrics_is_active");
+
+                    b.HasIndex("IsDefault")
+                        .IsUnique()
+                        .HasDatabaseName("ix_icp_rubrics_is_default")
+                        .HasFilter("is_default = true AND deleted_at IS NULL");
+
+                    b.ToTable("icp_rubrics");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.IdentityDocument", b =>
                 {
                     b.Property<int>("Id")
@@ -8590,9 +8953,23 @@ namespace QBEngineer.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AccountId")
+                        .HasColumnType("integer")
+                        .HasColumnName("account_id");
+
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("assigned_to_user_id");
+
                     b.Property<int?>("CampaignId")
                         .HasColumnType("integer")
                         .HasColumnName("campaign_id");
+
+                    b.Property<string>("CapabilityFit")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("capability_fit");
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
@@ -8638,14 +9015,42 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("engagement_shape");
 
+                    b.Property<string>("ExportControl")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("export_control");
+
                     b.Property<DateTimeOffset?>("FollowUpDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("follow_up_date");
+
+                    b.Property<int?>("IcpScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("icp_score");
+
+                    b.Property<int?>("LeadSourceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("lead_source_id");
 
                     b.Property<string>("LostReason")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("lost_reason");
+
+                    b.Property<DateTimeOffset?>("NdaExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("nda_expires_at");
+
+                    b.Property<DateTimeOffset?>("NdaSignedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("nda_signed_at");
+
+                    b.Property<string>("NdaState")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("nda_state");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(2000)
@@ -8658,10 +9063,19 @@ namespace QBEngineer.Data.Migrations
                         .HasColumnType("character varying(40)")
                         .HasColumnName("outreach_state");
 
+                    b.Property<string>("PartClassCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("part_class_code");
+
                     b.Property<string>("Phone")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("phone");
+
+                    b.Property<int?>("SecondaryOwnerUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("secondary_owner_user_id");
 
                     b.Property<string>("Source")
                         .HasMaxLength(100)
@@ -8679,15 +9093,36 @@ namespace QBEngineer.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_leads");
 
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_leads_account_id");
+
+                    b.HasIndex("AssignedToUserId")
+                        .HasDatabaseName("ix_leads_assigned_to_user_id");
+
                     b.HasIndex("CampaignId")
                         .HasDatabaseName("ix_leads_campaign_id");
+
+                    b.HasIndex("CapabilityFit")
+                        .HasDatabaseName("ix_leads_capability_fit");
 
                     b.HasIndex("ConvertedCustomerId")
                         .IsUnique()
                         .HasDatabaseName("ix_leads_converted_customer_id");
 
+                    b.HasIndex("IcpScore")
+                        .HasDatabaseName("ix_leads_icp_score");
+
+                    b.HasIndex("LeadSourceId")
+                        .HasDatabaseName("ix_leads_lead_source_id");
+
                     b.HasIndex("OutreachState")
                         .HasDatabaseName("ix_leads_outreach_state");
+
+                    b.HasIndex("PartClassCode")
+                        .HasDatabaseName("ix_leads_part_class_code");
+
+                    b.HasIndex("SecondaryOwnerUserId")
+                        .HasDatabaseName("ix_leads_secondary_owner_user_id");
 
                     b.ToTable("leads");
                 });
@@ -8786,6 +9221,71 @@ namespace QBEngineer.Data.Migrations
                         .HasFilter("deleted_at IS NULL");
 
                     b.ToTable("lead_outreach_preferences");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.LeadSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset?>("LastScoredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_scored_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("QualityScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("quality_score");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_lead_sources");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_lead_sources_code")
+                        .HasFilter("deleted_at IS NULL");
+
+                    b.ToTable("lead_sources");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.LeaveBalance", b =>
@@ -15092,6 +15592,103 @@ namespace QBEngineer.Data.Migrations
                     b.ToTable("sales_tax_rates");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.SampleShipment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Carrier")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("carrier");
+
+                    b.Property<decimal?>("ChargedAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("charged_amount");
+
+                    b.Property<decimal?>("CostToUs")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("cost_to_us");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<DateTimeOffset?>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delivered_at");
+
+                    b.Property<int>("LeadId")
+                        .HasColumnType("integer")
+                        .HasColumnName("lead_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("PartDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("part_description");
+
+                    b.Property<int?>("PartId")
+                        .HasColumnType("integer")
+                        .HasColumnName("part_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<DateTimeOffset?>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<DateTimeOffset?>("ShippedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("shipped_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TrackingNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tracking_number");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sample_shipments");
+
+                    b.HasIndex("LeadId")
+                        .HasDatabaseName("ix_sample_shipments_lead_id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_sample_shipments_status");
+
+                    b.ToTable("sample_shipments");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.SavedReport", b =>
                 {
                     b.Property<int>("Id")
@@ -20042,6 +20639,18 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("Run");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.AccountContact", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.Account", "Account")
+                        .WithMany("Contacts")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_account_contacts_accounts_account_id");
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.AndonAlert", b =>
                 {
                     b.HasOne("QBEngineer.Core.Entities.Job", "Job")
@@ -21268,6 +21877,18 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("WorkingCalendar");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.IcpDimension", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.IcpRubric", "Rubric")
+                        .WithMany("Dimensions")
+                        .HasForeignKey("IcpRubricId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_icp_dimensions__icp_rubrics_icp_rubric_id");
+
+                    b.Navigation("Rubric");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.IdentityDocument", b =>
                 {
                     b.HasOne("QBEngineer.Core.Entities.FileAttachment", "FileAttachment")
@@ -21645,6 +22266,12 @@ namespace QBEngineer.Data.Migrations
 
             modelBuilder.Entity("QBEngineer.Core.Entities.Lead", b =>
                 {
+                    b.HasOne("QBEngineer.Core.Entities.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_leads_accounts_account_id");
+
                     b.HasOne("QBEngineer.Core.Entities.OutreachCampaign", "Campaign")
                         .WithMany()
                         .HasForeignKey("CampaignId")
@@ -21657,9 +22284,19 @@ namespace QBEngineer.Data.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_leads_customers_converted_customer_id");
 
+                    b.HasOne("QBEngineer.Core.Entities.LeadSource", "LeadSource")
+                        .WithMany()
+                        .HasForeignKey("LeadSourceId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_leads__lead_sources_lead_source_id");
+
+                    b.Navigation("Account");
+
                     b.Navigation("Campaign");
 
                     b.Navigation("ConvertedCustomer");
+
+                    b.Navigation("LeadSource");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.LeadOutreachPreferences", b =>
@@ -23092,6 +23729,18 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("Uom");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.SampleShipment", b =>
+                {
+                    b.HasOne("QBEngineer.Core.Entities.Lead", "Lead")
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sample_shipments_leads_lead_id");
+
+                    b.Navigation("Lead");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.SavedReport", b =>
                 {
                     b.HasOne("QBEngineer.Data.Context.ApplicationUser", null)
@@ -23893,6 +24542,11 @@ namespace QBEngineer.Data.Migrations
                     b.Navigation("Classifications");
                 });
 
+            modelBuilder.Entity("QBEngineer.Core.Entities.Account", b =>
+                {
+                    b.Navigation("Contacts");
+                });
+
             modelBuilder.Entity("QBEngineer.Core.Entities.Announcement", b =>
                 {
                     b.Navigation("Acknowledgments");
@@ -24036,6 +24690,11 @@ namespace QBEngineer.Data.Migrations
             modelBuilder.Entity("QBEngineer.Core.Entities.Gage", b =>
                 {
                     b.Navigation("CalibrationRecords");
+                });
+
+            modelBuilder.Entity("QBEngineer.Core.Entities.IcpRubric", b =>
+                {
+                    b.Navigation("Dimensions");
                 });
 
             modelBuilder.Entity("QBEngineer.Core.Entities.InterPlantTransfer", b =>
