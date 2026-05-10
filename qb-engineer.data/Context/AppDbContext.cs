@@ -70,6 +70,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<LeadOutreachPreferences> LeadOutreachPreferences => Set<LeadOutreachPreferences>();
     public DbSet<OutreachCampaign> OutreachCampaigns => Set<OutreachCampaign>();
+    public DbSet<LeadSource> LeadSources => Set<LeadSource>();
+    public DbSet<IcpRubric> IcpRubrics => Set<IcpRubric>();
+    public DbSet<IcpDimension> IcpDimensions => Set<IcpDimension>();
+    public DbSet<AssignmentRule> AssignmentRules => Set<AssignmentRule>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<RecurringExpense> RecurringExpenses => Set<RecurringExpense>();
     public DbSet<Asset> Assets => Set<Asset>();

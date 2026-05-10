@@ -44,5 +44,14 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
 
         builder.Property(e => e.OutreachState).HasConversion<string>().HasMaxLength(40);
         builder.HasIndex(e => e.OutreachState);
+
+        // Phase 1r / Batches 9-11 — intelligence + assignment columns.
+        builder.HasOne(e => e.LeadSource)
+            .WithMany()
+            .HasForeignKey(e => e.LeadSourceId)
+            .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(e => e.LeadSourceId);
+        builder.HasIndex(e => e.AssignedToUserId);
+        builder.HasIndex(e => e.IcpScore);
     }
 }

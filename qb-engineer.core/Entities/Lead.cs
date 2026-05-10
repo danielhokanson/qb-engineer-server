@@ -40,6 +40,16 @@ public class Lead : BaseAuditableEntity
     /// </summary>
     public OutreachState OutreachState { get; set; } = OutreachState.Queued;
 
+    /// <summary>Phase 1r / Batch 9 — formal source FK. Legacy free-text Source field stays for back-compat.</summary>
+    public int? LeadSourceId { get; set; }
+
+    /// <summary>Phase 1r / Batch 10 — cached ICP score 0-100. Job recomputes on Lead create + rubric edits.</summary>
+    public int? IcpScore { get; set; }
+
+    /// <summary>Phase 1r / Batch 11 — rep ownership assignment. Null = unassigned / open queue.</summary>
+    public int? AssignedToUserId { get; set; }
+
     public Customer? ConvertedCustomer { get; set; }
     public OutreachCampaign? Campaign { get; set; }
+    public LeadSource? LeadSource { get; set; }
 }

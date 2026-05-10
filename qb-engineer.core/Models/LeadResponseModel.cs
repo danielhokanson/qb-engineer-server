@@ -38,4 +38,10 @@ public record LeadResponseModel(
     int? CampaignId = null,
     /// <summary>Phase 1r / Batch 5 — orthogonal-to-Status outreach
     /// substate (Queued / NoAnswer / VoicemailLeft / Engaged / etc.).</summary>
-    OutreachState OutreachState = OutreachState.Queued);
+    OutreachState OutreachState = OutreachState.Queued,
+    /// <summary>Phase 1r / Batch 9 — formal source FK.</summary>
+    int? LeadSourceId = null,
+    /// <summary>Phase 1r / Batch 10 — cached ICP score 0-100, null until computed.</summary>
+    int? IcpScore = null,
+    /// <summary>Phase 1r / Batch 11 — rep ownership; null = unassigned.</summary>
+    int? AssignedToUserId = null);
