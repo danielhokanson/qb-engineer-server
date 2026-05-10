@@ -44,4 +44,6 @@ public record LeadResponseModel(
     /// <summary>Phase 1r / Batch 10 — cached ICP score 0-100, null until computed.</summary>
     int? IcpScore = null,
     /// <summary>Phase 1r / Batch 11 — rep ownership; null = unassigned.</summary>
-    int? AssignedToUserId = null);
+    int? AssignedToUserId = null,
+    /// <summary>Phase 1r / Batch 12 — optional account FK for multi-contact groupings.</summary>
+    int? AccountId = null);

@@ -11,6 +11,7 @@ public static partial class LeadMapper
     [MapperIgnoreSource(nameof(Lead.ConvertedCustomer))]
     [MapperIgnoreSource(nameof(Lead.Campaign))]
     [MapperIgnoreSource(nameof(Lead.LeadSource))]
+    [MapperIgnoreSource(nameof(Lead.Account))]
     [MapperIgnoreSource(nameof(Lead.CreatedBy))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.DeletedAt))]
     [MapperIgnoreSource(nameof(BaseAuditableEntity.DeletedBy))]

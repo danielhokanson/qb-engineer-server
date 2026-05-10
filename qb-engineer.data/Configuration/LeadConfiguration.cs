@@ -53,5 +53,14 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.HasIndex(e => e.LeadSourceId);
         builder.HasIndex(e => e.AssignedToUserId);
         builder.HasIndex(e => e.IcpScore);
+
+        // Phase 1r / Batch 12 — optional Account FK. SetNull preserves
+        // the lead when its Account gets soft-deleted; orphan leads
+        // remain queryable via the legacy flat-lead shape.
+        builder.HasOne(e => e.Account)
+            .WithMany()
+            .HasForeignKey(e => e.AccountId)
+            .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(e => e.AccountId);
     }
 }

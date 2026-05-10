@@ -49,7 +49,11 @@ public class Lead : BaseAuditableEntity
     /// <summary>Phase 1r / Batch 11 — rep ownership assignment. Null = unassigned / open queue.</summary>
     public int? AssignedToUserId { get; set; }
 
+    /// <summary>Phase 1r / Batch 12 — optional FK to a multi-contact Account. Null = legacy flat-lead shape.</summary>
+    public int? AccountId { get; set; }
+
     public Customer? ConvertedCustomer { get; set; }
     public OutreachCampaign? Campaign { get; set; }
     public LeadSource? LeadSource { get; set; }
+    public Account? Account { get; set; }
 }
