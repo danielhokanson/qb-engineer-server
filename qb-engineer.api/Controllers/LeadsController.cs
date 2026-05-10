@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Features.Activity;
 using QBEngineer.Api.Features.Leads;
+using QBEngineer.Api.Features.Leads.BulkIntake;
 using QBEngineer.Api.Features.OutreachPreferences;
 using QBEngineer.Core.Enums;
 using QBEngineer.Core.Models;
@@ -85,6 +86,28 @@ public class LeadsController(IMediator mediator) : ControllerBase
         int id, [FromBody] UpdateOutreachPreferencesRequest request)
     {
         var result = await mediator.Send(new UpdateLeadOutreachPreferencesCommand(id, request));
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Phase 1r / Batch 4 — bulk intake preview. Runs the full dedup +
+    /// suppression + quality pipeline on the inbound rows but does NOT
+    /// persist anything. UI uses this to render the per-row status table
+    /// before the operator clicks "import N rows" on the commit endpoint.
+    /// </summary>
+    [HttpPost("bulk-intake/preview")]
+    public async Task<ActionResult<BulkLeadIntakeResponseModel>> BulkIntakePreview(
+        [FromBody] BulkLeadIntakeRequest request)
+    {
+        var result = await mediator.Send(new BulkLeadIntakeCommand(request, Commit: false));
+        return Ok(result);
+    }
+
+    [HttpPost("bulk-intake/commit")]
+    public async Task<ActionResult<BulkLeadIntakeResponseModel>> BulkIntakeCommit(
+        [FromBody] BulkLeadIntakeRequest request)
+    {
+        var result = await mediator.Send(new BulkLeadIntakeCommand(request, Commit: true));
         return Ok(result);
     }
 }
