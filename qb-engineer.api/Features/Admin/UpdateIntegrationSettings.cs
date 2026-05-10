@@ -24,11 +24,12 @@ namespace QBEngineer.Api.Features.Admin;
 /// value, and we'd corrupt the stored secret if we wrote the mask in.
 ///
 /// IOptions in-memory mutation: restored from the pre-1m handler so
-/// admin saves take effect without restart for the 5 integrations whose
+/// admin saves take effect without restart for the 9 integrations whose
 /// services bind <c>IOptions&lt;T&gt;</c> (SMTP, MinIO, USPS, DocuSeal,
-/// AI). Migrating those services to <see cref="ISettingsService"/>
-/// directly retires this shim — until then the propagation here keeps
-/// user-visible behaviour parity with the pre-1m admin handler.
+/// AI, plus the 4 shipping carriers — UPS, FedEx, DHL, Stamps). Migrating
+/// those services to <see cref="ISettingsService"/> directly retires
+/// this shim — until then the propagation here keeps user-visible
+/// behaviour parity with the pre-1m admin handler.
 /// </summary>
 public record UpdateIntegrationSettingsCommand(
     string Provider,
@@ -41,7 +42,11 @@ public class UpdateIntegrationSettingsHandler(
     IOptions<MinioOptions> minioOptions,
     IOptions<UspsOptions> uspsOptions,
     IOptions<DocuSealOptions> docuSealOptions,
-    IOptions<AiOptions> aiOptions)
+    IOptions<AiOptions> aiOptions,
+    IOptions<UpsOptions> upsOptions,
+    IOptions<FedExOptions> fedExOptions,
+    IOptions<DhlOptions> dhlOptions,
+    IOptions<StampsOptions> stampsOptions)
     : IRequestHandler<UpdateIntegrationSettingsCommand, IntegrationStatusModel>
 {
     public async Task<IntegrationStatusModel> Handle(UpdateIntegrationSettingsCommand request, CancellationToken ct)
@@ -101,6 +106,18 @@ public class UpdateIntegrationSettingsHandler(
                 break;
             case "ai":
                 ApplyAi(applied);
+                break;
+            case "ups":
+                ApplyUps(applied);
+                break;
+            case "fedex":
+                ApplyFedEx(applied);
+                break;
+            case "dhl":
+                ApplyDhl(applied);
+                break;
+            case "stamps":
+                ApplyStamps(applied);
                 break;
         }
     }
@@ -163,6 +180,59 @@ public class UpdateIntegrationSettingsHandler(
         if (applied.TryGetValue(AiSettings.KeyVisionModel, out var vm) && vm is not null) o.VisionModel = vm;
         if (applied.TryGetValue(AiSettings.KeyTimeoutSeconds, out var ts) && int.TryParse(ts, out var t)) o.TimeoutSeconds = t;
         if (applied.TryGetValue(AiSettings.KeyVisionTimeoutSeconds, out var vts) && int.TryParse(vts, out var vt)) o.VisionTimeoutSeconds = vt;
+    }
+
+    // ── Shipping carriers ─────────────────────────────────────────────
+    // The four direct carrier services (UPS, FedEx, USPS Shipping, DHL,
+    // Stamps.com) all bind IOptions<T>. Without this propagation, an
+    // admin save lands the new credentials in the database but the
+    // carrier services keep using the in-memory snapshot from process
+    // start — a "saved successfully" toast that does nothing until the
+    // next API restart. Mirroring the SMTP / MinIO pattern lets carrier
+    // credentials take effect on save, same as every other integration.
+
+    private void ApplyUps(Dictionary<string, string?> applied)
+    {
+        var o = upsOptions.Value;
+        if (applied.TryGetValue("ups.client-id", out var cid) && cid is not null) o.ClientId = cid;
+        if (applied.TryGetValue("ups.client-secret", out var cs) && cs is not null) o.ClientSecret = cs;
+        if (applied.TryGetValue("ups.account-number", out var acct) && acct is not null) o.AccountNumber = acct;
+        // mode descriptor maps to environment ("sandbox" / "production")
+        if (applied.TryGetValue("ups.mode", out var mode) && mode is not null) o.Environment = mode;
+    }
+
+    private void ApplyFedEx(Dictionary<string, string?> applied)
+    {
+        var o = fedExOptions.Value;
+        if (applied.TryGetValue("fedex.client-id", out var cid) && cid is not null) o.ClientId = cid;
+        if (applied.TryGetValue("fedex.client-secret", out var cs) && cs is not null) o.ClientSecret = cs;
+        if (applied.TryGetValue("fedex.account-number", out var acct) && acct is not null) o.AccountNumber = acct;
+        if (applied.TryGetValue("fedex.mode", out var mode) && mode is not null) o.Environment = mode;
+    }
+
+    private void ApplyDhl(Dictionary<string, string?> applied)
+    {
+        var o = dhlOptions.Value;
+        if (applied.TryGetValue("dhl.api-key", out var key) && key is not null) o.ApiKey = key;
+        if (applied.TryGetValue("dhl.account-number", out var acct) && acct is not null) o.AccountNumber = acct;
+        // dhl.mode is in the descriptor but DhlOptions doesn't model an
+        // environment switch — the BaseUrl is hardcoded to production.
+        // Sandbox vs production for DHL Express is gated server-side by
+        // the API key tier the developer was issued. No-op here.
+    }
+
+    private void ApplyStamps(Dictionary<string, string?> applied)
+    {
+        var o = stampsOptions.Value;
+        // Stamps descriptor uses username/password/integration-id; the
+        // options model has ApiKey + AccountId + Environment. Map
+        // integration-id → ApiKey, username → AccountId (closest
+        // available fields). Until a real Stamps service ships, this
+        // captures the credentials without a restart so when the service
+        // does land it picks them up immediately.
+        if (applied.TryGetValue("stamps.integration-id", out var iid) && iid is not null) o.ApiKey = iid;
+        if (applied.TryGetValue("stamps.username", out var user) && user is not null) o.AccountId = user;
+        if (applied.TryGetValue("stamps.mode", out var mode) && mode is not null) o.Environment = mode;
     }
 
     private static bool IsMaskedSecret(string value)
