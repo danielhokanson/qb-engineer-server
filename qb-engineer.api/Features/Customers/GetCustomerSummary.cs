@@ -68,6 +68,12 @@ public class GetCustomerSummaryHandler(AppDbContext db)
             activeJobCount,
             openInvoiceData.Count,
             openInvoiceData.Sum(i => i.Total),
-            ytdRevenue);
+            ytdRevenue,
+            customer.IsFdaRegulated,
+            customer.IsAerospace,
+            customer.IsAutomotive,
+            customer.IsItarControlled,
+            customer.IsReferenceOk,
+            customer.ReferenceNotes);
     }
 }

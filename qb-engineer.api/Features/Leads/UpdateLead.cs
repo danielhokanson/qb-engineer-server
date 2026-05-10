@@ -92,6 +92,37 @@ public class UpdateLeadHandler(ILeadRepository repo, AppDbContext db) : IRequest
             changedFields.Add("customFieldValues");
         }
 
+        // Phase 1r / Batch 13-14 — manufacturing/compliance classifications.
+        // Each transition is rolled into the same activity-log entry; we
+        // surface the new state by name (matches Status / EngagementShape
+        // treatment above) so an auditor reading the activity tab can see
+        // the trail without opening the row.
+        if (data.CapabilityFit.HasValue && data.CapabilityFit.Value != lead.CapabilityFit)
+        {
+            lead.CapabilityFit = data.CapabilityFit.Value;
+            changedFields.Add($"capabilityFit: {lead.CapabilityFit}");
+        }
+        if (data.NdaState.HasValue && data.NdaState.Value != lead.NdaState)
+        {
+            lead.NdaState = data.NdaState.Value;
+            changedFields.Add($"ndaState: {lead.NdaState}");
+        }
+        if (data.NdaSignedAt.HasValue && data.NdaSignedAt != lead.NdaSignedAt)
+        {
+            lead.NdaSignedAt = data.NdaSignedAt;
+            changedFields.Add("ndaSignedAt");
+        }
+        if (data.NdaExpiresAt.HasValue && data.NdaExpiresAt != lead.NdaExpiresAt)
+        {
+            lead.NdaExpiresAt = data.NdaExpiresAt;
+            changedFields.Add("ndaExpiresAt");
+        }
+        if (data.ExportControl.HasValue && data.ExportControl.Value != lead.ExportControl)
+        {
+            lead.ExportControl = data.ExportControl.Value;
+            changedFields.Add($"exportControl: {lead.ExportControl}");
+        }
+
         if (changedFields.Count > 0)
         {
             db.LogActivityAt(

@@ -17,4 +17,12 @@ public record UpdateLeadRequestModel(
     // classification (matches the rest of the patch fields' nullable +
     // explicit-clear semantics).
     LeadEngagementShape? EngagementShape = null,
-    string? CustomFieldValues = null);
+    string? CustomFieldValues = null,
+    // Phase 1r / Batch 13-14 — manufacturing/compliance classifications.
+    // Each is independently nullable so the detail panel's per-chip edit
+    // affordances PATCH only the field they're modifying.
+    CapabilityFitStatus? CapabilityFit = null,
+    NdaState? NdaState = null,
+    DateTimeOffset? NdaSignedAt = null,
+    DateTimeOffset? NdaExpiresAt = null,
+    ExportControlClearance? ExportControl = null);

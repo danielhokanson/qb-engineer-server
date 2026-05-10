@@ -14,7 +14,15 @@ public record UpdateCustomerCommand(
     string? Phone,
     bool? IsActive,
     bool? IsTaxExempt = null,
-    string? TaxExemptionId = null) : IRequest;
+    string? TaxExemptionId = null,
+    // Phase 1r / Batch 15-16 — regulated-industry flags + reference-customer
+    // consent. Default null = "leave alone"; explicit true/false sets.
+    bool? IsFdaRegulated = null,
+    bool? IsAerospace = null,
+    bool? IsAutomotive = null,
+    bool? IsItarControlled = null,
+    bool? IsReferenceOk = null,
+    string? ReferenceNotes = null) : IRequest;
 
 public class UpdateCustomerValidator : AbstractValidator<UpdateCustomerCommand>
 {
@@ -78,6 +86,41 @@ public class UpdateCustomerHandler(ICustomerRepository repo, AppDbContext db, IC
         {
             customer.TaxExemptionId = request.TaxExemptionId;
             changedFields.Add("taxExemptionId");
+        }
+
+        // Phase 1r / Batch 15 — regulated-industry flags. Each is independent
+        // (a customer can be both aerospace + ITAR-controlled, or automotive
+        // alone). Toggle activity rows surface the new state by name.
+        if (request.IsFdaRegulated.HasValue && request.IsFdaRegulated.Value != customer.IsFdaRegulated)
+        {
+            customer.IsFdaRegulated = request.IsFdaRegulated.Value;
+            changedFields.Add($"isFdaRegulated: {customer.IsFdaRegulated}");
+        }
+        if (request.IsAerospace.HasValue && request.IsAerospace.Value != customer.IsAerospace)
+        {
+            customer.IsAerospace = request.IsAerospace.Value;
+            changedFields.Add($"isAerospace: {customer.IsAerospace}");
+        }
+        if (request.IsAutomotive.HasValue && request.IsAutomotive.Value != customer.IsAutomotive)
+        {
+            customer.IsAutomotive = request.IsAutomotive.Value;
+            changedFields.Add($"isAutomotive: {customer.IsAutomotive}");
+        }
+        if (request.IsItarControlled.HasValue && request.IsItarControlled.Value != customer.IsItarControlled)
+        {
+            customer.IsItarControlled = request.IsItarControlled.Value;
+            changedFields.Add($"isItarControlled: {customer.IsItarControlled}");
+        }
+        // Phase 1r / Batch 16 — reference-customer consent + notes.
+        if (request.IsReferenceOk.HasValue && request.IsReferenceOk.Value != customer.IsReferenceOk)
+        {
+            customer.IsReferenceOk = request.IsReferenceOk.Value;
+            changedFields.Add($"isReferenceOk: {customer.IsReferenceOk}");
+        }
+        if (request.ReferenceNotes is not null && request.ReferenceNotes != customer.ReferenceNotes)
+        {
+            customer.ReferenceNotes = request.ReferenceNotes;
+            changedFields.Add("referenceNotes");
         }
 
         if (changedFields.Count > 0)

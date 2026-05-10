@@ -49,7 +49,13 @@ public class GetCustomerByIdHandler(ICustomerRepository repo)
             DefaultTaxCodeId: customer.DefaultTaxCodeId,
             DefaultCurrency: customer.DefaultCurrency,
             BillingAddress: PickAddress(customer, AddressType.Billing),
-            ShippingAddress: PickAddress(customer, AddressType.Shipping));
+            ShippingAddress: PickAddress(customer, AddressType.Shipping),
+            IsFdaRegulated: customer.IsFdaRegulated,
+            IsAerospace: customer.IsAerospace,
+            IsAutomotive: customer.IsAutomotive,
+            IsItarControlled: customer.IsItarControlled,
+            IsReferenceOk: customer.IsReferenceOk,
+            ReferenceNotes: customer.ReferenceNotes);
     }
 
     private static AddressOutput? PickAddress(Customer customer, AddressType type)

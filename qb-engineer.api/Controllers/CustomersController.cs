@@ -79,7 +79,13 @@ public class CustomersController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> UpdateCustomer(int id, UpdateCustomerRequestModel request)
     {
         await mediator.Send(new UpdateCustomerCommand(
-            id, request.Name, request.CompanyName, request.Email, request.Phone, request.IsActive));
+            id, request.Name, request.CompanyName, request.Email, request.Phone, request.IsActive,
+            IsFdaRegulated: request.IsFdaRegulated,
+            IsAerospace: request.IsAerospace,
+            IsAutomotive: request.IsAutomotive,
+            IsItarControlled: request.IsItarControlled,
+            IsReferenceOk: request.IsReferenceOk,
+            ReferenceNotes: request.ReferenceNotes));
         return NoContent();
     }
 
@@ -130,6 +136,25 @@ public class CustomersController(IMediator mediator) : ControllerBase
     [RequiresCapability("CAP-MD-CUSTOMER-CONTACTS")]
     public async Task<ActionResult<List<FlatContactRowModel>>> GetAllContactsFlat()
         => Ok(await mediator.Send(new GetAllContactsFlatQuery()));
+
+    /// <summary>
+    /// Phase 1r — admin oversight of customer-portal access.
+    /// GET lists every CustomerPortalAccess row; PUT toggles IsEnabled.
+    /// Gated behind the same portal capability the customer-facing side
+    /// uses, since "manage who can sign in" is part of the portal feature.
+    /// </summary>
+    [HttpGet("portal-access")]
+    [RequiresCapability("CAP-EXT-CUSTOMER-PORTAL")]
+    public async Task<ActionResult<List<PortalAccessRowModel>>> ListPortalAccess()
+        => Ok(await mediator.Send(new ListPortalAccessQuery()));
+
+    [HttpPut("portal-access/{accessId:int}/enabled")]
+    [RequiresCapability("CAP-EXT-CUSTOMER-PORTAL")]
+    public async Task<IActionResult> SetPortalAccessEnabled(int accessId, [FromBody] SetPortalAccessEnabledRequest request)
+    {
+        await mediator.Send(new SetPortalAccessEnabledCommand(accessId, request.Enabled));
+        return NoContent();
+    }
 
     // ─── Phase 1r — Contact outreach preferences ───
     // 0..1:1 sidecar carrying per-channel opt-outs + cooldown windows.
@@ -257,3 +282,5 @@ public class CustomersController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 }
+
+public record SetPortalAccessEnabledRequest(bool Enabled);

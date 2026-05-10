@@ -22,7 +22,14 @@ public record CustomerDetailResponseModel(
     int? DefaultTaxCodeId = null,
     string? DefaultCurrency = null,
     AddressOutput? BillingAddress = null,
-    AddressOutput? ShippingAddress = null);
+    AddressOutput? ShippingAddress = null,
+    // Phase 1r / Batch 15-16 — regulated-industry flags + reference-customer consent.
+    bool IsFdaRegulated = false,
+    bool IsAerospace = false,
+    bool IsAutomotive = false,
+    bool IsItarControlled = false,
+    bool IsReferenceOk = false,
+    string? ReferenceNotes = null);
 
 /// <summary>
 /// Minimal nested address shape returned alongside a customer record. Phase 3 F3.
