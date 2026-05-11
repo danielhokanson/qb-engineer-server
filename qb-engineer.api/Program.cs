@@ -682,10 +682,23 @@ try
         builder.Services.AddScoped<IMessagingIntegrationService, DiscordMessagingService>();
         builder.Services.AddScoped<IMessagingIntegrationService, GoogleChatMessagingService>();
 
-        // Cloud storage providers — real Drive / OneDrive / Dropbox land in
-        // subsequent waves of the Pro Services rollout; until then the mock
-        // serves as the default. Singleton: the mock holds in-memory state.
+        // Cloud storage providers — Google Drive / OneDrive / Dropbox land
+        // here per the Pro Services rollout. DI registers all configured
+        // providers (one per provider whose options are populated); a
+        // future MultiCloudStorageService resolver will pick the right
+        // one per CloudStorageProvider row at runtime.
+        //
+        // The mock provider is always registered as a fallback (Singleton
+        // because it holds in-memory state). The real providers are added
+        // alongside it when their credentials are configured.
         builder.Services.AddSingleton<ICloudStorageIntegrationService, MockCloudStorageIntegrationService>();
+
+        var googleDriveOptions = builder.Configuration.GetSection("GoogleDrive").Get<GoogleDriveOptions>();
+        if (googleDriveOptions?.IsConfigured == true)
+        {
+            builder.Services.Configure<GoogleDriveOptions>(builder.Configuration.GetSection("GoogleDrive"));
+            builder.Services.AddScoped<ICloudStorageIntegrationService, GoogleDriveCloudStorageService>();
+        }
     }
     builder.Services.AddScoped<IGitHubIssueService, GitHubIssueService>();
 
