@@ -17,8 +17,8 @@ public static class PresetMetadata
         "PRESET-05" => ["Regulated industry", "ISO 13485 / AS9100 / IATF / FDA", "Full QC stack"],
         "PRESET-06" => ["50-500 people", "Multi-site (2+ plants)", "EDI", "MRP/MPS"],
         "PRESET-07" => ["200+ people", "Multi-currency", "CTO/ETO", "Machine connect"],
-        "PRESET-08" => ["5-50 people", "Consulting / agency", "Billable hours", "Retainers"],
-        "PRESET-09" => ["10-100 people", "Make + service", "Hybrid stereotype"],
+        "PRESET-08" => ["5-50 people", "Consulting / agency", "Agile task types", "Billable hours"],
+        "PRESET-09" => ["10-100 people", "Make + service", "Hybrid + agile tasks"],
         "PRESET-CUSTOM" => ["Hand-pick capabilities", "Catalog defaults"],
         _ => [],
     };

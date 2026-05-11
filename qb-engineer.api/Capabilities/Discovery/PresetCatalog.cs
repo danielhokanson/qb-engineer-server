@@ -253,17 +253,22 @@ public static class PresetCatalog
                 "CAP-QC-COMPLIANCE-FORMS", // per D7 — NDAs / MSAs apply to services
             ]),
         // ── Terminology overlay (full) ──
+        // Per the agile / scrum mental model: Job becomes Task (the work-
+        // tracking primitive); Track Type becomes Task Type (Epic, Project,
+        // Story, Bug, Spike — each with its own stage set per the
+        // TrackTypeBundle below).
         TerminologyBundle: new TerminologyBundle(
             Labels: new Dictionary<string, string>
             {
-                ["entity_job"] = "Project",
+                ["entity_job"] = "Task",
+                ["entity_track_type"] = "Task Type",
                 ["entity_customer"] = "Client",
                 ["entity_work_center"] = "Consultant",
                 ["entity_planning_cycle"] = "Sprint",
-                ["status_in_production"] = "In Delivery",
-                ["status_shipped"] = "Delivered",
-                ["action_start_production"] = "Start Delivery",
-                ["label_jobs"] = "Projects",
+                ["status_in_production"] = "In Progress",
+                ["status_shipped"] = "Done",
+                ["action_start_production"] = "Start Work",
+                ["label_jobs"] = "Tasks",
                 ["label_customers"] = "Clients",
             }),
         // ── Reference data (10 service-shop groups) ──
@@ -343,14 +348,37 @@ public static class PresetCatalog
                     new("public_sector", "Public Sector", 4),
                 },
             }),
-        // ── Track type: Engagement with service-shop stages ──
+        // ── Task types (agile / scrum) ──
+        // Five task types, each with its own status set tuned to its
+        // lifecycle. Project keeps the full O2C-style stage progression
+        // (Proposal → ... → Paid) because that's the canonical agency
+        // engagement shape and carries the accounting document hooks.
+        // The other four are internal-work types with no accounting docs:
+        //   Epic    — coarse-grained initiative spanning weeks/months
+        //   Story   — user story / feature within an Epic
+        //   Bug     — defect lifecycle
+        //   Spike   — time-boxed exploratory investigation
         TrackTypeBundle: new TrackTypeBundle(
             TrackTypes: new List<TrackTypeSeed>
             {
                 new(
-                    Code: "engagement",
-                    Name: "Engagement",
+                    Code: "ps_epic",
+                    Name: "Epic",
                     SortOrder: 1,
+                    IsDefault: false,
+                    IsShopFloor: false,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("draft",       "Draft",       1, "#94a3b8"),
+                        new("refined",     "Refined",     2, "#0ea5e9"),
+                        new("in_progress", "In Progress", 3, "#f59e0b"),
+                        new("review",      "Review",      4, "#ec4899"),
+                        new("done",        "Done",        5, "#15803d"),
+                    }),
+                new(
+                    Code: "ps_project",
+                    Name: "Project",
+                    SortOrder: 2,
                     IsDefault: true,
                     IsShopFloor: false,
                     Stages: new List<JobStageSeed>
@@ -363,6 +391,48 @@ public static class PresetCatalog
                         new("delivered", "Delivered",       6, "#15803d"),
                         new("invoiced",  "Invoiced",        7, "#dc2626", AccountingDocumentType: AccountingDocumentType.Invoice, IsIrreversible: true),
                         new("paid",      "Paid",            8, "#16a34a", AccountingDocumentType: AccountingDocumentType.Payment, IsIrreversible: true),
+                    }),
+                new(
+                    Code: "ps_story",
+                    Name: "Story",
+                    SortOrder: 3,
+                    IsDefault: false,
+                    IsShopFloor: false,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("backlog",     "Backlog",     1, "#94a3b8"),
+                        new("ready",       "Ready",       2, "#0ea5e9"),
+                        new("in_progress", "In Progress", 3, "#f59e0b"),
+                        new("review",      "Review",      4, "#ec4899"),
+                        new("done",        "Done",        5, "#15803d"),
+                    }),
+                new(
+                    Code: "ps_bug",
+                    Name: "Bug",
+                    SortOrder: 4,
+                    IsDefault: false,
+                    IsShopFloor: false,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("reported",    "Reported",    1, "#94a3b8"),
+                        new("triaged",     "Triaged",     2, "#0ea5e9"),
+                        new("in_progress", "In Progress", 3, "#f59e0b"),
+                        new("review",      "Review",      4, "#ec4899"),
+                        new("resolved",    "Resolved",    5, "#15803d"),
+                        new("verified",    "Verified",    6, "#16a34a"),
+                    }),
+                new(
+                    Code: "ps_spike",
+                    Name: "Spike",
+                    SortOrder: 5,
+                    IsDefault: false,
+                    IsShopFloor: false,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("defined",     "Defined",     1, "#94a3b8"),
+                        new("in_progress", "In Progress", 2, "#f59e0b"),
+                        new("outcome",     "Outcome",     3, "#ec4899"),
+                        new("closed",      "Closed",      4, "#15803d"),
                     }),
             }),
         // ── Roles (AddOnly default — never strips admin grants) ──
@@ -386,14 +456,14 @@ public static class PresetCatalog
                 new(
                     EntityType: "Customer",
                     PathTemplate: "/Clients/{Customer}/",
-                    SubfolderNames: new[] { "00-General", "01-Contracts", "02-Engagements" }),
+                    SubfolderNames: new[] { "00-General", "01-Contracts", "02-Tasks" }),
                 new(
                     EntityType: "Job",
-                    PathTemplate: "/Clients/{Customer}/02-Engagements/{Job}/",
+                    PathTemplate: "/Clients/{Customer}/02-Tasks/{Job}/",
                     SubfolderNames: new[] { "Proposal", "Contracts", "Discovery", "Working", "Deliverables", "Final" }),
                 new(
                     EntityType: "Deliverable",
-                    PathTemplate: "/Clients/{Customer}/02-Engagements/{Job}/Deliverables/",
+                    PathTemplate: "/Clients/{Customer}/02-Tasks/{Job}/Deliverables/",
                     SubfolderNames: new[] { "Draft", "Review", "Final" }),
             }));
 

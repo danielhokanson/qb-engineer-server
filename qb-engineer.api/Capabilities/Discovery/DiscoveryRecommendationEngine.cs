@@ -69,9 +69,10 @@ public static class DiscoveryRecommendationEngine
                 Confidence: 1.0,
                 ConfidenceLabel: "high",
                 Rationale: "You sell time / professional services. Pro Services is the right starting point: " +
-                           "engagement-based work organization, billable hours, retainers, and deliverable " +
-                           "tracking — without the manufacturing capabilities a service shop never uses. " +
-                           "You can review the capability changes and the terminology bundle before applying anything.",
+                           "task-based work organization (Epic / Project / Story / Bug / Spike), billable hours, " +
+                           "retainers, and deliverable tracking — without the manufacturing capabilities a " +
+                           "service shop never uses. You can review the capability changes and the terminology " +
+                           "bundle before applying anything.",
                 Factors: [new DiscoveryRecommendationFactor("Q-S1", "Services-only business → Pro Services")],
                 Alternatives:
                 [
@@ -92,9 +93,9 @@ public static class DiscoveryRecommendationEngine
                 Confidence: 1.0,
                 ConfidenceLabel: "high",
                 Rationale: "You sell both physical products and professional services. Hybrid is the right starting point: " +
-                           "carries the full manufacturing stack AND the Pro Services overlay (engagement track type, " +
-                           "billable hours, deliverables) in one install. Terminology renames Job → Project, " +
-                           "Customer → Client, Work Center → Consultant universally.",
+                           "carries the full manufacturing stack AND the Pro Services overlay (agile task types — " +
+                           "Epic / Project / Story / Bug / Spike — billable hours, deliverables) in one install. " +
+                           "Terminology renames Job → Task, Customer → Client, Work Center → Consultant universally.",
                 Factors: [new DiscoveryRecommendationFactor("Q-S1", "Make-and-service business → Hybrid")],
                 Alternatives:
                 [

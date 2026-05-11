@@ -329,11 +329,13 @@ public class PresetBrowserTests
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // Terminology — Job → Project, Customer → Client, Work Center → Consultant.
+        // Terminology — Job → Task, Customer → Client, Work Center → Consultant.
+        // (The agile/scrum rename — Track Type also gets renamed to Task Type
+        // since each TaskType has its own status set.)
         var jobRename = await db.TerminologyEntries
             .FirstOrDefaultAsync(t => t.Key == "entity_job");
         Assert.NotNull(jobRename);
-        Assert.Equal("Project", jobRename!.Label);
+        Assert.Equal("Task", jobRename!.Label);
         Assert.Equal("PRESET-08", jobRename.SourcePresetId);
 
         var customerRename = await db.TerminologyEntries
@@ -344,6 +346,10 @@ public class PresetBrowserTests
             .FirstOrDefaultAsync(t => t.Key == "entity_work_center");
         Assert.Equal("Consultant", workCenterRename?.Label);
 
+        var taskTypeRename = await db.TerminologyEntries
+            .FirstOrDefaultAsync(t => t.Key == "entity_track_type");
+        Assert.Equal("Task Type", taskTypeRename?.Label);
+
         // Reference data — engagement_type group seeded with 4 values.
         var engagementTypes = await db.ReferenceData
             .Where(r => r.GroupCode == "engagement_type")
@@ -351,12 +357,21 @@ public class PresetBrowserTests
         Assert.Equal(4, engagementTypes.Count);
         Assert.All(engagementTypes, r => Assert.True(r.IsSeedData));
 
-        // Track type — Engagement with 8 stages.
-        var engagementTrack = await db.TrackTypes
+        // Task types — 5 agile task types each with their own status set.
+        var taskTypes = await db.TrackTypes
             .Include(t => t.Stages)
-            .FirstOrDefaultAsync(t => t.Code == "engagement");
-        Assert.NotNull(engagementTrack);
-        Assert.Equal(8, engagementTrack!.Stages.Count);
+            .Where(t => new[] { "ps_epic", "ps_project", "ps_story", "ps_bug", "ps_spike" }.Contains(t.Code))
+            .ToListAsync();
+        Assert.Equal(5, taskTypes.Count);
+        // Project keeps the canonical 8-stage O2C lifecycle (carries
+        // accounting document hooks: SalesOrder, Invoice, Payment).
+        var projectTrack = taskTypes.First(t => t.Code == "ps_project");
+        Assert.Equal(8, projectTrack.Stages.Count);
+        // Other task types have lighter status sets specific to their lifecycle.
+        var epic = taskTypes.First(t => t.Code == "ps_epic");
+        Assert.Equal(5, epic.Stages.Count);
+        var bug = taskTypes.First(t => t.Code == "ps_bug");
+        Assert.Equal(6, bug.Stages.Count);
 
         // Roles — 4 Pro Services role templates added.
         var roles = await db.RoleTemplates
@@ -394,7 +409,7 @@ public class PresetBrowserTests
             db.TerminologyEntries.Add(new QBEngineer.Core.Entities.TerminologyEntry
             {
                 Key = "entity_job",
-                Label = "WorkOrder",  // admin's preference, distinct from "Project"
+                Label = "WorkOrder",  // admin's preference, distinct from "Task" (the PRESET-08 default)
                 IsAdminEdited = true,
             });
             await db.SaveChangesAsync();
@@ -404,7 +419,7 @@ public class PresetBrowserTests
             "/api/v1/presets/PRESET-08/apply",
             new { reason = "should preserve admin edit" });
 
-        // entity_job should still read "WorkOrder" — not "Project".
+        // entity_job should still read "WorkOrder" — not "Task".
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
