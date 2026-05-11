@@ -415,6 +415,54 @@ public class PresetBundleApplierTests
         Assert.Contains("new", row.StepsJson);
     }
 
+    // ─── PRESET-04 bundle re-apply against existing seed (Wave 12) ─────────
+
+    [Fact]
+    public async Task TrackType_UpsertByCode_Reapplied_Against_Existing_Seed_Adds_Missing_Stages()
+    {
+        using var db = TestDbContextFactory.Create();
+        // Simulate what SeedData.Essential already wrote — the Production
+        // track exists with a partial set of stages already.
+        var existing = new TrackType { Code = "production", Name = "Production", SortOrder = 1, IsDefault = true, IsShopFloor = true };
+        foreach (var (code, name, sortOrder) in new (string, string, int)[]
+        {
+            ("quote_requested", "Quote Requested", 1),
+            ("quoted", "Quoted", 2),
+            ("order_confirmed", "Order Confirmed", 3),
+            ("materials_ordered", "Materials Ordered", 4),
+        })
+        {
+            existing.Stages.Add(new JobStage { Code = code, Name = name, SortOrder = sortOrder });
+        }
+        db.TrackTypes.Add(existing);
+        await db.SaveChangesAsync();
+
+        // Re-apply PRESET-04's bundle (canonical preset record).
+        var preset = QBEngineer.Api.Capabilities.Discovery.PresetCatalog.Preset04_ProductionManufacturer;
+        Assert.NotNull(preset.TrackTypeBundle);
+
+        await TrackTypeBundleApplier.ApplyAsync(
+            preset.TrackTypeBundle!, db, preset.Id, CancellationToken.None);
+        await db.SaveChangesAsync();
+
+        // No duplicate Production track.
+        var prodTracks = await db.TrackTypes
+            .Where(t => t.Code == "production")
+            .ToListAsync();
+        Assert.Single(prodTracks);
+
+        // All 10 Production stages now present (4 pre-existing + 6 new).
+        var prodStages = await db.JobStages
+            .Where(s => s.TrackTypeId == existing.Id)
+            .ToListAsync();
+        Assert.Equal(10, prodStages.Count);
+
+        // R&D + Maintenance tracks added (they didn't pre-exist).
+        var allTracks = await db.TrackTypes.Select(t => t.Code).ToListAsync();
+        Assert.Contains("rnd", allTracks);
+        Assert.Contains("maintenance", allTracks);
+    }
+
     // ─── FolderMapBundleApplier ────────────────────────────────────────────
 
     [Fact]

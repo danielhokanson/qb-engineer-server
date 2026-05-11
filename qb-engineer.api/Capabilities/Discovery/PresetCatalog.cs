@@ -133,7 +133,67 @@ public static class PresetCatalog
                 "CAP-IDEN-AUTH-KIOSK", "CAP-EXT-SHOPFLOOR-KIOSK", "CAP-EXT-ANDON",
                 "CAP-HR-LEAVE", "CAP-HR-SHIFTS", "CAP-HR-TRAINING",
                 "CAP-RPT-OEE",
-            ]));
+            ]),
+        // ── Track type bundle (G-03/04 per Artifact 3) ──
+        // Mirrors the manufacturing track types currently seeded by
+        // SeedData.Essential.cs (Production / R&D / Maintenance). Bundle
+        // exists so that re-applying PRESET-04 reasserts the canonical
+        // manufacturing kanban shape; on a fresh install the existing
+        // hardcoded seeder runs first, then this bundle's UpsertByCode
+        // semantics are a no-op (codes already exist, stages already
+        // present). Refactoring the seeder to run via this bundle alone
+        // is a Phase 3a follow-up — for now this is additive.
+        TrackTypeBundle: new TrackTypeBundle(
+            TrackTypes: new List<TrackTypeSeed>
+            {
+                new(
+                    Code: "production",
+                    Name: "Production",
+                    SortOrder: 1,
+                    IsDefault: true,
+                    IsShopFloor: true,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("quote_requested",   "Quote Requested",   1, "#94a3b8"),
+                        new("quoted",            "Quoted",            2, "#0d9488", AccountingDocumentType: AccountingDocumentType.Estimate),
+                        new("order_confirmed",   "Order Confirmed",   3, "#0ea5e9", AccountingDocumentType: AccountingDocumentType.SalesOrder),
+                        new("materials_ordered", "Materials Ordered", 4, "#8b5cf6", IsShopFloor: true, AccountingDocumentType: AccountingDocumentType.PurchaseOrder),
+                        new("materials_received","Materials Received",5, "#a855f7", IsShopFloor: true),
+                        new("in_production",     "In Production",     6, "#f59e0b", IsShopFloor: true),
+                        new("qc_review",         "QC/Review",         7, "#ec4899", IsShopFloor: true),
+                        new("shipped",           "Shipped",           8, "#c2410c", IsShopFloor: true, AccountingDocumentType: AccountingDocumentType.Invoice),
+                        new("invoiced_sent",     "Invoiced/Sent",     9, "#dc2626", AccountingDocumentType: AccountingDocumentType.Invoice, IsIrreversible: true),
+                        new("payment_received",  "Payment Received", 10, "#15803d", AccountingDocumentType: AccountingDocumentType.Payment, IsIrreversible: true),
+                    }),
+                new(
+                    Code: "rnd",
+                    Name: "R&D/Tooling",
+                    SortOrder: 2,
+                    IsDefault: false,
+                    IsShopFloor: false,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("concept",          "Concept",          1, "#94a3b8"),
+                        new("design",           "Design",           2, "#0d9488"),
+                        new("prototype",        "Prototype",        3, "#0ea5e9", IsShopFloor: true),
+                        new("test",             "Test",             4, "#f59e0b", IsShopFloor: true),
+                        new("iterate",          "Iterate",          5, "#ec4899", IsShopFloor: true),
+                        new("production_ready", "Production Ready", 6, "#15803d"),
+                    }),
+                new(
+                    Code: "maintenance",
+                    Name: "Maintenance",
+                    SortOrder: 3,
+                    IsDefault: false,
+                    IsShopFloor: true,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("requested",   "Requested",   1, "#94a3b8"),
+                        new("scheduled",   "Scheduled",   2, "#0ea5e9", IsShopFloor: true),
+                        new("in_progress", "In Progress", 3, "#f59e0b", IsShopFloor: true),
+                        new("complete",    "Complete",    4, "#15803d", IsShopFloor: true),
+                    }),
+            }));
 
     public static PresetDefinition Preset05_RegulatedManufacturer { get; } = new(
         Id: "PRESET-05",
