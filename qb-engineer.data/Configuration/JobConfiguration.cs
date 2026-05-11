@@ -83,5 +83,16 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
             .WithMany()
             .HasForeignKey(e => e.BomRevisionIdAtRelease)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Pro Services rollout — engagement axis fields. FK columns only;
+        // navigation properties intentionally omitted on Job to keep the
+        // read surface light. Loaders that need to expand these resolve
+        // ReferenceData / Quote independently.
+        builder.Property(e => e.RetainerHours).HasPrecision(10, 2);
+        builder.Property(e => e.RetainerBalanceHours).HasPrecision(10, 2);
+
+        builder.HasIndex(e => e.EngagementTypeId);
+        builder.HasIndex(e => e.ProjectPhaseId);
+        builder.HasIndex(e => e.SowId);
     }
 }

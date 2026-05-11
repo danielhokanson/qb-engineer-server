@@ -63,6 +63,18 @@ public class Job : BaseAuditableEntity, IConcurrencyVersioned
     // Custom fields (JSONB)
     public string? CustomFieldValues { get; set; }
 
+    // Pro Services — engagement axis fields. Gated by CAP-PS-ENGAGEMENT at
+    // the UI / API surface; columns are write-anytime. Per the G-17 spike
+    // (docs/pro-services-rollout/phase-2-foundations/spike-01-engagement-
+    // entity.md), engagements are Jobs on the Engagement track type, so
+    // these fields live on Job rather than a separate Engagement entity.
+    public int? EngagementTypeId { get; set; }       // FK → reference_data (group: engagement_type)
+    public int? ProjectPhaseId { get; set; }         // FK → reference_data (group: project_phase)
+    public BillingModelType? BillingModel { get; set; }  // T&M / FixedBid / Retainer
+    public decimal? RetainerHours { get; set; }       // Hours purchased (Retainer model only)
+    public decimal? RetainerBalanceHours { get; set; } // Hours remaining (debited by billable TimeEntries)
+    public int? SowId { get; set; }                  // FK → quotes (SOW lives in Quote per spec)
+
     // Cover photo
     public int? CoverPhotoFileId { get; set; }
     public FileAttachment? CoverPhotoFile { get; set; }
