@@ -3,6 +3,7 @@ using System.Text.Json;
 using MediatR;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 using QBEngineer.Core.Entities;
 using QBEngineer.Core.Enums;
@@ -29,9 +30,11 @@ public record SaveOnboardingDataCommand(
     string UserName,
     OnboardingSubmitRequestModel Model) : IRequest<SaveOnboardingResultModel>;
 
-public class SaveOnboardingDataHandler(AppDbContext db)
+public class SaveOnboardingDataHandler(AppDbContext db, IConfiguration configuration)
     : IRequestHandler<SaveOnboardingDataCommand, SaveOnboardingResultModel>
 {
+    private bool IsMock => configuration.GetValue<bool>("MockIntegrations");
+
     public async Task<SaveOnboardingResultModel> Handle(
         SaveOnboardingDataCommand request, CancellationToken ct)
     {
@@ -59,11 +62,20 @@ public class SaveOnboardingDataHandler(AppDbContext db)
             .OrderBy(t => t.SortOrder)
             .ToListAsync(ct);
 
+        // Only surface forms that can actually be signed. A template that lacks
+        // AcroFieldMapJson + a blank PDF can't be filled, and SignOnboardingForm
+        // would throw — bubbling up as a 500 mid-wizard (reported 2026-05-10).
+        // In MockIntegrations mode the signing service returns synthetic URLs,
+        // so unconfigured templates are still listed.
         var formsToSign = templates
-            .Select(t => new OnboardingFormToSignItem(
-                t.FormType.ToString(),
-                t.Name,
-                HasTemplate: !string.IsNullOrWhiteSpace(t.AcroFieldMapJson) && t.FilledPdfTemplateId is not null))
+            .Select(t => (
+                Item: new OnboardingFormToSignItem(
+                    t.FormType.ToString(),
+                    t.Name,
+                    HasTemplate: !string.IsNullOrWhiteSpace(t.AcroFieldMapJson) && t.FilledPdfTemplateId is not null),
+                CanSign: IsMock || (!string.IsNullOrWhiteSpace(t.AcroFieldMapJson) && t.FilledPdfTemplateId is not null)))
+            .Where(x => x.CanSign)
+            .Select(x => x.Item)
             .ToList();
 
         return new SaveOnboardingResultModel(formsToSign);

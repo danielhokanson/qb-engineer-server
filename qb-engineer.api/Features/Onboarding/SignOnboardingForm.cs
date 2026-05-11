@@ -46,7 +46,7 @@ public class SignOnboardingFormHandler(
         SignOnboardingFormCommand request, CancellationToken ct)
     {
         if (!Enum.TryParse<ComplianceFormType>(request.Model.FormType, out var formType))
-            throw new ArgumentException($"Unknown form type: {request.Model.FormType}");
+            throw new KeyNotFoundException($"Unknown form type: {request.Model.FormType}");
 
         var template = await db.ComplianceFormTemplates
             .Include(t => t.FilledPdfTemplate)

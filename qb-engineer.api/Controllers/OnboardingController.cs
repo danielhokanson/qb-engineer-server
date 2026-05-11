@@ -74,6 +74,18 @@ public class OnboardingController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
+    /// Returns the policy-document URLs (workers' comp notice, employee handbook)
+    /// surfaced on the Acknowledgments step. Blank values map to null so the UI
+    /// can omit the link and — for the handbook — skip the acknowledgment entirely.
+    /// </summary>
+    [HttpGet("policy-docs")]
+    public async Task<ActionResult<OnboardingPolicyDocsModel>> GetPolicyDocs(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetOnboardingPolicyDocsQuery(), ct);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Self-service bypass: marks the current user as onboarded without completing the wizard.
     /// Creates an EmployeeProfile if one doesn't exist and sets OnboardingBypassedAt.
     /// </summary>

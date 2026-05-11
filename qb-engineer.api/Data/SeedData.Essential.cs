@@ -402,6 +402,20 @@ public static partial class SeedData
             Log.Information("Seeded company profile settings");
         }
 
+        // HR Policy Document URLs — surfaced on the onboarding Acknowledgments step
+        // so employees can read the policy before checking the toggle. Empty by
+        // default; admins paste a link in Admin → Settings later. The handbook
+        // acknowledgment is hidden + not required when its URL is blank.
+        if (!await db.SystemSettings.AnyAsync(s => s.Key == "hr.workersCompDocUrl"))
+        {
+            db.SystemSettings.AddRange(
+                new SystemSetting { Key = "hr.workersCompDocUrl", Value = "", Description = "URL to the company workers' compensation notice / policy document shown during onboarding." },
+                new SystemSetting { Key = "hr.handbookDocUrl",    Value = "", Description = "URL to the employee handbook PDF. When blank the handbook acknowledgment step is skipped." }
+            );
+            await db.SaveChangesAsync();
+            Log.Information("Seeded HR policy document URL settings");
+        }
+
         // Bought-parts effort PR4 — purchasing thresholds. Tenant-wide
         // default for the off-tier price-variance prompt at PO line entry;
         // per-vendor override on `Vendor.OffTierVariancePct` falls back to

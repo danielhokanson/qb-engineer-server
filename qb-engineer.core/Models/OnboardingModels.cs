@@ -141,3 +141,12 @@ public record SignOnboardingFormResultModel(
     string SigningUrl,
     int SubmissionId,
     bool IsMock);
+
+/// <summary>
+/// Policy documents surfaced on the Acknowledgments step. Empty / null URLs
+/// mean the document isn't configured yet — the UI hides the corresponding
+/// acknowledgment when its URL is blank.
+/// </summary>
+public record OnboardingPolicyDocsModel(
+    string? WorkersCompDocUrl,
+    string? HandbookDocUrl);
