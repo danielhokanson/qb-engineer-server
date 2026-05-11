@@ -452,6 +452,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<UserCloudStorageLink> UserCloudStorageLinks => Set<UserCloudStorageLink>();
     public DbSet<EntityCloudLink> EntityCloudLinks => Set<EntityCloudLink>();
 
+    // Pro Services rollout — Deliverable entity (Artifact 4 §4.6, gated by CAP-O2C-DELIVERABLE).
+    public DbSet<Deliverable> Deliverables => Set<Deliverable>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
