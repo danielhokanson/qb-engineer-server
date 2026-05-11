@@ -706,6 +706,13 @@ try
             builder.Services.Configure<OneDriveOptions>(builder.Configuration.GetSection("OneDrive"));
             builder.Services.AddScoped<ICloudStorageIntegrationService, OneDriveCloudStorageService>();
         }
+
+        var dropboxOptions = builder.Configuration.GetSection("Dropbox").Get<DropboxOptions>();
+        if (dropboxOptions?.IsConfigured == true)
+        {
+            builder.Services.Configure<DropboxOptions>(builder.Configuration.GetSection("Dropbox"));
+            builder.Services.AddScoped<ICloudStorageIntegrationService, DropboxCloudStorageService>();
+        }
     }
     builder.Services.AddScoped<IGitHubIssueService, GitHubIssueService>();
 
