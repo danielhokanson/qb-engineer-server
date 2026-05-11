@@ -699,6 +699,13 @@ try
             builder.Services.Configure<GoogleDriveOptions>(builder.Configuration.GetSection("GoogleDrive"));
             builder.Services.AddScoped<ICloudStorageIntegrationService, GoogleDriveCloudStorageService>();
         }
+
+        var oneDriveOptions = builder.Configuration.GetSection("OneDrive").Get<OneDriveOptions>();
+        if (oneDriveOptions?.IsConfigured == true)
+        {
+            builder.Services.Configure<OneDriveOptions>(builder.Configuration.GetSection("OneDrive"));
+            builder.Services.AddScoped<ICloudStorageIntegrationService, OneDriveCloudStorageService>();
+        }
     }
     builder.Services.AddScoped<IGitHubIssueService, GitHubIssueService>();
 
