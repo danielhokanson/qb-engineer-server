@@ -6,6 +6,7 @@ using MediatR;
 using QBEngineer.Api.Capabilities;
 using QBEngineer.Api.Capabilities.Discovery;
 using QBEngineer.Api.Features.Capabilities.BulkToggle;
+using QBEngineer.Api.Features.Presets.Apply.Layers;
 using QBEngineer.Api.Features.Presets.Models;
 using QBEngineer.Api.Services;
 using QBEngineer.Data.Context;
@@ -107,6 +108,47 @@ public class ApplyPresetHandler(
                 cancellationToken);
         }
 
+        // Pro Services rollout (Artifact 5 §4) — bundle apply pipeline.
+        // Each non-null bundle is staged on the same AppDbContext; one
+        // SaveChangesAsync at the end commits all bundle changes in a
+        // single transaction. Capability state was already committed by
+        // BulkToggleCapabilitiesCommand above — bundles are idempotent so
+        // a re-apply recovers from any partial-bundle failure.
+        // Bundle apply is skipped on Custom (no bundles on PRESET-CUSTOM).
+        var layerResults = new List<LayerApplyResult>();
+        if (!preset.IsCustom)
+        {
+            if (preset.TerminologyBundle is { } tb)
+            {
+                layerResults.Add(await TerminologyBundleApplier.ApplyAsync(tb, db, preset.Id, cancellationToken));
+            }
+            if (preset.ReferenceDataBundle is { } rdb)
+            {
+                layerResults.Add(await ReferenceDataBundleApplier.ApplyAsync(rdb, db, preset.Id, cancellationToken));
+            }
+            if (preset.TrackTypeBundle is { } ttb)
+            {
+                layerResults.Add(await TrackTypeBundleApplier.ApplyAsync(ttb, db, preset.Id, cancellationToken));
+            }
+            if (preset.RoleBundle is { } rb)
+            {
+                layerResults.Add(await RoleBundleApplier.ApplyAsync(rb, db, preset.Id, cancellationToken));
+            }
+            if (preset.WorkflowDefinitionBundle is { } wdb)
+            {
+                layerResults.Add(await WorkflowDefinitionBundleApplier.ApplyAsync(wdb, db, preset.Id, cancellationToken));
+            }
+            // ReportVisibilityBundle / FolderMapBundle / DashboardBundle
+            // appliers are intentionally deferred until their backing
+            // storage tables land (Phase 3a/cloud-storage work). When
+            // those tables exist, append the same way here.
+
+            if (layerResults.Count > 0 && layerResults.Any(r => r.TouchedCount > 0))
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         // Write the PresetApplied audit row (always, no-op or not).
         var actorId = db.CurrentUserId ?? 0;
         var auditDetails = JsonSerializer.Serialize(new
@@ -116,11 +158,20 @@ public class ApplyPresetHandler(
             isCustom = preset.IsCustom,
             isCustomOverride = request.IsCustomOverride,
             customOverrideCount = request.CustomOverrides?.Count ?? 0,
-            outcome = noOp ? "no-op" : "applied",
+            outcome = noOp && layerResults.All(r => r.TouchedCount == 0) ? "no-op" : "applied",
             deltaCount = deltas.Count,
             reason = request.Reason,
             applyPath = "preset-browser-direct",
             actorUserId = actorId,
+            // Per-layer counts — empty list if preset carries no bundles.
+            layerResults = layerResults.Select(r => new
+            {
+                layer = r.Layer,
+                addedCount = r.AddedCount,
+                updatedCount = r.UpdatedCount,
+                skippedCount = r.SkippedCount,
+                conflictedCount = r.ConflictedCount,
+            }).ToList(),
         });
         await auditWriter.WriteAsync(
             action: CapabilityAuditEvents.PresetApplied,
@@ -136,7 +187,15 @@ public class ApplyPresetHandler(
             IsCustom: preset.IsCustom,
             NoOp: noOp,
             DeltaCount: deltas.Count,
-            Applied: deltas);
+            Applied: deltas,
+            LayerResults: layerResults.Count == 0 ? null : layerResults
+                .Select(r => new PresetBundleApplyResultResponseModel(
+                    Layer: r.Layer,
+                    AddedCount: r.AddedCount,
+                    UpdatedCount: r.UpdatedCount,
+                    SkippedCount: r.SkippedCount,
+                    ConflictedCount: r.ConflictedCount))
+                .ToList());
     }
 
     private static HashSet<string> ResolveTargetSet(

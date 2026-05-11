@@ -85,7 +85,25 @@ public record PresetApplyResultResponseModel(
     bool IsCustom,
     bool NoOp,
     int DeltaCount,
-    IReadOnlyList<PresetCapabilityDeltaResponseModel> Applied);
+    IReadOnlyList<PresetCapabilityDeltaResponseModel> Applied,
+    // Pro Services rollout (Artifact 5 §4) — per-bundle outcome counts.
+    // Empty when the preset carries no bundles; otherwise one entry per
+    // non-null bundle on the PresetDefinition.
+    IReadOnlyList<PresetBundleApplyResultResponseModel>? LayerResults = null);
+
+/// <summary>
+/// Pro Services rollout (Artifact 5 §4) — outcome of applying one preset
+/// bundle (terminology, refdata, track type, role, workflow). Surfaced
+/// in the apply response so the UI can render per-layer summaries
+/// ("added 4 reference-data values, skipped 1 admin-edited terminology
+/// key", etc.).
+/// </summary>
+public record PresetBundleApplyResultResponseModel(
+    string Layer,
+    int AddedCount,
+    int UpdatedCount,
+    int SkippedCount,
+    int ConflictedCount);
 
 public record PresetCustomOverrideRequestItem(string Code, bool Enabled);
 
