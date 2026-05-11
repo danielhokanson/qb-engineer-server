@@ -1,3 +1,6 @@
+using QBEngineer.Api.Capabilities.Discovery.Bundles;
+using QBEngineer.Core.Enums;
+
 namespace QBEngineer.Api.Capabilities.Discovery;
 
 /// <summary>
@@ -219,6 +222,200 @@ public static class PresetCatalog
                 "CAP-RPT-OEE", "CAP-RPT-MRPEX",
             ]));
 
+    // ─── Pro Services rollout (Phase 2 foundations) ──────────────────────────
+    // PRESET-08 (Pro Services) and PRESET-09 (Hybrid) carry full bundles.
+    // Terminology (Job → Project, Customer → Client, Work Center → Consultant)
+    // per user direction. Apply pipeline (ApplyPresetHandler) reads non-null
+    // bundles and seeds each layer per its conflict policy.
+
+    public static PresetDefinition Preset08_ProServices { get; } = new(
+        Id: "PRESET-08",
+        Name: "Pro Services",
+        ShortDescription: "Consulting / agency / engineering services firm — bills hours, ships deliverables. No parts, BOMs, inventory, or shop floor.",
+        TargetProfile: "5–50 people doing professional services (consulting, agency, engineering). Engagements are time + deliverable based; revenue tied to billable hours, fixed bids, or retainers.",
+        EnabledCapabilities: AssemblePreset(
+            // Manufacturing / inventory / shop-floor concepts hidden.
+            remove:
+            [
+                "CAP-MD-PARTS", "CAP-MD-BOM", "CAP-MD-ROUTING", "CAP-MD-WORKCENTERS",
+                "CAP-P2P-RECEIVE",
+                "CAP-O2C-PICKPACK", "CAP-O2C-SHIP",
+                "CAP-MFG-WO-RELEASE", "CAP-MFG-MATL-ISSUE", "CAP-MFG-LABOR",
+                "CAP-MFG-MULTIOP", "CAP-MFG-COMPLETE", "CAP-MFG-SHOPFLOOR",
+                "CAP-INV-CORE", "CAP-INV-CYCLECOUNT",
+                "CAP-RPT-INVVAL", "CAP-RPT-OPERATIONAL",
+            ],
+            add:
+            [
+                "CAP-O2C-LEAD", "CAP-O2C-RECURRING", "CAP-O2C-DELIVERABLE",
+                "CAP-PS-ENGAGEMENT", "CAP-PS-TIME-BILLABLE", "CAP-PS-RATE-CARDS",
+                "CAP-PS-PROJECT-COST", "CAP-PS-UTILIZATION", "CAP-PS-RETAINER",
+                "CAP-QC-COMPLIANCE-FORMS", // per D7 — NDAs / MSAs apply to services
+            ]),
+        // ── Terminology overlay (full) ──
+        TerminologyBundle: new TerminologyBundle(
+            Labels: new Dictionary<string, string>
+            {
+                ["entity_job"] = "Project",
+                ["entity_customer"] = "Client",
+                ["entity_work_center"] = "Consultant",
+                ["entity_planning_cycle"] = "Sprint",
+                ["status_in_production"] = "In Delivery",
+                ["status_shipped"] = "Delivered",
+                ["action_start_production"] = "Start Delivery",
+                ["label_jobs"] = "Projects",
+                ["label_customers"] = "Clients",
+            }),
+        // ── Reference data (10 service-shop groups) ──
+        ReferenceDataBundle: new ReferenceDataBundle(
+            Groups: new Dictionary<string, IReadOnlyList<ReferenceDataValueSeed>>
+            {
+                ["engagement_type"] = new List<ReferenceDataValueSeed>
+                {
+                    new("consulting",      "Consulting",      1),
+                    new("project",         "Project",         2),
+                    new("retainer",        "Retainer",        3),
+                    new("ongoing_service", "Ongoing Service", 4),
+                },
+                ["project_phase"] = new List<ReferenceDataValueSeed>
+                {
+                    new("discovery", "Discovery", 1),
+                    new("design",    "Design",    2),
+                    new("build",     "Build",     3),
+                    new("deliver",   "Deliver",   4),
+                    new("maintain",  "Maintain",  5),
+                },
+                ["time_billable_status"] = new List<ReferenceDataValueSeed>
+                {
+                    new("billable",     "Billable",             1, "{\"color\":\"#15803d\"}"),
+                    new("non_billable", "Non-Billable",         2, "{\"color\":\"#94a3b8\"}"),
+                    new("internal",     "Internal",             3),
+                    new("travel",       "Travel (non-billable)", 4),
+                },
+                ["time_activity_type"] = new List<ReferenceDataValueSeed>
+                {
+                    new("discovery",     "Discovery",     1),
+                    new("design",        "Design",        2),
+                    new("build",         "Build",         3),
+                    new("testing",       "Testing",       4),
+                    new("documentation", "Documentation", 5),
+                    new("travel",        "Travel",        6),
+                    new("admin",         "Admin",         7),
+                },
+                ["deliverable_type"] = new List<ReferenceDataValueSeed>
+                {
+                    new("report",        "Report",        1),
+                    new("code",          "Code",          2),
+                    new("design",        "Design",        3),
+                    new("documentation", "Documentation", 4),
+                    new("training",      "Training",      5),
+                    new("other",         "Other",         6),
+                },
+                ["service_uom"] = new List<ReferenceDataValueSeed>
+                {
+                    new("hour",       "Hour",       1),
+                    new("day",        "Day",        2),
+                    new("week",       "Week",       3),
+                    new("sprint",     "Sprint",     4),
+                    new("engagement", "Engagement", 5),
+                    new("fixed_bid",  "Fixed Bid",  6),
+                },
+                ["engagement_status"] = new List<ReferenceDataValueSeed>
+                {
+                    new("proposal", "Proposal", 1),
+                    new("won",      "Won",      2),
+                    new("active",   "Active",   3),
+                    new("paused",   "Paused",   4),
+                    new("complete", "Complete", 5),
+                    new("lost",     "Lost",     6),
+                },
+                ["retainer_status"] = new List<ReferenceDataValueSeed>
+                {
+                    new("active",   "Active",   1),
+                    new("expired",  "Expired",  2),
+                    new("renewed",  "Renewed",  3),
+                },
+                ["client_segment"] = new List<ReferenceDataValueSeed>
+                {
+                    new("enterprise",    "Enterprise",    1),
+                    new("mid_market",    "Mid-Market",    2),
+                    new("smb",           "SMB",           3),
+                    new("public_sector", "Public Sector", 4),
+                },
+            }),
+        // ── Track type: Engagement with service-shop stages ──
+        TrackTypeBundle: new TrackTypeBundle(
+            TrackTypes: new List<TrackTypeSeed>
+            {
+                new(
+                    Code: "engagement",
+                    Name: "Engagement",
+                    SortOrder: 1,
+                    IsDefault: true,
+                    IsShopFloor: false,
+                    Stages: new List<JobStageSeed>
+                    {
+                        new("proposal",  "Proposal",        1, "#94a3b8"),
+                        new("won",       "Won",             2, "#0d9488", AccountingDocumentType: AccountingDocumentType.SalesOrder),
+                        new("discovery", "Discovery",       3, "#0ea5e9"),
+                        new("active",    "Active Delivery", 4, "#f59e0b"),
+                        new("review",    "In Review",       5, "#ec4899"),
+                        new("delivered", "Delivered",       6, "#15803d"),
+                        new("invoiced",  "Invoiced",        7, "#dc2626", AccountingDocumentType: AccountingDocumentType.Invoice, IsIrreversible: true),
+                        new("paid",      "Paid",            8, "#16a34a", AccountingDocumentType: AccountingDocumentType.Payment, IsIrreversible: true),
+                    }),
+            }),
+        // ── Roles (AddOnly default — never strips admin grants) ──
+        RoleBundle: new RoleBundle(
+            Roles: new List<RoleSeed>
+            {
+                new("practitioner",       "Practitioner",       Description: "Service practitioner — delivers engagement work, logs billable hours."),
+                new("engagement_manager", "Engagement Manager", Description: "Owns one or more engagements end-to-end: client relationship, scope, budget, delivery."),
+                new("account_manager",    "Account Manager",    Description: "Owns the client relationship across engagements: sales, renewals, retainer health."),
+                new("delivery_lead",      "Delivery Lead",      Description: "Senior delivery role — multi-engagement oversight, escalation point, practice lead."),
+            }));
+
+    public static PresetDefinition Preset09_Hybrid { get; } = new(
+        Id: "PRESET-09",
+        Name: "Hybrid (Make + Service)",
+        ShortDescription: "Shop that both makes products AND sells services (e.g. engineering firm with a fab shop; product company with a services arm). Carries the union of manufacturing + Pro Services capabilities.",
+        TargetProfile: "10–100 people doing both manufacturing and services. Both Production AND Engagement track types are active; vocabulary follows Pro Services renames for service-side work.",
+        EnabledCapabilities: AssemblePreset(
+            // Manufacturing baseline stays. Add Pro Services capabilities on top.
+            remove: ["CAP-ACCT-BUILTIN"],  // Hybrid typically uses external accounting (like PRESET-04)
+            add:
+            [
+                "CAP-ACCT-EXTERNAL",
+                "CAP-MD-PRICELIST",
+                "CAP-P2P-RFQ", "CAP-P2P-SUBCONTRACT",
+                "CAP-O2C-LEAD", "CAP-O2C-RECURRING", "CAP-O2C-DELIVERABLE",
+                "CAP-O2C-COLLECTIONS", "CAP-O2C-RMA",
+                "CAP-PLAN-SAFETYSTOCK",
+                "CAP-INV-RESERVE",
+                "CAP-QC-INSPECTION", "CAP-QC-NCR", "CAP-QC-COMPLIANCE-FORMS",
+                "CAP-IDEN-AUTH-KIOSK", "CAP-EXT-SHOPFLOOR-KIOSK",
+                "CAP-HR-LEAVE",
+                // Pro Services overlay
+                "CAP-PS-ENGAGEMENT", "CAP-PS-TIME-BILLABLE", "CAP-PS-RATE-CARDS",
+                "CAP-PS-PROJECT-COST", "CAP-PS-UTILIZATION", "CAP-PS-RETAINER",
+            ]),
+        // ── Same terminology overlay as PRESET-08 (per user — Hybrid carries
+        // full Project/Client/Consultant renames even where manufacturing
+        // surfaces would otherwise read with the original vocabulary). ──
+        TerminologyBundle: Preset08_ProServices.TerminologyBundle,
+        // ── Same reference-data seed as PRESET-08 — manufacturing groups
+        // continue to be seeded by SeedData.Essential for now. ──
+        ReferenceDataBundle: Preset08_ProServices.ReferenceDataBundle,
+        // ── Both track-type sets: Engagement (from PRESET-08) PLUS the
+        // manufacturing tracks (Production / R&D / Maintenance) carried by
+        // the existing install seeder. Hybrid presets that re-apply find
+        // existing manufacturing track types via UpsertByCode and leave
+        // them alone — the bundle adds Engagement without disturbing them. ──
+        TrackTypeBundle: Preset08_ProServices.TrackTypeBundle,
+        // ── Same Pro Services role seed as PRESET-08; manufacturing roles
+        // carried by the existing seeder. ──
+        RoleBundle: Preset08_ProServices.RoleBundle);
+
     public static PresetDefinition PresetCustom { get; } = new(
         Id: "PRESET-CUSTOM",
         Name: "Custom",
@@ -240,6 +437,8 @@ public static class PresetCatalog
         Preset05_RegulatedManufacturer,
         Preset06_MultiSite,
         Preset07_Enterprise,
+        Preset08_ProServices,
+        Preset09_Hybrid,
         PresetCustom,
     };
 

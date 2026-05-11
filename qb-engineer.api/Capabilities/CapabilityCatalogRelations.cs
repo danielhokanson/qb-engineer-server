@@ -69,6 +69,15 @@ public static class CapabilityCatalogRelations
         new("CAP-MD-UOM", "CAP-IDEN-TENANT-CONFIG"),
         new("CAP-MD-CURRENCIES", "CAP-IDEN-TENANT-CONFIG"),
         new("CAP-MD-TAXCODES", "CAP-IDEN-TENANT-CONFIG"),
+        // Pro Services rollout (2026-05): removed over-tight edges
+        // `CAP-O2C-QUOTE → CAP-MD-PARTS`, `CAP-O2C-SO → CAP-MD-PARTS`, and
+        // `CAP-P2P-PO → CAP-MD-PARTS`. Services shops issue quotes, sales
+        // orders, and POs whose line items are services (hours / fixed
+        // bids / subcontractor work), not parts. The Quote/SO/PO schemas
+        // already make PartId optional on line items, and Pro Services
+        // code paths populate alternative identifiers (service item codes)
+        // rather than parts. These edges were manufacturing-era over-
+        // generalizations from the same wave as the kanban/invoice edges.
         new("CAP-MD-CONTRACTS-CONSIGNMENT", "CAP-MD-VENDORS"),
         new("CAP-MD-CONTRACTS-CONSIGNMENT", "CAP-MD-CUSTOMERS"),
         new("CAP-MD-CONTRACTS-CONSIGNMENT", "CAP-MD-PARTS"),
@@ -82,7 +91,8 @@ public static class CapabilityCatalogRelations
 
         // ── P2P ─────────────────────────────────────────────────────────────
         new("CAP-P2P-PO", "CAP-MD-VENDORS"),
-        new("CAP-P2P-PO", "CAP-MD-PARTS"),
+        // CAP-P2P-PO → CAP-MD-PARTS edge removed per Pro Services rollout
+        // (see comment above MD block).
         new("CAP-P2P-RFQ", "CAP-P2P-PO"),
         new("CAP-P2P-RFQ", "CAP-MD-VENDORS"),
         new("CAP-P2P-RECEIVE", "CAP-P2P-PO"),
@@ -101,18 +111,24 @@ public static class CapabilityCatalogRelations
         new("CAP-O2C-LEAD", "CAP-MD-CUSTOMERS"),
         new("CAP-O2C-CREDIT-LIMITS", "CAP-MD-CUSTOMERS"),
         new("CAP-O2C-QUOTE", "CAP-MD-CUSTOMERS"),
-        new("CAP-O2C-QUOTE", "CAP-MD-PARTS"),
+        // CAP-O2C-QUOTE → CAP-MD-PARTS removed per Pro Services rollout.
         new("CAP-O2C-CPQ", "CAP-O2C-QUOTE"),
         new("CAP-O2C-CPQ", "CAP-MD-PRICELIST"),
         new("CAP-O2C-SO", "CAP-MD-CUSTOMERS"),
-        new("CAP-O2C-SO", "CAP-MD-PARTS"),
+        // CAP-O2C-SO → CAP-MD-PARTS removed per Pro Services rollout.
         new("CAP-O2C-RECURRING", "CAP-O2C-SO"),
         new("CAP-O2C-PICKPACK", "CAP-O2C-SO"),
         new("CAP-O2C-PICKPACK", "CAP-INV-CORE"),
         new("CAP-O2C-SHIP", "CAP-O2C-PICKPACK"),
         // Note: CAP-O2C-INVOICE depends on (CAP-ACCT-BUILTIN OR CAP-ACCT-EXTERNAL) per 4A —
         // Phase C uses AND semantics, so we model the operationally-dominant edge.
-        new("CAP-O2C-INVOICE", "CAP-O2C-SHIP"),
+        //
+        // Pro Services rollout (2026-05): removed the
+        // `CAP-O2C-INVOICE → CAP-O2C-SHIP` edge. Services shops invoice
+        // billable hours / fixed bids / retainer renewals without a
+        // shipment — the edge was a manufacturing-era over-generalization.
+        // Invoicing in the codebase doesn't actually call into shipment
+        // code; the dependency was structural rather than functional.
         new("CAP-O2C-INVOICE", "CAP-MD-TAXCODES"),
         new("CAP-O2C-CASH", "CAP-O2C-INVOICE"),
         new("CAP-O2C-COLLECTIONS", "CAP-O2C-CASH"),
@@ -228,7 +244,12 @@ public static class CapabilityCatalogRelations
         new("CAP-RPT-OPERATIONAL", "CAP-MD-VENDORS"),
         new("CAP-RPT-INVVAL", "CAP-INV-CORE"),
         new("CAP-RPT-MRPEX", "CAP-PLAN-MRP"),
-        new("CAP-RPT-DASHBOARDS", "CAP-RPT-OPERATIONAL"),
+        // CAP-RPT-DASHBOARDS → CAP-RPT-OPERATIONAL edge removed per Pro
+        // Services rollout. Dashboards are a generic UI surface for widgets;
+        // they should work with whatever per-preset widget set is loaded,
+        // not be hard-tied to operational reports. PRESET-08 ships service-
+        // flavored dashboard widgets (utilization, billable %, retainer
+        // burn-down) that don't depend on manufacturing operational reports.
 
         // ── CROSS ───────────────────────────────────────────────────────────
         new("CAP-CROSS-PERMS-MATRIX", "CAP-IDEN-ROLES"),
@@ -241,7 +262,12 @@ public static class CapabilityCatalogRelations
         new("CAP-CROSS-BI-EXPORT", "CAP-IDEN-AUTH-API-KEYS"),
 
         // ── EXT ─────────────────────────────────────────────────────────────
-        new("CAP-EXT-KANBAN", "CAP-MFG-WO-RELEASE"),
+        // Pro Services rollout (2026-05): removed the
+        // `CAP-EXT-KANBAN → CAP-MFG-WO-RELEASE` edge. Kanban is a UI surface
+        // that renders Jobs grouped by stage — no shop-floor / WO-release
+        // code is invoked. Pro Services engagements ARE Jobs (per G-17
+        // spike) on the Engagement track type, so kanban needs to work
+        // without the manufacturing capability.
         new("CAP-EXT-KANBAN-REPLENISHMENT", "CAP-EXT-KANBAN"),
         new("CAP-EXT-KANBAN-REPLENISHMENT", "CAP-INV-CORE"),
         new("CAP-EXT-MOBILE", "CAP-IDEN-USERS"),

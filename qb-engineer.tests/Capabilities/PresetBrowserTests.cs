@@ -11,7 +11,7 @@ namespace QBEngineer.Tests.Capabilities;
 
 /// <summary>
 /// Phase 4 Phase-G — Tests for the preset browser + apply orchestration:
-///   • GET /api/v1/presets — list of 8 presets with summary descriptors.
+///   • GET /api/v1/presets — list of 10 presets with summary descriptors.
 ///   • GET /api/v1/presets/{id} — single preset detail with deltas.
 ///   • POST /api/v1/presets/compare — side-by-side matrix.
 ///   • POST /api/v1/presets/{id}/preview-apply — deltas + violations, no persist.
@@ -43,7 +43,7 @@ public class PresetBrowserTests
     // ─── List ──────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task List_Returns_All_Eight_Presets()
+    public async Task List_Returns_All_Ten_Presets()
     {
         var client = AuthenticatedClient();
         var response = await client.GetAsync("/api/v1/presets");
@@ -51,9 +51,11 @@ public class PresetBrowserTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var summaries = await response.Content.ReadFromJsonAsync<List<PresetSummaryRow>>();
         Assert.NotNull(summaries);
-        Assert.Equal(8, summaries!.Count);
+        Assert.Equal(10, summaries!.Count);
 
         Assert.Contains(summaries, p => p.Id == "PRESET-01" && p.Name == "Two-Person Shop");
+        Assert.Contains(summaries, p => p.Id == "PRESET-08" && p.Name == "Pro Services");
+        Assert.Contains(summaries, p => p.Id == "PRESET-09" && p.Name == "Hybrid (Make + Service)");
         Assert.Contains(summaries, p => p.Id == "PRESET-CUSTOM" && p.IsCustom);
         Assert.All(summaries, p => Assert.True(p.CapabilityCount > 0));
         Assert.All(summaries, p => Assert.NotEmpty(p.RecommendedFor));
@@ -301,6 +303,109 @@ public class PresetBrowserTests
             "/api/v1/presets/PRESET-FAKE/apply",
             new { });
         Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.InternalServerError);
+    }
+
+    // ─── PRESET-08 (Pro Services) — bundle apply ───────────────────────────
+
+    [Fact]
+    public async Task ApplyPreset08_Seeds_Terminology_RefData_TrackType_Roles()
+    {
+        var client = AuthenticatedClient();
+
+        // Reset state to PRESET-01 so PRESET-08 has a real capability delta
+        // to apply through the bulk-toggle path.
+        await client.PostAsJsonAsync("/api/v1/presets/PRESET-01/apply", new { reason = "test-baseline" });
+
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/presets/PRESET-08/apply",
+            new { reason = "pro-services-stereotype apply" });
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.Fail($"Apply returned {response.StatusCode}: {body}");
+        }
+
+        // Verify the four bundle layers landed in the DB.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Terminology — Job → Project, Customer → Client, Work Center → Consultant.
+        var jobRename = await db.TerminologyEntries
+            .FirstOrDefaultAsync(t => t.Key == "entity_job");
+        Assert.NotNull(jobRename);
+        Assert.Equal("Project", jobRename!.Label);
+        Assert.Equal("PRESET-08", jobRename.SourcePresetId);
+
+        var customerRename = await db.TerminologyEntries
+            .FirstOrDefaultAsync(t => t.Key == "entity_customer");
+        Assert.Equal("Client", customerRename?.Label);
+
+        var workCenterRename = await db.TerminologyEntries
+            .FirstOrDefaultAsync(t => t.Key == "entity_work_center");
+        Assert.Equal("Consultant", workCenterRename?.Label);
+
+        // Reference data — engagement_type group seeded with 4 values.
+        var engagementTypes = await db.ReferenceData
+            .Where(r => r.GroupCode == "engagement_type")
+            .ToListAsync();
+        Assert.Equal(4, engagementTypes.Count);
+        Assert.All(engagementTypes, r => Assert.True(r.IsSeedData));
+
+        // Track type — Engagement with 8 stages.
+        var engagementTrack = await db.TrackTypes
+            .Include(t => t.Stages)
+            .FirstOrDefaultAsync(t => t.Code == "engagement");
+        Assert.NotNull(engagementTrack);
+        Assert.Equal(8, engagementTrack!.Stages.Count);
+
+        // Roles — 4 Pro Services role templates added.
+        var roles = await db.RoleTemplates
+            .Where(r => new[] { "Practitioner", "Engagement Manager", "Account Manager", "Delivery Lead" }
+                .Contains(r.Name))
+            .ToListAsync();
+        Assert.Equal(4, roles.Count);
+    }
+
+    [Fact]
+    public async Task ApplyPreset08_Skips_AdminEdited_Terminology()
+    {
+        var client = AuthenticatedClient();
+        await client.PostAsJsonAsync("/api/v1/presets/PRESET-01/apply", new { reason = "test-baseline" });
+
+        // Reset terminology state for this key, then add the admin row.
+        // (Shared fixture across tests; earlier tests may have seeded
+        // `entity_job` already.)
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var stale = await db.TerminologyEntries
+                .Where(t => t.Key == "entity_job")
+                .ToListAsync();
+            db.TerminologyEntries.RemoveRange(stale);
+            await db.SaveChangesAsync();
+
+            db.TerminologyEntries.Add(new QBEngineer.Core.Entities.TerminologyEntry
+            {
+                Key = "entity_job",
+                Label = "WorkOrder",  // admin's preference, distinct from "Project"
+                IsAdminEdited = true,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await client.PostAsJsonAsync(
+            "/api/v1/presets/PRESET-08/apply",
+            new { reason = "should preserve admin edit" });
+
+        // entity_job should still read "WorkOrder" — not "Project".
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var jobLabel = await db.TerminologyEntries
+                .FirstAsync(t => t.Key == "entity_job");
+            Assert.Equal("WorkOrder", jobLabel.Label);
+            Assert.True(jobLabel.IsAdminEdited);
+        }
     }
 
     // ─── Custom preview ────────────────────────────────────────────────────
