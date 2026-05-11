@@ -1,47 +1,134 @@
+using System.Collections.Concurrent;
+using System.Diagnostics;
+
 using Microsoft.Extensions.Logging;
 
 using QBEngineer.Core.Interfaces;
+using QBEngineer.Core.Models;
 
 namespace QBEngineer.Integrations;
 
-public class MockCloudStorageIntegrationService(ILogger<MockCloudStorageIntegrationService> logger) : ICloudStorageIntegrationService
+/// <summary>
+/// Pro Services rollout — in-memory mock cloud-storage provider. Used when
+/// <c>MockIntegrations=true</c> (Development) or when no real provider
+/// credentials are configured. Stores folders in a thread-safe dictionary
+/// keyed by provider-side external id; folder URLs and paths are
+/// synthesized.
+///
+/// <para>Behaves like a single provider — <see cref="ProviderCode"/>
+/// returns <c>"mock"</c>. Tests / dev exercises pick the mock; production
+/// installs swap in the real Google Drive / OneDrive / Dropbox services
+/// per the DI registration in Program.cs.</para>
+/// </summary>
+public class MockCloudStorageIntegrationService : ICloudStorageIntegrationService
 {
-    public string ProviderId => "mock_storage";
+    private readonly ILogger<MockCloudStorageIntegrationService> _logger;
+    private readonly ConcurrentDictionary<string, CloudFolder> _folders = new();
+    private long _nextId;
 
-    public Task<string> UploadFileAsync(int userId, int integrationId, string remotePath, Stream content, string contentType, CancellationToken ct = default)
+    public MockCloudStorageIntegrationService(ILogger<MockCloudStorageIntegrationService> logger)
     {
-        logger.LogInformation("[MockCloudStorage] UploadFile '{Path}' ({ContentType}) for user {UserId}",
-            remotePath, contentType, userId);
-        return Task.FromResult($"https://mock-storage.local/{remotePath}");
+        _logger = logger;
+        // Pre-seed a root folder so child-of-root operations resolve cleanly.
+        const string rootId = "mock-root";
+        _folders.TryAdd(rootId, new CloudFolder(
+            ExternalId: rootId,
+            Name: "Root",
+            Path: "/",
+            WebUrl: "https://mock-cloud.local/",
+            ParentExternalId: null));
     }
 
-    public Task<Stream> DownloadFileAsync(int userId, int integrationId, string remotePath, CancellationToken ct = default)
+    public string ProviderCode => "mock";
+
+    public Task<CloudFolder> CreateFolderAsync(
+        string accessToken,
+        CreateFolderRequest request,
+        CancellationToken ct)
     {
-        logger.LogInformation("[MockCloudStorage] DownloadFile '{Path}' for user {UserId}", remotePath, userId);
-        return Task.FromResult<Stream>(new MemoryStream());
+        var parentPath = ResolveParentPath(request.ParentExternalId);
+        var path = parentPath == "/" ? $"/{request.Name}" : $"{parentPath}/{request.Name}";
+
+        // EnsureExists: return the existing folder if one already lives at this path.
+        if (request.EnsureExists)
+        {
+            var existing = _folders.Values.FirstOrDefault(f => f.Path == path);
+            if (existing is not null)
+            {
+                _logger.LogInformation("[MockCloud] CreateFolder ensure-exists hit '{Path}'", path);
+                return Task.FromResult(existing);
+            }
+        }
+
+        var newId = $"mock-folder-{Interlocked.Increment(ref _nextId)}";
+        var folder = new CloudFolder(
+            ExternalId: newId,
+            Name: request.Name,
+            Path: path,
+            WebUrl: $"https://mock-cloud.local{path}",
+            ParentExternalId: request.ParentExternalId);
+        _folders.TryAdd(newId, folder);
+        _logger.LogInformation("[MockCloud] CreateFolder '{Path}' (id={Id})", path, newId);
+        return Task.FromResult(folder);
     }
 
-    public Task<List<CloudStorageFile>> ListFilesAsync(int userId, int integrationId, string remotePath, CancellationToken ct = default)
+    public Task<CloudFolder?> GetFolderAsync(
+        string accessToken,
+        string folderExternalId,
+        CancellationToken ct)
     {
-        logger.LogInformation("[MockCloudStorage] ListFiles '{Path}' for user {UserId}", remotePath, userId);
-        return Task.FromResult(new List<CloudStorageFile>());
+        _folders.TryGetValue(folderExternalId, out var folder);
+        return Task.FromResult(folder);
     }
 
-    public Task<string> GetShareLinkAsync(int userId, int integrationId, string remotePath, CancellationToken ct = default)
+    public Task<IReadOnlyList<CloudFolder>> ListChildFoldersAsync(
+        string accessToken,
+        string parentExternalId,
+        CancellationToken ct)
     {
-        logger.LogInformation("[MockCloudStorage] GetShareLink '{Path}' for user {UserId}", remotePath, userId);
-        return Task.FromResult($"https://mock-storage.local/share/{remotePath}");
+        IReadOnlyList<CloudFolder> children = _folders.Values
+            .Where(f => f.ParentExternalId == parentExternalId)
+            .OrderBy(f => f.Name, StringComparer.Ordinal)
+            .ToList();
+        return Task.FromResult(children);
     }
 
-    public Task DeleteFileAsync(int userId, int integrationId, string remotePath, CancellationToken ct = default)
+    public Task<CloudFolder?> FindFolderByPathAsync(
+        string accessToken,
+        string path,
+        CancellationToken ct)
     {
-        logger.LogInformation("[MockCloudStorage] DeleteFile '{Path}' for user {UserId}", remotePath, userId);
-        return Task.CompletedTask;
+        var folder = _folders.Values.FirstOrDefault(f => f.Path == path);
+        return Task.FromResult(folder);
     }
 
-    public Task<bool> TestConnectionAsync(int userId, int integrationId, CancellationToken ct = default)
+    public Task<CloudStorageTokenRefreshResult> RefreshTokenAsync(
+        string refreshToken,
+        CancellationToken ct)
     {
-        logger.LogInformation("[MockCloudStorage] TestConnection for user {UserId}", userId);
-        return Task.FromResult(true);
+        _logger.LogInformation("[MockCloud] RefreshToken (mock returns same token, +1 hour)");
+        return Task.FromResult(new CloudStorageTokenRefreshResult(
+            AccessToken: $"mock-access-{Guid.NewGuid():N}",
+            RefreshToken: refreshToken,
+            ExpiresAt: DateTimeOffset.UtcNow.AddHours(1)));
+    }
+
+    public Task<CloudStorageHealthResult> HealthCheckAsync(
+        string accessToken,
+        CancellationToken ct)
+    {
+        var sw = Stopwatch.StartNew();
+        sw.Stop();
+        return Task.FromResult(new CloudStorageHealthResult(
+            IsHealthy: true,
+            ProviderCode: ProviderCode,
+            Message: "Mock provider — always healthy.",
+            LatencyMs: sw.ElapsedMilliseconds));
+    }
+
+    private string ResolveParentPath(string? parentExternalId)
+    {
+        if (string.IsNullOrEmpty(parentExternalId)) return "/";
+        return _folders.TryGetValue(parentExternalId, out var parent) ? parent.Path : "/";
     }
 }

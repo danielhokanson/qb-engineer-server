@@ -447,6 +447,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>
     public DbSet<CostCalculation> CostCalculations => Set<CostCalculation>();
     public DbSet<CostCalculationInputs> CostCalculationInputs => Set<CostCalculationInputs>();
 
+    // Pro Services rollout — cloud storage substrate (D9 / Artifact 4 §3.2-3.4).
+    public DbSet<CloudStorageProvider> CloudStorageProviders => Set<CloudStorageProvider>();
+    public DbSet<UserCloudStorageLink> UserCloudStorageLinks => Set<UserCloudStorageLink>();
+    public DbSet<EntityCloudLink> EntityCloudLinks => Set<EntityCloudLink>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

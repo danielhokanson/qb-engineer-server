@@ -682,8 +682,10 @@ try
         builder.Services.AddScoped<IMessagingIntegrationService, DiscordMessagingService>();
         builder.Services.AddScoped<IMessagingIntegrationService, GoogleChatMessagingService>();
 
-        // Cloud storage providers
-        builder.Services.AddScoped<ICloudStorageIntegrationService, MockCloudStorageIntegrationService>();
+        // Cloud storage providers — real Drive / OneDrive / Dropbox land in
+        // subsequent waves of the Pro Services rollout; until then the mock
+        // serves as the default. Singleton: the mock holds in-memory state.
+        builder.Services.AddSingleton<ICloudStorageIntegrationService, MockCloudStorageIntegrationService>();
     }
     builder.Services.AddScoped<IGitHubIssueService, GitHubIssueService>();
 
