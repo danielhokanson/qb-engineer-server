@@ -49,11 +49,13 @@ public class DiscoveryFlowTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<QuestionsResponseRow>();
         Assert.NotNull(result);
-        // The catalog ships 27 self-serve questions (6 opening + 4 per branch ×
-        // 3 + 2 override + 6 diagnostic + 1 exit). A given user only answers 22
-        // because only one branch applies — the wizard filters at render time.
-        Assert.Equal(27, result!.Questions.Count);
-        Assert.Equal(27, result.SelfServeCount);
+        // The catalog ships 28 self-serve questions: 1 top-of-funnel (Q-S1,
+        // Pro Services rollout D4) + 6 opening + 4 per branch × 3 + 2 override
+        // + 6 diagnostic + 1 exit. A given user typically answers fewer because
+        // only one branch applies AND Q-S1 = "services" / "both" short-circuits
+        // the entire mfg tree — the wizard filters at render time.
+        Assert.Equal(28, result!.Questions.Count);
+        Assert.Equal(28, result.SelfServeCount);
 
         // Verify the opening / branch / override / diagnostic / exit categories
         // are all present.
@@ -455,6 +457,81 @@ public class DiscoveryFlowTests
         ]);
         var rec = DiscoveryRecommendationEngine.Recommend(answers);
         Assert.Equal("PRESET-05", rec.PresetId);
+    }
+
+    // ─── D4 — top-of-funnel products/services/both short-circuit ─────────
+
+    [Fact]
+    public void Engine_QS1_Services_Routes_Directly_To_Preset08()
+    {
+        var answers = new DiscoveryAnswerSet(new[]
+        {
+            new DiscoveryAnswer("Q-S1", "services"),
+            // Even though the rest of the answers describe a small mfg shop,
+            // Q-S1 = services short-circuits BEFORE the branch logic runs.
+            new DiscoveryAnswer("Q-O1", "3-10"),
+            new DiscoveryAnswer("Q-O3", "make"),
+            new DiscoveryAnswer("Q-O4", "no"),
+        });
+        var rec = DiscoveryRecommendationEngine.Recommend(answers);
+        Assert.Equal("PRESET-08", rec.PresetId);
+        Assert.Equal("high", rec.ConfidenceLabel);
+        Assert.Contains(rec.Factors, f => f.QuestionId == "Q-S1");
+        Assert.Contains(rec.Alternatives, a => a.PresetId == "PRESET-09");
+    }
+
+    [Fact]
+    public void Engine_QS1_Both_Routes_Directly_To_Preset09()
+    {
+        var answers = new DiscoveryAnswerSet(new[]
+        {
+            new DiscoveryAnswer("Q-S1", "both"),
+            new DiscoveryAnswer("Q-O1", "26-50"),
+        });
+        var rec = DiscoveryRecommendationEngine.Recommend(answers);
+        Assert.Equal("PRESET-09", rec.PresetId);
+        Assert.Equal("high", rec.ConfidenceLabel);
+        Assert.Contains(rec.Alternatives, a => a.PresetId == "PRESET-08");
+        Assert.Contains(rec.Alternatives, a => a.PresetId == "PRESET-04");
+    }
+
+    [Fact]
+    public void Engine_QS1_Products_Falls_Through_To_Existing_Logic()
+    {
+        // Backward compatibility — Q-S1 = products is the implied default.
+        // The recommendation should match what we'd get without Q-S1 at all.
+        var withQS1 = new DiscoveryAnswerSet(new[]
+        {
+            new DiscoveryAnswer("Q-S1", "products"),
+            new DiscoveryAnswer("Q-O1", "1-2"),
+            new DiscoveryAnswer("Q-O3", "make"),
+            new DiscoveryAnswer("Q-A2", "same-person"),
+        });
+        var withoutQS1 = new DiscoveryAnswerSet(new[]
+        {
+            new DiscoveryAnswer("Q-O1", "1-2"),
+            new DiscoveryAnswer("Q-O3", "make"),
+            new DiscoveryAnswer("Q-A2", "same-person"),
+        });
+
+        var recWith = DiscoveryRecommendationEngine.Recommend(withQS1);
+        var recWithout = DiscoveryRecommendationEngine.Recommend(withoutQS1);
+        Assert.Equal(recWithout.PresetId, recWith.PresetId);
+        Assert.Equal("PRESET-01", recWith.PresetId);
+    }
+
+    [Fact]
+    public void Engine_QS1_Unanswered_Falls_Through_Same_As_Products()
+    {
+        var answers = new DiscoveryAnswerSet(new[]
+        {
+            new DiscoveryAnswer("Q-O1", "200+"),
+            new DiscoveryAnswer("Q-O3", "make"),
+            new DiscoveryAnswer("Q-O5", "3+"),
+        });
+        var rec = DiscoveryRecommendationEngine.Recommend(answers);
+        // Existing routing — large + multi-site → PRESET-06.
+        Assert.Equal("PRESET-06", rec.PresetId);
     }
 
     // ─── Helper response shapes ────────────────────────────────────────────

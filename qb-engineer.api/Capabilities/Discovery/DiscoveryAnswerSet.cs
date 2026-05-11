@@ -103,4 +103,24 @@ public class DiscoveryAnswerSet
             };
         }
     }
+
+    /// <summary>
+    /// Pro Services rollout D4 — Q-S1 → business-type variable.
+    /// Returns "products" / "services" / "both". When Q-S1 is unanswered
+    /// the value defaults to "products" so the existing manufacturing-
+    /// flavored 22-question path runs (backward compatible).
+    /// </summary>
+    public string BusinessType
+    {
+        get
+        {
+            var raw = Get("Q-S1") ?? string.Empty;
+            return raw switch
+            {
+                "services" => "services",
+                "both"     => "both",
+                _          => "products",
+            };
+        }
+    }
 }

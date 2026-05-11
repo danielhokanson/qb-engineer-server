@@ -56,6 +56,59 @@ public static class DiscoveryRecommendationEngine
                 Alternatives: []);
         }
 
+        // ── Step 0.5: Pro Services rollout D4 — Q-S1 short-circuit ──────
+        // Top-of-funnel products / services / both split. Services and Hybrid
+        // route directly to PRESET-08 / PRESET-09 without traversing the
+        // manufacturing-flavored 22-question tree. Products (or unanswered)
+        // falls through to existing logic for backward compatibility.
+        var businessType = answers.BusinessType;
+        if (businessType == "services")
+        {
+            return new DiscoveryRecommendation(
+                PresetId: "PRESET-08",
+                Confidence: 1.0,
+                ConfidenceLabel: "high",
+                Rationale: "You sell time / professional services. Pro Services is the right starting point: " +
+                           "engagement-based work organization, billable hours, retainers, and deliverable " +
+                           "tracking — without the manufacturing capabilities a service shop never uses. " +
+                           "You can review the capability changes and the terminology bundle before applying anything.",
+                Factors: [new DiscoveryRecommendationFactor("Q-S1", "Services-only business → Pro Services")],
+                Alternatives:
+                [
+                    new DiscoveryAlternative(
+                        PresetId: "PRESET-09",
+                        PresetName: "Hybrid (Make + Service)",
+                        DistinguishingRationale: "If you also make or resell physical products, Hybrid carries both stereotypes."),
+                    new DiscoveryAlternative(
+                        PresetId: "PRESET-CUSTOM",
+                        PresetName: "Custom",
+                        DistinguishingRationale: "Skip the preset and configure each capability directly."),
+                ]);
+        }
+        if (businessType == "both")
+        {
+            return new DiscoveryRecommendation(
+                PresetId: "PRESET-09",
+                Confidence: 1.0,
+                ConfidenceLabel: "high",
+                Rationale: "You sell both physical products and professional services. Hybrid is the right starting point: " +
+                           "carries the full manufacturing stack AND the Pro Services overlay (engagement track type, " +
+                           "billable hours, deliverables) in one install. Terminology renames Job → Project, " +
+                           "Customer → Client, Work Center → Consultant universally.",
+                Factors: [new DiscoveryRecommendationFactor("Q-S1", "Make-and-service business → Hybrid")],
+                Alternatives:
+                [
+                    new DiscoveryAlternative(
+                        PresetId: "PRESET-08",
+                        PresetName: "Pro Services",
+                        DistinguishingRationale: "If the make-side is small enough to not warrant the mfg stack, Pro Services alone is lighter."),
+                    new DiscoveryAlternative(
+                        PresetId: "PRESET-04",
+                        PresetName: "Production Manufacturer",
+                        DistinguishingRationale: "If the services arm is small enough to skip, Production Manufacturer alone is lighter."),
+                ]);
+        }
+
         // ── Step 1: Compute base candidate ──────────────────────────────
         var headcount = answers.HeadcountBucket;
         var mode = answers.Mode;

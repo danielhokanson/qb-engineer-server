@@ -24,6 +24,27 @@ namespace QBEngineer.Api.Capabilities.Discovery;
 /// </summary>
 public static class DiscoveryQuestionCatalog
 {
+    // ── Top-of-funnel (Q-S1) ───────────────────────────────────────────────
+    // Pro Services rollout D4: split products / services / both at the very
+    // top of the wizard. "services" short-circuits to PRESET-08 (Pro Services);
+    // "both" short-circuits to PRESET-09 (Hybrid); "products" falls through to
+    // the existing manufacturing-flavored 22 questions. Unanswered = backward
+    // compatible (engine treats as "products" and falls through).
+
+    private static readonly DiscoveryQuestion QS1 = new(
+        Id: "Q-S1",
+        Stage: DiscoveryStage.Opening,
+        Category: DiscoveryCategory.Opening,
+        Type: DiscoveryQuestionType.SingleChoice,
+        Text: "What does your business primarily sell — physical products you make or resell, time and services your team delivers, or both?",
+        WhyAsking: "This is the biggest fork in the road. A consulting firm or agency needs a fundamentally different setup than a manufacturer or distributor. If you sell time you should never be asked about BOMs, routings, or shop floor; if you do both, you need the union.",
+        Choices:
+        [
+            new("products", "We sell physical products"),
+            new("services", "We sell time / professional services"),
+            new("both",     "We do both"),
+        ]);
+
     // ── Opening (Q-O1 .. Q-O6) ────────────────────────────────────────────
 
     private static readonly DiscoveryQuestion QO1 = new(
@@ -521,6 +542,7 @@ public static class DiscoveryQuestionCatalog
     /// </summary>
     public static IReadOnlyList<DiscoveryQuestion> All { get; } = new List<DiscoveryQuestion>
     {
+        QS1,  // Pro Services rollout D4 — top-of-funnel products/services/both split.
         QO1, QO2, QO3, QO4, QO5, QO6,
         QA1, QA2, QA3, QA4,
         QB1, QB2, QB3, QB4,
@@ -535,14 +557,15 @@ public static class DiscoveryQuestionCatalog
     };
 
     /// <summary>
-    /// Self-serve catalog count: 27 = 6 opening + 4 Branch A + 4 Branch B + 4 Branch C
-    /// + 2 override + 6 diagnostic + 1 exit. A given user only answers 22 of these
-    /// because only one branch's questions apply (4C names this "22 questions" —
-    /// the per-user count after branch routing). The catalog ships all 27.
+    /// Self-serve catalog count: 28 = 1 top-of-funnel (Q-S1, Pro Services D4) +
+    /// 6 opening + 4 Branch A + 4 Branch B + 4 Branch C + 2 override + 6 diagnostic
+    /// + 1 exit. A given user typically answers far fewer because only one branch's
+    /// questions apply AND Q-S1 = "services" / "both" short-circuits the entire
+    /// manufacturing tree. The catalog ships all 28.
     /// </summary>
-    public const int SelfServeCount = 27;
+    public const int SelfServeCount = 28;
 
-    /// <summary>Per-user count after branch routing — what the 4C design calls "22 questions."</summary>
+    /// <summary>Per-user count after branch routing — what the 4C design calls "22 questions." For Q-S1 = products this is still 22; for services/both, it's effectively 1.</summary>
     public const int PerUserAnsweredCount = 22;
 
     /// <summary>Consultant deepdive count: 12 across 3 branches (4 per branch).</summary>
