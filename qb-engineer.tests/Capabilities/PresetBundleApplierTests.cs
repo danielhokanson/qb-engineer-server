@@ -415,6 +415,73 @@ public class PresetBundleApplierTests
         Assert.Contains("new", row.StepsJson);
     }
 
+    // ─── FolderMapBundleApplier ────────────────────────────────────────────
+
+    [Fact]
+    public async Task FolderMap_First_Apply_Inserts_System_Setting()
+    {
+        using var db = TestDbContextFactory.Create();
+        var bundle = new FolderMapBundle(new[]
+        {
+            new FolderMapSuggestion("Customer", "/Clients/{Customer}/", new[] { "Contracts" }),
+            new FolderMapSuggestion("Job",      "/Clients/{Customer}/{Job}/", new[] { "Working", "Final" }),
+        });
+
+        var result = await FolderMapBundleApplier.ApplyAsync(bundle, db, TestPresetId, CancellationToken.None);
+        await db.SaveChangesAsync();
+
+        Assert.Equal(2, result.AddedCount);
+        var setting = await db.SystemSettings.FirstAsync(s => s.Key == FolderMapBundleApplier.FolderMapSettingKey);
+        Assert.Contains("Clients/{Customer}", setting.Value);
+    }
+
+    [Fact]
+    public async Task FolderMap_Re_Apply_With_Identical_Bundle_Is_Noop()
+    {
+        using var db = TestDbContextFactory.Create();
+        var bundle = new FolderMapBundle(new[]
+        {
+            new FolderMapSuggestion("Customer", "/Clients/{Customer}/", new[] { "Contracts" }),
+        });
+
+        await FolderMapBundleApplier.ApplyAsync(bundle, db, TestPresetId, CancellationToken.None);
+        await db.SaveChangesAsync();
+        var second = await FolderMapBundleApplier.ApplyAsync(bundle, db, TestPresetId, CancellationToken.None);
+
+        Assert.Equal(0, second.AddedCount);
+        Assert.Equal(0, second.UpdatedCount);
+        Assert.Equal(1, second.SkippedCount);
+    }
+
+    [Fact]
+    public async Task FolderMap_Re_Apply_With_Changed_Bundle_Updates_Setting()
+    {
+        using var db = TestDbContextFactory.Create();
+        var first = new FolderMapBundle(new[]
+        {
+            new FolderMapSuggestion("Customer", "/Customers/{Customer}/", new[] { "Files" }),
+        });
+        var second = new FolderMapBundle(new[]
+        {
+            new FolderMapSuggestion("Customer", "/Clients/{Customer}/", new[] { "Contracts", "Engagements" }),
+        });
+
+        await FolderMapBundleApplier.ApplyAsync(first, db, TestPresetId, CancellationToken.None);
+        await db.SaveChangesAsync();
+        var result = await FolderMapBundleApplier.ApplyAsync(second, db, TestPresetId, CancellationToken.None);
+        await db.SaveChangesAsync();
+
+        Assert.Equal(0, result.AddedCount);
+        Assert.Equal(1, result.UpdatedCount);
+
+        var setting = await db.SystemSettings.FirstAsync(s => s.Key == FolderMapBundleApplier.FolderMapSettingKey);
+        Assert.Contains("Clients/{Customer}", setting.Value);
+        Assert.Contains("Engagements", setting.Value);
+        Assert.DoesNotContain("Customers/{Customer}", setting.Value);
+    }
+
+    // ─── WorkflowDefinitionBundleApplier ───────────────────────────────────
+
     [Fact]
     public async Task WorkflowDefinition_Skips_Admin_Edited_Row()
     {

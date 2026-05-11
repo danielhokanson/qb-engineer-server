@@ -138,10 +138,13 @@ public class ApplyPresetHandler(
             {
                 layerResults.Add(await WorkflowDefinitionBundleApplier.ApplyAsync(wdb, db, preset.Id, cancellationToken));
             }
-            // ReportVisibilityBundle / FolderMapBundle / DashboardBundle
-            // appliers are intentionally deferred until their backing
-            // storage tables land (Phase 3a/cloud-storage work). When
-            // those tables exist, append the same way here.
+            if (preset.FolderMapBundle is { } fmb)
+            {
+                layerResults.Add(await FolderMapBundleApplier.ApplyAsync(fmb, db, preset.Id, cancellationToken));
+            }
+            // ReportVisibilityBundle / DashboardBundle appliers are
+            // deferred until their backing storage lands (Phase 3a UI work).
+            // When those land, append the same way here.
 
             if (layerResults.Count > 0 && layerResults.Any(r => r.TouchedCount > 0))
             {

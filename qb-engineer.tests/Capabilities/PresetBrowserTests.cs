@@ -364,6 +364,13 @@ public class PresetBrowserTests
                 .Contains(r.Name))
             .ToListAsync();
         Assert.Equal(4, roles.Count);
+
+        // Folder map — bundle persists as a single system_setting.
+        var folderMap = await db.SystemSettings
+            .FirstOrDefaultAsync(s => s.Key == "cloud_storage.folder_map");
+        Assert.NotNull(folderMap);
+        Assert.Contains("Clients/{Customer}", folderMap!.Value);
+        Assert.Contains("Deliverables", folderMap.Value);
     }
 
     [Fact]

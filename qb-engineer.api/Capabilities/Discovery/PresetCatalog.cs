@@ -373,6 +373,28 @@ public static class PresetCatalog
                 new("engagement_manager", "Engagement Manager", Description: "Owns one or more engagements end-to-end: client relationship, scope, budget, delivery."),
                 new("account_manager",    "Account Manager",    Description: "Owns the client relationship across engagements: sales, renewals, retainer health."),
                 new("delivery_lead",      "Delivery Lead",      Description: "Senior delivery role — multi-engagement oversight, escalation point, practice lead."),
+            }),
+        // ── Folder map suggestions (per D9) ──
+        // Used by the dual-path auto-create flow (D2) when an entity is
+        // created on a Pro Services install with CAP-EXT-CLOUD-STORAGE
+        // enabled. The applier persists this catalog to a single
+        // system_setting row; the auto-create flow consults it at entity-
+        // create time.
+        FolderMapBundle: new FolderMapBundle(
+            Suggestions: new List<FolderMapSuggestion>
+            {
+                new(
+                    EntityType: "Customer",
+                    PathTemplate: "/Clients/{Customer}/",
+                    SubfolderNames: new[] { "00-General", "01-Contracts", "02-Engagements" }),
+                new(
+                    EntityType: "Job",
+                    PathTemplate: "/Clients/{Customer}/02-Engagements/{Job}/",
+                    SubfolderNames: new[] { "Proposal", "Contracts", "Discovery", "Working", "Deliverables", "Final" }),
+                new(
+                    EntityType: "Deliverable",
+                    PathTemplate: "/Clients/{Customer}/02-Engagements/{Job}/Deliverables/",
+                    SubfolderNames: new[] { "Draft", "Review", "Final" }),
             }));
 
     public static PresetDefinition Preset09_Hybrid { get; } = new(
@@ -414,7 +436,10 @@ public static class PresetCatalog
         TrackTypeBundle: Preset08_ProServices.TrackTypeBundle,
         // ── Same Pro Services role seed as PRESET-08; manufacturing roles
         // carried by the existing seeder. ──
-        RoleBundle: Preset08_ProServices.RoleBundle);
+        RoleBundle: Preset08_ProServices.RoleBundle,
+        // ── Same folder map as PRESET-08; Hybrid installs benefit from the
+        // services-shaped folder layout for engagement-track Jobs. ──
+        FolderMapBundle: Preset08_ProServices.FolderMapBundle);
 
     public static PresetDefinition PresetCustom { get; } = new(
         Id: "PRESET-CUSTOM",
