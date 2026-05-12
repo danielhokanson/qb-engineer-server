@@ -53,6 +53,27 @@ public static class OnboardingPiiMerge
             if (!string.IsNullOrEmpty(account))
                 formData["accountNumber"] = account;
         }
+
+        // I-9 Section 1 — alien-reg / I-94 / foreign-passport. Same shape as SSN:
+        // wizard sends blank when the user keeps the previously stored value.
+        if (IsBlank(formData, "i9AlienRegNumber") && !string.IsNullOrEmpty(profile.I9AlienRegProtected))
+        {
+            var alien = pii.Unprotect(profile.I9AlienRegProtected);
+            if (!string.IsNullOrEmpty(alien))
+                formData["i9AlienRegNumber"] = alien;
+        }
+        if (IsBlank(formData, "i9I94Number") && !string.IsNullOrEmpty(profile.I9I94Protected))
+        {
+            var i94 = pii.Unprotect(profile.I9I94Protected);
+            if (!string.IsNullOrEmpty(i94))
+                formData["i9I94Number"] = i94;
+        }
+        if (IsBlank(formData, "i9ForeignPassportNumber") && !string.IsNullOrEmpty(profile.I9ForeignPassportProtected))
+        {
+            var fp = pii.Unprotect(profile.I9ForeignPassportProtected);
+            if (!string.IsNullOrEmpty(fp))
+                formData["i9ForeignPassportNumber"] = fp;
+        }
     }
 
     private static bool IsBlank(Dictionary<string, string> d, string key) =>

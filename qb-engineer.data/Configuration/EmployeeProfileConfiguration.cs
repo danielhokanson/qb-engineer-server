@@ -59,5 +59,23 @@ public class EmployeeProfileConfiguration : IEntityTypeConfiguration<EmployeePro
         builder.Property(e => e.BankRoutingProtected);
         builder.Property(e => e.BankAccountProtected);
         builder.Property(e => e.BankAccountType).HasMaxLength(20);
+
+        // W-4 + State Tax — plaintext (filing status codes, dependent counts,
+        // dollar amounts). Not sensitive on their own; persisted so the user
+        // doesn't re-enter on revisit.
+        builder.Property(e => e.W4FilingStatus).HasMaxLength(20);
+        builder.Property(e => e.W4OtherIncome).HasPrecision(12, 2);
+        builder.Property(e => e.W4Deductions).HasPrecision(12, 2);
+        builder.Property(e => e.W4ExtraWithholding).HasPrecision(12, 2);
+        builder.Property(e => e.StateFilingStatus).HasMaxLength(20);
+        builder.Property(e => e.StateAdditionalWithholding).HasPrecision(12, 2);
+
+        // I-9 citizenship — code is plaintext; alien-reg / I-94 / foreign-
+        // passport-number are encrypted (regulatory identifiers).
+        builder.Property(e => e.I9CitizenshipStatus).HasMaxLength(4);
+        builder.Property(e => e.I9AlienRegProtected);
+        builder.Property(e => e.I9I94Protected);
+        builder.Property(e => e.I9ForeignPassportProtected);
+        builder.Property(e => e.I9ForeignPassportCountry).HasMaxLength(100);
     }
 }

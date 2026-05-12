@@ -183,7 +183,29 @@ public record SaveOnboardingDraftRequestModel(
     string? AddressState,
     string? ZipCode,
 
-    // Step 5 — I-9 (identity-document details persisted; PDF-only fields stay client-side)
+    // Step 3 — W-4 Federal Withholding
+    string? W4FilingStatus,
+    bool? W4MultipleJobs,
+    int? W4QualifyingChildren,
+    int? W4OtherDependents,
+    decimal? W4OtherIncome,
+    decimal? W4Deductions,
+    decimal? W4ExtraWithholding,
+    bool? W4ExemptFromWithholding,
+
+    // Step 4 — State Tax Withholding
+    string? StateFilingStatus,
+    int? StateAllowances,
+    decimal? StateAdditionalWithholding,
+    bool? StateExempt,
+
+    // Step 5 — I-9 (citizenship + identity-document details)
+    string? I9CitizenshipStatus,
+    string? I9AlienRegNumber,
+    string? I9I94Number,
+    string? I9ForeignPassportNumber,
+    string? I9ForeignPassportCountry,
+    DateTimeOffset? I9WorkAuthExpiry,
     string? I9DocumentChoice,
     string? I9ListAType,
     string? I9ListADocNumber,
@@ -229,6 +251,30 @@ public record OnboardingDraftStatusModel(
     string? City,
     string? AddressState,
     string? ZipCode,
+
+    // Step 3 — W-4
+    string? W4FilingStatus,
+    bool? W4MultipleJobs,
+    int? W4QualifyingChildren,
+    int? W4OtherDependents,
+    decimal? W4OtherIncome,
+    decimal? W4Deductions,
+    decimal? W4ExtraWithholding,
+    bool? W4ExemptFromWithholding,
+
+    // Step 4 — State Tax
+    string? StateFilingStatus,
+    int? StateAllowances,
+    decimal? StateAdditionalWithholding,
+    bool? StateExempt,
+
+    // Step 5 — I-9 Section 1 (citizenship + alien-fields meta)
+    string? I9CitizenshipStatus,
+    bool HasAlienRegNumber,
+    bool HasI94Number,
+    bool HasForeignPassportNumber,
+    string? I9ForeignPassportCountry,
+    DateTimeOffset? I9WorkAuthExpiry,
 
     // Step 5 (I-9 doc detail; doc numbers represented only by Has*)
     string? I9DocumentChoice,

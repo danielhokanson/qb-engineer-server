@@ -63,6 +63,30 @@ public class GetOnboardingDraftStatusHandler(AppDbContext db)
             AddressState: profile?.State,
             ZipCode:      profile?.ZipCode,
 
+            // W-4
+            W4FilingStatus:           profile?.W4FilingStatus,
+            W4MultipleJobs:           profile?.W4MultipleJobs,
+            W4QualifyingChildren:     profile?.W4QualifyingChildren,
+            W4OtherDependents:        profile?.W4OtherDependents,
+            W4OtherIncome:            profile?.W4OtherIncome,
+            W4Deductions:             profile?.W4Deductions,
+            W4ExtraWithholding:       profile?.W4ExtraWithholding,
+            W4ExemptFromWithholding:  profile?.W4ExemptFromWithholding,
+
+            // State
+            StateFilingStatus:           profile?.StateFilingStatus,
+            StateAllowances:             profile?.StateAllowances,
+            StateAdditionalWithholding:  profile?.StateAdditionalWithholding,
+            StateExempt:                 profile?.StateExempt,
+
+            // I-9 Section 1
+            I9CitizenshipStatus:        profile?.I9CitizenshipStatus,
+            HasAlienRegNumber:          !string.IsNullOrEmpty(profile?.I9AlienRegProtected),
+            HasI94Number:               !string.IsNullOrEmpty(profile?.I9I94Protected),
+            HasForeignPassportNumber:   !string.IsNullOrEmpty(profile?.I9ForeignPassportProtected),
+            I9ForeignPassportCountry:   profile?.I9ForeignPassportCountry,
+            I9WorkAuthExpiry:           profile?.I9WorkAuthExpiry,
+
             I9DocumentChoice: docChoice,
 
             I9ListAType:               listA?.DocumentName,

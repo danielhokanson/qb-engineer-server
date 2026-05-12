@@ -68,5 +68,35 @@ public class EmployeeProfile : BaseAuditableEntity
     public string? BankRoutingProtected { get; set; }
     public string? BankAccountProtected { get; set; }
     public string? BankAccountType { get; set; }
+
+    // ── W-4 Federal Tax Withholding (not sensitive — plaintext OK) ─────────
+    // Filing status, dependent counts, dollar-amount adjustments. Persisted
+    // here so the user doesn't have to re-enter when they revisit step 3.
+    public string? W4FilingStatus { get; set; }
+    public bool? W4MultipleJobs { get; set; }
+    public int? W4QualifyingChildren { get; set; }
+    public int? W4OtherDependents { get; set; }
+    public decimal? W4OtherIncome { get; set; }
+    public decimal? W4Deductions { get; set; }
+    public decimal? W4ExtraWithholding { get; set; }
+    public bool? W4ExemptFromWithholding { get; set; }
+
+    // ── State Tax Withholding (not sensitive — plaintext OK) ───────────────
+    public string? StateFilingStatus { get; set; }
+    public int? StateAllowances { get; set; }
+    public decimal? StateAdditionalWithholding { get; set; }
+    public bool? StateExempt { get; set; }
+
+    // ── I-9 Section 1 — citizenship / immigration ──────────────────────────
+    // Citizenship status code (1/2/3/4) is not sensitive on its own.
+    // Alien-reg #, I-94 #, and foreign-passport # uniquely identify the
+    // person for federal verification — encrypted via IPiiProtector. Country
+    // + work-auth expiry are fine plaintext.
+    public string? I9CitizenshipStatus { get; set; }
+    public string? I9AlienRegProtected { get; set; }
+    public string? I9I94Protected { get; set; }
+    public string? I9ForeignPassportProtected { get; set; }
+    public string? I9ForeignPassportCountry { get; set; }
+    public DateTimeOffset? I9WorkAuthExpiry { get; set; }
 }
 

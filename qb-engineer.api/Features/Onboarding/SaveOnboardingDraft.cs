@@ -59,6 +59,33 @@ public class SaveOnboardingDraftHandler(AppDbContext db, IPiiProtector pii)
         if (m.AddressState is not null)  profile.State   = m.AddressState;
         if (m.ZipCode      is not null)  profile.ZipCode = m.ZipCode;
 
+        // ── Step 3: W-4 ─────────────────────────────────────────────────────
+        if (m.W4FilingStatus       is not null) profile.W4FilingStatus       = m.W4FilingStatus;
+        if (m.W4MultipleJobs.HasValue)          profile.W4MultipleJobs       = m.W4MultipleJobs;
+        if (m.W4QualifyingChildren.HasValue)    profile.W4QualifyingChildren = m.W4QualifyingChildren;
+        if (m.W4OtherDependents.HasValue)       profile.W4OtherDependents    = m.W4OtherDependents;
+        if (m.W4OtherIncome.HasValue)           profile.W4OtherIncome        = m.W4OtherIncome;
+        if (m.W4Deductions.HasValue)            profile.W4Deductions         = m.W4Deductions;
+        if (m.W4ExtraWithholding.HasValue)      profile.W4ExtraWithholding   = m.W4ExtraWithholding;
+        if (m.W4ExemptFromWithholding.HasValue) profile.W4ExemptFromWithholding = m.W4ExemptFromWithholding;
+
+        // ── Step 4: State Withholding ───────────────────────────────────────
+        if (m.StateFilingStatus       is not null)  profile.StateFilingStatus = m.StateFilingStatus;
+        if (m.StateAllowances.HasValue)             profile.StateAllowances   = m.StateAllowances;
+        if (m.StateAdditionalWithholding.HasValue)  profile.StateAdditionalWithholding = m.StateAdditionalWithholding;
+        if (m.StateExempt.HasValue)                 profile.StateExempt       = m.StateExempt;
+
+        // ── Step 5: I-9 Section 1 (citizenship + alien fields) ──────────────
+        if (m.I9CitizenshipStatus      is not null) profile.I9CitizenshipStatus      = m.I9CitizenshipStatus;
+        if (m.I9ForeignPassportCountry is not null) profile.I9ForeignPassportCountry = m.I9ForeignPassportCountry;
+        if (m.I9WorkAuthExpiry.HasValue)            profile.I9WorkAuthExpiry         = m.I9WorkAuthExpiry;
+        if (!string.IsNullOrWhiteSpace(m.I9AlienRegNumber))
+            profile.I9AlienRegProtected = pii.Protect(m.I9AlienRegNumber);
+        if (!string.IsNullOrWhiteSpace(m.I9I94Number))
+            profile.I9I94Protected = pii.Protect(m.I9I94Number);
+        if (!string.IsNullOrWhiteSpace(m.I9ForeignPassportNumber))
+            profile.I9ForeignPassportProtected = pii.Protect(m.I9ForeignPassportNumber);
+
         // ── Step 6: Direct Deposit ──────────────────────────────────────────
         if (m.BankName    is not null) profile.BankName        = m.BankName;
         if (m.AccountType is not null) profile.BankAccountType = m.AccountType;
